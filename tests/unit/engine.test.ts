@@ -208,6 +208,28 @@ describe('MatchingEngine', () => {
     })
   })
 
+  describe('error handling', () => {
+    it('throws error for unknown strategy', () => {
+      const config: MatchingConfig = {
+        fields: new Map([
+          [
+            'email',
+            { strategy: 'unknown' as any, weight: 100 }, // Cast to bypass TypeScript
+          ],
+        ]),
+        thresholds: { noMatch: 20, definiteMatch: 80 },
+      }
+
+      const engine = new MatchingEngine<TestPerson>(config)
+      const pair = createPair(
+        { firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' },
+        { firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' }
+      )
+
+      expect(() => engine.compare(pair)).toThrow('Unknown strategy: unknown')
+    })
+  })
+
   describe('nested field access', () => {
     interface NestedPerson {
       name: { first: string; last: string }

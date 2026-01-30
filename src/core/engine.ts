@@ -5,7 +5,13 @@ import type {
   MatchScore,
   RecordPair,
 } from '../types'
-import { exactMatch } from './comparators'
+import {
+  exactMatch,
+  levenshtein,
+  jaroWinkler,
+  soundex,
+  metaphone,
+} from './comparators'
 
 /**
  * Core matching engine that compares two records using configured strategies.
@@ -59,9 +65,32 @@ export class MatchingEngine<T extends object = object> {
     right: unknown,
     config: FieldMatchConfig
   ): number {
-    const similarity = exactMatch(left, right, {
-      caseSensitive: config.caseSensitive ?? true,
-    })
+    let similarity: number
+
+    switch (config.strategy) {
+      case 'exact':
+        similarity = exactMatch(left, right, {
+          caseSensitive: config.caseSensitive ?? true,
+        })
+        break
+      case 'levenshtein':
+        similarity = levenshtein(left, right, config.levenshteinOptions)
+        break
+      case 'jaro-winkler':
+        similarity = jaroWinkler(left, right, config.jaroWinklerOptions)
+        break
+      case 'soundex':
+        similarity = soundex(left, right, config.soundexOptions)
+        break
+      case 'metaphone':
+        similarity = metaphone(left, right, config.metaphoneOptions)
+        break
+      default: {
+        // TypeScript exhaustiveness check
+        const _exhaustive: never = config.strategy
+        throw new Error(`Unknown strategy: ${_exhaustive}`)
+      }
+    }
 
     if (config.threshold !== undefined && similarity < config.threshold) {
       return 0

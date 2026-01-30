@@ -1,4 +1,10 @@
 import type { SchemaDefinition } from './schema'
+import type {
+  LevenshteinOptions,
+  JaroWinklerOptions,
+  SoundexOptions,
+  MetaphoneOptions,
+} from '../core/comparators'
 
 /**
  * Configuration for match score thresholds that determine outcomes.
@@ -15,10 +21,18 @@ export interface ThresholdConfig {
 
 /**
  * Available matching strategies for field comparison.
- * Currently only supports exact matching; additional strategies
- * (e.g., 'levenshtein', 'jaro-winkler', 'soundex') will be added in Phase 2.
+ * - `'exact'`: Exact match comparison
+ * - `'levenshtein'`: Edit distance-based similarity (general purpose)
+ * - `'jaro-winkler'`: Optimized for short strings like names (handles transpositions)
+ * - `'soundex'`: Phonetic encoding for English names
+ * - `'metaphone'`: Improved phonetic encoding with better pronunciation rules
  */
-export type MatchingStrategy = 'exact'
+export type MatchingStrategy =
+  | 'exact'
+  | 'levenshtein'
+  | 'jaro-winkler'
+  | 'soundex'
+  | 'metaphone'
 
 /**
  * Configuration for how a single field should be matched.
@@ -32,6 +46,15 @@ export interface FieldMatchConfig {
   threshold?: number
   /** Whether string comparisons should be case-sensitive (default: true) */
   caseSensitive?: boolean
+
+  /** Options for Levenshtein distance strategy */
+  levenshteinOptions?: LevenshteinOptions
+  /** Options for Jaro-Winkler similarity strategy */
+  jaroWinklerOptions?: JaroWinklerOptions
+  /** Options for Soundex phonetic encoding strategy */
+  soundexOptions?: SoundexOptions
+  /** Options for Metaphone phonetic encoding strategy */
+  metaphoneOptions?: MetaphoneOptions
 }
 
 /**
