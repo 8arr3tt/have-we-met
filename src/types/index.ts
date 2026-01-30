@@ -1,7 +1,6 @@
-// Types - Records
 export type {
   RecordId,
   RecordMetadata,
   Record,
   RecordPair,
-} from './types'
+} from './record'
