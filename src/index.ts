@@ -4,6 +4,7 @@ export { MatchingEngine } from './core/engine'
 
 // Builders
 export { SchemaBuilder } from './builder/schema-builder'
+export { MatchingBuilder, FieldMatchBuilder } from './builder/matching-builder'
 
 // Comparators
 export { exactMatch, type ExactMatchOptions } from './core/comparators'
