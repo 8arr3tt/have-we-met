@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'COMMIT REMINDER: Use prefix (feat:/fix:/refactor:/test:/docs:/chore:), no ticket numbers, no Co-Authored-By'"
+          }
+        ]
+      }
+    ]
+  }
+}
