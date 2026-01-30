@@ -13,3 +13,15 @@ export type {
   MatchCandidate,
   MatchResult,
 } from './match'
+
+export type {
+  ThresholdConfig,
+  MatchingStrategy,
+  FieldMatchConfig,
+  MatchingConfig,
+  BlockingConfig,
+  ResolverConfig,
+  ResolverOptions,
+} from './config'
+
+export type { FieldType, FieldDefinition, SchemaDefinition } from './schema'
