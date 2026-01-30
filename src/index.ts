@@ -5,3 +5,13 @@ export type {
   Record,
   RecordPair,
 } from './types'
+
+// Types - Match Results
+export type {
+  MatchOutcome,
+  FieldComparison,
+  MatchScore,
+  MatchExplanation,
+  MatchCandidate,
+  MatchResult,
+} from './types'
