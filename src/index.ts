@@ -1,3 +1,6 @@
+// Main entry point
+export { HaveWeMet, ResolverBuilder } from './builder/resolver-builder'
+
 // Core classes
 export { Resolver } from './core/resolver'
 export { MatchingEngine } from './core/engine'
