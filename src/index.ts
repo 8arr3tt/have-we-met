@@ -6,7 +6,17 @@ export { Resolver } from './core/resolver'
 export { MatchingEngine } from './core/engine'
 
 // Comparators
-export { exactMatch, type ExactMatchOptions } from './core/comparators'
+export {
+  exactMatch,
+  type ExactMatchOptions,
+  levenshtein,
+  type LevenshteinOptions,
+  jaroWinkler,
+  type JaroWinklerOptions,
+  soundex,
+  soundexEncode,
+  type SoundexOptions,
+} from './core/comparators'
 
 // Types - Records
 export type {

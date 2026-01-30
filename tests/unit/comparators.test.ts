@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { exactMatch } from '../../src/core/comparators'
+import {
+  exactMatch,
+  levenshtein,
+  jaroWinkler,
+  soundex,
+  soundexEncode,
+} from '../../src/core/comparators'
 
 describe('exactMatch', () => {
   describe('string comparison', () => {
@@ -120,6 +126,735 @@ describe('exactMatch', () => {
     it('returns 0 for date vs string', () => {
       const date = new Date('2024-01-01')
       expect(exactMatch(date, '2024-01-01')).toBe(0)
+    })
+  })
+})
+
+describe('levenshtein', () => {
+  describe('basic matching', () => {
+    it('returns 1 for identical strings', () => {
+      expect(levenshtein('hello', 'hello')).toBe(1)
+      expect(levenshtein('world', 'world')).toBe(1)
+      expect(levenshtein('', '')).toBe(1)
+    })
+
+    it('returns 0.8 for one character different', () => {
+      expect(levenshtein('hello', 'hallo')).toBe(0.8)
+      expect(levenshtein('cat', 'bat')).toBeCloseTo(2 / 3, 3)
+    })
+
+    it('returns 0 for completely different strings', () => {
+      expect(levenshtein('abc', 'xyz')).toBe(0)
+    })
+
+    it('handles different lengths correctly', () => {
+      // 'cat' vs 'category': distance = 5, maxLength = 8
+      expect(levenshtein('cat', 'category')).toBeCloseTo(0.375, 3)
+      // 'sit' vs 'sitting': distance = 4, maxLength = 7
+      expect(levenshtein('sit', 'sitting')).toBeCloseTo(0.4286, 3)
+    })
+
+    it('handles single character strings', () => {
+      expect(levenshtein('a', 'a')).toBe(1)
+      expect(levenshtein('a', 'b')).toBe(0)
+      expect(levenshtein('a', 'ab')).toBe(0.5)
+    })
+  })
+
+  describe('empty strings', () => {
+    it('returns 1 for two empty strings', () => {
+      expect(levenshtein('', '')).toBe(1)
+    })
+
+    it('returns 0 when one string is empty', () => {
+      expect(levenshtein('', 'abc')).toBe(0)
+      expect(levenshtein('abc', '')).toBe(0)
+      expect(levenshtein('', 'a')).toBe(0)
+    })
+  })
+
+  describe('case sensitivity', () => {
+    it('is case-insensitive by default', () => {
+      expect(levenshtein('Hello', 'hello')).toBe(1)
+      expect(levenshtein('HELLO', 'hello')).toBe(1)
+      expect(levenshtein('HeLLo', 'hello')).toBe(1)
+    })
+
+    it('respects case when caseSensitive is true', () => {
+      expect(levenshtein('Hello', 'hello', { caseSensitive: true })).toBe(0.8)
+      expect(levenshtein('HELLO', 'hello', { caseSensitive: true })).toBe(0)
+      expect(
+        levenshtein('hello', 'hello', { caseSensitive: true })
+      ).toBe(1)
+    })
+  })
+
+  describe('whitespace normalization', () => {
+    it('normalizes whitespace by default', () => {
+      expect(levenshtein('hello world', 'hello  world')).toBe(1)
+      expect(levenshtein('hello   world', 'hello world')).toBe(1)
+      expect(levenshtein(' hello ', 'hello')).toBe(1)
+      expect(levenshtein('hello\t\nworld', 'hello world')).toBe(1)
+    })
+
+    it('does not normalize when normalizeWhitespace is false', () => {
+      expect(
+        levenshtein('hello world', 'hello  world', {
+          normalizeWhitespace: false,
+        })
+      ).toBeLessThan(1)
+      expect(
+        levenshtein(' hello ', 'hello', { normalizeWhitespace: false })
+      ).toBeLessThan(1)
+    })
+  })
+
+  describe('null/undefined handling', () => {
+    it('returns 1 when both are null by default', () => {
+      expect(levenshtein(null, null)).toBe(1)
+    })
+
+    it('returns 1 when both are undefined by default', () => {
+      expect(levenshtein(undefined, undefined)).toBe(1)
+    })
+
+    it('returns 1 when one is null and other is undefined by default', () => {
+      expect(levenshtein(null, undefined)).toBe(1)
+      expect(levenshtein(undefined, null)).toBe(1)
+    })
+
+    it('returns 0 when nullMatchesNull is false', () => {
+      expect(levenshtein(null, null, { nullMatchesNull: false })).toBe(0)
+      expect(
+        levenshtein(undefined, undefined, { nullMatchesNull: false })
+      ).toBe(0)
+    })
+
+    it('returns 0 when only one value is null/undefined', () => {
+      expect(levenshtein(null, 'value')).toBe(0)
+      expect(levenshtein('value', null)).toBe(0)
+      expect(levenshtein(undefined, 'value')).toBe(0)
+      expect(levenshtein('value', undefined)).toBe(0)
+    })
+  })
+
+  describe('non-string inputs', () => {
+    it('coerces numbers to strings', () => {
+      expect(levenshtein(123, 123)).toBe(1)
+      expect(levenshtein(123, 124)).toBeCloseTo(2 / 3, 3)
+      expect(levenshtein(42, '42')).toBe(1)
+    })
+
+    it('coerces booleans to strings', () => {
+      expect(levenshtein(true, true)).toBe(1)
+      expect(levenshtein(true, 'true')).toBe(1)
+      expect(levenshtein(false, 'false')).toBe(1)
+    })
+
+    it('coerces objects to strings', () => {
+      const obj1 = { toString: () => 'hello' }
+      const obj2 = { toString: () => 'hello' }
+      const obj3 = { toString: () => 'hallo' }
+      expect(levenshtein(obj1, obj2)).toBe(1)
+      expect(levenshtein(obj1, obj3)).toBe(0.8)
+    })
+  })
+
+  describe('combined options', () => {
+    it('applies both case sensitivity and whitespace normalization', () => {
+      expect(
+        levenshtein('Hello  World', 'hello world', {
+          caseSensitive: false,
+          normalizeWhitespace: true,
+        })
+      ).toBe(1)
+
+      expect(
+        levenshtein('Hello  World', 'hello world', {
+          caseSensitive: true,
+          normalizeWhitespace: true,
+        })
+      ).toBeLessThan(1)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('handles very long strings', () => {
+      const longStr1 = 'a'.repeat(100)
+      const longStr2 = 'a'.repeat(100)
+      expect(levenshtein(longStr1, longStr2)).toBe(1)
+
+      const longStr3 = 'a'.repeat(99) + 'b'
+      expect(levenshtein(longStr1, longStr3)).toBe(0.99)
+    })
+
+    it('handles strings with special characters', () => {
+      expect(levenshtein('hello!', 'hello!')).toBe(1)
+      expect(levenshtein('hello@world', 'hello#world')).toBeCloseTo(
+        10 / 11,
+        3
+      )
+      expect(levenshtein('test-123', 'test-123')).toBe(1)
+    })
+
+    it('handles unicode characters', () => {
+      expect(levenshtein('café', 'café')).toBe(1)
+      expect(levenshtein('🙂', '🙂')).toBe(1)
+      expect(levenshtein('hello 世界', 'hello 世界')).toBe(1)
+    })
+  })
+})
+
+describe('jaroWinkler', () => {
+  describe('basic matching', () => {
+    it('returns 1 for identical strings', () => {
+      expect(jaroWinkler('MARTHA', 'MARTHA')).toBe(1)
+      expect(jaroWinkler('hello', 'hello')).toBe(1)
+      expect(jaroWinkler('', '')).toBe(1)
+    })
+
+    it('handles transpositions well', () => {
+      // MARTHA vs MARHTA (H and T are transposed)
+      const score = jaroWinkler('MARTHA', 'MARHTA')
+      expect(score).toBeGreaterThan(0.95)
+      expect(score).toBeLessThan(1)
+    })
+
+    it('rewards common prefixes', () => {
+      // DIXON vs DICKSONX - has common prefix DI
+      const score = jaroWinkler('DIXON', 'DICKSONX')
+      expect(score).toBeGreaterThan(0.8)
+      expect(score).toBeLessThan(0.85)
+    })
+
+    it('returns low score for different strings', () => {
+      const score = jaroWinkler('SMITH', 'JONES')
+      expect(score).toBeLessThan(0.5)
+    })
+
+    it('handles single character strings', () => {
+      expect(jaroWinkler('a', 'a')).toBe(1)
+      expect(jaroWinkler('a', 'b')).toBe(0)
+    })
+  })
+
+  describe('empty strings', () => {
+    it('returns 1 for two empty strings', () => {
+      expect(jaroWinkler('', '')).toBe(1)
+    })
+
+    it('returns 0 when one string is empty', () => {
+      expect(jaroWinkler('', 'abc')).toBe(0)
+      expect(jaroWinkler('abc', '')).toBe(0)
+      expect(jaroWinkler('', 'a')).toBe(0)
+    })
+  })
+
+  describe('case sensitivity', () => {
+    it('is case-insensitive by default', () => {
+      expect(jaroWinkler('Martha', 'MARTHA')).toBe(1)
+      expect(jaroWinkler('hello', 'HELLO')).toBe(1)
+      expect(jaroWinkler('Smith', 'smith')).toBe(1)
+    })
+
+    it('respects case when caseSensitive is true', () => {
+      // Martha/MARTHA have matching first letter 'M', so score > 0
+      expect(
+        jaroWinkler('Martha', 'MARTHA', { caseSensitive: true })
+      ).toBeLessThan(0.6)
+      expect(
+        jaroWinkler('Martha', 'MARTHA', { caseSensitive: true })
+      ).toBeGreaterThan(0)
+
+      // hello/HELLO have no matching characters with case sensitivity
+      expect(jaroWinkler('hello', 'HELLO', { caseSensitive: true })).toBe(0)
+      expect(jaroWinkler('hello', 'hello', { caseSensitive: true })).toBe(1)
+    })
+  })
+
+  describe('prefix scaling', () => {
+    it('uses default prefix scale of 0.1', () => {
+      const score1 = jaroWinkler('DIXON', 'DICKSONX')
+      const score2 = jaroWinkler('DIXON', 'DICKSONX', { prefixScale: 0.1 })
+      expect(score1).toBe(score2)
+    })
+
+    it('applies different prefix scales correctly', () => {
+      const score0 = jaroWinkler('DIXON', 'DICKSONX', { prefixScale: 0 })
+      const score1 = jaroWinkler('DIXON', 'DICKSONX', { prefixScale: 0.1 })
+      const score2 = jaroWinkler('DIXON', 'DICKSONX', { prefixScale: 0.2 })
+
+      // Higher prefix scale should give higher scores for strings with common prefixes
+      expect(score2).toBeGreaterThan(score1)
+      expect(score1).toBeGreaterThan(score0)
+    })
+
+    it('handles zero prefix scale (pure Jaro)', () => {
+      const score = jaroWinkler('hello', 'hello', { prefixScale: 0 })
+      expect(score).toBe(1)
+    })
+
+    it('handles maximum prefix scale of 0.25', () => {
+      const score = jaroWinkler('DIXON', 'DICKSONX', { prefixScale: 0.25 })
+      expect(score).toBeGreaterThan(0)
+      expect(score).toBeLessThanOrEqual(1)
+    })
+  })
+
+  describe('prefix length', () => {
+    it('uses default maxPrefixLength of 4', () => {
+      const score1 = jaroWinkler('PREFIX', 'PREFIXTEST')
+      const score2 = jaroWinkler('PREFIX', 'PREFIXTEST', {
+        maxPrefixLength: 4,
+      })
+      expect(score1).toBe(score2)
+    })
+
+    it('respects maxPrefixLength option', () => {
+      const score2 = jaroWinkler('PREFIX', 'PREFIXTEST', {
+        maxPrefixLength: 2,
+      })
+      const score4 = jaroWinkler('PREFIX', 'PREFIXTEST', {
+        maxPrefixLength: 4,
+      })
+      const score6 = jaroWinkler('PREFIX', 'PREFIXTEST', {
+        maxPrefixLength: 6,
+      })
+
+      // Longer prefix consideration should give higher scores
+      expect(score6).toBeGreaterThan(score4)
+      expect(score4).toBeGreaterThan(score2)
+    })
+
+    it('handles maxPrefixLength of 0', () => {
+      const score = jaroWinkler('hello', 'hello', { maxPrefixLength: 0 })
+      expect(score).toBe(1) // Still perfect match, just no prefix bonus
+    })
+  })
+
+  describe('null/undefined handling', () => {
+    it('returns 1 when both are null by default', () => {
+      expect(jaroWinkler(null, null)).toBe(1)
+    })
+
+    it('returns 1 when both are undefined by default', () => {
+      expect(jaroWinkler(undefined, undefined)).toBe(1)
+    })
+
+    it('returns 1 when one is null and other is undefined by default', () => {
+      expect(jaroWinkler(null, undefined)).toBe(1)
+      expect(jaroWinkler(undefined, null)).toBe(1)
+    })
+
+    it('returns 0 when nullMatchesNull is false', () => {
+      expect(jaroWinkler(null, null, { nullMatchesNull: false })).toBe(0)
+      expect(
+        jaroWinkler(undefined, undefined, { nullMatchesNull: false })
+      ).toBe(0)
+    })
+
+    it('returns 0 when only one value is null/undefined', () => {
+      expect(jaroWinkler(null, 'value')).toBe(0)
+      expect(jaroWinkler('value', null)).toBe(0)
+      expect(jaroWinkler(undefined, 'value')).toBe(0)
+      expect(jaroWinkler('value', undefined)).toBe(0)
+    })
+  })
+
+  describe('non-string inputs', () => {
+    it('coerces numbers to strings', () => {
+      expect(jaroWinkler(123, 123)).toBe(1)
+      expect(jaroWinkler(42, '42')).toBe(1)
+      expect(jaroWinkler(123, 124)).toBeGreaterThan(0.5)
+    })
+
+    it('coerces booleans to strings', () => {
+      expect(jaroWinkler(true, true)).toBe(1)
+      expect(jaroWinkler(true, 'true')).toBe(1)
+      expect(jaroWinkler(false, 'false')).toBe(1)
+    })
+
+    it('coerces objects to strings', () => {
+      const obj1 = { toString: () => 'MARTHA' }
+      const obj2 = { toString: () => 'MARTHA' }
+      const obj3 = { toString: () => 'MARHTA' }
+      expect(jaroWinkler(obj1, obj2)).toBe(1)
+      expect(jaroWinkler(obj1, obj3)).toBeGreaterThan(0.9)
+    })
+  })
+
+  describe('combined options', () => {
+    it('applies case sensitivity with prefix options', () => {
+      expect(
+        jaroWinkler('Hello', 'hello', {
+          caseSensitive: false,
+          prefixScale: 0.1,
+        })
+      ).toBe(1)
+
+      expect(
+        jaroWinkler('Hello', 'hello', {
+          caseSensitive: true,
+          prefixScale: 0.1,
+        })
+      ).toBeLessThan(1)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('handles very similar strings', () => {
+      const score = jaroWinkler('DwAyNE', 'DuANE')
+      expect(score).toBeGreaterThan(0.8)
+      expect(score).toBeLessThan(1)
+    })
+
+    it('handles strings with special characters', () => {
+      expect(jaroWinkler('hello!', 'hello!')).toBe(1)
+      expect(jaroWinkler('test-123', 'test-123')).toBe(1)
+    })
+
+    it('handles unicode characters', () => {
+      expect(jaroWinkler('café', 'café')).toBe(1)
+      expect(jaroWinkler('🙂', '🙂')).toBe(1)
+      expect(jaroWinkler('hello 世界', 'hello 世界')).toBe(1)
+    })
+
+    it('handles different length strings', () => {
+      const score = jaroWinkler('AL', 'ALEXANDER')
+      expect(score).toBeGreaterThan(0.5)
+    })
+
+    it('handles no common characters', () => {
+      const score = jaroWinkler('abc', 'xyz')
+      expect(score).toBe(0)
+    })
+  })
+
+  describe('real-world name matching', () => {
+    it('matches common name variations', () => {
+      // Robert/Bob share some characters
+      expect(jaroWinkler('Robert', 'Bob')).toBeGreaterThanOrEqual(0.5)
+      expect(jaroWinkler('William', 'Bill')).toBeGreaterThan(0.4)
+      // Stephen/Steven are very similar
+      expect(jaroWinkler('Stephen', 'Steven')).toBeGreaterThan(0.85)
+    })
+
+    it('handles typos in names', () => {
+      expect(jaroWinkler('Jennifer', 'Jenifer')).toBeGreaterThan(0.95)
+      expect(jaroWinkler('Catherine', 'Katherine')).toBeGreaterThan(0.85)
+    })
+
+    it('distinguishes different names', () => {
+      // John/Jane share 'J' and 'n', giving moderate similarity
+      expect(jaroWinkler('John', 'Jane')).toBeLessThanOrEqual(0.7)
+      expect(jaroWinkler('Michael', 'Michelle')).toBeGreaterThan(0.8)
+    })
+  })
+})
+
+describe('soundexEncode', () => {
+  describe('basic encoding', () => {
+    it('encodes classic Soundex examples correctly', () => {
+      expect(soundexEncode('Robert')).toBe('R163')
+      expect(soundexEncode('Rupert')).toBe('R163')
+      expect(soundexEncode('Smith')).toBe('S530')
+      expect(soundexEncode('Smyth')).toBe('S530')
+    })
+
+    it('handles single letter names', () => {
+      expect(soundexEncode('A')).toBe('A000')
+      expect(soundexEncode('B')).toBe('B000')
+      expect(soundexEncode('Z')).toBe('Z000')
+    })
+
+    it('handles short names', () => {
+      expect(soundexEncode('Lee')).toBe('L000')
+      expect(soundexEncode('Li')).toBe('L000')
+      expect(soundexEncode('Wu')).toBe('W000')
+    })
+
+    it('handles names with leading vowels', () => {
+      expect(soundexEncode('Amy')).toBe('A500')
+      expect(soundexEncode('Emily')).toBe('E540')
+      expect(soundexEncode('Ann')).toBe('A500')
+    })
+  })
+
+  describe('consonant mapping', () => {
+    it('maps b, f, p, v to 1', () => {
+      expect(soundexEncode('Bob')).toBe('B100')
+      expect(soundexEncode('Fab')).toBe('F100')
+      expect(soundexEncode('Pop')).toBe('P100')
+      expect(soundexEncode('Viv')).toBe('V100')
+    })
+
+    it('maps c, g, j, k, q, s, x, z to 2', () => {
+      expect(soundexEncode('Cac')).toBe('C200')
+      expect(soundexEncode('Gag')).toBe('G200')
+      expect(soundexEncode('Jaj')).toBe('J200')
+      expect(soundexEncode('Kak')).toBe('K200')
+    })
+
+    it('maps d, t to 3', () => {
+      expect(soundexEncode('Dad')).toBe('D300')
+      expect(soundexEncode('Tat')).toBe('T300')
+    })
+
+    it('maps l to 4', () => {
+      expect(soundexEncode('Lil')).toBe('L400')
+    })
+
+    it('maps m, n to 5', () => {
+      expect(soundexEncode('Mom')).toBe('M500')
+      expect(soundexEncode('Nan')).toBe('N500')
+    })
+
+    it('maps r to 6', () => {
+      expect(soundexEncode('Rar')).toBe('R600')
+    })
+  })
+
+  describe('duplicate removal', () => {
+    it('removes duplicate adjacent consonants', () => {
+      expect(soundexEncode('Pfister')).toBe('P236')
+      // Both p and f map to 1, should only appear once
+      expect(soundexEncode('Jackson')).toBe('J250')
+    })
+
+    it('handles duplicates at the start', () => {
+      // First letter is kept, then duplicates removed
+      expect(soundexEncode('Lloyd')).toBe('L300')
+      expect(soundexEncode('Phillip')).toBe('P410')
+    })
+  })
+
+  describe('vowel handling', () => {
+    it('removes vowels', () => {
+      expect(soundexEncode('Aeiou')).toBe('A000')
+      expect(soundexEncode('Example')).toBe('E251')
+    })
+
+    it('removes h, w, y', () => {
+      expect(soundexEncode('Hawley')).toBe('H400')
+      expect(soundexEncode('Why')).toBe('W000')
+    })
+
+    it('allows consonants to match across vowels', () => {
+      // Vowels break the duplicate sequence, so 'b' can appear again after 'a'
+      // Babab: B-a-b-a-b → B-1-1 → B110
+      expect(soundexEncode('Babab')).toBe('B110')
+    })
+  })
+
+  describe('padding and truncation', () => {
+    it('pads short codes with zeros', () => {
+      expect(soundexEncode('A')).toBe('A000')
+      expect(soundexEncode('Ab')).toBe('A100')
+      expect(soundexEncode('Abc')).toBe('A120')
+    })
+
+    it('truncates long codes to 4 characters', () => {
+      expect(soundexEncode('Washington')).toBe('W252')
+      expect(soundexEncode('Wolfeschlegelsteinhausenbergerdorff')).toBe('W412')
+    })
+  })
+
+  describe('edge cases', () => {
+    it('returns empty string for empty input', () => {
+      expect(soundexEncode('')).toBe('')
+    })
+
+    it('handles names with non-alphabetic characters', () => {
+      expect(soundexEncode("O'Brien")).toBe('O165')
+      expect(soundexEncode('Smith-Jones')).toBe('S532')
+      expect(soundexEncode('Mary123')).toBe('M600')
+      expect(soundexEncode('Test!')).toBe('T230')
+    })
+
+    it('handles names with numbers', () => {
+      expect(soundexEncode('Test123')).toBe('T230')
+      expect(soundexEncode('456Name')).toBe('N500')
+    })
+
+    it('handles lowercase input', () => {
+      expect(soundexEncode('robert')).toBe('R163')
+      expect(soundexEncode('smith')).toBe('S530')
+    })
+
+    it('handles mixed case input', () => {
+      expect(soundexEncode('RoBeRt')).toBe('R163')
+      expect(soundexEncode('SmItH')).toBe('S530')
+    })
+
+    it('handles input with only non-alphabetic characters', () => {
+      expect(soundexEncode('123')).toBe('')
+      expect(soundexEncode('!!!')).toBe('')
+      expect(soundexEncode('   ')).toBe('')
+    })
+  })
+
+  describe('real-world names', () => {
+    it('encodes common name pairs the same', () => {
+      // Catherine/Katherine start with different letters, so they don't match
+      expect(soundexEncode('John')).toBe(soundexEncode('Jon'))
+      expect(soundexEncode('Stephen')).toBe(soundexEncode('Steven'))
+      expect(soundexEncode('Philip')).toBe(soundexEncode('Phillip'))
+    })
+
+    it('encodes different-sounding names differently', () => {
+      // Catherine/Katherine start with different letters
+      expect(soundexEncode('Catherine')).not.toBe(soundexEncode('Katherine'))
+      expect(soundexEncode('Robert')).not.toBe(soundexEncode('Richard'))
+    })
+  })
+})
+
+describe('soundex', () => {
+  describe('basic matching', () => {
+    it('returns 1 for identical names', () => {
+      expect(soundex('Robert', 'Robert')).toBe(1)
+      expect(soundex('Smith', 'Smith')).toBe(1)
+    })
+
+    it('returns 1 for classic Soundex pairs', () => {
+      expect(soundex('Robert', 'Rupert')).toBe(1)
+      expect(soundex('Smith', 'Smyth')).toBe(1)
+    })
+
+    it('returns 0 for different Soundex codes', () => {
+      expect(soundex('Smith', 'Jones')).toBe(0)
+      expect(soundex('Robert', 'John')).toBe(0)
+    })
+
+    it('returns 1 for short names that encode the same', () => {
+      expect(soundex('Lee', 'Li')).toBe(1)
+      expect(soundex('Wu', 'Woo')).toBe(1)
+    })
+
+    it('returns 0 for names with different leading vowels', () => {
+      expect(soundex('Amy', 'Emily')).toBe(0)
+      expect(soundex('Ann', 'Ian')).toBe(0)
+    })
+  })
+
+  describe('case insensitivity', () => {
+    it('is always case-insensitive', () => {
+      expect(soundex('ROBERT', 'robert')).toBe(1)
+      expect(soundex('Smith', 'SMITH')).toBe(1)
+      expect(soundex('MiXeD', 'mixed')).toBe(1)
+    })
+  })
+
+  describe('null/undefined handling', () => {
+    it('returns 1 when both are null by default', () => {
+      expect(soundex(null, null)).toBe(1)
+    })
+
+    it('returns 1 when both are undefined by default', () => {
+      expect(soundex(undefined, undefined)).toBe(1)
+    })
+
+    it('returns 1 when one is null and other is undefined by default', () => {
+      expect(soundex(null, undefined)).toBe(1)
+      expect(soundex(undefined, null)).toBe(1)
+    })
+
+    it('returns 0 when nullMatchesNull is false', () => {
+      expect(soundex(null, null, { nullMatchesNull: false })).toBe(0)
+      expect(soundex(undefined, undefined, { nullMatchesNull: false })).toBe(0)
+    })
+
+    it('returns 0 when only one value is null/undefined', () => {
+      expect(soundex(null, 'value')).toBe(0)
+      expect(soundex('value', null)).toBe(0)
+      expect(soundex(undefined, 'value')).toBe(0)
+      expect(soundex('value', undefined)).toBe(0)
+    })
+  })
+
+  describe('non-string inputs', () => {
+    it('coerces numbers to strings', () => {
+      expect(soundex(123, 123)).toBe(1)
+      expect(soundex(123, '123')).toBe(1)
+    })
+
+    it('coerces booleans to strings', () => {
+      expect(soundex(true, true)).toBe(1)
+      expect(soundex(true, 'true')).toBe(1)
+      expect(soundex(false, 'false')).toBe(1)
+    })
+
+    it('coerces objects to strings', () => {
+      const obj1 = { toString: () => 'Robert' }
+      const obj2 = { toString: () => 'Rupert' }
+      expect(soundex(obj1, obj2)).toBe(1)
+    })
+  })
+
+  describe('empty strings', () => {
+    it('returns 1 for two empty strings', () => {
+      expect(soundex('', '')).toBe(1)
+    })
+
+    it('returns 0 when one string is empty', () => {
+      expect(soundex('', 'Robert')).toBe(0)
+      expect(soundex('Robert', '')).toBe(0)
+    })
+
+    it('returns 1 for strings with only non-alphabetic characters', () => {
+      expect(soundex('!!!', '###')).toBe(1)
+      expect(soundex('123', '456')).toBe(1)
+    })
+  })
+
+  describe('special characters', () => {
+    it('strips special characters before encoding', () => {
+      expect(soundex("O'Brien", 'OBrien')).toBe(1)
+      expect(soundex('Smith-Jones', 'SmithJones')).toBe(1)
+      expect(soundex('Mary!', 'Mary')).toBe(1)
+    })
+
+    it('handles names with hyphens', () => {
+      expect(soundex('Jean-Pierre', 'JeanPierre')).toBe(1)
+    })
+
+    it('handles names with apostrophes', () => {
+      expect(soundex("D'Angelo", 'DAngelo')).toBe(1)
+    })
+  })
+
+  describe('real-world name matching', () => {
+    it('matches common spelling variations', () => {
+      // Note: Catherine/Katherine start with different letters, so no match
+      expect(soundex('John', 'Jon')).toBe(1)
+      expect(soundex('Stephen', 'Steven')).toBe(1)
+      expect(soundex('Philip', 'Phillip')).toBe(1)
+      expect(soundex('Smith', 'Smyth')).toBe(1)
+    })
+
+    it('distinguishes clearly different names', () => {
+      // Note: John/Jane both encode to J500, Michael/Michelle to M240
+      expect(soundex('Catherine', 'Katherine')).toBe(0) // Different first letters
+      expect(soundex('Peter', 'Paul')).toBe(0)
+      expect(soundex('David', 'Michael')).toBe(0)
+    })
+
+    it('handles surnames', () => {
+      expect(soundex('Johnson', 'Jonson')).toBe(1)
+      expect(soundex('Williams', 'Willams')).toBe(1)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('handles single character names', () => {
+      expect(soundex('A', 'A')).toBe(1)
+      expect(soundex('A', 'B')).toBe(0)
+    })
+
+    it('handles very long names', () => {
+      const long1 = 'Wolfeschlegelsteinhausenbergerdorff'
+      const long2 = 'Wolfeschlegelsteinhausenbergerdorff'
+      expect(soundex(long1, long2)).toBe(1)
     })
   })
 })
