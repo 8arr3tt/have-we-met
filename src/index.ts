@@ -2,6 +2,9 @@
 export { Resolver } from './core/resolver'
 export { MatchingEngine } from './core/engine'
 
+// Builders
+export { SchemaBuilder } from './builder/schema-builder'
+
 // Comparators
 export { exactMatch, type ExactMatchOptions } from './core/comparators'
 
