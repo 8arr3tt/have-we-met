@@ -156,7 +156,9 @@ describe('MatchingEngine', () => {
       const result = engine.compare(pair)
 
       expect(result.total).toBe(100)
-      const ageComparison = result.fieldComparisons.find(fc => fc.field === 'age')
+      const ageComparison = result.fieldComparisons.find(
+        (fc) => fc.field === 'age'
+      )
       expect(ageComparison?.similarity).toBe(1)
       expect(ageComparison?.leftValue).toBeUndefined()
       expect(ageComparison?.rightValue).toBeUndefined()
@@ -164,9 +166,7 @@ describe('MatchingEngine', () => {
 
     it('records field comparison details', () => {
       const config: MatchingConfig = {
-        fields: new Map([
-          ['email', { strategy: 'exact', weight: 100 }],
-        ]),
+        fields: new Map([['email', { strategy: 'exact', weight: 100 }]]),
         thresholds: { noMatch: 20, definiteMatch: 80 },
       }
 

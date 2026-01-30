@@ -91,7 +91,9 @@ describe('exactMatch', () => {
 
     it('returns 0 when nullMatchesNull is false', () => {
       expect(exactMatch(null, null, { nullMatchesNull: false })).toBe(0)
-      expect(exactMatch(undefined, undefined, { nullMatchesNull: false })).toBe(0)
+      expect(exactMatch(undefined, undefined, { nullMatchesNull: false })).toBe(
+        0
+      )
     })
 
     it('returns 0 when only one value is null/undefined', () => {

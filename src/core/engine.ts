@@ -73,6 +73,9 @@ export class MatchingEngine<T extends object = object> {
   private getFieldValue(data: T, field: string): unknown {
     return field
       .split('.')
-      .reduce((obj: unknown, key) => (obj as Record<string, unknown>)?.[key], data)
+      .reduce(
+        (obj: unknown, key) => (obj as Record<string, unknown>)?.[key],
+        data
+      )
   }
 }

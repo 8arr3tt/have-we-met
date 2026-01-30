@@ -1,10 +1,12 @@
+// Core classes
+export { Resolver } from './core/resolver'
+export { MatchingEngine } from './core/engine'
+
+// Comparators
+export { exactMatch, type ExactMatchOptions } from './core/comparators'
+
 // Types - Records
-export type {
-  RecordId,
-  RecordMetadata,
-  Record,
-  RecordPair,
-} from './types'
+export type { RecordId, RecordMetadata, Record, RecordPair } from './types'
 
 // Types - Match Results
 export type {

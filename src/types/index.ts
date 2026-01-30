@@ -1,9 +1,4 @@
-export type {
-  RecordId,
-  RecordMetadata,
-  Record,
-  RecordPair,
-} from './record'
+export type { RecordId, RecordMetadata, Record, RecordPair } from './record'
 
 export type {
   MatchOutcome,
