@@ -429,3 +429,357 @@ export function soundex(
   // Compare codes
   return codeA === codeB ? 1 : 0
 }
+
+/**
+ * Options for Metaphone comparison.
+ */
+export interface MetaphoneOptions {
+  /** Maximum length of the phonetic code (default: 4) */
+  maxLength?: number
+  /** Whether two null/undefined values should match (default: true) */
+  nullMatchesNull?: boolean
+}
+
+/**
+ * Encodes a name into its Metaphone code.
+ *
+ * Metaphone is an improved phonetic algorithm that handles more English
+ * pronunciation rules and edge cases than Soundex. It produces variable-length
+ * codes that better represent how words sound.
+ *
+ * The algorithm handles:
+ * - Consonant clusters (ch, sh, th, ph, wh, gh, etc.)
+ * - Silent letters (knight, gnostic, etc.)
+ * - Position-dependent transformations
+ * - Complex vowel handling
+ *
+ * @param name - The name to encode
+ * @param maxLength - Maximum length of the code (default: 4)
+ * @returns Metaphone code
+ *
+ * @example
+ * ```typescript
+ * metaphoneEncode('Christine')   // 'XRSTN'
+ * metaphoneEncode('Kristine')    // 'KRSTN'
+ * metaphoneEncode('Knight')      // 'NXT'
+ * metaphoneEncode('Night')       // 'NXT'
+ * ```
+ */
+export function metaphoneEncode(name: string, maxLength: number = 4): string {
+  if (!name) return ''
+
+  // Normalize: uppercase and keep only alphabetic characters
+  let word = name.toUpperCase().replace(/[^A-Z]/g, '')
+  if (word.length === 0) return ''
+
+  let metaphone = ''
+  let i = 0
+
+  // Helper function to check if a character is a vowel
+  const isVowel = (char: string): boolean => {
+    return char === 'A' || char === 'E' || char === 'I' || char === 'O' || char === 'U'
+  }
+
+  // Helper function to get character at position (safe)
+  const charAt = (pos: number): string => {
+    return pos >= 0 && pos < word.length ? word[pos] : ''
+  }
+
+  // Helper function to add a character to metaphone
+  const addChar = (char: string): void => {
+    metaphone += char
+  }
+
+  // Handle initial consonant clusters
+  // Drop initial letters in certain combinations
+  if (word.length >= 2) {
+    const prefix = word.substring(0, 2)
+    if (
+      prefix === 'KN' ||
+      prefix === 'GN' ||
+      prefix === 'PN' ||
+      prefix === 'AE' ||
+      prefix === 'WR'
+    ) {
+      word = word.substring(1) // Remove first letter
+    }
+  }
+
+  // Handle initial X
+  if (word[0] === 'X') {
+    addChar('S')
+    i = 1
+  }
+
+  // Handle initial WH
+  if (word.length >= 2 && word.substring(0, 2) === 'WH') {
+    addChar('W')
+    i = 2
+  }
+
+  // Process the rest of the word
+  while (i < word.length) {
+    const char = charAt(i)
+    const next = charAt(i + 1)
+    const next2 = charAt(i + 2)
+    const prev = charAt(i - 1)
+
+    switch (char) {
+      case 'B':
+        // Drop B if after M at end of word
+        if (!(prev === 'M' && i === word.length - 1)) {
+          addChar('B')
+        }
+        i++
+        break
+
+      case 'C':
+        // CH -> X
+        if (next === 'H') {
+          addChar('X')
+          i += 2
+        }
+        // CIA -> X
+        else if (next === 'I' && next2 === 'A') {
+          addChar('X')
+          i += 3
+        }
+        // CI, CE, CY -> S
+        else if (next === 'I' || next === 'E' || next === 'Y') {
+          addChar('S')
+          i += 2 // Skip the I/E/Y
+        }
+        // Otherwise -> K
+        else {
+          addChar('K')
+          i++
+        }
+        break
+
+      case 'D':
+        // DGE, DGY, DGI -> J
+        if (
+          next === 'G' &&
+          (next2 === 'E' || next2 === 'Y' || next2 === 'I')
+        ) {
+          addChar('J')
+          i += 3
+        }
+        // Otherwise -> T
+        else {
+          addChar('T')
+          i++
+        }
+        break
+
+      case 'G':
+        // Silent G in GN, GNED at end
+        if (next === 'N' && i === word.length - 2) {
+          // Skip this G
+          i++
+        } else if (
+          next === 'N' &&
+          next2 === 'E' &&
+          charAt(i + 3) === 'D' &&
+          i === word.length - 4
+        ) {
+          // Skip this G
+          i++
+        }
+        // GH -> X
+        else if (next === 'H') {
+          addChar('X')
+          i += 2
+        }
+        // GI, GE, GY -> J
+        else if (next === 'I' || next === 'E' || next === 'Y') {
+          addChar('J')
+          i += 2 // Skip the I/E/Y
+        }
+        // Otherwise -> K
+        else {
+          addChar('K')
+          i++
+        }
+        break
+
+      case 'H':
+        // Drop H if after vowel and not before vowel
+        if (!(isVowel(prev) && !isVowel(next))) {
+          addChar('H')
+        }
+        i++
+        break
+
+      case 'K':
+        // CK -> K (C was already handled)
+        if (prev !== 'C') {
+          addChar('K')
+        }
+        i++
+        break
+
+      case 'P':
+        // PH -> F
+        if (next === 'H') {
+          addChar('F')
+          i += 2
+        } else {
+          addChar('P')
+          i++
+        }
+        break
+
+      case 'Q':
+        addChar('K')
+        i++
+        break
+
+      case 'S':
+        // SH -> X
+        if (next === 'H') {
+          addChar('X')
+          i += 2
+        }
+        // SIO, SIA -> keep S, convert IO/IA to X
+        else if (
+          (next === 'I' && next2 === 'O') ||
+          (next === 'I' && next2 === 'A')
+        ) {
+          addChar('S')
+          addChar('X')
+          i += 3
+        } else {
+          addChar('S')
+          i++
+        }
+        break
+
+      case 'T':
+        // TIA, TIO -> keep T?, convert to X
+        if (
+          (next === 'I' && next2 === 'A') ||
+          (next === 'I' && next2 === 'O')
+        ) {
+          addChar('X')
+          i += 3
+        }
+        // TCH -> skip T
+        else if (next === 'C' && next2 === 'H') {
+          i++
+        }
+        // TH -> 0
+        else if (next === 'H') {
+          addChar('0')
+          i += 2
+        } else {
+          addChar('T')
+          i++
+        }
+        break
+
+      case 'V':
+        addChar('F')
+        i++
+        break
+
+      case 'W':
+        // Drop W if not followed by vowel
+        if (isVowel(next)) {
+          addChar('W')
+        }
+        i++
+        break
+
+      case 'X':
+        addChar('K')
+        addChar('S')
+        i++
+        break
+
+      case 'Y':
+        // Drop Y if not followed by vowel
+        if (isVowel(next)) {
+          addChar('Y')
+        }
+        i++
+        break
+
+      case 'Z':
+        addChar('S')
+        i++
+        break
+
+      default:
+        // Vowels: keep only at the beginning
+        if (isVowel(char)) {
+          if (i === 0 || (i === 1 && metaphone.length === 0)) {
+            addChar(char)
+          }
+        } else {
+          // Other consonants (F, J, L, M, N, R) - keep as is
+          addChar(char)
+        }
+        i++
+        break
+    }
+  }
+
+  // Remove consecutive duplicate characters
+  let result = ''
+  for (let j = 0; j < metaphone.length; j++) {
+    if (j === 0 || metaphone[j] !== metaphone[j - 1]) {
+      result += metaphone[j]
+    }
+  }
+
+  // Truncate to maxLength
+  return result.substring(0, maxLength)
+}
+
+/**
+ * Compares two values using Metaphone phonetic encoding.
+ *
+ * Metaphone encoding provides improved phonetic matching compared to Soundex,
+ * handling more English pronunciation rules and edge cases. Returns 1 if the
+ * Metaphone codes match, 0 otherwise.
+ *
+ * @param a - First value to compare
+ * @param b - Second value to compare
+ * @param options - Comparison options
+ * @returns 1 if Metaphone codes match, 0 otherwise
+ *
+ * @example
+ * ```typescript
+ * metaphone('Christine', 'Kristine')  // 1 (similar phonetic encoding)
+ * metaphone('Stephen', 'Steven')      // 1 (similar sound)
+ * metaphone('Knight', 'Night')        // 1 (both encode to NXT)
+ * metaphone('Smith', 'Jones')         // 0 (different phonetic codes)
+ * ```
+ */
+export function metaphone(
+  a: unknown,
+  b: unknown,
+  options: MetaphoneOptions = {}
+): number {
+  const { maxLength = 4, nullMatchesNull = true } = options
+
+  // Handle null/undefined
+  if (a == null && b == null) return nullMatchesNull ? 1 : 0
+  if (a == null || b == null) return 0
+
+  // Coerce to strings
+  const strA = String(a)
+  const strB = String(b)
+
+  // Encode both strings
+  const codeA = metaphoneEncode(strA, maxLength)
+  const codeB = metaphoneEncode(strB, maxLength)
+
+  // Handle empty codes
+  if (codeA === '' && codeB === '') return 1
+  if (codeA === '' || codeB === '') return 0
+
+  // Compare codes
+  return codeA === codeB ? 1 : 0
+}

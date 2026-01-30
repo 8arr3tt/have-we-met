@@ -16,6 +16,9 @@ export {
   soundex,
   soundexEncode,
   type SoundexOptions,
+  metaphone,
+  metaphoneEncode,
+  type MetaphoneOptions,
 } from './core/comparators'
 
 // Types - Records
