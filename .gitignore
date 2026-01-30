@@ -9,6 +9,7 @@ coverage/
 # Plan files
 PLAN.md
 phase-1-plan.md
+phase-2-plan.md
 
 # Claude Code
 .claude/
