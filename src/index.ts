@@ -5,17 +5,18 @@ export { HaveWeMet, ResolverBuilder } from './builder/resolver-builder'
 export { Resolver } from './core/resolver'
 export { MatchingEngine } from './core/engine'
 
-// Builders
-export { SchemaBuilder } from './builder/schema-builder'
-export { MatchingBuilder, FieldMatchBuilder } from './builder/matching-builder'
-
 // Comparators
 export { exactMatch, type ExactMatchOptions } from './core/comparators'
 
 // Types - Records
-export type { RecordId, RecordMetadata, Record, RecordPair } from './types'
+export type {
+  RecordId,
+  RecordMetadata,
+  Record,
+  RecordPair,
+} from './types/record'
 
-// Types - Match Results
+// Types - Matching
 export type {
   MatchOutcome,
   FieldComparison,
@@ -23,7 +24,7 @@ export type {
   MatchExplanation,
   MatchCandidate,
   MatchResult,
-} from './types'
+} from './types/match'
 
 // Types - Configuration
 export type {
@@ -34,7 +35,15 @@ export type {
   BlockingConfig,
   ResolverConfig,
   ResolverOptions,
-} from './types'
+} from './types/config'
 
 // Types - Schema
-export type { FieldType, FieldDefinition, SchemaDefinition } from './types'
+export type {
+  FieldType,
+  FieldDefinition,
+  SchemaDefinition,
+} from './types/schema'
+
+// Builders
+export { SchemaBuilder } from './builder/schema-builder'
+export { MatchingBuilder, FieldMatchBuilder } from './builder/matching-builder'
