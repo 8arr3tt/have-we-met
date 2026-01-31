@@ -31,10 +31,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'john@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should configure name normalizer via fluent API', () => {
@@ -77,10 +78,11 @@ describe('Builder API - Normalizers', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should configure phone normalizer via fluent API', () => {
@@ -104,10 +106,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ phone: '5551234567' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should configure normalizer with options via fluent API', () => {
@@ -128,10 +131,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ dateOfBirth: '1985-01-15' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should configure basic normalizers via fluent API', () => {
@@ -148,10 +152,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'john@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
   })
 
@@ -177,9 +182,10 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'user@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
 
     it('should allow inline options in normalizer() call', () => {
@@ -202,9 +208,10 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'user@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
   })
 
@@ -236,10 +243,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'user@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should handle custom normalizer returning null gracefully', () => {
@@ -268,10 +276,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'user@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Should have 'new' or 'no-match' outcome since emails don't match
-      expect(['new', 'no-match']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('no-match')
     })
   })
 
@@ -324,10 +333,11 @@ describe('Builder API - Normalizers', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
   })
 
@@ -365,9 +375,10 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ firstName: 'John', lastName: 'Smith' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
 
     it('should support required() method', () => {
@@ -384,9 +395,10 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'john@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
   })
 
@@ -412,10 +424,11 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'john@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should support mixing old and new API patterns', () => {
@@ -453,9 +466,10 @@ describe('Builder API - Normalizers', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
   })
 
@@ -514,9 +528,10 @@ describe('Builder API - Normalizers', () => {
         createPersonRecord({ email: 'john@example.com', firstName: 'John' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
   })
 })

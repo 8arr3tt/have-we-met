@@ -1,0 +1,5 @@
+export * from './types'
+export * from './deduplication-result'
+export { ScoreCalculator } from './score-calculator'
+export { OutcomeClassifier } from './outcome-classifier'
+export { MatchExplainer } from './explainer'

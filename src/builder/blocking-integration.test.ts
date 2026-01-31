@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { HaveWeMet } from './resolver-builder'
 
-interface Person {
+interface Person extends Record<string, unknown> {
   id: string
   firstName: string
   lastName: string

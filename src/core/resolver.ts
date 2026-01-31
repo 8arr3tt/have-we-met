@@ -1,105 +1,433 @@
+import type { ResolverConfig } from '../types/config'
+import type { SchemaDefinition } from '../types/schema'
 import type {
-  MatchCandidate,
-  MatchExplanation,
-  MatchOutcome,
+  FieldComparison,
   MatchResult,
-  MatchScore,
-  Record,
-  ResolverConfig,
-  ResolverOptions,
-  ThresholdConfig,
-} from '../types'
-import { MatchingEngine } from './engine'
+  MatchThresholds,
+} from './scoring/types'
+import type {
+  DeduplicationBatchOptions,
+  DeduplicationBatchResult,
+  DeduplicationResult,
+} from './scoring/deduplication-result'
+import { ScoreCalculator } from './scoring/score-calculator'
+import { OutcomeClassifier } from './scoring/outcome-classifier'
+import { MatchExplainer } from './scoring/explainer'
+import { BlockGenerator } from './blocking/block-generator'
+import type { BlockingStrategy } from './blocking/types'
 
 /**
- * Main resolver class that orchestrates matching and determines outcomes.
- *
- * @typeParam T - The shape of the user's data object
+ * Options for resolver operations
  */
-export class Resolver<T extends object = object> {
-  private engine: MatchingEngine<T>
-  private thresholds: ThresholdConfig
+export interface ResolverOptions {
+  /** Maximum number of results to return */
+  maxResults?: number
+}
+
+/**
+ * Core resolver class that orchestrates matching, scoring, and outcome classification.
+ *
+ * @example
+ * ```typescript
+ * const resolver = HaveWeMet.create<Person>()
+ *   .schema(schema => { ... })
+ *   .matching(match => { ... })
+ *   .thresholds({ noMatch: 20, definiteMatch: 45 })
+ *   .build()
+ *
+ * // Find matches for a single record
+ * const results = resolver.resolve(newRecord, existingRecords)
+ *
+ * // Batch deduplication
+ * const batchResult = resolver.deduplicateBatch(records)
+ * ```
+ *
+ * @typeParam T - The record type being matched
+ */
+export class Resolver<T extends Record<string, unknown> = Record<string, unknown>> {
+  private schema: SchemaDefinition<T>
+  private comparisons: FieldComparison[]
+  private thresholds: MatchThresholds
+  private blockingStrategy?: BlockingStrategy<T>
+  private scoreCalculator: ScoreCalculator
+  private outcomeClassifier: OutcomeClassifier
+  private explainer: MatchExplainer
 
   constructor(config: ResolverConfig<T>) {
-    this.engine = new MatchingEngine<T>(config.matching, config.schema, config.blocking)
-    this.thresholds = config.matching.thresholds
+    this.validateConfig(config)
+
+    this.schema = config.schema
+    this.thresholds = {
+      noMatch: config.matching.thresholds.noMatch,
+      definiteMatch: config.matching.thresholds.definiteMatch,
+    }
+
+    this.comparisons = this.buildComparisons(config)
+    this.blockingStrategy = config.blocking?.strategies?.[0]
+
+    this.scoreCalculator = new ScoreCalculator(this.schema)
+    this.outcomeClassifier = new OutcomeClassifier()
+    this.explainer = new MatchExplainer()
   }
 
   /**
-   * Resolves an input record against a list of candidates.
+   * Find matches for a single candidate record against a set of existing records.
    *
-   * @param input - The record to match
-   * @param candidates - List of potential matching records
-   * @param options - Runtime options
-   * @returns Match result with outcome, candidates, and best match
+   * This method:
+   * 1. Applies blocking (if configured) to reduce the candidate set
+   * 2. Normalizes records according to schema definitions
+   * 3. Calculates weighted scores for each comparison
+   * 4. Classifies outcomes based on thresholds
+   * 5. Generates detailed explanations for each match
+   *
+   * Results are sorted by score (highest first).
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param existingRecords - The dataset to search within
+   * @param options - Optional configuration (e.g., maxResults)
+   * @returns Array of match results with scores and explanations
+   *
+   * @example
+   * ```typescript
+   * const newRecord = {
+   *   firstName: 'John',
+   *   lastName: 'Smith',
+   *   email: 'john@example.com'
+   * }
+   *
+   * const results = resolver.resolve(newRecord, existingRecords)
+   *
+   * results.forEach(result => {
+   *   console.log(result.outcome)  // 'definite-match', 'potential-match', or 'no-match'
+   *   console.log(result.score.totalScore)
+   *   console.log(result.explanation)
+   * })
+   * ```
    */
   resolve(
-    input: Record<T>,
-    candidates: Record<T>[],
-    options: ResolverOptions = {}
-  ): MatchResult<T> {
-    const { maxCandidates = 10, returnExplanation = true } = options
+    candidateRecord: Record<string, unknown>,
+    existingRecords: Record<string, unknown>[],
+    options?: ResolverOptions
+  ): MatchResult[] {
+    if (existingRecords.length === 0) {
+      return []
+    }
 
-    const scoredCandidates = candidates
-      .map((candidate) =>
-        this.scoreCandidate(input, candidate, returnExplanation)
+    let recordsToCompare = existingRecords
+
+    if (this.blockingStrategy) {
+      const allRecords = [candidateRecord, ...existingRecords]
+      const blockGenerator = new BlockGenerator()
+      const blocks = blockGenerator.generateBlocks(
+        allRecords,
+        this.blockingStrategy
       )
-      .filter((c) => c.score.total > 0)
-      .sort((a, b) => b.score.total - a.score.total)
-      .slice(0, maxCandidates)
 
-    const outcome = this.determineOutcome(scoredCandidates)
-    const bestMatch = scoredCandidates[0] ?? null
+      const candidatesSet = new Set<Record<string, unknown>>()
+
+      for (const block of blocks.values()) {
+        if (block.includes(candidateRecord)) {
+          for (const record of block) {
+            if (record !== candidateRecord) {
+              candidatesSet.add(record)
+            }
+          }
+        }
+      }
+
+      recordsToCompare = Array.from(candidatesSet)
+    }
+
+    const results: MatchResult[] = []
+
+    for (const existingRecord of recordsToCompare) {
+      const score = this.scoreCalculator.calculateScore(
+        candidateRecord,
+        existingRecord,
+        this.comparisons
+      )
+
+      const outcome = this.outcomeClassifier.classify(score, this.thresholds)
+
+      const result: MatchResult = {
+        outcome,
+        candidateRecord: existingRecord,
+        score,
+        explanation: '',
+      }
+
+      result.explanation = this.explainer.explain(result)
+
+      results.push(result)
+    }
+
+    results.sort((a, b) => b.score.totalScore - a.score.totalScore)
+
+    if (options?.maxResults && options.maxResults > 0) {
+      return results.slice(0, options.maxResults)
+    }
+
+    return results
+  }
+
+  /**
+   * Find all matches above a minimum score threshold.
+   *
+   * This is similar to `resolve()` but filters results to only include
+   * matches above the specified score. Useful for finding all potential
+   * duplicates without the three-tier classification.
+   *
+   * @param record - The record to find matches for
+   * @param existingRecords - The dataset to search within
+   * @param minScore - Minimum score required (defaults to noMatch threshold)
+   * @returns Array of matches above the minimum score
+   *
+   * @example
+   * ```typescript
+   * // Find all matches with score >= 30
+   * const matches = resolver.findMatches(newRecord, existingRecords, 30)
+   * ```
+   */
+  findMatches(
+    record: Record<string, unknown>,
+    existingRecords: Record<string, unknown>[],
+    minScore?: number
+  ): MatchResult[] {
+    const results = this.resolve(record, existingRecords)
+
+    const threshold = minScore ?? this.thresholds.noMatch
+
+    return results.filter((result) => result.score.totalScore >= threshold)
+  }
+
+  /**
+   * Find all duplicates within a dataset using batch deduplication.
+   *
+   * This method:
+   * 1. Applies blocking to generate candidate pairs efficiently
+   * 2. Compares each pair and calculates scores
+   * 3. Groups results by record
+   * 4. Provides comprehensive statistics
+   *
+   * @param records - The dataset to deduplicate
+   * @param options - Optional configuration for batch processing
+   * @returns Deduplication results with matches grouped by record and statistics
+   *
+   * @example
+   * ```typescript
+   * const batchResult = resolver.deduplicateBatch(records, {
+   *   maxPairsPerRecord: 10,  // Limit matches per record
+   *   minScore: 25,            // Override threshold
+   *   includeNoMatches: false  // Exclude records with no matches
+   * })
+   *
+   * console.log(batchResult.stats.definiteMatchesFound)
+   * console.log(batchResult.stats.comparisonsMade)
+   *
+   * batchResult.results.forEach(result => {
+   *   if (result.hasDefiniteMatches) {
+   *     console.log(`Found ${result.matchCount} duplicates for:`, result.record)
+   *   }
+   * })
+   * ```
+   */
+  deduplicateBatch(
+    records: Record<string, unknown>[],
+    options?: DeduplicationBatchOptions
+  ): DeduplicationBatchResult {
+    if (records.length === 0) {
+      return {
+        results: [],
+        stats: {
+          recordsProcessed: 0,
+          comparisonsMade: 0,
+          definiteMatchesFound: 0,
+          potentialMatchesFound: 0,
+          noMatchesFound: 0,
+          recordsWithMatches: 0,
+          recordsWithoutMatches: 0,
+        },
+      }
+    }
+
+    const blockGenerator = new BlockGenerator()
+    let pairs: Array<[Record<string, unknown>, Record<string, unknown>]>
+
+    if (this.blockingStrategy) {
+      const blocks = blockGenerator.generateBlocks(records, this.blockingStrategy)
+      pairs = blockGenerator.generatePairs(blocks)
+    } else {
+      pairs = []
+      for (let i = 0; i < records.length; i++) {
+        for (let j = i + 1; j < records.length; j++) {
+          pairs.push([records[i], records[j]])
+        }
+      }
+    }
+
+    const matchesByRecord = new Map<
+      Record<string, unknown>,
+      MatchResult[]
+    >()
+
+    for (const record of records) {
+      matchesByRecord.set(record, [])
+    }
+
+    let comparisonsMade = 0
+    let definiteMatchesFound = 0
+    let potentialMatchesFound = 0
+    let noMatchesFound = 0
+
+    for (const [record1, record2] of pairs) {
+      const score = this.scoreCalculator.calculateScore(
+        record1,
+        record2,
+        this.comparisons
+      )
+
+      const outcome = this.outcomeClassifier.classify(score, this.thresholds)
+
+      comparisonsMade++
+
+      const minScore = options?.minScore ?? this.thresholds.noMatch
+
+      if (score.totalScore >= minScore) {
+        const result1: MatchResult = {
+          outcome,
+          candidateRecord: record2,
+          score,
+          explanation: '',
+        }
+        result1.explanation = this.explainer.explain(result1)
+
+        const result2: MatchResult = {
+          outcome,
+          candidateRecord: record1,
+          score,
+          explanation: '',
+        }
+        result2.explanation = this.explainer.explain(result2)
+
+        matchesByRecord.get(record1)!.push(result1)
+        matchesByRecord.get(record2)!.push(result2)
+
+        if (outcome === 'definite-match') {
+          definiteMatchesFound++
+        } else if (outcome === 'potential-match') {
+          potentialMatchesFound++
+        } else {
+          noMatchesFound++
+        }
+      }
+    }
+
+    const results: DeduplicationResult[] = []
+    let recordsWithMatches = 0
+    let recordsWithoutMatches = 0
+
+    for (const [record, matches] of matchesByRecord) {
+      matches.sort((a, b) => b.score.totalScore - a.score.totalScore)
+
+      let limitedMatches = matches
+      if (options?.maxPairsPerRecord && options.maxPairsPerRecord > 0) {
+        limitedMatches = matches.slice(0, options.maxPairsPerRecord)
+      }
+
+      const hasMatches = limitedMatches.length > 0
+      if (hasMatches) {
+        recordsWithMatches++
+      } else {
+        recordsWithoutMatches++
+      }
+
+      if (hasMatches || options?.includeNoMatches) {
+        const hasDefiniteMatches = limitedMatches.some(
+          (m) => m.outcome === 'definite-match'
+        )
+        const hasPotentialMatches = limitedMatches.some(
+          (m) => m.outcome === 'potential-match'
+        )
+
+        results.push({
+          record,
+          matches: limitedMatches,
+          hasDefiniteMatches,
+          hasPotentialMatches,
+          matchCount: limitedMatches.length,
+        })
+      }
+    }
 
     return {
-      outcome,
-      candidates: scoredCandidates,
-      bestMatch,
-      inputRecord: input,
-      processedAt: new Date(),
+      results,
+      stats: {
+        recordsProcessed: records.length,
+        comparisonsMade,
+        definiteMatchesFound,
+        potentialMatchesFound,
+        noMatchesFound,
+        recordsWithMatches,
+        recordsWithoutMatches,
+      },
     }
   }
 
-  private determineOutcome(candidates: MatchCandidate<T>[]): MatchOutcome {
-    if (candidates.length === 0) return 'new'
+  private validateConfig(config: ResolverConfig<T>): void {
+    if (!config.matching || config.matching.fields.size === 0) {
+      throw new Error('At least one field comparison must be configured')
+    }
 
-    const bestScore = candidates[0].score.total
+    const { noMatch, definiteMatch } = config.matching.thresholds
 
-    if (bestScore >= this.thresholds.definiteMatch) return 'match'
-    if (bestScore >= this.thresholds.noMatch) return 'review'
-    return 'new'
-  }
+    if (noMatch >= definiteMatch) {
+      throw new Error(
+        `Invalid thresholds: noMatch (${noMatch}) must be less than definiteMatch (${definiteMatch})`
+      )
+    }
 
-  private scoreCandidate(
-    input: Record<T>,
-    candidate: Record<T>,
-    includeExplanation: boolean
-  ): MatchCandidate<T> {
-    const score = this.engine.compare({ left: input, right: candidate })
-
-    return {
-      record: candidate,
-      score,
-      explanation: includeExplanation
-        ? this.generateExplanation(score)
-        : { summary: '', fieldComparisons: [], appliedRules: [] },
+    if (noMatch < 0) {
+      throw new Error(`noMatch threshold must be non-negative, got ${noMatch}`)
     }
   }
 
-  private generateExplanation(score: MatchScore): MatchExplanation {
-    const matchingFields = score.fieldComparisons
-      .filter((fc) => fc.similarity > 0)
-      .map((fc) => fc.field)
+  private buildComparisons(config: ResolverConfig<T>): FieldComparison[] {
+    const comparisons: FieldComparison[] = []
 
-    const summary =
-      matchingFields.length > 0
-        ? `Matched on: ${matchingFields.join(', ')}`
-        : 'No matching fields'
+    for (const [field, matchConfig] of config.matching.fields.entries()) {
+      const fieldDef = this.schema[field as keyof T]
 
-    return {
-      summary,
-      fieldComparisons: score.fieldComparisons,
-      appliedRules: [],
+      if (!fieldDef) {
+        throw new Error(
+          `Field '${field}' is configured for matching but not defined in schema`
+        )
+      }
+
+      const options: Record<string, unknown> = {}
+
+      if (matchConfig.caseSensitive !== undefined) {
+        options.caseSensitive = matchConfig.caseSensitive
+      }
+
+      if (matchConfig.strategy === 'levenshtein' && matchConfig.levenshteinOptions) {
+        Object.assign(options, matchConfig.levenshteinOptions)
+      } else if (matchConfig.strategy === 'jaro-winkler' && matchConfig.jaroWinklerOptions) {
+        Object.assign(options, matchConfig.jaroWinklerOptions)
+      } else if (matchConfig.strategy === 'soundex' && matchConfig.soundexOptions) {
+        Object.assign(options, matchConfig.soundexOptions)
+      } else if (matchConfig.strategy === 'metaphone' && matchConfig.metaphoneOptions) {
+        Object.assign(options, matchConfig.metaphoneOptions)
+      }
+
+      comparisons.push({
+        field,
+        strategy: matchConfig.strategy,
+        weight: matchConfig.weight,
+        threshold: matchConfig.threshold,
+        options: Object.keys(options).length > 0 ? options : undefined,
+      })
     }
+
+    return comparisons
   }
 }

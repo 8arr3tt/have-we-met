@@ -75,7 +75,7 @@ describe('ResolverBuilder', () => {
           schema.field('email', { type: 'email' })
         })
         .matching((match) => {
-          match.field('email').weight(100)
+          return match.field('email').strategy('exact').weight(100)
         })
 
       const resolver = builder.build()
@@ -93,7 +93,7 @@ describe('ResolverBuilder', () => {
           .strategy('exact')
           .weight(50)
           .field('firstName')
-          .strategy('fuzzy')
+          .strategy('jaro-winkler')
           .weight(25)
       })
 
@@ -109,7 +109,7 @@ describe('ResolverBuilder', () => {
           .strategy('exact')
           .weight(50)
           .field('firstName')
-          .strategy('fuzzy')
+          .strategy('jaro-winkler')
           .weight(25)
       })
 
@@ -132,7 +132,7 @@ describe('ResolverBuilder', () => {
           schema.field('email', { type: 'email' })
         })
         .matching((match) => {
-          match.field('email').weight(100)
+          return match.field('email').strategy('exact').weight(100)
         })
 
       const resolver = builder.build()
@@ -149,7 +149,7 @@ describe('ResolverBuilder', () => {
         })
         .thresholds({ noMatch: 30, definiteMatch: 90 })
         .matching((match) => {
-          match.field('email').weight(100)
+          return match.field('email').strategy('exact').weight(100)
         })
 
       const resolver = builder.build()
@@ -197,10 +197,10 @@ describe('ResolverBuilder', () => {
             .strategy('exact')
             .weight(50)
             .field('firstName')
-            .strategy('fuzzy')
+            .strategy('jaro-winkler')
             .weight(25)
             .field('lastName')
-            .strategy('fuzzy')
+            .strategy('jaro-winkler')
             .weight(25)
         })
         .build()
@@ -252,29 +252,24 @@ describe('ResolverBuilder', () => {
         .build()
 
       const input = {
-        data: {
-          firstName: 'Jane',
-          lastName: 'Smith',
-          email: 'jane@example.com',
-        },
-        metadata: { id: 'input-1' },
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane@example.com',
       }
 
       const candidates = [
         {
-          data: {
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane@example.com',
-          },
-          metadata: { id: 'candidate-1' },
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
         },
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input, candidates)
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results).toHaveLength(1)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
   })
 
@@ -303,10 +298,10 @@ describe('ResolverBuilder', () => {
             .weight(50)
             .caseSensitive(false)
             .field('firstName')
-            .strategy('fuzzy')
+            .strategy('jaro-winkler')
             .weight(25)
             .field('lastName')
-            .strategy('fuzzy')
+            .strategy('jaro-winkler')
             .weight(25)
             .thresholds({ noMatch: 20, definiteMatch: 75 })
         })
@@ -321,7 +316,7 @@ describe('ResolverBuilder', () => {
           schema.field('email', { type: 'email' })
         })
         .matching((match) => {
-          match.field('email').weight(100)
+          return match.field('email').strategy('exact').weight(100)
         })
         .thresholds({ noMatch: 30, definiteMatch: 90 })
         .build()
@@ -336,7 +331,7 @@ describe('ResolverBuilder', () => {
           schema.field('email', { type: 'email' })
         })
         .matching((match) => {
-          match.field('email').weight(100)
+          return match.field('email').strategy('exact').weight(100)
         })
         .build()
 
@@ -385,41 +380,33 @@ describe('ResolverBuilder', () => {
         .build()
 
       const input = {
-        data: {
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane.smith@example.com',
+        phone: '555-0100',
+      }
+
+      const candidates = [
+        {
           firstName: 'Jane',
           lastName: 'Smith',
           email: 'jane.smith@example.com',
           phone: '555-0100',
         },
-        metadata: { id: 'input-1' },
-      }
-
-      const candidates = [
         {
-          data: {
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane.smith@example.com',
-            phone: '555-0100',
-          },
-          metadata: { id: 'existing-1' },
-        },
-        {
-          data: {
-            firstName: 'Jane',
-            lastName: 'Doe',
-            email: 'jane.doe@example.com',
-          },
-          metadata: { id: 'existing-2' },
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'jane.doe@example.com',
         },
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input, candidates)
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.record.metadata.id).toBe('existing-1')
-      expect(result.bestMatch?.score.total).toBe(100)
-      expect(result.candidates).toHaveLength(2)
+      expect(results).toHaveLength(2)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
+      expect(results[1].outcome).toBe('potential-match')
+      expect(results[1].score.totalScore).toBe(25)
     })
   })
 })

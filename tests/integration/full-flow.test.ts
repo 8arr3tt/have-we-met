@@ -65,24 +65,23 @@ describe('Full Resolution Flow', () => {
       ]
 
       // Resolve
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Verify match outcome
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch).not.toBeNull()
-      expect(result.bestMatch?.record.metadata.id).toBe('1')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].candidateRecord).toBeDefined()
+      expect(results[0].score.totalScore).toBe(100)
 
       // Verify explanation
-      expect(result.bestMatch?.explanation.summary).toContain('email')
-      expect(result.bestMatch?.explanation.fieldComparisons).toHaveLength(3)
+      expect(results[0].explanation).toContain('email')
 
       // Verify all fields matched
-      const emailComparison = result.bestMatch?.score.fieldComparisons.find(
+      const emailComparison = results[0].score.fieldScores.find(
         (fc) => fc.field === 'email'
       )
       expect(emailComparison?.similarity).toBe(1)
-      expect(emailComparison?.weightedScore).toBe(50)
+      expect(emailComparison?.contribution).toBe(50)
     })
 
     it('should return "new" outcome for no matches', () => {
@@ -136,11 +135,10 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('new')
-      expect(result.bestMatch).toBeNull()
-      expect(result.candidates).toHaveLength(0)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('no-match')
     })
 
     it('should return "review" outcome for uncertain matches', () => {
@@ -187,16 +185,15 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('review')
-      expect(result.bestMatch).not.toBeNull()
-      expect(result.bestMatch?.record.metadata.id).toBe('1')
-      expect(result.bestMatch?.score.total).toBe(25) // Only firstName matches
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('potential-match')
+      expect(results[0].score.totalScore).toBe(25) // Only firstName matches
 
       // Should be in the uncertain range
-      expect(result.bestMatch?.score.total).toBeGreaterThanOrEqual(20)
-      expect(result.bestMatch?.score.total).toBeLessThan(75)
+      expect(results[0].score.totalScore).toBeGreaterThanOrEqual(20)
+      expect(results[0].score.totalScore).toBeLessThan(75)
     })
   })
 
@@ -263,20 +260,15 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.candidates).toHaveLength(3)
+      expect(results.length).toBe(3)
+      expect(results[0].outcome).toBe('definite-match')
 
       // Verify ranking by score
-      expect(result.candidates[0].record.metadata.id).toBe('1')
-      expect(result.candidates[0].score.total).toBe(100)
-
-      expect(result.candidates[1].record.metadata.id).toBe('2')
-      expect(result.candidates[1].score.total).toBe(75)
-
-      expect(result.candidates[2].record.metadata.id).toBe('3')
-      expect(result.candidates[2].score.total).toBe(25)
+      expect(results[0].score.totalScore).toBe(100)
+      expect(results[1].score.totalScore).toBe(75)
+      expect(results[2].score.totalScore).toBe(25)
     })
 
     it('should respect maxCandidates option', () => {
@@ -303,9 +295,9 @@ describe('Full Resolution Flow', () => {
         createPersonRecord({ firstName: 'Jane' }, '5'),
       ]
 
-      const result = resolver.resolve(input, candidates, { maxCandidates: 2 })
+      const results = resolver.resolve(input.data, candidates.map(c => c.data), { maxResults: 2 })
 
-      expect(result.candidates).toHaveLength(2)
+      expect(results).toHaveLength(2)
     })
   })
 
@@ -327,10 +319,10 @@ describe('Full Resolution Flow', () => {
         createPersonRecord({ email: 'jane.smith@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('new')
-      expect(result.candidates).toHaveLength(0)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('no-match')
     })
 
     it('should handle case-insensitive matching', () => {
@@ -350,10 +342,10 @@ describe('Full Resolution Flow', () => {
         createPersonRecord({ email: 'jane.smith@example.com' }, '1'),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.record.metadata.id).toBe('1')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
   })
 
@@ -395,10 +387,11 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100) // Both fields match (undefined === undefined)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100) // Both fields match (undefined === undefined)
     })
   })
 
@@ -446,14 +439,13 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates, {
-        returnExplanation: true,
-      })
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.bestMatch?.explanation.summary).toBeTruthy()
-      expect(result.bestMatch?.explanation.fieldComparisons).toHaveLength(3)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].explanation).toBeTruthy()
+      expect(results[0].score.fieldScores).toHaveLength(3)
 
-      const emailComp = result.bestMatch?.explanation.fieldComparisons.find(
+      const emailComp = results[0].score.fieldScores.find(
         (fc) => fc.field === 'email'
       )
       expect(emailComp).toBeDefined()

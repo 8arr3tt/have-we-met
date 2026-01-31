@@ -45,11 +45,12 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Should match with high confidence after normalization
       // Name normalization should standardize casing
-      expect(['match', 'potential-match', 'new']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(['definite-match', 'potential-match', 'no-match']).toContain(results[0].outcome)
     })
 
     it('should handle typos with fuzzy matching', () => {
@@ -93,10 +94,11 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBeGreaterThan(80)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBeGreaterThan(80)
     })
 
     it('should not match completely different names', () => {
@@ -140,10 +142,11 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // When no candidates match the threshold, outcome can be 'new' or 'no-match'
-      expect(['no-match', 'new']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('no-match')
     })
   })
 
@@ -171,10 +174,11 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should match emails with plus-addressing removed', () => {
@@ -205,10 +209,11 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
-      expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
+      expect(results[0].score.totalScore).toBe(100)
     })
 
     it('should not match different emails', () => {
@@ -234,10 +239,11 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // When no candidates match the threshold, outcome can be 'new' or 'no-match'
-      expect(['no-match', 'new']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('no-match')
     })
   })
 
@@ -270,14 +276,15 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Phone normalizer may fail if libphonenumber-js has issues
-      if (result.outcome === 'match') {
-        expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      if (results[0].outcome === 'definite-match') {
+        expect(results[0].score.totalScore).toBe(100)
       } else {
-        // If phone normalization failed, outcome may be 'new'
-        expect(['match', 'new']).toContain(result.outcome)
+        // If phone normalization failed, outcome may be no-match
+        expect(['definite-match', 'no-match']).toContain(results[0].outcome)
       }
     })
 
@@ -309,14 +316,15 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Phone normalizer may fail if libphonenumber-js has issues
-      if (result.outcome === 'match') {
-        expect(result.bestMatch?.score.total).toBe(100)
+      expect(results.length).toBeGreaterThan(0)
+      if (results[0].outcome === 'definite-match') {
+        expect(results[0].score.totalScore).toBe(100)
       } else {
-        // If phone normalization failed, outcome may be 'new'
-        expect(['match', 'new']).toContain(result.outcome)
+        // If phone normalization failed, outcome may be no-match
+        expect(['definite-match', 'no-match']).toContain(results[0].outcome)
       }
     })
   })
@@ -379,11 +387,12 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Should match with multiple normalized fields
       // All fields match after normalization
-      expect(['match', 'potential-match', 'new']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(['definite-match', 'potential-match', 'no-match']).toContain(results[0].outcome)
     })
 
     it('should handle partial matches across fields', () => {
@@ -443,13 +452,14 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Should be a potential match (name + email match, but phone doesn't)
       // Score: 25 (firstName) + 25 (lastName) + 30 (email) + 0 (phone) = 80
       // But we set threshold at 80, so depending on exact scoring, could be match or potential
-      expect(['match', 'potential-match']).toContain(result.outcome)
-      expect(result.bestMatch?.score.total).toBeGreaterThan(50)
+      expect(results.length).toBeGreaterThan(0)
+      expect(['definite-match', 'potential-match']).toContain(results[0].outcome)
+      expect(results[0].score.totalScore).toBeGreaterThan(50)
     })
   })
 
@@ -513,11 +523,12 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Should match messy data after normalization
       // Normalizers clean up formatting differences
-      expect(['match', 'potential-match', 'new']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(['definite-match', 'potential-match', 'no-match']).toContain(results[0].outcome)
     })
 
     it('should handle records with missing fields', () => {
@@ -569,11 +580,12 @@ describe('Normalizers - Full Workflow Integration', () => {
         ),
       ]
 
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
       // Should match on firstName + lastName + email
       // Missing phone field should not prevent matching
-      expect(['match', 'potential-match', 'new']).toContain(result.outcome)
+      expect(results.length).toBeGreaterThan(0)
+      expect(['definite-match', 'potential-match', 'no-match']).toContain(results[0].outcome)
     })
   })
 
@@ -609,9 +621,10 @@ describe('Normalizers - Full Workflow Integration', () => {
       ]
 
       // Should fall back to raw value comparison
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
 
     it('should handle custom normalizer errors gracefully', () => {
@@ -644,9 +657,10 @@ describe('Normalizers - Full Workflow Integration', () => {
       ]
 
       // Should fall back to raw value comparison
-      const result = resolver.resolve(input, candidates)
+      const results = resolver.resolve(input.data, candidates.map(c => c.data))
 
-      expect(result.outcome).toBe('match')
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0].outcome).toBe('definite-match')
     })
   })
 })
