@@ -6,6 +6,7 @@ import type {
   MetaphoneOptions,
 } from '../core/comparators'
 import type { BlockingConfig as BlockingConfigType } from '../core/blocking/types'
+import type { DatabaseAdapter } from '../adapters/types'
 
 /**
  * Configuration for match score thresholds that determine outcomes.
@@ -80,13 +81,15 @@ export type BlockingConfig<T = unknown> = BlockingConfigType<T>
  *
  * @typeParam T - The shape of the user's data object
  */
-export interface ResolverConfig<T extends object = object> {
+export interface ResolverConfig<T extends Record<string, unknown> = Record<string, unknown>> {
   /** Schema defining the structure of records */
   schema: SchemaDefinition<T>
   /** Configuration for the matching process */
   matching: MatchingConfig
   /** Optional blocking configuration for performance optimization */
   blocking?: BlockingConfig<T>
+  /** Optional database adapter for persistent storage integration */
+  adapter?: DatabaseAdapter<T>
 }
 
 /**

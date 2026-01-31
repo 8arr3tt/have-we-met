@@ -4,9 +4,11 @@ An identity resolution library for TypeScript/JavaScript.
 
 ## Status
 
-Currently in development. Phase 5 (Probabilistic Matching) is complete.
+Currently in development. Phase 6 (Database Adapters) is complete.
 
 ## Quick Start
+
+### In-Memory Matching
 
 ```typescript
 import { HaveWeMet } from 'have-we-met'
@@ -57,7 +59,41 @@ const batchResult = resolver.deduplicateBatch(records)
 console.log(batchResult.stats.definiteMatchesFound)  // Number of duplicates found
 ```
 
+### Database Integration
+
+```typescript
+import { HaveWeMet } from 'have-we-met'
+import { prismaAdapter } from 'have-we-met/adapters/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+const resolver = HaveWeMet.create<Person>()
+  .schema(schema => { /* ... */ })
+  .blocking(block => { /* ... */ })
+  .matching(match => { /* ... */ })
+  .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
+  .build()
+
+// Resolve against database (uses blocking for efficient queries)
+const matches = await resolver.resolveWithDatabase(newRecord)
+
+// Batch deduplicate entire database
+const result = await resolver.deduplicateBatchFromDatabase({
+  batchSize: 1000,
+  persistResults: true
+})
+```
+
 ## Documentation
+
+### Database Adapters
+- [Database Adapters](docs/database-adapters.md) - Overview of database integration
+- [Prisma Adapter](docs/adapter-guides/prisma.md) - Prisma ORM integration guide
+- [Drizzle Adapter](docs/adapter-guides/drizzle.md) - Drizzle ORM integration guide
+- [TypeORM Adapter](docs/adapter-guides/typeorm.md) - TypeORM integration guide
+- [Performance Optimization](docs/database-performance.md) - Index strategies and query optimization
+- [Migration Guide](docs/migration-guide.md) - Deduplicate existing databases
 
 ### Probabilistic Matching
 - [Probabilistic Matching](docs/probabilistic-matching.md) - How weighted scoring works

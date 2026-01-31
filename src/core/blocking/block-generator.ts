@@ -154,6 +154,41 @@ export class BlockGenerator {
   }
 
   /**
+   * Extracts blocking keys from a single record for database queries.
+   * Used to efficiently query the database for potential matches.
+   *
+   * @param record - The record to extract blocking keys from
+   * @param strategy - Blocking strategy to apply
+   * @returns Map of field names to block values
+   */
+  extractBlockingKeys<T>(
+    record: T,
+    strategy: BlockingStrategy<T>
+  ): Map<string, unknown> {
+    const tempBlocks = strategy.generateBlocks([record])
+
+    const blockingKeys = new Map<string, unknown>()
+
+    for (const [blockKey] of tempBlocks) {
+      const parts = blockKey.split(':')
+      if (parts.length >= 2) {
+        const field = parts[0]
+        const value = parts.slice(1).join(':')
+        blockingKeys.set(field, value)
+      } else if (parts.length === 1) {
+        const rawRecord = record as Record<string, unknown>
+        for (const key in rawRecord) {
+          if (Object.prototype.hasOwnProperty.call(rawRecord, key)) {
+            blockingKeys.set(key, rawRecord[key])
+          }
+        }
+      }
+    }
+
+    return blockingKeys
+  }
+
+  /**
    * Generates all unique pairs from a block set.
    * Each pair will be compared exactly once.
    *

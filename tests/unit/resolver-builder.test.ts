@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { HaveWeMet, ResolverBuilder } from '../../src/builder/resolver-builder'
 import { Resolver } from '../../src/core/resolver'
 import type { SchemaBuilder } from '../../src/builder/schema-builder'
 import type { MatchingBuilder } from '../../src/builder/matching-builder'
+import type { DatabaseAdapter } from '../../src/adapters/types'
 
 interface TestPerson {
   firstName: string
@@ -407,6 +408,108 @@ describe('ResolverBuilder', () => {
       expect(results[0].score.totalScore).toBe(100)
       expect(results[1].outcome).toBe('potential-match')
       expect(results[1].score.totalScore).toBe(25)
+    })
+  })
+
+  describe('adapter', () => {
+    it('accepts database adapter', () => {
+      const mockAdapter: DatabaseAdapter<TestPerson> = {
+        findByBlockingKeys: vi.fn(),
+        findByIds: vi.fn(),
+        findAll: vi.fn(),
+        count: vi.fn(),
+        insert: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        transaction: vi.fn(),
+        batchInsert: vi.fn(),
+        batchUpdate: vi.fn(),
+      }
+
+      const builder = HaveWeMet.create<TestPerson>()
+        .schema((schema) => {
+          schema.field('email', { type: 'email' })
+        })
+        .matching((match) => {
+          match
+            .field('email').strategy('exact').weight(100)
+            .thresholds({ noMatch: 20, definiteMatch: 45 })
+        })
+        .adapter(mockAdapter)
+
+      const resolver = builder.build()
+
+      expect(resolver).toBeInstanceOf(Resolver)
+    })
+
+    it('builds resolver with adapter configured', () => {
+      const mockAdapter: DatabaseAdapter<TestPerson> = {
+        findByBlockingKeys: vi.fn(),
+        findByIds: vi.fn(),
+        findAll: vi.fn(),
+        count: vi.fn(),
+        insert: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        transaction: vi.fn(),
+        batchInsert: vi.fn(),
+        batchUpdate: vi.fn(),
+      }
+
+      const resolver = HaveWeMet.create<TestPerson>()
+        .schema((schema) => {
+          schema
+            .field('firstName', { type: 'name', component: 'first' })
+            .field('lastName', { type: 'name', component: 'last' })
+            .field('email', { type: 'email' })
+        })
+        .matching((match) => {
+          match
+            .field('email')
+            .strategy('exact')
+            .weight(50)
+            .field('firstName')
+            .strategy('jaro-winkler')
+            .weight(25)
+            .field('lastName')
+            .strategy('jaro-winkler')
+            .weight(25)
+            .thresholds({ noMatch: 20, definiteMatch: 45 })
+        })
+        .adapter(mockAdapter)
+        .build()
+
+      expect(resolver).toBeInstanceOf(Resolver)
+    })
+
+    it('allows chaining after adapter configuration', () => {
+      const mockAdapter: DatabaseAdapter<TestPerson> = {
+        findByBlockingKeys: vi.fn(),
+        findByIds: vi.fn(),
+        findAll: vi.fn(),
+        count: vi.fn(),
+        insert: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        transaction: vi.fn(),
+        batchInsert: vi.fn(),
+        batchUpdate: vi.fn(),
+      }
+
+      const builder = HaveWeMet.create<TestPerson>()
+        .schema((schema) => {
+          schema.field('email', { type: 'email' })
+        })
+        .adapter(mockAdapter)
+        .matching((match) => {
+          match
+            .field('email').strategy('exact').weight(100)
+            .thresholds({ noMatch: 20, definiteMatch: 45 })
+        })
+
+      const resolver = builder.build()
+
+      expect(resolver).toBeInstanceOf(Resolver)
     })
   })
 })

@@ -15,6 +15,13 @@ import { OutcomeClassifier } from './scoring/outcome-classifier'
 import { MatchExplainer } from './scoring/explainer'
 import { BlockGenerator } from './blocking/block-generator'
 import type { BlockingStrategy } from './blocking/types'
+import type {
+  DatabaseAdapter,
+  DatabaseResolveOptions,
+  DatabaseDeduplicationOptions,
+  MergeOptions,
+  MergeResult,
+} from '../adapters/types'
 
 /**
  * Options for resolver operations
@@ -49,6 +56,7 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   private comparisons: FieldComparison[]
   private thresholds: MatchThresholds
   private blockingStrategy?: BlockingStrategy<T>
+  private adapter?: DatabaseAdapter<T>
   private scoreCalculator: ScoreCalculator
   private outcomeClassifier: OutcomeClassifier
   private explainer: MatchExplainer
@@ -64,6 +72,7 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
 
     this.comparisons = this.buildComparisons(config)
     this.blockingStrategy = config.blocking?.strategies?.[0]
+    this.adapter = config.adapter
 
     this.scoreCalculator = new ScoreCalculator(this.schema)
     this.outcomeClassifier = new OutcomeClassifier()
@@ -371,6 +380,247 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
         recordsWithoutMatches,
       },
     }
+  }
+
+  /**
+   * Resolve a record using database adapter for efficient querying.
+   *
+   * This method leverages blocking strategies to efficiently query the database
+   * for potential matches, then applies in-memory matching logic.
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param options - Database resolve options
+   * @returns Array of match results from database records
+   *
+   * @throws Error if adapter is not configured
+   *
+   * @example
+   * ```typescript
+   * const results = await resolver.resolveWithDatabase(newRecord, {
+   *   useBlocking: true,
+   *   maxFetchSize: 1000
+   * })
+   *
+   * results.forEach(result => {
+   *   if (result.outcome === 'definite-match') {
+   *     console.log('Found duplicate:', result.candidateRecord)
+   *   }
+   * })
+   * ```
+   */
+  async resolveWithDatabase(
+    candidateRecord: T,
+    options?: DatabaseResolveOptions
+  ): Promise<MatchResult[]> {
+    if (!this.adapter) {
+      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+    }
+
+    const useBlocking = options?.useBlocking ?? true
+    const maxFetchSize = options?.maxFetchSize ?? 1000
+
+    let existingRecords: T[]
+
+    if (useBlocking && this.blockingStrategy) {
+      const blockGenerator = new BlockGenerator()
+      const blockingKeys = blockGenerator.extractBlockingKeys(
+        candidateRecord,
+        this.blockingStrategy
+      )
+
+      existingRecords = await this.adapter.findByBlockingKeys(
+        blockingKeys,
+        { limit: maxFetchSize }
+      )
+    } else {
+      existingRecords = await this.adapter.findAll({ limit: maxFetchSize })
+    }
+
+    return this.resolve(candidateRecord, existingRecords)
+  }
+
+  /**
+   * Batch deduplicate records stored in database.
+   *
+   * This method processes records from the database in batches, applies blocking
+   * and matching, and optionally persists results back to the database.
+   *
+   * @param options - Database deduplication options
+   * @returns Deduplication batch result with statistics
+   *
+   * @throws Error if adapter is not configured
+   *
+   * @example
+   * ```typescript
+   * const result = await resolver.deduplicateBatchFromDatabase({
+   *   batchSize: 1000,
+   *   persistResults: true,
+   *   maxRecords: 10000
+   * })
+   *
+   * console.log(`Processed ${result.stats.recordsProcessed} records`)
+   * console.log(`Found ${result.stats.definiteMatchesFound} definite matches`)
+   * ```
+   */
+  async deduplicateBatchFromDatabase(
+    options?: DatabaseDeduplicationOptions
+  ): Promise<DeduplicationBatchResult> {
+    if (!this.adapter) {
+      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+    }
+
+    const batchSize = options?.batchSize ?? 1000
+    const maxRecords = options?.maxRecords
+    const persistResults = options?.persistResults ?? false
+
+    const totalRecords = await this.adapter.count()
+    const recordsToProcess = maxRecords ? Math.min(maxRecords, totalRecords) : totalRecords
+
+    let allResults: DeduplicationResult[] = []
+    const totalStats = {
+      recordsProcessed: 0,
+      comparisonsMade: 0,
+      definiteMatchesFound: 0,
+      potentialMatchesFound: 0,
+      noMatchesFound: 0,
+      recordsWithMatches: 0,
+      recordsWithoutMatches: 0,
+    }
+
+    for (let offset = 0; offset < recordsToProcess; offset += batchSize) {
+      const limit = Math.min(batchSize, recordsToProcess - offset)
+      const records = await this.adapter.findAll({ limit, offset })
+
+      if (records.length === 0) break
+
+      const batchResult = this.deduplicateBatch(records, {
+        minScore: options?.returnExplanation === false ? this.thresholds.noMatch : undefined,
+      })
+
+      allResults = allResults.concat(batchResult.results)
+      totalStats.recordsProcessed += batchResult.stats.recordsProcessed
+      totalStats.comparisonsMade += batchResult.stats.comparisonsMade
+      totalStats.definiteMatchesFound += batchResult.stats.definiteMatchesFound
+      totalStats.potentialMatchesFound += batchResult.stats.potentialMatchesFound
+      totalStats.noMatchesFound += batchResult.stats.noMatchesFound
+      totalStats.recordsWithMatches += batchResult.stats.recordsWithMatches
+      totalStats.recordsWithoutMatches += batchResult.stats.recordsWithoutMatches
+    }
+
+    if (persistResults) {
+      const updates = allResults
+        .filter((result) => result.hasDefiniteMatches)
+        .map((result) => {
+          const recordId = (result.record as T & { id: string }).id
+          return {
+            id: recordId,
+            updates: { hasDuplicates: true } as unknown as Partial<T>,
+          }
+        })
+
+      if (updates.length > 0) {
+        await this.adapter.batchUpdate(updates)
+      }
+    }
+
+    return {
+      results: allResults,
+      stats: totalStats,
+    }
+  }
+
+  /**
+   * Find and merge duplicates, persisting results to database.
+   *
+   * This is a preview method for Phase 8 (Golden Record) functionality.
+   * Currently implements basic merging logic with transaction support.
+   *
+   * @param options - Merge options
+   * @returns Array of merge results
+   *
+   * @throws Error if adapter is not configured
+   *
+   * @example
+   * ```typescript
+   * const mergeResults = await resolver.findAndMergeDuplicates({
+   *   deleteAfterMerge: false,
+   *   useTransaction: true
+   * })
+   *
+   * mergeResults.forEach(result => {
+   *   console.log(`Merged record ${result.mergedRecordId}`)
+   *   console.log(`Source records: ${result.sourceRecordIds.join(', ')}`)
+   * })
+   * ```
+   */
+  async findAndMergeDuplicates(options?: MergeOptions): Promise<MergeResult[]> {
+    if (!this.adapter) {
+      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+    }
+
+    const useTransaction = options?.useTransaction ?? true
+    const deleteAfterMerge = options?.deleteAfterMerge ?? false
+
+    const deduplicationResult = await this.deduplicateBatchFromDatabase({
+      batchSize: 1000,
+      persistResults: false,
+    })
+
+    const mergeResults: MergeResult[] = []
+
+    const processedRecordIds = new Set<string>()
+
+    for (const result of deduplicationResult.results) {
+      if (!result.hasDefiniteMatches) continue
+
+      const masterRecord = result.record as T & { id: string }
+      const masterRecordId = masterRecord.id
+
+      if (processedRecordIds.has(masterRecordId)) continue
+
+      const duplicateIds: string[] = []
+      for (const match of result.matches) {
+        if (match.outcome === 'definite-match') {
+          const duplicateId = (match.candidateRecord as T & { id: string }).id
+          if (!processedRecordIds.has(duplicateId)) {
+            duplicateIds.push(duplicateId)
+            processedRecordIds.add(duplicateId)
+          }
+        }
+      }
+
+      if (duplicateIds.length === 0) continue
+
+      processedRecordIds.add(masterRecordId)
+
+      const mergeOperation = async (txAdapter: DatabaseAdapter<T>) => {
+        const mergedRecord = await txAdapter.update(masterRecordId, {
+          mergedCount: ((masterRecord as T & { mergedCount?: number }).mergedCount ?? 0) + duplicateIds.length,
+        } as unknown as Partial<T>)
+
+        if (deleteAfterMerge) {
+          for (const duplicateId of duplicateIds) {
+            await txAdapter.delete(duplicateId)
+          }
+        }
+
+        return mergedRecord
+      }
+
+      if (useTransaction) {
+        await this.adapter.transaction(mergeOperation)
+      } else {
+        await mergeOperation(this.adapter)
+      }
+
+      mergeResults.push({
+        mergedRecordId: masterRecordId,
+        sourceRecordIds: duplicateIds,
+        fieldsMerged: duplicateIds.length,
+      })
+    }
+
+    return mergeResults
   }
 
   private validateConfig(config: ResolverConfig<T>): void {

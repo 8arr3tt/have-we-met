@@ -4,6 +4,7 @@ import type {
   ThresholdConfig,
   BlockingConfig,
 } from '../types'
+import type { DatabaseAdapter } from '../adapters/types'
 import { Resolver } from '../core/resolver'
 import { SchemaBuilder } from './schema-builder'
 import { MatchingBuilder, FieldMatchBuilder } from './matching-builder'
@@ -37,6 +38,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   private schemaDefinition?: SchemaDefinition<T>
   private matchingConfig?: MatchingConfig
   private blockingConfiguration?: BlockingConfig<T>
+  private databaseAdapter?: DatabaseAdapter<T>
 
   /**
    * Configure the schema defining field types and normalizers.
@@ -127,6 +129,33 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   }
 
   /**
+   * Configure a database adapter for persistent storage integration.
+   *
+   * Database adapters enable efficient querying and deduplication of records
+   * stored in databases using blocking strategies.
+   *
+   * @param adapter - Database adapter instance (Prisma, Drizzle, TypeORM, etc.)
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * import { prismaAdapter } from 'have-we-met/adapters/prisma'
+   *
+   * const resolver = HaveWeMet.create<Customer>()
+   *   .schema(schema => { ... })
+   *   .matching(match => { ... })
+   *   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
+   *   .build()
+   *
+   * const results = await resolver.resolveWithDatabase(newCustomer)
+   * ```
+   */
+  adapter(adapter: DatabaseAdapter<T>): this {
+    this.databaseAdapter = adapter
+    return this
+  }
+
+  /**
    * Build and return the configured Resolver instance.
    *
    * @returns Configured Resolver ready for matching operations
@@ -144,6 +173,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
       schema: this.schemaDefinition,
       matching: this.matchingConfig,
       blocking: this.blockingConfiguration,
+      adapter: this.databaseAdapter,
     })
   }
 }
