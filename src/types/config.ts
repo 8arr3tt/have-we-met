@@ -5,6 +5,7 @@ import type {
   SoundexOptions,
   MetaphoneOptions,
 } from '../core/comparators'
+import type { BlockingConfig as BlockingConfigType } from '../core/blocking/types'
 
 /**
  * Configuration for match score thresholds that determine outcomes.
@@ -68,12 +69,11 @@ export interface MatchingConfig {
 }
 
 /**
- * Placeholder for blocking configuration.
+ * Configuration for blocking strategies.
  * Blocking strategies reduce O(n²) comparisons by grouping records.
- * Will be fully implemented in Phase 4.
+ * Records within the same block will be compared against each other.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface BlockingConfig {}
+export type BlockingConfig<T = unknown> = BlockingConfigType<T>
 
 /**
  * Complete configuration for a resolver instance.
@@ -86,7 +86,7 @@ export interface ResolverConfig<T extends object = object> {
   /** Configuration for the matching process */
   matching: MatchingConfig
   /** Optional blocking configuration for performance optimization */
-  blocking?: BlockingConfig
+  blocking?: BlockingConfig<T>
 }
 
 /**

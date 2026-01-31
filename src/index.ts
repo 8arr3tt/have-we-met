@@ -58,7 +58,10 @@ export type {
 } from './types/schema'
 
 // Builders
-export { SchemaBuilder } from './builder/schema-builder'
+export {
+  SchemaBuilder,
+  FieldDefinitionBuilder,
+} from './builder/schema-builder'
 export { MatchingBuilder, FieldMatchBuilder } from './builder/matching-builder'
 
 // Normalizers
@@ -101,6 +104,7 @@ export {
   parseAddressComponents,
   abbreviateState,
   abbreviateStreetType,
+  formatUKPostcode,
   type AddressComponents,
   type AddressNormalizerOptions,
 } from './core/normalizers/address'
@@ -111,3 +115,27 @@ export {
   type DateComponents,
   type DateNormalizerOptions,
 } from './core/normalizers/date'
+
+// Blocking
+export {
+  BlockGenerator,
+  applyTransform,
+  firstLetter,
+  firstN,
+  soundexTransform,
+  metaphoneTransform,
+  yearTransform,
+  StandardBlockingStrategy,
+} from './core/blocking'
+export type {
+  BlockKey,
+  BlockSet,
+  BlockingStats,
+  BlockingStrategy,
+  BlockTransform,
+  FirstNOptions,
+  NullStrategy,
+  SingleFieldBlockConfig,
+  MultiFieldBlockConfig,
+  StandardBlockConfig,
+} from './core/blocking'

@@ -14,17 +14,71 @@ import {
   metaphone,
 } from './comparators'
 import { getNormalizer } from './normalizers/registry'
+import type { BlockingConfig, BlockingStats } from './blocking/types'
+import { BlockGenerator } from './blocking/block-generator'
 
 /**
  * Core matching engine that compares two records using configured strategies.
+ * Supports optional blocking to reduce the number of comparisons.
  *
  * @typeParam T - The shape of the user's data object
  */
 export class MatchingEngine<T extends object = object> {
+  private blockGenerator: BlockGenerator
+
   constructor(
     private config: MatchingConfig,
-    private schema?: SchemaDefinition<T>
-  ) {}
+    private schema?: SchemaDefinition<T>,
+    private blockingConfig?: BlockingConfig<T>
+  ) {
+    this.blockGenerator = new BlockGenerator()
+  }
+
+  /**
+   * Gets blocking statistics for a set of records.
+   * Returns null if blocking is not configured.
+   *
+   * @param records - Array of records to analyze
+   * @returns Blocking statistics or null
+   */
+  getBlockingStats(records: Array<T>): BlockingStats | null {
+    if (!this.blockingConfig || this.blockingConfig.strategies.length === 0) {
+      return null
+    }
+
+    const blocks = this.generateBlocks(records)
+    return this.blockGenerator.calculateStats(blocks)
+  }
+
+  /**
+   * Generates blocks from records using configured blocking strategies.
+   * Returns an empty map if blocking is not configured.
+   *
+   * @param records - Array of records to block
+   * @returns Block set
+   */
+  private generateBlocks(records: Array<T>) {
+    if (!this.blockingConfig || this.blockingConfig.strategies.length === 0) {
+      return new Map()
+    }
+
+    // Use composite or single strategy based on configuration
+    if (
+      this.blockingConfig.mode === 'composite' ||
+      this.blockingConfig.mode === 'union' ||
+      this.blockingConfig.strategies.length > 1
+    ) {
+      return this.blockGenerator.generateBlocksComposite(
+        records,
+        this.blockingConfig.strategies
+      )
+    } else {
+      return this.blockGenerator.generateBlocks(
+        records,
+        this.blockingConfig.strategies[0]
+      )
+    }
+  }
 
   /**
    * Compares two records and calculates a match score.
