@@ -16,3 +16,9 @@ export type {
   MultiFieldBlockConfig,
   StandardBlockConfig,
 } from './strategies/standard-blocking'
+export { SortedNeighbourhoodStrategy } from './strategies/sorted-neighbourhood'
+export type {
+  SortOrder,
+  SortField,
+  SortedNeighbourhoodConfig,
+} from './strategies/sorted-neighbourhood'

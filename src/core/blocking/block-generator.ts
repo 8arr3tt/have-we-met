@@ -73,9 +73,10 @@ export class BlockGenerator {
    * Useful for understanding blocking effectiveness and tuning strategies.
    *
    * @param blockSet - The block set to analyze
+   * @param uniqueRecordCount - Optional count of unique records (for strategies where records appear in multiple blocks)
    * @returns Blocking statistics
    */
-  calculateStats<T>(blockSet: BlockSet<T>): BlockingStats {
+  calculateStats<T>(blockSet: BlockSet<T>, uniqueRecordCount?: number): BlockingStats {
     const blocks = Array.from(blockSet.values())
     const totalBlocks = blocks.length
 
@@ -92,15 +93,15 @@ export class BlockGenerator {
       }
     }
 
-    // Count total records and block sizes
-    let totalRecords = 0
+    // Count total record appearances and block sizes
+    let totalRecordAppearances = 0
     let minBlockSize = Infinity
     let maxBlockSize = 0
     let comparisonsWithBlocking = 0
 
     for (const block of blocks) {
       const blockSize = block.length
-      totalRecords += blockSize
+      totalRecordAppearances += blockSize
 
       if (blockSize < minBlockSize) minBlockSize = blockSize
       if (blockSize > maxBlockSize) maxBlockSize = blockSize
@@ -109,6 +110,23 @@ export class BlockGenerator {
       if (blockSize > 1) {
         comparisonsWithBlocking += (blockSize * (blockSize - 1)) / 2
       }
+    }
+
+    // Determine unique record count
+    // If provided explicitly, use that (for strategies with overlapping blocks)
+    // Otherwise, count unique records from all blocks
+    let totalRecords: number
+    if (uniqueRecordCount !== undefined) {
+      totalRecords = uniqueRecordCount
+    } else {
+      // Count unique records using Set
+      const uniqueRecords = new Set<string>()
+      for (const block of blocks) {
+        for (const record of block) {
+          uniqueRecords.add(this.getRecordId(record))
+        }
+      }
+      totalRecords = uniqueRecords.size
     }
 
     // Calculate comparisons without blocking: n*(n-1)/2
@@ -126,7 +144,7 @@ export class BlockGenerator {
     return {
       totalRecords,
       totalBlocks,
-      avgRecordsPerBlock: totalRecords / totalBlocks,
+      avgRecordsPerBlock: totalRecordAppearances / totalBlocks,
       minBlockSize: minBlockSize === Infinity ? 0 : minBlockSize,
       maxBlockSize,
       comparisonsWithBlocking,

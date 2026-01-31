@@ -126,6 +126,7 @@ export {
   metaphoneTransform,
   yearTransform,
   StandardBlockingStrategy,
+  SortedNeighbourhoodStrategy,
 } from './core/blocking'
 export type {
   BlockKey,
@@ -138,4 +139,7 @@ export type {
   SingleFieldBlockConfig,
   MultiFieldBlockConfig,
   StandardBlockConfig,
+  SortOrder,
+  SortField,
+  SortedNeighbourhoodConfig,
 } from './core/blocking'
