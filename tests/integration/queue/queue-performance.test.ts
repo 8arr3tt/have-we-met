@@ -26,8 +26,33 @@ function createMockQueueAdapter() {
       Object.assign(item, updates)
       return item
     },
-    async findQueueItems() {
-      return [...items]
+    async findQueueItems(filter?: import('../../../src/queue/types.js').QueueFilter) {
+      let result = [...items]
+
+      // Filter by status
+      if (filter?.status) {
+        const statuses = Array.isArray(filter.status) ? filter.status : [filter.status]
+        result = result.filter((item) => statuses.includes(item.status))
+      }
+
+      // Filter by tags
+      if (filter?.tags && filter.tags.length > 0) {
+        result = result.filter((item) =>
+          filter.tags!.every((tag) => item.tags?.includes(tag))
+        )
+      }
+
+      // Apply offset
+      if (filter?.offset) {
+        result = result.slice(filter.offset)
+      }
+
+      // Apply limit
+      if (filter?.limit) {
+        result = result.slice(0, filter.limit)
+      }
+
+      return result
     },
     async findQueueItemById(id: string) {
       return items.find((i) => i.id === id) || null
@@ -36,8 +61,21 @@ function createMockQueueAdapter() {
       const index = items.findIndex((i) => i.id === id)
       if (index >= 0) items.splice(index, 1)
     },
-    async countQueueItems() {
-      return items.length
+    async countQueueItems(filter?: import('../../../src/queue/types.js').QueueFilter) {
+      let result = [...items]
+
+      if (filter?.status) {
+        const statuses = Array.isArray(filter.status) ? filter.status : [filter.status]
+        result = result.filter((item) => statuses.includes(item.status))
+      }
+
+      if (filter?.tags && filter.tags.length > 0) {
+        result = result.filter((item) =>
+          filter.tags!.every((tag) => item.tags?.includes(tag))
+        )
+      }
+
+      return result.length
     },
     async batchInsertQueueItems(queueItems: QueueItem<TestRecord>[]) {
       items.push(...queueItems)
