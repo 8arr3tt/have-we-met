@@ -22,3 +22,5 @@ export type {
   SortField,
   SortedNeighbourhoodConfig,
 } from './strategies/sorted-neighbourhood'
+export { CompositeBlockingStrategy } from './strategies/composite-blocking'
+export type { CompositeMode, CompositeBlockingConfig } from './strategies/composite-blocking'
