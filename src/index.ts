@@ -63,6 +63,10 @@ export {
   FieldDefinitionBuilder,
 } from './builder/schema-builder'
 export { MatchingBuilder, FieldMatchBuilder } from './builder/matching-builder'
+export {
+  BlockingBuilder,
+  CompositeBlockingBuilder,
+} from './builder/blocking-builder'
 
 // Normalizers
 export {
@@ -127,6 +131,7 @@ export {
   yearTransform,
   StandardBlockingStrategy,
   SortedNeighbourhoodStrategy,
+  CompositeBlockingStrategy,
 } from './core/blocking'
 export type {
   BlockKey,
@@ -142,4 +147,6 @@ export type {
   SortOrder,
   SortField,
   SortedNeighbourhoodConfig,
+  CompositeMode,
+  CompositeBlockingConfig,
 } from './core/blocking'

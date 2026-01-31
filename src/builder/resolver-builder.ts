@@ -2,14 +2,17 @@ import type {
   SchemaDefinition,
   MatchingConfig,
   ThresholdConfig,
+  BlockingConfig,
 } from '../types'
 import { Resolver } from '../core/resolver'
 import { SchemaBuilder } from './schema-builder'
 import { MatchingBuilder } from './matching-builder'
+import { BlockingBuilder } from './blocking-builder'
 
 export class ResolverBuilder<T extends object = object> {
   private schemaDefinition?: SchemaDefinition<T>
   private matchingConfig?: MatchingConfig
+  private blockingConfiguration?: BlockingConfig<T>
 
   schema(
     configurator: (builder: SchemaBuilder<T>) => SchemaBuilder<T> | void
@@ -17,6 +20,15 @@ export class ResolverBuilder<T extends object = object> {
     const builder = new SchemaBuilder<T>()
     const result = configurator(builder)
     this.schemaDefinition = (result ?? builder).build()
+    return this
+  }
+
+  blocking(
+    configurator: (builder: BlockingBuilder<T>) => BlockingBuilder<T> | void
+  ): this {
+    const builder = new BlockingBuilder<T>()
+    const result = configurator(builder)
+    this.blockingConfiguration = (result ?? builder).build()
     return this
   }
 
@@ -52,6 +64,7 @@ export class ResolverBuilder<T extends object = object> {
     return new Resolver<T>({
       schema: this.schemaDefinition,
       matching: this.matchingConfig,
+      blocking: this.blockingConfiguration,
     })
   }
 }

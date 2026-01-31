@@ -21,7 +21,7 @@ export class Resolver<T extends object = object> {
   private thresholds: ThresholdConfig
 
   constructor(config: ResolverConfig<T>) {
-    this.engine = new MatchingEngine<T>(config.matching, config.schema)
+    this.engine = new MatchingEngine<T>(config.matching, config.schema, config.blocking)
     this.thresholds = config.matching.thresholds
   }
 
