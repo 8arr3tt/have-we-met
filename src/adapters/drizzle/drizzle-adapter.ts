@@ -1,6 +1,7 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria } from '../types'
+import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria, QueueAdapter } from '../types'
 import { BaseAdapter } from '../base-adapter'
 import { QueryError, TransactionError, NotFoundError } from '../adapter-error'
+import { DrizzleQueueAdapter } from './drizzle-queue-adapter'
 
 type DrizzleDatabase = {
   select: (fields?: Record<string, unknown>) => {
@@ -41,6 +42,7 @@ type DrizzleOperators = {
   lt: (column: unknown, value: unknown) => unknown
   lte: (column: unknown, value: unknown) => unknown
   inArray: (column: unknown, values: unknown[]) => unknown
+  arrayContains: (column: unknown, values: unknown[]) => unknown
   like: (column: unknown, pattern: unknown) => unknown
   and: (...conditions: unknown[]) => unknown
   asc: (column: unknown) => unknown
@@ -55,17 +57,25 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
   private readonly db: DrizzleDatabase
   private readonly table: DrizzleTable
   private readonly operators: DrizzleOperators
+  readonly queue: QueueAdapter<T>
 
   constructor(
     db: DrizzleDatabase,
     table: DrizzleTable,
     config: AdapterConfig,
-    operators: DrizzleOperators
+    operators: DrizzleOperators,
+    queueTable?: DrizzleTable
   ) {
     super(config)
     this.db = db
     this.table = table
     this.operators = operators
+    this.queue = new DrizzleQueueAdapter<T>(
+      db,
+      queueTable || table,
+      operators,
+      config.queue
+    )
   }
 
   private getColumn(fieldName: string): unknown {

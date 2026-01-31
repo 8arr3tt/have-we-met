@@ -29,6 +29,7 @@ export abstract class BaseAdapter<T extends Record<string, unknown>>
       fieldMapping: config.fieldMapping ?? {},
       usePreparedStatements: config.usePreparedStatements ?? true,
       poolConfig: config.poolConfig ?? {},
+      queue: config.queue ?? {},
     }
   }
 

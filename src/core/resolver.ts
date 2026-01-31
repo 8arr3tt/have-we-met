@@ -9,6 +9,7 @@ import type {
   DeduplicationBatchOptions,
   DeduplicationBatchResult,
   DeduplicationResult,
+  DeduplicationStats,
 } from './scoring/deduplication-result'
 import { ScoreCalculator } from './scoring/score-calculator'
 import { OutcomeClassifier } from './scoring/outcome-classifier'
@@ -22,6 +23,10 @@ import type {
   MergeOptions,
   MergeResult,
 } from '../adapters/types'
+import { ReviewQueue } from '../queue/review-queue.js'
+import type { ReviewQueue as IReviewQueue } from '../queue/types.js'
+import { QueueError } from '../queue/queue-error.js'
+import { matchResultToQueueItem } from './queue-resolver-integration.js'
 
 /**
  * Options for resolver operations
@@ -29,6 +34,10 @@ import type {
 export interface ResolverOptions {
   /** Maximum number of results to return */
   maxResults?: number
+  /** Automatically add potential matches to review queue */
+  autoQueue?: boolean
+  /** Context to include with queued items */
+  queueContext?: Partial<import('../queue/types.js').QueueContext>
 }
 
 /**
@@ -60,6 +69,7 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   private scoreCalculator: ScoreCalculator
   private outcomeClassifier: OutcomeClassifier
   private explainer: MatchExplainer
+  private _queue?: IReviewQueue<T>
 
   constructor(config: ResolverConfig<T>) {
     this.validateConfig(config)
@@ -77,6 +87,47 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     this.scoreCalculator = new ScoreCalculator(this.schema)
     this.outcomeClassifier = new OutcomeClassifier()
     this.explainer = new MatchExplainer()
+
+    // Initialize queue if adapter has queue support
+    if (this.adapter?.queue) {
+      this._queue = new ReviewQueue<T>(this.adapter.queue)
+    }
+  }
+
+  /**
+   * Access to the review queue for human-in-the-loop matching.
+   *
+   * The queue is only available when a database adapter with queue support
+   * is configured.
+   *
+   * @throws QueueError if adapter is not configured or doesn't support queue
+   *
+   * @example
+   * ```typescript
+   * const resolver = HaveWeMet
+   *   .schema({ ... })
+   *   .matching(...)
+   *   .adapter(prismaAdapter(prisma))
+   *   .build()
+   *
+   * // Add to queue manually
+   * await resolver.queue.add({
+   *   candidateRecord: newRecord,
+   *   potentialMatches: matches.filter(m => m.outcome === 'potential-match')
+   * })
+   *
+   * // List pending items
+   * const pending = await resolver.queue.list({ status: 'pending' })
+   * ```
+   */
+  get queue(): IReviewQueue<T> {
+    if (!this._queue) {
+      throw new QueueError(
+        'Queue is not available. Ensure you have configured a database adapter with queue support.',
+        'QUEUE_NOT_AVAILABLE'
+      )
+    }
+    return this._queue
   }
 
   /**
@@ -172,11 +223,35 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
 
     results.sort((a, b) => b.score.totalScore - a.score.totalScore)
 
+    let finalResults = results
     if (options?.maxResults && options.maxResults > 0) {
-      return results.slice(0, options.maxResults)
+      finalResults = results.slice(0, options.maxResults)
     }
 
-    return results
+    // Auto-queue potential matches if enabled
+    // Note: This is done synchronously to ensure queueing happens before return
+    // In production, this could be made async with proper error handling
+    if (options?.autoQueue && this._queue) {
+      const potentialMatches = finalResults.filter(
+        (result) => result.outcome === 'potential-match'
+      )
+
+      if (potentialMatches.length > 0) {
+        const queueItem = matchResultToQueueItem(
+          candidateRecord as T,
+          potentialMatches,
+          options.queueContext
+        )
+
+        // Queue asynchronously without blocking
+        // Fire and forget pattern - errors logged but don't disrupt flow
+        void this._queue.add(queueItem).catch((error) => {
+          console.error('Failed to auto-queue potential matches:', error)
+        })
+      }
+    }
+
+    return finalResults
   }
 
   /**
@@ -368,17 +443,47 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
       }
     }
 
+    const stats: DeduplicationStats & { queuedCount?: number } = {
+      recordsProcessed: records.length,
+      comparisonsMade,
+      definiteMatchesFound,
+      potentialMatchesFound,
+      noMatchesFound,
+      recordsWithMatches,
+      recordsWithoutMatches,
+    }
+
+    // Auto-queue potential matches if enabled
+    if (options?.autoQueue && this._queue) {
+      const queueItems = results
+        .filter((result) => result.hasPotentialMatches)
+        .map((result) => {
+          const potentialMatches = result.matches.filter(
+            (m) => m.outcome === 'potential-match'
+          )
+          return matchResultToQueueItem(
+            result.record as T,
+            potentialMatches,
+            options.queueContext
+          )
+        })
+
+      if (queueItems.length > 0) {
+        // Queue asynchronously without blocking
+        void this._queue.addBatch(queueItems)
+          .then((queued) => {
+            stats.queuedCount = queued.length
+          })
+          .catch((error) => {
+            console.error('Failed to auto-queue potential matches:', error)
+            stats.queuedCount = 0
+          })
+      }
+    }
+
     return {
       results,
-      stats: {
-        recordsProcessed: records.length,
-        comparisonsMade,
-        definiteMatchesFound,
-        potentialMatchesFound,
-        noMatchesFound,
-        recordsWithMatches,
-        recordsWithoutMatches,
-      },
+      stats,
     }
   }
 
@@ -436,7 +541,11 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
       existingRecords = await this.adapter.findAll({ limit: maxFetchSize })
     }
 
-    return this.resolve(candidateRecord, existingRecords)
+    // Pass through autoQueue and queueContext options
+    return this.resolve(candidateRecord, existingRecords, {
+      autoQueue: options?.autoQueue,
+      queueContext: options?.queueContext,
+    })
   }
 
   /**
@@ -495,6 +604,8 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
 
       const batchResult = this.deduplicateBatch(records, {
         minScore: options?.returnExplanation === false ? this.thresholds.noMatch : undefined,
+        autoQueue: options?.autoQueue,
+        queueContext: options?.queueContext,
       })
 
       allResults = allResults.concat(batchResult.results)

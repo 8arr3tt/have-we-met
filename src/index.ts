@@ -150,3 +150,38 @@ export type {
   CompositeMode,
   CompositeBlockingConfig,
 } from './core/blocking'
+
+// Queue
+export type {
+  QueueStatus,
+  QueueContext,
+  QueueDecision,
+  QueueItem,
+  AddQueueItemRequest,
+  ListQueueOptions,
+  QueueItemList,
+  ConfirmDecision,
+  RejectDecision,
+  MergeDecision,
+  QueueStats,
+  CleanupOptions,
+  StatsOptions,
+  ReviewQueue,
+  QueueFilter,
+  QueueAdapter,
+} from './queue'
+export type {
+  QueueOptions,
+  AlertThresholds,
+} from './builder/queue-options'
+export {
+  QueueError,
+  QueueItemNotFoundError,
+  InvalidStatusTransitionError,
+  QueueOperationError,
+  QueueValidationError,
+  validateQueueItem,
+  validateStatusTransition,
+  validateQueueDecision,
+  validateCompleteQueueItem,
+} from './queue'

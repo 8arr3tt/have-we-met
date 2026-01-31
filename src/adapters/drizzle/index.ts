@@ -12,6 +12,7 @@ type DrizzleOperators = {
   lt: (column: unknown, value: unknown) => unknown
   lte: (column: unknown, value: unknown) => unknown
   inArray: (column: unknown, values: unknown[]) => unknown
+  arrayContains: (column: unknown, values: unknown[]) => unknown
   like: (column: unknown, pattern: unknown) => unknown
   and: (...conditions: unknown[]) => unknown
   asc: (column: unknown) => unknown
@@ -60,3 +61,4 @@ export function drizzleAdapter<T extends Record<string, unknown>>(
 }
 
 export { DrizzleAdapter }
+export { DrizzleQueueAdapter } from './drizzle-queue-adapter'

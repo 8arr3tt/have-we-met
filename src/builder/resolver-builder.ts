@@ -207,4 +207,19 @@ export const HaveWeMet = {
   create<T extends Record<string, unknown> = Record<string, unknown>>(): ResolverBuilder<T> {
     return new ResolverBuilder<T>()
   },
+
+  /**
+   * Shortcut to create a builder with schema configuration.
+   * Equivalent to `HaveWeMet.create<T>().schema(...)`
+   *
+   * @param schemaDefinition - Schema definition object with field definitions
+   * @returns A ResolverBuilder with the schema configured
+   */
+  schema<T extends Record<string, unknown> = Record<string, unknown>>(
+    schemaDefinition: SchemaDefinition<T>
+  ): ResolverBuilder<T> {
+    const builder = new ResolverBuilder<T>()
+    builder['schemaDefinition'] = schemaDefinition
+    return builder
+  },
 }

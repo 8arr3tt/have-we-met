@@ -4,7 +4,7 @@ An identity resolution library for TypeScript/JavaScript.
 
 ## Status
 
-Currently in development. Phase 6 (Database Adapters) is complete.
+Currently in development. Phase 7 (Review Queue) is complete.
 
 ## Quick Start
 
@@ -85,6 +85,46 @@ const result = await resolver.deduplicateBatchFromDatabase({
 })
 ```
 
+### Review Queue (Human-in-the-Loop)
+
+```typescript
+import { HaveWeMet } from 'have-we-met'
+import { prismaAdapter } from 'have-we-met/adapters/prisma'
+
+const resolver = HaveWeMet.create<Person>()
+  .schema(schema => { /* ... */ })
+  .blocking(block => { /* ... */ })
+  .matching(match => { /* ... */ })
+  .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
+  .build()
+
+// Automatically queue ambiguous matches for human review
+const results = await resolver.resolve(newRecord, {
+  autoQueue: true,
+  queueContext: { source: 'customer-import', userId: 'admin' }
+})
+
+// Review queued items
+const pending = await resolver.queue.list({
+  status: 'pending',
+  limit: 10,
+  orderBy: 'priority',
+  orderDirection: 'desc'
+})
+
+// Make decisions
+await resolver.queue.confirm(itemId, {
+  selectedMatchId: matchId,
+  notes: 'Verified by phone number',
+  decidedBy: 'reviewer@example.com'
+})
+
+// Track queue health
+const stats = await resolver.queue.stats()
+console.log(`Pending: ${stats.byStatus.pending}`)
+console.log(`Throughput: ${stats.throughput?.last24h} decisions/day`)
+```
+
 ## Documentation
 
 ### Database Adapters
@@ -99,6 +139,12 @@ const result = await resolver.deduplicateBatchFromDatabase({
 - [Probabilistic Matching](docs/probabilistic-matching.md) - How weighted scoring works
 - [Tuning Guide](docs/tuning-guide.md) - Configure weights and thresholds for your use case
 - [Examples](docs/examples.md) - Real-world configurations for common scenarios
+
+### Review Queue
+- [Review Queue Overview](docs/review-queue.md) - Human-in-the-loop review workflows
+- [Queue Workflows](docs/queue-workflows.md) - Common patterns and best practices
+- [Queue Metrics](docs/queue-metrics.md) - Monitoring and analytics
+- [Queue UI Guide](docs/queue-ui-guide.md) - Building review interfaces
 
 ### Blocking Strategies
 - [Blocking Overview](docs/blocking/overview.md) - Why blocking is essential for large datasets

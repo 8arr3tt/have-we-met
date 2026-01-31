@@ -42,3 +42,4 @@ export function prismaAdapter<T extends Record<string, unknown>>(
 }
 
 export { PrismaAdapter }
+export { PrismaQueueAdapter } from './prisma-queue-adapter'

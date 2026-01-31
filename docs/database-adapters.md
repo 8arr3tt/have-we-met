@@ -86,6 +86,83 @@ console.log(`Found ${result.duplicateGroupsFound} duplicate groups`)
 console.log(`Completed in ${result.durationMs}ms`)
 ```
 
+## Review Queue Support
+
+**Phase 7 Feature:** All database adapters now support the review queue for human-in-the-loop matching decisions.
+
+### Queue Adapter Interface
+
+When you configure an adapter, it automatically includes a `queue` property for persisting review queue items:
+
+```typescript
+const resolver = HaveWeMet.create<Customer>()
+  // ... schema, blocking, matching ...
+  .adapter(prismaAdapter(prisma, {
+    tableName: 'customers',
+    queue: {
+      autoExpireAfter: 30 * 24 * 60 * 60 * 1000, // 30 days
+      defaultPriority: 0,
+      enableMetrics: true
+    }
+  }))
+  .build()
+
+// Queue is automatically available
+await resolver.queue.add({
+  candidateRecord: newCustomer,
+  potentialMatches: matches,
+  context: { source: 'import' }
+})
+```
+
+### Queue Schema
+
+The queue adapter stores items in a separate table/collection (e.g., `review_queue`):
+
+```sql
+-- Example PostgreSQL schema
+CREATE TABLE review_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  candidate_record JSONB NOT NULL,
+  potential_matches JSONB NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  decided_at TIMESTAMP,
+  decided_by VARCHAR(255),
+  decision JSONB,
+  context JSONB,
+  priority INTEGER DEFAULT 0,
+  tags TEXT[]
+);
+
+-- Indexes for common queries
+CREATE INDEX idx_queue_status ON review_queue(status);
+CREATE INDEX idx_queue_created_at ON review_queue(created_at);
+CREATE INDEX idx_queue_priority ON review_queue(priority);
+CREATE INDEX idx_queue_status_created ON review_queue(status, created_at);
+```
+
+### Queue Operations
+
+All adapters provide these queue-specific methods:
+
+```typescript
+interface QueueAdapter<T> {
+  insertQueueItem(item: QueueItem<T>): Promise<QueueItem<T>>
+  updateQueueItem(id: string, updates: Partial<QueueItem<T>>): Promise<QueueItem<T>>
+  findQueueItems(filter: QueueFilter): Promise<QueueItem<T>[]>
+  findQueueItemById(id: string): Promise<QueueItem<T> | null>
+  deleteQueueItem(id: string): Promise<void>
+  countQueueItems(filter?: QueueFilter): Promise<number>
+  batchInsertQueueItems(items: QueueItem<T>[]): Promise<QueueItem<T>[]>
+}
+```
+
+These methods handle JSON serialization, filtering, and efficient queries for the review queue.
+
+See [Review Queue Documentation](./review-queue.md) for complete queue usage guide.
+
 ## Adapter Interface
 
 All adapters implement the `DatabaseAdapter<T>` interface:
@@ -387,6 +464,115 @@ const results = await adapter.findByBlockingKeys(keys)
 console.log(`Query took ${Date.now() - start}ms`)
 ```
 
+## Queue Migrations
+
+When adding the review queue to an existing database, you'll need to create the queue table. Each adapter provides migration examples:
+
+### Prisma Migration
+
+```prisma
+// schema.prisma
+model ReviewQueue {
+  id                String   @id @default(uuid())
+  candidateRecord   Json
+  potentialMatches  Json
+  status            String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  decidedAt         DateTime?
+  decidedBy         String?
+  decision          Json?
+  context           Json?
+  priority          Int      @default(0)
+  tags              String[] @default([])
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([priority])
+  @@index([status, createdAt])
+}
+```
+
+```bash
+npx prisma migrate dev --name add_review_queue
+```
+
+### Drizzle Migration
+
+```typescript
+// drizzle/schema.ts
+import { pgTable, uuid, jsonb, varchar, timestamp, integer, text } from 'drizzle-orm/pg-core'
+
+export const reviewQueue = pgTable('review_queue', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  candidateRecord: jsonb('candidate_record').notNull(),
+  potentialMatches: jsonb('potential_matches').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  decidedAt: timestamp('decided_at'),
+  decidedBy: varchar('decided_by', { length: 255 }),
+  decision: jsonb('decision'),
+  context: jsonb('context'),
+  priority: integer('priority').default(0),
+  tags: text('tags').array()
+})
+```
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+### TypeORM Migration
+
+```typescript
+// migrations/xxxxx-add-review-queue.ts
+import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm'
+
+export class AddReviewQueue1234567890 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: 'review_queue',
+        columns: [
+          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          { name: 'candidate_record', type: 'jsonb' },
+          { name: 'potential_matches', type: 'jsonb' },
+          { name: 'status', type: 'varchar', length: '20', default: "'pending'" },
+          { name: 'created_at', type: 'timestamp', default: 'now()' },
+          { name: 'updated_at', type: 'timestamp', default: 'now()' },
+          { name: 'decided_at', type: 'timestamp', isNullable: true },
+          { name: 'decided_by', type: 'varchar', length: '255', isNullable: true },
+          { name: 'decision', type: 'jsonb', isNullable: true },
+          { name: 'context', type: 'jsonb', isNullable: true },
+          { name: 'priority', type: 'integer', default: 0 },
+          { name: 'tags', type: 'text[]', default: 'ARRAY[]::text[]' }
+        ]
+      })
+    )
+
+    await queryRunner.createIndex('review_queue', new TableIndex({
+      name: 'idx_queue_status',
+      columnNames: ['status']
+    }))
+
+    await queryRunner.createIndex('review_queue', new TableIndex({
+      name: 'idx_queue_created_at',
+      columnNames: ['created_at']
+    }))
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropTable('review_queue')
+  }
+}
+```
+
+```bash
+npm run typeorm migration:run
+```
+
 ## Next Steps
 
 - [Prisma Adapter Guide](./adapter-guides/prisma.md) - Prisma-specific setup and examples
@@ -394,6 +580,7 @@ console.log(`Query took ${Date.now() - start}ms`)
 - [TypeORM Adapter Guide](./adapter-guides/typeorm.md) - TypeORM-specific setup and examples
 - [Database Performance](./database-performance.md) - Performance tuning and optimization
 - [Migration Guide](./migration-guide.md) - Deduplicate existing databases
+- [Review Queue](./review-queue.md) - Human-in-the-loop review workflows
 
 ## Examples
 

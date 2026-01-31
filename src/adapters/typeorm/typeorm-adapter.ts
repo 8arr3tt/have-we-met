@@ -1,6 +1,7 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria } from '../types'
+import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria, QueueAdapter } from '../types'
 import { BaseAdapter } from '../base-adapter'
 import { QueryError, TransactionError, NotFoundError } from '../adapter-error'
+import { TypeORMQueueAdapter } from './typeorm-queue-adapter'
 
 type Repository<T> = {
   find: (options?: unknown) => Promise<T[]>
@@ -27,11 +28,21 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
 {
   private readonly repository: Repository<T>
   private readonly entityTarget: unknown
+  readonly queue: QueueAdapter<T>
 
-  constructor(repository: Repository<T>, config: AdapterConfig, entityTarget?: unknown) {
+  constructor(
+    repository: Repository<T>,
+    config: AdapterConfig,
+    entityTarget?: unknown,
+    queueRepository?: Repository<Record<string, unknown>>
+  ) {
     super(config)
     this.repository = repository
     this.entityTarget = entityTarget
+    this.queue = new TypeORMQueueAdapter<T>(
+      queueRepository || (repository as unknown as Repository<Record<string, unknown>>),
+      config.queue
+    )
   }
 
   private buildWhereClause(filter: FilterCriteria): Record<string, unknown> {

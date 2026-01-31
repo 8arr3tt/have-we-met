@@ -1,3 +1,7 @@
+import type { QueueAdapter, QueueFilter } from '../queue/types.js'
+
+export type { QueueAdapter, QueueFilter }
+
 /**
  * Core adapter interface that all database implementations must satisfy.
  * Provides storage-agnostic operations for querying, reading, writing, and managing records.
@@ -13,6 +17,11 @@
  * ```
  */
 export interface DatabaseAdapter<T extends Record<string, unknown>> {
+  /**
+   * Queue adapter for review queue persistence.
+   * Available when the adapter is configured to support queue operations.
+   */
+  queue?: QueueAdapter<T>
   /**
    * Find records matching the blocking criteria.
    * Used to efficiently retrieve candidate records for matching based on blocking keys.
@@ -225,6 +234,9 @@ export interface AdapterConfig {
     max?: number
     idleTimeoutMs?: number
   }
+
+  /** Queue configuration options */
+  queue?: import('../builder/queue-options.js').QueueOptions
 }
 
 /**
@@ -250,6 +262,12 @@ export interface DatabaseResolveOptions {
 
   /** Maximum records to fetch from database (default: 1000) */
   maxFetchSize?: number
+
+  /** Automatically add potential matches to review queue */
+  autoQueue?: boolean
+
+  /** Context to include with queued items */
+  queueContext?: Partial<import('../queue/types.js').QueueContext>
 }
 
 /**
@@ -267,6 +285,12 @@ export interface DatabaseDeduplicationOptions {
 
   /** Whether to include detailed explanations in results (default: true) */
   returnExplanation?: boolean
+
+  /** Automatically add potential matches to review queue */
+  autoQueue?: boolean
+
+  /** Context to include with queued items */
+  queueContext?: Partial<import('../queue/types.js').QueueContext>
 }
 
 /**

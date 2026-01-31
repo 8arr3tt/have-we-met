@@ -21,6 +21,7 @@ type Repository<T> = {
 }
 
 export { TypeORMAdapter }
+export { TypeORMQueueAdapter } from './typeorm-queue-adapter'
 
 export function typeormAdapter<T extends Record<string, unknown>>(
   repository: Repository<T>,

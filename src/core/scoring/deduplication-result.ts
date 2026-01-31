@@ -28,6 +28,10 @@ export interface DeduplicationBatchOptions {
   minScore?: number
   /** Whether to include records with no matches in results */
   includeNoMatches?: boolean
+  /** Automatically add potential matches to review queue */
+  autoQueue?: boolean
+  /** Context to include with queued items */
+  queueContext?: Partial<import('../../queue/types.js').QueueContext>
 }
 
 /**
@@ -48,6 +52,8 @@ export interface DeduplicationStats {
   recordsWithMatches: number
   /** Number of records with no matches */
   recordsWithoutMatches: number
+  /** Number of items added to review queue (if autoQueue enabled) */
+  queuedCount?: number
 }
 
 /**

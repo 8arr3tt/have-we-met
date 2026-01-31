@@ -1,6 +1,7 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria } from '../types'
+import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria, QueueAdapter } from '../types'
 import { BaseAdapter } from '../base-adapter'
 import { QueryError, TransactionError, NotFoundError } from '../adapter-error'
+import { PrismaQueueAdapter } from './prisma-queue-adapter'
 
 type PrismaClient = {
   $transaction: <R>(callback: (tx: PrismaClient) => Promise<R>) => Promise<R>
@@ -12,11 +13,13 @@ export class PrismaAdapter<T extends Record<string, unknown>>
 {
   private readonly prisma: PrismaClient
   private readonly modelName: string
+  readonly queue: QueueAdapter<T>
 
   constructor(prisma: PrismaClient, config: AdapterConfig) {
     super(config)
     this.prisma = prisma
     this.modelName = config.tableName
+    this.queue = new PrismaQueueAdapter<T>(prisma, config.queue)
   }
 
   private getModel() {
