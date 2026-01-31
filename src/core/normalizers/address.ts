@@ -5,7 +5,9 @@ import {
   US_STATE_CODES,
   CANADIAN_PROVINCES,
   CANADIAN_PROVINCE_CODES,
+  UK_COUNTIES,
   STREET_TYPE_ABBREVIATIONS,
+  UK_STREET_TYPE_ABBREVIATIONS,
   DIRECTIONAL_ABBREVIATIONS,
   UNIT_TYPE_PATTERNS,
 } from './address-data'
@@ -51,17 +53,19 @@ export interface AddressNormalizerOptions {
 }
 
 /**
- * Converts a US state full name to its two-letter abbreviation.
+ * Converts a US state, Canadian province, or UK county full name to its abbreviation.
  *
- * @param state - The state name (full or abbreviated)
- * @returns The two-letter state code, or the input if already abbreviated or not found
+ * @param state - The state/province/county name (full or abbreviated)
+ * @returns The abbreviated code, or the input if already abbreviated or not found
  *
  * @example
  * ```typescript
- * abbreviateState('California')  // 'CA'
- * abbreviateState('New York')    // 'NY'
- * abbreviateState('CA')          // 'CA'
- * abbreviateState('Unknown')     // 'Unknown'
+ * abbreviateState('California')       // 'CA'
+ * abbreviateState('New York')         // 'NY'
+ * abbreviateState('Ontario')          // 'ON'
+ * abbreviateState('Greater London')   // 'London'
+ * abbreviateState('CA')               // 'CA'
+ * abbreviateState('Unknown')          // 'Unknown'
  * ```
  */
 export function abbreviateState(state: string): string {
@@ -79,6 +83,11 @@ export function abbreviateState(state: string): string {
     return CANADIAN_PROVINCES[normalized]
   }
 
+  // Check UK counties
+  if (UK_COUNTIES[normalized]) {
+    return UK_COUNTIES[normalized]
+  }
+
   // Check if already a valid state/province code
   const upper = state.trim().toUpperCase()
   if (US_STATE_CODES.has(upper) || CANADIAN_PROVINCE_CODES.has(upper)) {
@@ -90,9 +99,10 @@ export function abbreviateState(state: string): string {
 }
 
 /**
- * Abbreviates street type names per USPS standards.
+ * Abbreviates street type names per USPS/UK standards.
  *
  * @param streetType - The street type (full or abbreviated)
+ * @param country - Optional country code to use country-specific abbreviations
  * @returns The abbreviated street type, or the input if not found
  *
  * @example
@@ -100,17 +110,29 @@ export function abbreviateState(state: string): string {
  * abbreviateStreetType('Street')     // 'St'
  * abbreviateStreetType('Avenue')     // 'Ave'
  * abbreviateStreetType('Boulevard')  // 'Blvd'
+ * abbreviateStreetType('Close', 'GB') // 'Cl' (UK-specific)
  * abbreviateStreetType('St')         // 'St'
  * ```
  */
-export function abbreviateStreetType(streetType: string): string {
+export function abbreviateStreetType(streetType: string, country?: string): string {
   if (!streetType) return streetType
 
   const normalized = streetType.trim().toLowerCase()
+  const isUK = country === 'GB' || country === 'UK'
 
-  // Check if it's a known street type
+  // Check UK street types first if UK address
+  if (isUK && UK_STREET_TYPE_ABBREVIATIONS[normalized]) {
+    return UK_STREET_TYPE_ABBREVIATIONS[normalized]
+  }
+
+  // Check US/common street types
   if (STREET_TYPE_ABBREVIATIONS[normalized]) {
     return STREET_TYPE_ABBREVIATIONS[normalized]
+  }
+
+  // Check UK street types as fallback
+  if (UK_STREET_TYPE_ABBREVIATIONS[normalized]) {
+    return UK_STREET_TYPE_ABBREVIATIONS[normalized]
   }
 
   // Check directionals
@@ -123,6 +145,35 @@ export function abbreviateStreetType(streetType: string): string {
     .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ')
+}
+
+/**
+ * Validates and formats a UK postcode.
+ *
+ * @param postcode - The postcode to validate and format
+ * @returns The formatted postcode (uppercase with space), or null if invalid
+ *
+ * @example
+ * ```typescript
+ * formatUKPostcode('sw1a1aa')    // 'SW1A 1AA'
+ * formatUKPostcode('SW1A1AA')    // 'SW1A 1AA'
+ * formatUKPostcode('m1 1aa')     // 'M1 1AA'
+ * formatUKPostcode('gir 0aa')    // 'GIR 0AA'
+ * formatUKPostcode('invalid')    // null
+ * ```
+ */
+export function formatUKPostcode(postcode: string): string | null {
+  if (!postcode) return null
+
+  // Remove all spaces and convert to uppercase
+  const cleaned = postcode.replace(/\s+/g, '').toUpperCase()
+
+  // Match against UK postcode pattern (including special GIR 0AA)
+  const match = cleaned.match(/^([A-Z]{1,2}\d{1,2}[A-Z]?|GIR)(\d[A-Z]{2})$/)
+  if (!match) return null
+
+  // Format with space: "SW1A 1AA" or "GIR 0AA"
+  return `${match[1]} ${match[2]}`
 }
 
 /**
@@ -199,13 +250,29 @@ export function parseAddressComponents(address: string): AddressComponents {
 
   const components: AddressComponents = {}
 
-  // Extract unit from first part (street address)
-  let streetPart = parts[0]
-  const unitExtraction = extractUnit(streetPart)
-  if (unitExtraction.unit) {
-    components.unit = unitExtraction.unit
-    streetPart = unitExtraction.address
+  // Check if first part is a standalone unit designation (e.g., "Flat 2" before street address)
+  let streetPartIndex = 0
+  if (parts.length > 1) {
+    const firstPartUnitTest = extractUnit(parts[0])
+    // If first part becomes empty after unit extraction, it was a standalone unit
+    if (firstPartUnitTest.unit && !firstPartUnitTest.address.trim()) {
+      components.unit = firstPartUnitTest.unit
+      streetPartIndex = 1 // Street address is in the next part
+    }
   }
+
+  // Extract unit from street part if not already found
+  let streetPart = parts[streetPartIndex]
+  if (!components.unit) {
+    const unitExtraction = extractUnit(streetPart)
+    if (unitExtraction.unit) {
+      components.unit = unitExtraction.unit
+      streetPart = unitExtraction.address
+    }
+  }
+
+  // Adjust parts array to remove the standalone unit part if it was used
+  const relevantParts = streetPartIndex === 1 ? parts.slice(1) : parts
 
   // Parse street address (first part)
   // Try to extract street number (starts with digits)
@@ -233,14 +300,61 @@ export function parseAddressComponents(address: string): AddressComponents {
   }
   components.street = streetPart
 
+  // Detect UK postcode in relevant parts
+  let ukPostcodeIndex = -1
+  let detectedUKPostcode: string | null = null
+  for (let i = 0; i < relevantParts.length; i++) {
+    const formatted = formatUKPostcode(relevantParts[i])
+    if (formatted) {
+      ukPostcodeIndex = i
+      detectedUKPostcode = formatted
+      break
+    }
+  }
+
+  // If UK postcode detected, parse as UK address
+  if (ukPostcodeIndex !== -1 && detectedUKPostcode) {
+    components.postalCode = detectedUKPostcode
+    components.country = 'GB'
+
+    // UK address format (typically):
+    // relevantParts[0]: street (already parsed)
+    // relevantParts[1..n-2]: area/locality (optional), city
+    // relevantParts[n-1]: postcode (already found)
+    // relevantParts might also include county
+
+    if (ukPostcodeIndex === relevantParts.length - 1) {
+      // Postcode is last part (most common)
+      if (relevantParts.length === 2) {
+        // Format: "123 Main St, SW1A 1AA"
+        // No city/county provided, just street and postcode
+      } else if (relevantParts.length === 3) {
+        // Format: "123 Main St, London, SW1A 1AA"
+        components.city = relevantParts[1]
+      } else if (relevantParts.length === 4) {
+        // Format: "123 Main St, London, Greater London, SW1A 1AA"
+        // or: "123 Main St, Area, City, SW1A 1AA"
+        components.city = relevantParts[2]
+        components.state = relevantParts[1] // Could be county or area
+      } else if (relevantParts.length >= 5) {
+        // More parts - likely includes area, city, county
+        // Use last two parts before postcode
+        components.city = relevantParts[relevantParts.length - 2]
+        components.state = relevantParts[relevantParts.length - 3]
+      }
+    }
+
+    return components
+  }
+
   // Canadian postal code pattern: A1A 1A1 or A1A1A1
   const canadianPostalCodePattern = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i
 
-  // Parse remaining parts based on count
-  if (parts.length === 2) {
+  // Parse remaining parts based on count (US/Canadian addresses)
+  if (relevantParts.length === 2) {
     // Format: "123 Main St, Anytown CA 90210"
     // Last part contains city, state, ZIP
-    const lastPart = parts[1]
+    const lastPart = relevantParts[1]
     const lastPartMatch = lastPart.match(/^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i)
     if (lastPartMatch) {
       components.city = lastPartMatch[1].trim()
@@ -257,12 +371,12 @@ export function parseAddressComponents(address: string): AddressComponents {
         components.city = lastPart
       }
     }
-  } else if (parts.length === 3) {
+  } else if (relevantParts.length === 3) {
     // Format: "123 Main St, Anytown, CA 90210" or "123 Main St, Toronto, ON M5H 2N2"
-    components.city = parts[1]
+    components.city = relevantParts[1]
 
     // Parse state and ZIP from last part
-    const lastPart = parts[2]
+    const lastPart = relevantParts[2]
 
     // Try US format: state code + ZIP
     const usStateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i)
@@ -294,15 +408,16 @@ export function parseAddressComponents(address: string): AddressComponents {
         }
       }
     }
-  } else if (parts.length >= 4) {
+  } else if (relevantParts.length >= 4) {
     // Format: "123 Main St, Apt 4B, Anytown, CA 90210"
     // or: "123 Main St, Anytown, CA, 90210"
     // Try to identify which parts are what based on patterns
 
     // Check if any part looks like a unit designation (and we haven't extracted one yet)
+    const workingParts = [...relevantParts] // Copy to avoid mutating
     if (!components.unit) {
-      for (let i = 1; i < parts.length - 2; i++) {
-        const part = parts[i]
+      for (let i = 1; i < workingParts.length - 2; i++) {
+        const part = workingParts[i]
         // Check if this part looks like a unit designation
         for (const pattern of UNIT_TYPE_PATTERNS) {
           if (pattern.test(part)) {
@@ -310,7 +425,7 @@ export function parseAddressComponents(address: string): AddressComponents {
             if (unitMatch) {
               components.unit = unitMatch[1].trim()
               // Remove this part from further processing
-              parts.splice(i, 1)
+              workingParts.splice(i, 1)
               break
             }
           }
@@ -320,10 +435,10 @@ export function parseAddressComponents(address: string): AddressComponents {
     }
 
     // Now parse the remaining parts
-    if (parts.length === 3) {
+    if (workingParts.length === 3) {
       // After removing unit, we have: street, city, state+zip
-      components.city = parts[1]
-      const lastPart = parts[2]
+      components.city = workingParts[1]
+      const lastPart = workingParts[2]
 
       // Try US format
       const usStateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i)
@@ -340,35 +455,35 @@ export function parseAddressComponents(address: string): AddressComponents {
           components.state = lastPart
         }
       }
-    } else if (parts.length === 4) {
+    } else if (workingParts.length === 4) {
       // Four parts: street, city, state, zip
-      components.city = parts[1]
-      components.state = parts[2]
-      components.postalCode = parts[3]
+      components.city = workingParts[1]
+      components.state = workingParts[2]
+      components.postalCode = workingParts[3]
     } else {
       // More than 4 parts - use heuristics
       // If second-to-last part looks like a state code
-      const secondToLast = parts[parts.length - 2]
+      const secondToLast = workingParts[workingParts.length - 2]
       if (/^[A-Z]{2}$/i.test(secondToLast.trim())) {
         components.state = secondToLast.trim().toUpperCase()
-        components.city = parts[parts.length - 3]
+        components.city = workingParts[workingParts.length - 3]
 
         // Last part might be ZIP or postal code
-        const lastPart = parts[parts.length - 1]
+        const lastPart = workingParts[workingParts.length - 1]
         if (/^\d{5}(?:-\d{4})?$/.test(lastPart) || canadianPostalCodePattern.test(lastPart)) {
           components.postalCode = lastPart
         }
       } else {
         // Fallback: assume last 3 parts are city, state, ZIP
-        const lastPart = parts[parts.length - 1]
+        const lastPart = workingParts[workingParts.length - 1]
         if (/^\d{5}(?:-\d{4})?$/.test(lastPart) || canadianPostalCodePattern.test(lastPart)) {
           components.postalCode = lastPart
-          components.state = parts[parts.length - 2]
-          components.city = parts[parts.length - 3]
+          components.state = workingParts[workingParts.length - 2]
+          components.city = workingParts[workingParts.length - 3]
         } else {
           // Last two parts are city and state
-          components.state = parts[parts.length - 1]
-          components.city = parts[parts.length - 2]
+          components.state = workingParts[workingParts.length - 1]
+          components.city = workingParts[workingParts.length - 2]
         }
       }
     }

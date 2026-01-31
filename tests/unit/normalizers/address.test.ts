@@ -4,6 +4,7 @@ import {
   parseAddressComponents,
   abbreviateState,
   abbreviateStreetType,
+  formatUKPostcode,
   type AddressComponents,
 } from '../../../src/core/normalizers/address'
 
@@ -392,5 +393,196 @@ describe('normalizeAddress', () => {
     const first = normalizeAddress(input)
     const second = normalizeAddress(first as string)
     expect(first).toBe(second)
+  })
+})
+
+describe('UK Address Support', () => {
+  describe('formatUKPostcode', () => {
+    it('should format valid UK postcodes', () => {
+      expect(formatUKPostcode('SW1A1AA')).toBe('SW1A 1AA')
+      expect(formatUKPostcode('sw1a1aa')).toBe('SW1A 1AA')
+      expect(formatUKPostcode('SW1A 1AA')).toBe('SW1A 1AA')
+      expect(formatUKPostcode('m1 1aa')).toBe('M1 1AA')
+      expect(formatUKPostcode('M11AA')).toBe('M1 1AA')
+    })
+
+    it('should handle various UK postcode formats', () => {
+      expect(formatUKPostcode('W1A 0AX')).toBe('W1A 0AX')
+      expect(formatUKPostcode('M1 1AA')).toBe('M1 1AA')
+      expect(formatUKPostcode('B33 8TH')).toBe('B33 8TH')
+      expect(formatUKPostcode('CR2 6XH')).toBe('CR2 6XH')
+      expect(formatUKPostcode('DN55 1PT')).toBe('DN55 1PT')
+      expect(formatUKPostcode('EC1A 1BB')).toBe('EC1A 1BB')
+      expect(formatUKPostcode('GIR 0AA')).toBe('GIR 0AA') // Special Girobank postcode
+    })
+
+    it('should handle postcodes without spaces', () => {
+      expect(formatUKPostcode('W1A0AX')).toBe('W1A 0AX')
+      expect(formatUKPostcode('EC1A1BB')).toBe('EC1A 1BB')
+    })
+
+    it('should handle postcodes with extra spaces', () => {
+      expect(formatUKPostcode('W1A  0AX')).toBe('W1A 0AX')
+      expect(formatUKPostcode('  SW1A 1AA  ')).toBe('SW1A 1AA')
+    })
+
+    it('should return null for invalid postcodes', () => {
+      expect(formatUKPostcode('invalid')).toBeNull()
+      expect(formatUKPostcode('123')).toBeNull()
+      expect(formatUKPostcode('AAAA AAAA')).toBeNull()
+      expect(formatUKPostcode('')).toBeNull()
+    })
+
+    it('should return null for US ZIP codes', () => {
+      expect(formatUKPostcode('90210')).toBeNull()
+      expect(formatUKPostcode('12345-6789')).toBeNull()
+    })
+  })
+
+  describe('abbreviateState with UK counties', () => {
+    it('should abbreviate UK county names', () => {
+      expect(abbreviateState('Greater London')).toBe('London')
+      expect(abbreviateState('Berkshire')).toBe('Berks')
+      expect(abbreviateState('Buckinghamshire')).toBe('Bucks')
+      expect(abbreviateState('Cambridgeshire')).toBe('Cambs')
+      expect(abbreviateState('Hampshire')).toBe('Hants')
+      expect(abbreviateState('Hertfordshire')).toBe('Herts')
+    })
+
+    it('should handle Scottish counties', () => {
+      expect(abbreviateState('Aberdeenshire')).toBe('Aberdeens')
+      expect(abbreviateState('East Lothian')).toBe('E Loth')
+      expect(abbreviateState('West Lothian')).toBe('W Loth')
+    })
+
+    it('should handle Welsh counties', () => {
+      expect(abbreviateState('Carmarthenshire')).toBe('Carmarthen')
+      expect(abbreviateState('Pembrokeshire')).toBe('Pembs')
+    })
+
+    it('should handle case-insensitive UK county names', () => {
+      expect(abbreviateState('greater london')).toBe('London')
+      expect(abbreviateState('BERKSHIRE')).toBe('Berks')
+    })
+  })
+
+  describe('parseAddressComponents with UK addresses', () => {
+    it('should parse simple UK address with postcode', () => {
+      const result = parseAddressComponents('10 Downing Street, London, SW1A 2AA')
+      expect(result.streetNumber).toBe('10')
+      expect(result.streetName).toBe('Downing')
+      expect(result.city).toBe('London')
+      expect(result.postalCode).toBe('SW1A 2AA')
+      expect(result.country).toBe('GB')
+    })
+
+    it('should parse UK address with county', () => {
+      const result = parseAddressComponents('123 High Street, Cambridge, Cambridgeshire, CB1 2AA')
+      expect(result.streetNumber).toBe('123')
+      expect(result.city).toBe('Cambridgeshire')
+      expect(result.state).toBe('Cambridge')
+      expect(result.postalCode).toBe('CB1 2AA')
+      expect(result.country).toBe('GB')
+    })
+
+    it('should parse UK address with Flat', () => {
+      const result = parseAddressComponents('Flat 2, 45 Baker Street, London, NW1 6XE')
+      expect(result.unit).toBe('2')
+      expect(result.streetNumber).toBe('45')
+      expect(result.streetName).toBe('Baker')
+      expect(result.city).toBe('London')
+      expect(result.postalCode).toBe('NW1 6XE')
+      expect(result.country).toBe('GB')
+    })
+
+    it('should handle various UK postcode formats', () => {
+      expect(parseAddressComponents('10 Main St, London, W1A 0AX').postalCode).toBe('W1A 0AX')
+      expect(parseAddressComponents('10 Main St, London, M1 1AA').postalCode).toBe('M1 1AA')
+      expect(parseAddressComponents('10 Main St, London, B33 8TH').postalCode).toBe('B33 8TH')
+      expect(parseAddressComponents('10 Main St, London, CR2 6XH').postalCode).toBe('CR2 6XH')
+      expect(parseAddressComponents('10 Main St, London, DN55 1PT').postalCode).toBe('DN55 1PT')
+    })
+
+    it('should handle UK postcodes without spaces', () => {
+      const result = parseAddressComponents('10 Main St, London, SW1A2AA')
+      expect(result.postalCode).toBe('SW1A 2AA')
+      expect(result.country).toBe('GB')
+    })
+
+    it('should handle lowercase UK postcodes', () => {
+      const result = parseAddressComponents('10 Main St, London, sw1a 2aa')
+      expect(result.postalCode).toBe('SW1A 2AA')
+      expect(result.country).toBe('GB')
+    })
+
+    it('should parse UK address without city', () => {
+      const result = parseAddressComponents('10 Main Street, SW1A 2AA')
+      expect(result.streetNumber).toBe('10')
+      expect(result.postalCode).toBe('SW1A 2AA')
+      expect(result.country).toBe('GB')
+    })
+  })
+
+  describe('normalizeAddress with UK addresses', () => {
+    it('should normalize UK address with proper formatting', () => {
+      const result = normalizeAddress('10 downing street, london, sw1a 2aa')
+      expect(result).toContain('10 Downing St')
+      expect(result).toContain('London')
+      expect(result).toContain('SW1A 2AA')
+    })
+
+    it('should normalize UK address with county', () => {
+      const result = normalizeAddress('123 high street, oxford, oxfordshire, ox1 1aa')
+      expect(result).toContain('123 High St')
+      expect(result).toContain('OX1 1AA')
+    })
+
+    it('should handle UK-specific street types', () => {
+      expect(normalizeAddress('10 Abbey Road, London, NW8 9AY')).toContain('Abbey Rd')
+      expect(normalizeAddress('10 Park Lane, London, W1K 7AA')).toContain('Park Ln')
+      expect(normalizeAddress('10 Kings Close, London, W1A 1AA')).toContain('Kings Cl')
+      expect(normalizeAddress('10 Victoria Crescent, London, W1A 1AA')).toContain('Victoria Cres')
+    })
+
+    it('should abbreviate UK county names in addresses', () => {
+      const result = normalizeAddress('123 Main St, Reading, Berkshire, RG1 1AA', {
+        abbreviateStates: true,
+      })
+      expect(result).toContain('Berks')
+    })
+
+    it('should handle Flat designation (UK-specific)', () => {
+      const result = normalizeAddress('Flat 3, 45 Park Road, London, NW1 6XE')
+      expect(result).toContain('#3')
+      expect(result).toContain('45 Park Rd')
+    })
+
+    it('should return components for UK address', () => {
+      const result = normalizeAddress('10 Downing Street, London, SW1A 2AA', {
+        outputFormat: 'components',
+      }) as AddressComponents
+
+      expect(result.streetNumber).toBe('10')
+      expect(result.streetName).toBe('Downing')
+      expect(result.city).toBe('London')
+      expect(result.postalCode).toBe('SW1A 2AA')
+      expect(result.country).toBe('GB')
+    })
+
+    it('should normalize messy UK address', () => {
+      const result = normalizeAddress(
+        '  FLAT  2,  123  HIGH  STREET,  CAMBRIDGE,  CAMBRIDGESHIRE,  cb1  2aa  '
+      )
+      expect(result).toContain('#2')
+      expect(result).toContain('123 High St')
+      expect(result).toContain('Cambridge')
+      expect(result).toContain('CB1 2AA')
+    })
+
+    it('should handle UK address with multiple commas', () => {
+      const result = normalizeAddress('10 Downing Street, Westminster, London, Greater London, SW1A 2AA')
+      expect(result).toContain('10 Downing St')
+      expect(result).toContain('SW1A 2AA')
+    })
   })
 })
