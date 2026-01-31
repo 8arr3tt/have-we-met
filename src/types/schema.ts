@@ -32,6 +32,9 @@ export interface FieldDefinition {
   required?: boolean
   /** Named normalizer to apply before comparison */
   normalizer?: string
+  /** Options to pass to the normalizer function */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  normalizerOptions?: any
   /** Custom normalizer function for pre-processing values */
   customNormalizer?: (value: unknown) => unknown
 }

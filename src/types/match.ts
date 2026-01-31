@@ -27,6 +27,10 @@ export interface FieldComparison {
   leftValue: unknown
   /** Value from the right/candidate record */
   rightValue: unknown
+  /** Normalized value from the left/input record (after normalizer applied) */
+  normalizedLeftValue?: unknown
+  /** Normalized value from the right/candidate record (after normalizer applied) */
+  normalizedRightValue?: unknown
 }
 
 /**

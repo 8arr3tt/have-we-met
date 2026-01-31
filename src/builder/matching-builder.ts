@@ -4,6 +4,12 @@ import type {
   MatchingStrategy,
   ThresholdConfig,
 } from '../types'
+import type {
+  LevenshteinOptions,
+  JaroWinklerOptions,
+  SoundexOptions,
+  MetaphoneOptions,
+} from '../core/comparators'
 
 export class FieldMatchBuilder {
   private config: FieldMatchConfig = {
@@ -33,6 +39,87 @@ export class FieldMatchBuilder {
 
   caseSensitive(caseSensitive: boolean): this {
     this.config.caseSensitive = caseSensitive
+    return this
+  }
+
+  /**
+   * Sets options for the Levenshtein distance strategy.
+   *
+   * @param options - Levenshtein-specific options
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * builder
+   *   .field('address')
+   *   .strategy('levenshtein')
+   *   .levenshteinOptions({ caseSensitive: false, normalizeWhitespace: true })
+   *   .weight(10)
+   * ```
+   */
+  levenshteinOptions(options: LevenshteinOptions): this {
+    this.config.levenshteinOptions = options
+    return this
+  }
+
+  /**
+   * Sets options for the Jaro-Winkler similarity strategy.
+   *
+   * @param options - Jaro-Winkler-specific options
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * builder
+   *   .field('firstName')
+   *   .strategy('jaro-winkler')
+   *   .jaroWinklerOptions({ prefixScale: 0.1, maxPrefixLength: 4 })
+   *   .weight(15)
+   *   .threshold(0.85)
+   * ```
+   */
+  jaroWinklerOptions(options: JaroWinklerOptions): this {
+    this.config.jaroWinklerOptions = options
+    return this
+  }
+
+  /**
+   * Sets options for the Soundex phonetic encoding strategy.
+   *
+   * @param options - Soundex-specific options
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * builder
+   *   .field('lastName')
+   *   .strategy('soundex')
+   *   .soundexOptions({ nullMatchesNull: true })
+   *   .weight(8)
+   * ```
+   */
+  soundexOptions(options: SoundexOptions): this {
+    this.config.soundexOptions = options
+    return this
+  }
+
+  /**
+   * Sets options for the Metaphone phonetic encoding strategy.
+   *
+   * @param options - Metaphone-specific options
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * builder
+   *   .field('lastName')
+   *   .strategy('metaphone')
+   *   .metaphoneOptions({ maxLength: 6 })
+   *   .weight(8)
+   * ```
+   */
+  metaphoneOptions(options: MetaphoneOptions): this {
+    this.config.metaphoneOptions = options
     return this
   }
 

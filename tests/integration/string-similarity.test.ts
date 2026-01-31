@@ -272,6 +272,114 @@ describe('String Similarity Strategies', () => {
     })
   })
 
+  describe('Algorithm-Specific Options', () => {
+    it('should use levenshtein options through builder API', () => {
+      const resolver = HaveWeMet.create<Person>()
+        .schema((s) => s.field('firstName', { type: 'name' }))
+        .matching((m) =>
+          m
+            .field('firstName')
+            .strategy('levenshtein')
+            .levenshteinOptions({ caseSensitive: true, normalizeWhitespace: false })
+            .weight(100)
+        )
+        .thresholds({ noMatch: 20, definiteMatch: 75 })
+        .build()
+
+      const input = createPersonRecord({ firstName: 'John' }, 'input')
+      const candidates = [
+        createPersonRecord({ firstName: 'john' }, '1'), // Different case
+      ]
+
+      const result = resolver.resolve(input, candidates)
+
+      // With case-sensitive option, 'John' and 'john' should not be identical
+      expect(result.bestMatch?.score.fieldComparisons[0].similarity).toBeLessThan(1)
+    })
+
+    it('should use jaro-winkler options through builder API', () => {
+      const resolver = HaveWeMet.create<Person>()
+        .schema((s) => s.field('firstName', { type: 'name' }))
+        .matching((m) =>
+          m
+            .field('firstName')
+            .strategy('jaro-winkler')
+            .jaroWinklerOptions({ prefixScale: 0.2, maxPrefixLength: 4 })
+            .weight(100)
+        )
+        .thresholds({ noMatch: 20, definiteMatch: 75 })
+        .build()
+
+      const input = createPersonRecord({ firstName: 'DIXON' }, 'input')
+      const candidates = [createPersonRecord({ firstName: 'DICKSONX' }, '1')]
+
+      const result = resolver.resolve(input, candidates)
+
+      // With higher prefix scale, the prefix bonus should be more significant
+      expect(result.bestMatch?.score.fieldComparisons[0].similarity).toBeGreaterThan(
+        0.75
+      )
+    })
+
+    it('should use metaphone options through builder API', () => {
+      const resolver = HaveWeMet.create<Person>()
+        .schema((s) => s.field('firstName', { type: 'name' }))
+        .matching((m) =>
+          m
+            .field('firstName')
+            .strategy('metaphone')
+            .metaphoneOptions({ maxLength: 6, nullMatchesNull: true })
+            .weight(100)
+        )
+        .thresholds({ noMatch: 20, definiteMatch: 75 })
+        .build()
+
+      const input = createPersonRecord({ firstName: 'Stephen' }, 'input')
+      const candidates = [createPersonRecord({ firstName: 'Steven' }, '1')]
+
+      const result = resolver.resolve(input, candidates)
+
+      // Stephen and Steven have the same metaphone encoding
+      expect(result.outcome).toBe('match')
+      expect(result.bestMatch?.score.fieldComparisons[0].similarity).toBe(1)
+    })
+
+    it('should use different options for multiple fields', () => {
+      const resolver = HaveWeMet.create<Person>()
+        .schema((s) =>
+          s
+            .field('firstName', { type: 'name', component: 'first' })
+            .field('lastName', { type: 'name', component: 'last' })
+        )
+        .matching((m) =>
+          m
+            .field('firstName')
+            .strategy('jaro-winkler')
+            .jaroWinklerOptions({ prefixScale: 0.1, caseSensitive: false })
+            .weight(50)
+            .field('lastName')
+            .strategy('levenshtein')
+            .levenshteinOptions({ normalizeWhitespace: true, caseSensitive: false })
+            .weight(50)
+        )
+        .thresholds({ noMatch: 20, definiteMatch: 75 })
+        .build()
+
+      const input = createPersonRecord(
+        { firstName: 'Jane', lastName: 'Smith-Jones' },
+        'input'
+      )
+      const candidates = [
+        createPersonRecord({ firstName: 'Jayne', lastName: 'Smith  Jones' }, '1'),
+      ]
+
+      const result = resolver.resolve(input, candidates)
+
+      expect(result.outcome).toBe('match')
+      expect(result.bestMatch?.score.total).toBeGreaterThan(75)
+    })
+  })
+
   describe('Strategy with Threshold', () => {
     it('should respect threshold for levenshtein strategy', () => {
       const resolver = HaveWeMet.create<Person>()

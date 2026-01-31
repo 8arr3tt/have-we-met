@@ -4,6 +4,7 @@ import type {
   MatchingConfig,
   MatchScore,
   RecordPair,
+  SchemaDefinition,
 } from '../types'
 import {
   exactMatch,
@@ -12,6 +13,7 @@ import {
   soundex,
   metaphone,
 } from './comparators'
+import { getNormalizer } from './normalizers/registry'
 
 /**
  * Core matching engine that compares two records using configured strategies.
@@ -19,7 +21,10 @@ import {
  * @typeParam T - The shape of the user's data object
  */
 export class MatchingEngine<T extends object = object> {
-  constructor(private config: MatchingConfig) {}
+  constructor(
+    private config: MatchingConfig,
+    private schema?: SchemaDefinition<T>
+  ) {}
 
   /**
    * Compares two records and calculates a match score.
@@ -36,10 +41,19 @@ export class MatchingEngine<T extends object = object> {
       const leftValue = this.getFieldValue(pair.left.data, field)
       const rightValue = this.getFieldValue(pair.right.data, field)
 
-      const similarity = this.compareField(leftValue, rightValue, fieldConfig)
+      // Apply normalization before comparison
+      const normalizedLeft = this.normalizeValue(leftValue, field)
+      const normalizedRight = this.normalizeValue(rightValue, field)
+
+      const similarity = this.compareField(
+        normalizedLeft,
+        normalizedRight,
+        fieldConfig
+      )
       const weightedScore = similarity * fieldConfig.weight
 
-      fieldComparisons.push({
+      // Only include normalized values if they differ from originals
+      const comparison: FieldComparison = {
         field,
         similarity,
         weight: fieldConfig.weight,
@@ -47,7 +61,16 @@ export class MatchingEngine<T extends object = object> {
         strategy: fieldConfig.strategy,
         leftValue,
         rightValue,
-      })
+      }
+
+      if (normalizedLeft !== leftValue) {
+        comparison.normalizedLeftValue = normalizedLeft
+      }
+      if (normalizedRight !== rightValue) {
+        comparison.normalizedRightValue = normalizedRight
+      }
+
+      fieldComparisons.push(comparison)
 
       totalWeight += fieldConfig.weight
       totalWeightedScore += weightedScore
@@ -58,6 +81,68 @@ export class MatchingEngine<T extends object = object> {
       normalizedTotal: totalWeight > 0 ? totalWeightedScore / totalWeight : 0,
       fieldComparisons,
     }
+  }
+
+  /**
+   * Normalizes a field value using configured normalizers.
+   * Applies custom normalizer or named normalizer from registry.
+   * Returns the original value if normalization fails or is not configured.
+   *
+   * @param value - The value to normalize
+   * @param fieldName - The name of the field being normalized
+   * @returns Normalized value, or original value if normalization fails
+   */
+  private normalizeValue(value: unknown, fieldName: string): unknown {
+    // Return early if no schema defined
+    if (!this.schema) {
+      return value
+    }
+
+    // Get field definition from schema
+    const fieldDef = this.schema[fieldName as keyof T]
+    if (!fieldDef) {
+      return value
+    }
+
+    // Option 1: Custom normalizer function takes precedence
+    if (fieldDef.customNormalizer) {
+      try {
+        const result = fieldDef.customNormalizer(value)
+        return result !== null ? result : value
+      } catch (error) {
+        console.warn(
+          `Custom normalizer failed for field '${fieldName}':`,
+          error instanceof Error ? error.message : error
+        )
+        return value
+      }
+    }
+
+    // Option 2: Named normalizer from registry
+    if (fieldDef.normalizer) {
+      const normalizerFn = getNormalizer(fieldDef.normalizer)
+
+      if (!normalizerFn) {
+        console.warn(
+          `Normalizer '${fieldDef.normalizer}' not found for field '${fieldName}'. Using original value.`
+        )
+        return value
+      }
+
+      try {
+        const result = normalizerFn(value, fieldDef.normalizerOptions)
+        return result !== null ? result : value
+      } catch (error) {
+        console.warn(
+          `Normalizer '${fieldDef.normalizer}' failed for field '${fieldName}':`,
+          error instanceof Error ? error.message : error
+        )
+        return value
+      }
+    }
+
+    // No normalization configured
+    return value
   }
 
   private compareField(
