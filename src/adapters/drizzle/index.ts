@@ -62,3 +62,9 @@ export function drizzleAdapter<T extends Record<string, unknown>>(
 
 export { DrizzleAdapter }
 export { DrizzleQueueAdapter } from './drizzle-queue-adapter'
+export {
+  DrizzleMergeAdapter,
+  DrizzleProvenanceAdapter,
+  createDrizzleMergeAdapter,
+  createDrizzleProvenanceAdapter,
+} from './drizzle-merge-adapter'

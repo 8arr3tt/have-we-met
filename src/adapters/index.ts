@@ -11,6 +11,21 @@ export type {
   MergeResult,
 } from './types'
 
+export type {
+  MergeAdapter,
+  ProvenanceAdapter,
+  ArchivedRecord,
+  UnmergeInfo,
+  MergeAdapterConfig,
+  DatabaseAdapterWithMerge,
+} from './merge-adapter'
+
+export {
+  DEFAULT_MERGE_ADAPTER_CONFIG,
+  toArchivedRecords,
+  toSourceRecords,
+} from './merge-adapter'
+
 export {
   AdapterError,
   ConnectionError,
@@ -22,11 +37,32 @@ export {
 
 export { BaseAdapter } from './base-adapter'
 
-export { PrismaAdapter, prismaAdapter } from './prisma'
+export {
+  PrismaAdapter,
+  prismaAdapter,
+  PrismaMergeAdapter,
+  PrismaProvenanceAdapter,
+  createPrismaMergeAdapter,
+  createPrismaProvenanceAdapter,
+} from './prisma'
 
-export { DrizzleAdapter, drizzleAdapter } from './drizzle'
+export {
+  DrizzleAdapter,
+  drizzleAdapter,
+  DrizzleMergeAdapter,
+  DrizzleProvenanceAdapter,
+  createDrizzleMergeAdapter,
+  createDrizzleProvenanceAdapter,
+} from './drizzle'
 
-export { TypeORMAdapter, typeormAdapter } from './typeorm'
+export {
+  TypeORMAdapter,
+  typeormAdapter,
+  TypeORMMergeAdapter,
+  TypeORMProvenanceAdapter,
+  createTypeORMMergeAdapter,
+  createTypeORMProvenanceAdapter,
+} from './typeorm'
 
 export { IndexAnalyzer, QueryProfiler } from './performance'
 export type {
