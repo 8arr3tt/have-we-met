@@ -133,11 +133,23 @@ export {
   balanceDataset,
   getDatasetStats,
   exportWeightsToJson,
+  // Feedback collector
+  FeedbackCollector,
+  createFeedbackCollector,
+  queueDecisionToTrainingExample,
+  queueDecisionsToTrainingExamples,
 } from './training';
 
 export type {
   TrainerOptions,
   TrainingProgressCallback,
+  FeedbackQuality,
+  FeedbackItem,
+  FeedbackSource,
+  FeedbackFilter,
+  FeedbackStats,
+  FeedbackCollectorOptions,
+  ExportOptions,
 } from './training';
 
 // Integration
