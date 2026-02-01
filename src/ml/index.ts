@@ -81,3 +81,22 @@ export {
 } from './validation';
 
 export type { ValidationError, ValidationResult } from './validation';
+
+// Feature extraction
+export {
+  FeatureExtractor,
+  FeatureExtractionConfigBuilder,
+  featureConfig,
+  builtInExtractors,
+  getFeatureByName,
+  getFieldFeatures,
+  compareFeatureVectors,
+  calculateFeatureStats,
+  DEFAULT_FEATURE_EXTRACTOR_OPTIONS,
+} from './feature-extractor';
+
+export type {
+  FeatureExtractorFn,
+  FeatureExtractorOptions,
+  FeatureExtractionStats,
+} from './feature-extractor';
