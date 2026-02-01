@@ -183,3 +183,53 @@ export {
   batchWithCache,
   refreshInBackground,
 } from './cache/index.js'
+
+// Built-in plugins (validators, lookups, etc.)
+export {
+  // NHS Number Validator
+  nhsNumberValidator,
+  createNHSNumberValidator,
+  validateNHSChecksum,
+  normalizeNHSNumber,
+  type NHSNumberValidatorOptions,
+  // Email Validator
+  emailValidator,
+  createEmailValidator,
+  validateEmailFormat,
+  normalizeEmail,
+  extractDomain,
+  isDisposableDomain,
+  type EmailValidatorOptions,
+  // Phone Validator
+  phoneValidator,
+  createPhoneValidator,
+  getValidCountryCodes,
+  isValidCountryCode,
+  normalizePhoneInput,
+  type PhoneValidatorOptions,
+  type PhoneNumberType,
+  type PhoneValidationMetadata,
+  // SSN Validator
+  ssnValidator,
+  createSSNValidator,
+  normalizeSSN,
+  formatSSN,
+  parseSSN,
+  hasValidAreaNumber,
+  hasValidGroupNumber,
+  hasValidSerialNumber,
+  isKnownInvalidSSN,
+  type SSNValidatorOptions,
+  // NINO Validator
+  ninoValidator,
+  createNINOValidator,
+  normalizeNINO,
+  formatNINO,
+  parseNINO,
+  hasValidFirstLetter,
+  hasValidSecondLetter,
+  hasValidPrefix,
+  hasValidSuffix,
+  isAdministrativeNINO,
+  type NINOValidatorOptions,
+} from './plugins/index.js'
