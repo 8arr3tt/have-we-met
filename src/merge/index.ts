@@ -106,3 +106,19 @@ export {
   setCurrentField,
   calculateStats,
 } from './merge-context.js'
+
+// Provenance tracking
+export {
+  ProvenanceTracker,
+  createProvenanceTracker,
+  InMemoryProvenanceStore,
+  createInMemoryProvenanceStore,
+} from './provenance/index.js'
+
+export type {
+  ProvenanceStore,
+  UnmergeInfo,
+  ProvenanceQueryOptions,
+  FieldHistoryEntry,
+  MergeTimelineEntry,
+} from './provenance/index.js'
