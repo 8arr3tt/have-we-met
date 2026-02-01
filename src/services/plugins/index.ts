@@ -6,5 +6,5 @@
 // Validators
 export * from './validators/index.js'
 
-// Lookups will be added in ticket 9.6
-// export * from './lookups/index.js'
+// Lookups
+export * from './lookups/index.js'
