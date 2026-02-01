@@ -91,3 +91,21 @@ export {
   isLookupService,
   isCustomService,
 } from './validation.js'
+
+// Service executor
+export {
+  ServiceExecutorImpl,
+  createServiceExecutor,
+  type ServiceExecutorOptions,
+} from './service-executor.js'
+
+// Execution context utilities
+export {
+  buildServiceContext,
+  createRequestMetadata,
+  generateCorrelationId,
+  defaultLogger,
+  createSilentLogger,
+  createPrefixedLogger,
+  type ExecutionContextOptions,
+} from './execution-context.js'
