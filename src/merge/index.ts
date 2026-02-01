@@ -137,3 +137,6 @@ export type { UnmergeMode, UnmergeOptions, SourceRecordArchive } from './unmerge
 export { QueueMergeHandler, createQueueMergeHandler } from './queue-merge-handler.js'
 
 export type { QueueMergeResult, QueueMergeHandlerOptions } from './queue-merge-handler.js'
+
+// Merge builder (re-export from builder module)
+export { MergeBuilder, FieldMergeBuilder, createMergeBuilder } from '../builder/merge-builder.js'
