@@ -122,3 +122,13 @@ export type {
   FieldHistoryEntry,
   MergeTimelineEntry,
 } from './provenance/index.js'
+
+// Unmerge executor
+export {
+  UnmergeExecutor,
+  InMemorySourceRecordArchive,
+  createUnmergeExecutor,
+  createInMemorySourceRecordArchive,
+} from './unmerge.js'
+
+export type { UnmergeMode, UnmergeOptions, SourceRecordArchive } from './unmerge.js'
