@@ -67,6 +67,12 @@ export {
   BlockingBuilder,
   CompositeBlockingBuilder,
 } from './builder/blocking-builder'
+export {
+  MergeBuilder,
+  FieldMergeBuilder,
+  MergeBuilderError,
+  createMergeBuilder,
+} from './builder/merge-builder.js'
 
 // Normalizers
 export {

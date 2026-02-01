@@ -89,7 +89,7 @@ export const mostFrequent: StrategyFunction = (
   let maxFirstIndex = Infinity
   let result: unknown = undefined
 
-  for (const [_key, { count, firstIndex }] of frequencies) {
+  for (const [, { count, firstIndex }] of frequencies) {
     if (count > maxCount || (count === maxCount && firstIndex < maxFirstIndex)) {
       maxCount = count
       maxFirstIndex = firstIndex

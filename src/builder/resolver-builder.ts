@@ -5,10 +5,12 @@ import type {
   BlockingConfig,
 } from '../types'
 import type { DatabaseAdapter } from '../adapters/types'
+import type { MergeConfig } from '../merge/types.js'
 import { Resolver } from '../core/resolver'
 import { SchemaBuilder } from './schema-builder'
 import { MatchingBuilder, FieldMatchBuilder } from './matching-builder'
 import { BlockingBuilder } from './blocking-builder'
+import { MergeBuilder, FieldMergeBuilder } from './merge-builder.js'
 
 /**
  * Fluent builder for configuring and creating a Resolver instance.
@@ -39,6 +41,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   private matchingConfig?: MatchingConfig
   private blockingConfiguration?: BlockingConfig<T>
   private databaseAdapter?: DatabaseAdapter<T>
+  private mergeConfiguration?: MergeConfig
 
   /**
    * Configure the schema defining field types and normalizers.
@@ -153,6 +156,58 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   adapter(adapter: DatabaseAdapter<T>): this {
     this.databaseAdapter = adapter
     return this
+  }
+
+  /**
+   * Configure merge strategies for golden record creation.
+   *
+   * Merge strategies determine how field values from multiple source records
+   * are combined when creating a golden record.
+   *
+   * @param configurator - Callback that receives a MergeBuilder
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * .merge(merge => merge
+   *   .timestampField('updatedAt')
+   *   .defaultStrategy('preferNonNull')
+   *   .onConflict('useDefault')
+   *   .field('firstName').strategy('preferLonger')
+   *   .field('lastName').strategy('preferLonger')
+   *   .field('email').strategy('preferNewer')
+   *   .field('phone').strategy('preferNonNull')
+   *   .field('addresses').strategy('union')
+   * )
+   * ```
+   */
+  merge(
+    configurator: (
+      builder: MergeBuilder<T>
+    ) => MergeBuilder<T> | FieldMergeBuilder<T> | void
+  ): this {
+    const builder = new MergeBuilder<T>(this.schemaDefinition)
+    const result = configurator(builder)
+
+    // If result is a FieldMergeBuilder, finalize it and get parent
+    if (result instanceof FieldMergeBuilder) {
+      result.finalize()
+      this.mergeConfiguration = result._parent.build()
+    } else {
+      this.mergeConfiguration = (result ?? builder).build()
+    }
+
+    return this
+  }
+
+  /**
+   * Get the configured merge configuration.
+   * Useful for inspecting the merge configuration before building.
+   *
+   * @returns The merge configuration or undefined if not configured
+   */
+  getMergeConfig(): MergeConfig | undefined {
+    return this.mergeConfiguration
   }
 
   /**
