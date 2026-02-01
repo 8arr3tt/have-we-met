@@ -132,3 +132,8 @@ export {
 } from './unmerge.js'
 
 export type { UnmergeMode, UnmergeOptions, SourceRecordArchive } from './unmerge.js'
+
+// Queue merge handler
+export { QueueMergeHandler, createQueueMergeHandler } from './queue-merge-handler.js'
+
+export type { QueueMergeResult, QueueMergeHandlerOptions } from './queue-merge-handler.js'

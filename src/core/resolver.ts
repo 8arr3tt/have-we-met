@@ -24,9 +24,28 @@ import type {
   MergeResult,
 } from '../adapters/types'
 import { ReviewQueue } from '../queue/review-queue.js'
-import type { ReviewQueue as IReviewQueue } from '../queue/types.js'
+import type { ReviewQueue as IReviewQueue, QueueItem, MergeDecision } from '../queue/types.js'
 import { QueueError } from '../queue/queue-error.js'
 import { matchResultToQueueItem } from './queue-resolver-integration.js'
+import type {
+  MergeConfig,
+  SourceRecord,
+  MergeResult as MergeResultFull,
+} from '../merge/types.js'
+import { MergeExecutor } from '../merge/merge-executor.js'
+import {
+  InMemoryProvenanceStore,
+  type ProvenanceStore,
+} from '../merge/provenance/provenance-store.js'
+import {
+  InMemorySourceRecordArchive,
+  UnmergeExecutor,
+  type SourceRecordArchive,
+} from '../merge/unmerge.js'
+import {
+  QueueMergeHandler,
+  type QueueMergeResult,
+} from '../merge/queue-merge-handler.js'
 
 /**
  * Options for resolver operations
@@ -38,6 +57,20 @@ export interface ResolverOptions {
   autoQueue?: boolean
   /** Context to include with queued items */
   queueContext?: Partial<import('../queue/types.js').QueueContext>
+}
+
+/**
+ * Options for direct merge operations
+ */
+export interface DirectMergeOptions {
+  /** ID to use for the golden record (defaults to first source record ID) */
+  targetRecordId?: string
+  /** User/system performing the merge */
+  mergedBy?: string
+  /** Whether to persist the golden record via adapter */
+  persist?: boolean
+  /** Whether to archive source records after merge */
+  archiveSourceRecords?: boolean
 }
 
 /**
@@ -70,6 +103,12 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   private outcomeClassifier: OutcomeClassifier
   private explainer: MatchExplainer
   private _queue?: IReviewQueue<T>
+  private _mergeConfig?: MergeConfig
+  private _mergeExecutor?: MergeExecutor<T>
+  private _provenanceStore?: ProvenanceStore
+  private _sourceRecordArchive?: SourceRecordArchive<T>
+  private _queueMergeHandler?: QueueMergeHandler<T>
+  private _unmergeExecutor?: UnmergeExecutor<T>
 
   constructor(config: ResolverConfig<T>) {
     this.validateConfig(config)
@@ -732,6 +771,272 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     }
 
     return mergeResults
+  }
+
+  /**
+   * Configure merge settings for the resolver.
+   * This must be called before using merge methods.
+   *
+   * @param mergeConfig - The merge configuration
+   *
+   * @example
+   * ```typescript
+   * resolver.configureMerge({
+   *   defaultStrategy: 'preferNonNull',
+   *   fieldStrategies: [
+   *     { field: 'email', strategy: 'preferNewer' },
+   *     { field: 'name', strategy: 'preferLonger' },
+   *   ],
+   *   trackProvenance: true,
+   *   conflictResolution: 'useDefault',
+   * })
+   * ```
+   */
+  configureMerge(mergeConfig: MergeConfig): void {
+    this._mergeConfig = mergeConfig
+    this._mergeExecutor = new MergeExecutor<T>(mergeConfig, this.schema)
+    this._provenanceStore = new InMemoryProvenanceStore()
+    this._sourceRecordArchive = new InMemorySourceRecordArchive<T>()
+    this._unmergeExecutor = new UnmergeExecutor<T>({
+      provenanceStore: this._provenanceStore,
+      sourceRecordArchive: this._sourceRecordArchive,
+      onRecordRestore: this.adapter
+        ? async (record) => {
+            await this.adapter!.insert(record.record)
+          }
+        : undefined,
+      onGoldenRecordDelete: this.adapter
+        ? async (id) => {
+            await this.adapter!.delete(id)
+          }
+        : undefined,
+    })
+
+    // Initialize queue merge handler if queue adapter is available
+    if (this.adapter?.queue) {
+      this._queueMergeHandler = new QueueMergeHandler<T>({
+        mergeExecutor: this._mergeExecutor,
+        provenanceStore: this._provenanceStore,
+        sourceRecordArchive: this._sourceRecordArchive,
+        queueAdapter: this.adapter.queue,
+        onGoldenRecordCreate: async (record, id) => {
+          if (this.adapter) {
+            await this.adapter.insert({ ...record, id } as T)
+          }
+        },
+        onSourceRecordsArchive: async (ids) => {
+          if (this.adapter) {
+            // Mark records as archived (soft delete) or delete them
+            for (const id of ids) {
+              await this.adapter.update(id, { _archived: true, _archivedAt: new Date() } as unknown as Partial<T>)
+            }
+          }
+        },
+      })
+    }
+  }
+
+  /**
+   * Get the merge configuration
+   */
+  getMergeConfig(): MergeConfig | undefined {
+    return this._mergeConfig
+  }
+
+  /**
+   * Get the provenance store for querying merge provenance
+   */
+  getProvenanceStore(): ProvenanceStore | undefined {
+    return this._provenanceStore
+  }
+
+  /**
+   * Get the source record archive
+   */
+  getSourceRecordArchive(): SourceRecordArchive<T> | undefined {
+    return this._sourceRecordArchive
+  }
+
+  /**
+   * Merge source records into a golden record using configured strategies.
+   *
+   * This method executes a merge operation on the provided source records,
+   * applying the configured field-level merge strategies to produce a single
+   * golden record.
+   *
+   * @param sourceRecords - Records to merge (must have id, createdAt, updatedAt)
+   * @param options - Merge options
+   * @returns The merge result containing the golden record and provenance
+   * @throws Error if merge is not configured
+   *
+   * @example
+   * ```typescript
+   * const result = await resolver.merge([
+   *   { id: 'rec-001', record: record1, createdAt: new Date(), updatedAt: new Date() },
+   *   { id: 'rec-002', record: record2, createdAt: new Date(), updatedAt: new Date() },
+   * ], {
+   *   mergedBy: 'admin-user',
+   *   persist: true,
+   * })
+   *
+   * console.log(result.goldenRecord)
+   * console.log(result.provenance.fieldSources)
+   * ```
+   */
+  async merge(
+    sourceRecords: SourceRecord<T>[],
+    options?: DirectMergeOptions
+  ): Promise<MergeResultFull<T>> {
+    if (!this._mergeExecutor) {
+      throw new Error(
+        'Merge is not configured. Call configureMerge() or use .merge() in the builder.'
+      )
+    }
+
+    const mergeResult = await this._mergeExecutor.merge({
+      sourceRecords,
+      targetRecordId: options?.targetRecordId,
+      mergedBy: options?.mergedBy,
+    })
+
+    // Archive source records in memory for potential unmerge
+    if (this._sourceRecordArchive) {
+      await this._sourceRecordArchive.archive(sourceRecords, mergeResult.goldenRecordId)
+    }
+
+    // Save provenance
+    if (this._provenanceStore) {
+      await this._provenanceStore.save(mergeResult.provenance)
+    }
+
+    // Persist golden record if requested
+    if (options?.persist && this.adapter) {
+      await this.adapter.insert({
+        ...mergeResult.goldenRecord,
+        id: mergeResult.goldenRecordId,
+      } as T)
+    }
+
+    // Archive source records in database if requested
+    if (options?.archiveSourceRecords && this.adapter) {
+      for (const record of sourceRecords) {
+        await this.adapter.update(record.id, {
+          _archived: true,
+          _archivedAt: new Date(),
+          _mergedInto: mergeResult.goldenRecordId,
+        } as unknown as Partial<T>)
+      }
+    }
+
+    return mergeResult
+  }
+
+  /**
+   * Execute a merge from a review queue decision.
+   *
+   * This method handles the complete merge workflow when a reviewer
+   * makes a merge decision in the review queue:
+   * 1. Extracts source records from the queue item
+   * 2. Executes the merge
+   * 3. Persists the golden record
+   * 4. Archives source records
+   * 5. Stores provenance
+   * 6. Updates queue item status
+   *
+   * @param queueItem - The queue item containing candidate and potential matches
+   * @param decision - The merge decision from the reviewer
+   * @returns The merge result with queue integration details
+   * @throws Error if merge or queue is not configured
+   *
+   * @example
+   * ```typescript
+   * // Get a queue item
+   * const queueItem = await resolver.queue.get('queue-item-123')
+   *
+   * // Execute merge from queue decision
+   * const result = await resolver.mergeFromQueue(queueItem, {
+   *   selectedMatchId: 'match-456',
+   *   decidedBy: 'reviewer@example.com',
+   *   notes: 'Confirmed as duplicate based on matching SSN',
+   *   confidence: 0.95,
+   * })
+   *
+   * console.log(result.goldenRecordId)
+   * console.log(result.queueItemUpdated)
+   * ```
+   */
+  async mergeFromQueue(
+    queueItem: QueueItem<T>,
+    decision: MergeDecision
+  ): Promise<QueueMergeResult<T>> {
+    if (!this._queueMergeHandler) {
+      throw new Error(
+        'Queue merge handler is not configured. Ensure merge is configured and adapter has queue support.'
+      )
+    }
+
+    return this._queueMergeHandler.handleMergeDecision(queueItem, decision)
+  }
+
+  /**
+   * Unmerge a previously merged golden record.
+   *
+   * This method reverses a merge operation by:
+   * 1. Retrieving provenance data
+   * 2. Restoring archived source records
+   * 3. Optionally deleting the golden record
+   * 4. Updating provenance to mark as unmerged
+   *
+   * @param goldenRecordId - ID of the golden record to unmerge
+   * @param options - Unmerge options
+   * @returns The unmerge result with restored records
+   * @throws Error if merge is not configured or record cannot be unmerged
+   *
+   * @example
+   * ```typescript
+   * const result = await resolver.unmerge('golden-123', {
+   *   unmergedBy: 'admin',
+   *   reason: 'Incorrectly matched records',
+   * })
+   *
+   * console.log(`Restored ${result.restoredRecords.length} records`)
+   * ```
+   */
+  async unmerge(
+    goldenRecordId: string,
+    options?: { unmergedBy?: string; reason?: string }
+  ): Promise<import('../merge/types.js').UnmergeResult<T>> {
+    if (!this._unmergeExecutor) {
+      throw new Error(
+        'Unmerge executor is not configured. Call configureMerge() first.'
+      )
+    }
+
+    return this._unmergeExecutor.unmerge({
+      goldenRecordId,
+      unmergedBy: options?.unmergedBy,
+      reason: options?.reason,
+    })
+  }
+
+  /**
+   * Check if a golden record can be unmerged
+   *
+   * @param goldenRecordId - ID of the golden record to check
+   * @returns Object indicating if unmerge is possible and why not
+   */
+  async canUnmerge(goldenRecordId: string): Promise<{
+    canUnmerge: boolean
+    reason?: string
+  }> {
+    if (!this._unmergeExecutor) {
+      return {
+        canUnmerge: false,
+        reason: 'Unmerge executor is not configured',
+      }
+    }
+
+    return this._unmergeExecutor.canUnmerge(goldenRecordId)
   }
 
   private validateConfig(config: ResolverConfig<T>): void {
