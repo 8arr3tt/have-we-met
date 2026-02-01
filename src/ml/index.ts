@@ -100,3 +100,13 @@ export type {
   FeatureExtractorOptions,
   FeatureExtractionStats,
 } from './feature-extractor';
+
+// Built-in models
+export {
+  SimpleClassifier,
+  createPersonMatchingClassifier,
+  createClassifierFromFields,
+  isValidSimpleClassifierWeights,
+} from './builtin';
+
+export type { SimpleClassifierConfig } from './builtin';
