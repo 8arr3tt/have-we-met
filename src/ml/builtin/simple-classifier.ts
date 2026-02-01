@@ -395,6 +395,15 @@ export class SimpleClassifier<T = Record<string, unknown>> extends BaseMLModel<T
   }
 
   /**
+   * Set training metadata (for use by trainers)
+   */
+  setTrainingMetadata(trainedAt: Date, accuracy: number, trainingExamples: number): void {
+    this.metadata.trainedAt = trainedAt;
+    this.metadata.accuracy = accuracy;
+    this.metadata.trainingExamples = trainingExamples;
+  }
+
+  /**
    * Get the number of features expected by this model
    */
   getFeatureCount(): number {

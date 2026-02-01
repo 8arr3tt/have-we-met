@@ -123,3 +123,19 @@ export {
 } from './builtin';
 
 export type { SimpleClassifierConfig } from './builtin';
+
+// Training
+export {
+  ModelTrainer,
+  createTrainingExample,
+  createTrainingDataset,
+  mergeTrainingDatasets,
+  balanceDataset,
+  getDatasetStats,
+  exportWeightsToJson,
+} from './training';
+
+export type {
+  TrainerOptions,
+  TrainingProgressCallback,
+} from './training';
