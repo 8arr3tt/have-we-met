@@ -110,11 +110,14 @@ function createFailedResult(
 }
 
 
+/** Timer ID type for cross-environment compatibility */
+type TimerId = ReturnType<typeof setTimeout>
+
 /** Reference to setTimeout for environment compatibility */
-const setTimeoutFn = (typeof setTimeout !== 'undefined' ? setTimeout : (fn: () => void, _ms: number) => { fn(); return 0 }) as (fn: () => void, ms: number) => ReturnType<typeof setTimeout>
+const setTimeoutFn = setTimeout as (fn: () => void, ms: number) => TimerId
 
 /** Reference to clearTimeout for environment compatibility */
-const clearTimeoutFn = (typeof clearTimeout !== 'undefined' ? clearTimeout : (_id: unknown) => {}) as (id: ReturnType<typeof setTimeout>) => void
+const clearTimeoutFn = clearTimeout as (id: TimerId) => void
 
 /**
  * Sleep utility for delays
@@ -504,7 +507,6 @@ export class ServiceExecutorImpl {
 
   /**
    * Execute a function with a timeout
-   * Uses globalThis for environment-agnostic timer access
    */
   private async executeWithTimeout<T>(
     fn: () => Promise<T>,
@@ -512,17 +514,17 @@ export class ServiceExecutorImpl {
     serviceName: string,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      const timeoutId = globalThis.setTimeout(() => {
+      const timeoutId = setTimeoutFn(() => {
         reject(new ServiceTimeoutError(serviceName, timeoutMs))
       }, timeoutMs)
 
       fn()
         .then(result => {
-          globalThis.clearTimeout(timeoutId)
+          clearTimeoutFn(timeoutId)
           resolve(result)
         })
         .catch(error => {
-          globalThis.clearTimeout(timeoutId)
+          clearTimeoutFn(timeoutId)
           reject(error)
         })
     })

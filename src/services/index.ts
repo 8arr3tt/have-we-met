@@ -109,3 +109,39 @@ export {
   createPrefixedLogger,
   type ExecutionContextOptions,
 } from './execution-context.js'
+
+// Resilience patterns
+export {
+  // Timeout
+  withTimeout,
+  withTimeoutFn,
+  withTimeoutTimed,
+  createTimeoutController,
+  TimeoutController,
+  type TimeoutOptions,
+  type TimedResult,
+  // Retry
+  withRetry,
+  withRetryDetailed,
+  createRetryable,
+  calculateRetryDelay,
+  shouldRetryError,
+  RetryTracker,
+  type ExtendedRetryConfig,
+  type RetryResult,
+  type AttemptDetail,
+  // Circuit breaker
+  CircuitBreaker,
+  createCircuitBreaker,
+  withCircuitBreaker,
+  CircuitBreakerRegistry,
+  createCircuitBreakerRegistry,
+  type ExtendedCircuitBreakerConfig,
+  // Combined
+  withResilience,
+  withResilienceDetailed,
+  createResilient,
+  executeWithAbortableTimeout,
+  type ResilienceConfig,
+  type ResilienceResult,
+} from './resilience/index.js'
