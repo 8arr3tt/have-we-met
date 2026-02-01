@@ -145,3 +145,41 @@ export {
   type ResilienceConfig,
   type ResilienceResult,
 } from './resilience/index.js'
+
+// Cache utilities
+export {
+  // Types
+  type ExtendedCacheEntry,
+  type ExtendedCacheStats,
+  type CacheSetOptions,
+  type CacheGetOptions,
+  type ExtendedServiceCache,
+  type MemoryCacheConfig,
+  type CacheOperationResult,
+  type CacheWrappedResult,
+  type CacheKeyOptions,
+  type CacheWrapperOptions,
+  // Constants
+  DEFAULT_MEMORY_CACHE_CONFIG,
+  DEFAULT_CACHE_KEY_OPTIONS,
+  // Memory cache
+  MemoryCache,
+  createMemoryCache,
+  createNoOpCache,
+  // Cache key generation
+  fnv1aHash,
+  stableStringify,
+  stableHash,
+  generateCacheKey,
+  createCacheKeyGenerator,
+  normalizeCacheKey,
+  isValidCacheKey,
+  // Cache wrapper
+  withCache,
+  withCacheDetailed,
+  createCachedFunction,
+  createCacheWrapper,
+  cacheMethod,
+  batchWithCache,
+  refreshInBackground,
+} from './cache/index.js'
