@@ -4,7 +4,7 @@
  */
 
 import type { ResolverConfig } from '../types/config.js'
-import type { MatchResult } from '../types/match.js'
+import type { MatchResult } from '../core/scoring/types.js'
 
 /**
  * Service types supported by the external services system

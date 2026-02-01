@@ -10,7 +10,7 @@ import type {
   Logger,
 } from './types.js'
 import type { ResolverConfig } from '../types/config.js'
-import type { MatchResult } from '../types/match.js'
+import type { MatchResult } from '../core/scoring/types.js'
 
 /**
  * Options for building a service context

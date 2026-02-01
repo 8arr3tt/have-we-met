@@ -46,6 +46,16 @@ import {
   QueueMergeHandler,
   type QueueMergeResult,
 } from '../merge/queue-merge-handler.js'
+import type {
+  ServicesConfig,
+  ServiceResult,
+  HealthCheckResult,
+  CircuitBreakerStatus,
+} from '../services/types.js'
+import {
+  ServiceExecutorImpl,
+  createServiceExecutor,
+} from '../services/service-executor.js'
 
 /**
  * Options for resolver operations
@@ -57,6 +67,42 @@ export interface ResolverOptions {
   autoQueue?: boolean
   /** Context to include with queued items */
   queueContext?: Partial<import('../queue/types.js').QueueContext>
+  /** Whether to skip external service execution */
+  skipServices?: boolean
+}
+
+/**
+ * Extended match result that includes service execution information
+ */
+export interface MatchResultWithServices extends MatchResult {
+  /** Results from external services */
+  serviceResults?: Record<string, ServiceResult>
+  /** Record after enrichment from lookup services */
+  enrichedRecord?: Record<string, unknown>
+  /** Flags added by services */
+  serviceFlags?: string[]
+}
+
+/**
+ * Resolution result returned by resolve methods when services are configured
+ */
+export interface ResolutionResult<T = unknown> {
+  /** The match results */
+  matches: MatchResultWithServices[]
+  /** Results from external services */
+  serviceResults?: Record<string, ServiceResult>
+  /** Record after enrichment from lookup services */
+  enrichedRecord?: T
+  /** Flags accumulated from services */
+  serviceFlags?: string[]
+  /** Whether resolution was rejected by a service */
+  rejected: boolean
+  /** Rejection reason (if rejected) */
+  rejectionReason?: string
+  /** Service that caused rejection (if rejected) */
+  rejectedBy?: string
+  /** Total service execution time in milliseconds */
+  serviceExecutionTimeMs?: number
 }
 
 /**
@@ -109,6 +155,8 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   private _sourceRecordArchive?: SourceRecordArchive<T>
   private _queueMergeHandler?: QueueMergeHandler<T>
   private _unmergeExecutor?: UnmergeExecutor<T>
+  private _serviceExecutor?: ServiceExecutorImpl
+  private _servicesConfig?: ServicesConfig
 
   constructor(config: ResolverConfig<T>) {
     this.validateConfig(config)
@@ -130,6 +178,22 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     // Initialize queue if adapter has queue support
     if (this.adapter?.queue) {
       this._queue = new ReviewQueue<T>(this.adapter.queue)
+    }
+
+    // Initialize service executor if services are configured
+    if (config.services) {
+      this._servicesConfig = config.services
+      this._serviceExecutor = createServiceExecutor({
+        resolverConfig: config,
+        defaults: config.services.defaults,
+        cachingEnabled: config.services.cachingEnabled,
+        executionOrder: config.services.executionOrder,
+      })
+
+      // Register all configured services
+      for (const serviceConfig of config.services.services) {
+        this._serviceExecutor.register(serviceConfig)
+      }
     }
   }
 
@@ -170,6 +234,84 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   }
 
   /**
+   * Check if external services are configured for this resolver.
+   *
+   * @returns True if services are configured
+   */
+  get hasServices(): boolean {
+    return this._serviceExecutor !== undefined
+  }
+
+  /**
+   * Get the services configuration for this resolver.
+   *
+   * @returns The services configuration or undefined if not configured
+   */
+  getServicesConfig(): ServicesConfig | undefined {
+    return this._servicesConfig
+  }
+
+  /**
+   * Get health status for all configured external services.
+   *
+   * @returns Promise resolving to health status for each service
+   * @throws Error if services are not configured
+   *
+   * @example
+   * ```typescript
+   * const healthStatus = await resolver.getServiceHealthStatus()
+   * for (const [name, status] of Object.entries(healthStatus)) {
+   *   console.log(`${name}: ${status.healthy ? 'healthy' : 'unhealthy'}`)
+   * }
+   * ```
+   */
+  async getServiceHealthStatus(): Promise<Record<string, HealthCheckResult>> {
+    if (!this._serviceExecutor) {
+      throw new Error('Services are not configured. Use .services() in the builder.')
+    }
+    return this._serviceExecutor.getHealthStatus()
+  }
+
+  /**
+   * Get circuit breaker status for all configured external services.
+   *
+   * @returns Circuit breaker status for each service
+   * @throws Error if services are not configured
+   *
+   * @example
+   * ```typescript
+   * const circuitStatus = resolver.getServiceCircuitStatus()
+   * for (const [name, status] of Object.entries(circuitStatus)) {
+   *   console.log(`${name}: ${status.state}`)
+   * }
+   * ```
+   */
+  getServiceCircuitStatus(): Record<string, CircuitBreakerStatus> {
+    if (!this._serviceExecutor) {
+      throw new Error('Services are not configured. Use .services() in the builder.')
+    }
+    return this._serviceExecutor.getCircuitStatus()
+  }
+
+  /**
+   * Dispose all external services and cleanup resources.
+   *
+   * Call this when shutting down the application to properly cleanup
+   * connections and resources held by external services.
+   *
+   * @example
+   * ```typescript
+   * // During application shutdown
+   * await resolver.disposeServices()
+   * ```
+   */
+  async disposeServices(): Promise<void> {
+    if (this._serviceExecutor) {
+      await this._serviceExecutor.dispose()
+    }
+  }
+
+  /**
    * Find matches for a single candidate record against a set of existing records.
    *
    * This method:
@@ -180,6 +322,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
    * 5. Generates detailed explanations for each match
    *
    * Results are sorted by score (highest first).
+   *
+   * Note: This is the synchronous version that does not execute external services.
+   * Use `resolveWithServices()` for the full service-integrated workflow.
    *
    * @param candidateRecord - The record to find matches for
    * @param existingRecords - The dataset to search within
@@ -204,6 +349,166 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
    * ```
    */
   resolve(
+    candidateRecord: Record<string, unknown>,
+    existingRecords: Record<string, unknown>[],
+    options?: ResolverOptions
+  ): MatchResult[] {
+    return this.executeMatching(candidateRecord, existingRecords, options)
+  }
+
+  /**
+   * Find matches with full external service integration.
+   *
+   * This async method:
+   * 1. Executes pre-match services (validation, enrichment)
+   * 2. If pre-match services pass, performs matching
+   * 3. Executes post-match services (fraud detection, scoring adjustments)
+   * 4. Returns comprehensive results with service information
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param existingRecords - The dataset to search within
+   * @param options - Optional configuration
+   * @returns Promise resolving to resolution result with matches and service info
+   *
+   * @example
+   * ```typescript
+   * const result = await resolver.resolveWithServices(newRecord, existingRecords)
+   *
+   * if (result.rejected) {
+   *   console.log(`Resolution rejected by ${result.rejectedBy}: ${result.rejectionReason}`)
+   * } else {
+   *   console.log(`Found ${result.matches.length} matches`)
+   *   console.log(`Service execution time: ${result.serviceExecutionTimeMs}ms`)
+   *
+   *   if (result.enrichedRecord) {
+   *     console.log('Record was enriched:', result.enrichedRecord)
+   *   }
+   * }
+   * ```
+   */
+  async resolveWithServices(
+    candidateRecord: Record<string, unknown>,
+    existingRecords: Record<string, unknown>[],
+    options?: ResolverOptions
+  ): Promise<ResolutionResult<T>> {
+    // If services are not configured or skipped, fall back to basic resolve
+    if (!this._serviceExecutor || options?.skipServices) {
+      const matches = this.executeMatching(candidateRecord, existingRecords, options)
+      return {
+        matches,
+        rejected: false,
+      }
+    }
+
+    const startTime = Date.now()
+    let processedRecord = candidateRecord
+    let allServiceResults: Record<string, ServiceResult> = {}
+    let allFlags: string[] = []
+    let allScoreAdjustments: number[] = []
+
+    // Execute pre-match services
+    const preMatchResult = await this._serviceExecutor.executePreMatch(candidateRecord)
+    allServiceResults = { ...preMatchResult.results }
+    if (preMatchResult.flags) {
+      allFlags = [...preMatchResult.flags]
+    }
+
+    if (!preMatchResult.proceed) {
+      return {
+        matches: [],
+        serviceResults: allServiceResults,
+        rejected: true,
+        rejectionReason: preMatchResult.rejectionReason,
+        rejectedBy: preMatchResult.rejectedBy,
+        serviceFlags: allFlags.length > 0 ? allFlags : undefined,
+        serviceExecutionTimeMs: Date.now() - startTime,
+      }
+    }
+
+    // Use enriched data if available
+    if (preMatchResult.enrichedData) {
+      processedRecord = preMatchResult.enrichedData
+    }
+
+    // Execute matching with enriched record
+    let matches = this.executeMatching(processedRecord, existingRecords, options)
+
+    // Execute post-match services if there are matches
+    if (matches.length > 0) {
+      // For post-match services, we pass the best match result
+      const bestMatch = matches[0]
+      const postMatchResult = await this._serviceExecutor.executePostMatch(
+        processedRecord,
+        bestMatch
+      )
+
+      // Merge service results
+      allServiceResults = { ...allServiceResults, ...postMatchResult.results }
+      if (postMatchResult.flags) {
+        allFlags = [...allFlags, ...postMatchResult.flags]
+      }
+      if (postMatchResult.scoreAdjustments) {
+        allScoreAdjustments = [...allScoreAdjustments, ...postMatchResult.scoreAdjustments]
+      }
+
+      if (!postMatchResult.proceed) {
+        return {
+          matches: [],
+          serviceResults: allServiceResults,
+          enrichedRecord: processedRecord as T,
+          rejected: true,
+          rejectionReason: postMatchResult.rejectionReason,
+          rejectedBy: postMatchResult.rejectedBy,
+          serviceFlags: allFlags.length > 0 ? allFlags : undefined,
+          serviceExecutionTimeMs: Date.now() - startTime,
+        }
+      }
+
+      // Apply score adjustments from post-match services
+      if (allScoreAdjustments.length > 0) {
+        const totalAdjustment = allScoreAdjustments.reduce((a, b) => a + b, 0)
+        matches = matches.map(match => ({
+          ...match,
+          score: {
+            ...match.score,
+            totalScore: match.score.totalScore + totalAdjustment,
+          },
+        }))
+
+        // Re-sort by adjusted score
+        matches.sort((a, b) => b.score.totalScore - a.score.totalScore)
+
+        // Re-classify outcomes based on adjusted scores
+        matches = matches.map(match => ({
+          ...match,
+          outcome: this.outcomeClassifier.classify(match.score, this.thresholds),
+        }))
+      }
+    }
+
+    // Add service results to each match result
+    const matchesWithServices: MatchResultWithServices[] = matches.map(match => ({
+      ...match,
+      serviceResults: allServiceResults,
+      enrichedRecord: processedRecord,
+      serviceFlags: allFlags.length > 0 ? allFlags : undefined,
+    }))
+
+    return {
+      matches: matchesWithServices,
+      serviceResults: allServiceResults,
+      enrichedRecord: processedRecord !== candidateRecord ? processedRecord as T : undefined,
+      rejected: false,
+      serviceFlags: allFlags.length > 0 ? allFlags : undefined,
+      serviceExecutionTimeMs: Date.now() - startTime,
+    }
+  }
+
+  /**
+   * Internal method that performs the actual matching logic.
+   * Used by both resolve() and resolveWithServices().
+   */
+  private executeMatching(
     candidateRecord: Record<string, unknown>,
     existingRecords: Record<string, unknown>[],
     options?: ResolverOptions
@@ -532,6 +837,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
    * This method leverages blocking strategies to efficiently query the database
    * for potential matches, then applies in-memory matching logic.
    *
+   * Note: This is the synchronous version that does not execute external services.
+   * Use `resolveWithDatabaseAndServices()` for the full service-integrated workflow.
+   *
    * @param candidateRecord - The record to find matches for
    * @param options - Database resolve options
    * @returns Array of match results from database records
@@ -584,6 +892,72 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     return this.resolve(candidateRecord, existingRecords, {
       autoQueue: options?.autoQueue,
       queueContext: options?.queueContext,
+    })
+  }
+
+  /**
+   * Resolve a record using database adapter with full external service integration.
+   *
+   * This method:
+   * 1. Executes pre-match services (validation, enrichment)
+   * 2. Queries database for candidates using blocking strategies
+   * 3. Performs matching with (potentially enriched) record
+   * 4. Executes post-match services
+   * 5. Returns comprehensive results with service information
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param options - Database resolve options
+   * @returns Promise resolving to resolution result with matches and service info
+   *
+   * @throws Error if adapter is not configured
+   *
+   * @example
+   * ```typescript
+   * const result = await resolver.resolveWithDatabaseAndServices(newRecord, {
+   *   useBlocking: true,
+   *   maxFetchSize: 1000
+   * })
+   *
+   * if (result.rejected) {
+   *   console.log(`Record rejected: ${result.rejectionReason}`)
+   * } else {
+   *   console.log(`Found ${result.matches.length} matches`)
+   *   console.log(`Service time: ${result.serviceExecutionTimeMs}ms`)
+   * }
+   * ```
+   */
+  async resolveWithDatabaseAndServices(
+    candidateRecord: T,
+    options?: DatabaseResolveOptions & { skipServices?: boolean }
+  ): Promise<ResolutionResult<T>> {
+    if (!this.adapter) {
+      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+    }
+
+    const useBlocking = options?.useBlocking ?? true
+    const maxFetchSize = options?.maxFetchSize ?? 1000
+
+    let existingRecords: T[]
+
+    if (useBlocking && this.blockingStrategy) {
+      const blockGenerator = new BlockGenerator()
+      const blockingKeys = blockGenerator.extractBlockingKeys(
+        candidateRecord,
+        this.blockingStrategy
+      )
+
+      existingRecords = await this.adapter.findByBlockingKeys(
+        blockingKeys,
+        { limit: maxFetchSize }
+      )
+    } else {
+      existingRecords = await this.adapter.findAll({ limit: maxFetchSize })
+    }
+
+    return this.resolveWithServices(candidateRecord, existingRecords, {
+      autoQueue: options?.autoQueue,
+      queueContext: options?.queueContext,
+      skipServices: options?.skipServices,
     })
   }
 

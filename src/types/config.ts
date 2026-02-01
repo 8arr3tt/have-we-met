@@ -7,6 +7,7 @@ import type {
 } from '../core/comparators'
 import type { BlockingConfig as BlockingConfigType } from '../core/blocking/types'
 import type { DatabaseAdapter } from '../adapters/types'
+import type { ServicesConfig } from '../services/types.js'
 
 /**
  * Configuration for match score thresholds that determine outcomes.
@@ -90,6 +91,8 @@ export interface ResolverConfig<T extends Record<string, unknown> = Record<strin
   blocking?: BlockingConfig<T>
   /** Optional database adapter for persistent storage integration */
   adapter?: DatabaseAdapter<T>
+  /** Optional external services configuration */
+  services?: ServicesConfig
 }
 
 /**

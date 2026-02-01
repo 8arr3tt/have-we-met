@@ -23,7 +23,7 @@ import type {
   ServiceErrorInfo,
 } from './types.js'
 import type { ResolverConfig } from '../types/config.js'
-import type { MatchResult } from '../types/match.js'
+import type { MatchResult } from './types.js'
 import {
   ServiceNotRegisteredError,
   ServiceAlreadyRegisteredError,

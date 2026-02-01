@@ -6,11 +6,19 @@ import type {
 } from '../types'
 import type { DatabaseAdapter } from '../adapters/types'
 import type { MergeConfig } from '../merge/types.js'
+import type { ServicesConfig } from '../services/types.js'
 import { Resolver } from '../core/resolver'
 import { SchemaBuilder } from './schema-builder'
 import { MatchingBuilder, FieldMatchBuilder } from './matching-builder'
 import { BlockingBuilder } from './blocking-builder'
 import { MergeBuilder, FieldMergeBuilder } from './merge-builder.js'
+import {
+  ServiceBuilder,
+  ValidationServiceBuilder,
+  LookupServiceBuilder,
+  CustomServiceBuilder,
+  type ServiceBuilderResult,
+} from './service-builder.js'
 
 /**
  * Fluent builder for configuring and creating a Resolver instance.
@@ -42,6 +50,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   private blockingConfiguration?: BlockingConfig<T>
   private databaseAdapter?: DatabaseAdapter<T>
   private mergeConfiguration?: MergeConfig
+  private servicesConfiguration?: ServicesConfig
 
   /**
    * Configure the schema defining field types and normalizers.
@@ -211,6 +220,82 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   }
 
   /**
+   * Configure external services for validation, enrichment, and custom processing.
+   *
+   * External services integrate with third-party systems for identity verification
+   * and data enrichment. Services can run before matching (pre-match) or after
+   * matching (post-match).
+   *
+   * @param configurator - Callback that receives a ServiceBuilder
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * .services(services => services
+   *   .defaultTimeout(5000)
+   *   .defaultRetry({ maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 1000 })
+   *   .caching(true)
+   *
+   *   .validate('nhsNumber')
+   *     .using(nhsNumberValidator)
+   *     .onInvalid('reject')
+   *     .required(true)
+   *
+   *   .validate('email')
+   *     .using(emailValidator)
+   *     .onInvalid('flag')
+   *     .cache({ enabled: true, ttlSeconds: 3600 })
+   *
+   *   .lookup('address')
+   *     .using(addressStandardization)
+   *     .mapFields({
+   *       'streetAddress': 'address.street',
+   *       'city': 'address.city',
+   *       'postalCode': 'address.postcode'
+   *     })
+   *     .onNotFound('continue')
+   *
+   *   .custom('fraudCheck')
+   *     .using(fraudDetectionService)
+   *     .executeAt('post-match')
+   *     .onResult(r => r.result.riskScore < 0.7)
+   * )
+   * ```
+   */
+  services(
+    configurator: (builder: ServiceBuilder<T>) => ServiceBuilderResult<T>,
+  ): this {
+    const builder = new ServiceBuilder<T>()
+    const result = configurator(builder)
+
+    // Handle different return types
+    if (result instanceof ValidationServiceBuilder) {
+      result.finalize()
+      this.servicesConfiguration = result._parent.build()
+    } else if (result instanceof LookupServiceBuilder) {
+      result.finalize()
+      this.servicesConfiguration = result._parent.build()
+    } else if (result instanceof CustomServiceBuilder) {
+      result.finalize()
+      this.servicesConfiguration = result._parent.build()
+    } else {
+      this.servicesConfiguration = (result ?? builder).build()
+    }
+
+    return this
+  }
+
+  /**
+   * Get the configured services configuration.
+   * Useful for inspecting the services configuration before building.
+   *
+   * @returns The services configuration or undefined if not configured
+   */
+  getServicesConfig(): ServicesConfig | undefined {
+    return this.servicesConfiguration
+  }
+
+  /**
    * Build and return the configured Resolver instance.
    *
    * @returns Configured Resolver ready for matching operations
@@ -229,6 +314,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
       matching: this.matchingConfig,
       blocking: this.blockingConfiguration,
       adapter: this.databaseAdapter,
+      services: this.servicesConfiguration,
     })
   }
 }
