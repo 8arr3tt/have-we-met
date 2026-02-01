@@ -4,7 +4,7 @@ An identity resolution library for TypeScript/JavaScript.
 
 ## Status
 
-Currently in development. Phase 8 (Golden Record) is complete.
+Currently in development. Phase 9 (External Services) is complete.
 
 ## Quick Start
 
@@ -162,6 +162,56 @@ console.log(result.goldenRecord)
 console.log(result.provenance.fieldSources)  // Which source contributed each field
 ```
 
+### External Services (Validation & Enrichment)
+
+```typescript
+import { HaveWeMet } from 'have-we-met'
+import {
+  nhsNumberValidator,
+  emailValidator,
+  createAddressStandardization,
+} from 'have-we-met/services'
+
+const resolver = HaveWeMet.create<PatientRecord>()
+  .schema(schema => { /* ... */ })
+  .blocking(block => { /* ... */ })
+  .matching(match => { /* ... */ })
+  .services(services => services
+    .defaultTimeout(5000)
+    .defaultRetry({ maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 1000 })
+    .caching(true)
+
+    // Validate NHS number format and checksum
+    .validate('nhsNumber')
+      .using(nhsNumberValidator)
+      .onInvalid('reject')
+      .required(true)
+
+    // Validate email format
+    .validate('email')
+      .using(emailValidator)
+      .onInvalid('flag')
+
+    // Enrich address data from external API
+    .lookup('address')
+      .using(createAddressStandardization({ provider: 'mock' }))
+      .mapFields({
+        'streetAddress': 'address.street',
+        'city': 'address.city',
+        'postalCode': 'address.postcode'
+      })
+      .onNotFound('continue')
+  )
+  .adapter(prismaAdapter(prisma, { tableName: 'patients' }))
+  .build()
+
+// Resolution now includes service results
+const result = await resolver.resolve(newRecord)
+console.log(result.serviceResults)   // Validation and lookup results
+console.log(result.enrichedRecord)   // Record with lookup data merged in
+console.log(result.serviceFlags)     // Any flags from services
+```
+
 ## Documentation
 
 ### Database Adapters
@@ -188,6 +238,12 @@ console.log(result.provenance.fieldSources)  // Which source contributed each fi
 - [Merge Strategies](docs/merge-strategies.md) - Complete guide to merge strategies
 - [Provenance](docs/provenance.md) - Audit trail and field attribution
 - [Unmerge](docs/unmerge.md) - Reversing incorrect merges
+
+### External Services
+- [External Services Overview](docs/external-services.md) - Validation and enrichment integration
+- [Service Plugins Guide](docs/service-plugins.md) - Creating custom service plugins
+- [Built-in Services](docs/built-in-services.md) - Reference for included validators and lookups
+- [Service Resilience](docs/service-resilience.md) - Timeout, retry, and circuit breaker patterns
 
 ### Blocking Strategies
 - [Blocking Overview](docs/blocking/overview.md) - Why blocking is essential for large datasets
