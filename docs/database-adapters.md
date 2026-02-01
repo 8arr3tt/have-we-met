@@ -358,15 +358,32 @@ interface DeduplicationBatchResult {
 
 ### `findAndMergeDuplicates(options?)`
 
-Identifies and merges duplicate records. (Basic implementation; full merge logic in Phase 8)
+Identifies and merges duplicate records using configured merge strategies.
 
 ```typescript
 const results = await resolver.findAndMergeDuplicates({
   deleteAfterMerge: false,       // Delete source records (default: false)
   useTransaction: true,          // Use transactions (default: true)
-  conflictResolution: 'manual'   // Phase 8 feature
 })
 ```
+
+The merge uses the strategies configured via the `.merge()` builder:
+
+```typescript
+const resolver = HaveWeMet.create<Customer>()
+  .schema(/* ... */)
+  .matching(/* ... */)
+  .merge(merge => merge
+    .timestampField('updatedAt')
+    .defaultStrategy('preferNonNull')
+    .field('firstName').strategy('preferLonger')
+    .field('email').strategy('preferNewer')
+  )
+  .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
+  .build()
+```
+
+See [Golden Record](./golden-record.md) for complete merge configuration.
 
 ## Error Handling
 
@@ -573,6 +590,107 @@ export class AddReviewQueue1234567890 implements MigrationInterface {
 npm run typeorm migration:run
 ```
 
+## Golden Record Merge Support
+
+Database adapters support the golden record merge system for creating and managing merged records.
+
+### Merge Schema Requirements
+
+When using merge functionality, your database needs additional tables/fields for:
+
+1. **Provenance tracking**: Records which source records contributed to each golden record
+2. **Source record archive**: Preserves original records for potential unmerge
+
+### Prisma Provenance Schema
+
+```prisma
+model Provenance {
+  id              String   @id @default(uuid())
+  goldenRecordId  String   @unique
+  sourceRecordIds String[]
+  mergedAt        DateTime
+  mergedBy        String?
+  queueItemId     String?
+  fieldSources    Json
+  strategyUsed    Json
+  unmerged        Boolean  @default(false)
+  unmergedAt      DateTime?
+  unmergedBy      String?
+  unmergeReason   String?
+
+  @@index([goldenRecordId])
+  @@index([mergedAt])
+  @@index([unmerged])
+}
+
+model SourceRecordArchive {
+  id              String   @id @default(uuid())
+  goldenRecordId  String
+  recordData      Json
+  createdAt       DateTime
+  updatedAt       DateTime
+
+  @@index([goldenRecordId])
+}
+```
+
+### Drizzle Provenance Schema
+
+```typescript
+import { pgTable, uuid, jsonb, varchar, timestamp, boolean, text } from 'drizzle-orm/pg-core'
+
+export const provenance = pgTable('provenance', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  goldenRecordId: varchar('golden_record_id', { length: 255 }).notNull().unique(),
+  sourceRecordIds: text('source_record_ids').array().notNull(),
+  mergedAt: timestamp('merged_at').notNull(),
+  mergedBy: varchar('merged_by', { length: 255 }),
+  queueItemId: varchar('queue_item_id', { length: 255 }),
+  fieldSources: jsonb('field_sources').notNull(),
+  strategyUsed: jsonb('strategy_used').notNull(),
+  unmerged: boolean('unmerged').default(false),
+  unmergedAt: timestamp('unmerged_at'),
+  unmergedBy: varchar('unmerged_by', { length: 255 }),
+  unmergeReason: text('unmerge_reason'),
+})
+
+export const sourceRecordArchive = pgTable('source_record_archive', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  goldenRecordId: varchar('golden_record_id', { length: 255 }).notNull(),
+  recordData: jsonb('record_data').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull(),
+})
+```
+
+### Using Merge with Adapters
+
+```typescript
+const resolver = HaveWeMet.create<Customer>()
+  .schema(/* ... */)
+  .matching(/* ... */)
+  .merge(merge => merge
+    .timestampField('updatedAt')
+    .defaultStrategy('preferNonNull')
+    .field('firstName').strategy('preferLonger')
+    .field('email').strategy('preferNewer')
+  )
+  .adapter(prismaAdapter(prisma, {
+    tableName: 'customers',
+    // Merge operations use the configured strategies
+  }))
+  .build()
+
+// Merge from queue
+await resolver.queue.merge('queue-item-id', {
+  selectedMatchId: 'match-id',
+  decidedBy: 'reviewer@example.com',
+})
+// Creates golden record, archives sources, stores provenance
+```
+
+See [Golden Record](./golden-record.md), [Provenance](./provenance.md), and [Unmerge](./unmerge.md) for complete merge documentation.
+
 ## Next Steps
 
 - [Prisma Adapter Guide](./adapter-guides/prisma.md) - Prisma-specific setup and examples
@@ -581,10 +699,15 @@ npm run typeorm migration:run
 - [Database Performance](./database-performance.md) - Performance tuning and optimization
 - [Migration Guide](./migration-guide.md) - Deduplicate existing databases
 - [Review Queue](./review-queue.md) - Human-in-the-loop review workflows
+- [Golden Record](./golden-record.md) - Merge configuration and strategies
 
 ## Examples
 
-Complete working examples are available in the `examples/database-adapters/` directory:
-- `prisma-example.ts` - Customer deduplication with Prisma
-- `drizzle-example.ts` - Patient matching with Drizzle
-- `typeorm-example.ts` - Contact merging with TypeORM
+Complete working examples are available in the `examples/` directory:
+- `examples/database-adapters/prisma-example.ts` - Customer deduplication with Prisma
+- `examples/database-adapters/drizzle-example.ts` - Patient matching with Drizzle
+- `examples/database-adapters/typeorm-example.ts` - Contact merging with TypeORM
+- `examples/golden-record/basic-merge.ts` - Basic merge workflow
+- `examples/golden-record/custom-strategies.ts` - Custom merge strategies
+- `examples/golden-record/queue-merge.ts` - Queue-triggered merges
+- `examples/golden-record/unmerge.ts` - Unmerge operations

@@ -4,7 +4,7 @@ An identity resolution library for TypeScript/JavaScript.
 
 ## Status
 
-Currently in development. Phase 7 (Review Queue) is complete.
+Currently in development. Phase 8 (Golden Record) is complete.
 
 ## Quick Start
 
@@ -125,6 +125,43 @@ console.log(`Pending: ${stats.byStatus.pending}`)
 console.log(`Throughput: ${stats.throughput?.last24h} decisions/day`)
 ```
 
+### Golden Record (Merge)
+
+```typescript
+const resolver = HaveWeMet.create<Person>()
+  .schema(schema => { /* ... */ })
+  .blocking(block => { /* ... */ })
+  .matching(match => { /* ... */ })
+  .merge(merge => merge
+    .timestampField('updatedAt')
+    .defaultStrategy('preferNonNull')
+    .field('firstName').strategy('preferLonger')
+    .field('lastName').strategy('preferLonger')
+    .field('email').strategy('preferNewer')
+    .field('phone').strategy('preferNonNull')
+    .field('addresses').strategy('union')
+  )
+  .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
+  .build()
+
+// Merge from review queue decision
+await resolver.queue.merge(itemId, {
+  selectedMatchId: matchId,
+  notes: 'Same customer, merging records',
+  decidedBy: 'reviewer@example.com'
+})
+
+// Direct merge operation
+const result = await mergeExecutor.merge({
+  sourceRecords,
+  mergedBy: 'admin',
+})
+
+// Access the golden record and provenance
+console.log(result.goldenRecord)
+console.log(result.provenance.fieldSources)  // Which source contributed each field
+```
+
 ## Documentation
 
 ### Database Adapters
@@ -145,6 +182,12 @@ console.log(`Throughput: ${stats.throughput?.last24h} decisions/day`)
 - [Queue Workflows](docs/queue-workflows.md) - Common patterns and best practices
 - [Queue Metrics](docs/queue-metrics.md) - Monitoring and analytics
 - [Queue UI Guide](docs/queue-ui-guide.md) - Building review interfaces
+
+### Golden Record (Merge)
+- [Golden Record Overview](docs/golden-record.md) - Merge configuration and workflows
+- [Merge Strategies](docs/merge-strategies.md) - Complete guide to merge strategies
+- [Provenance](docs/provenance.md) - Audit trail and field attribution
+- [Unmerge](docs/unmerge.md) - Reversing incorrect merges
 
 ### Blocking Strategies
 - [Blocking Overview](docs/blocking/overview.md) - Why blocking is essential for large datasets

@@ -229,18 +229,27 @@ console.log('Status:', rejected.status) // 'rejected'
 #### Merging Records
 
 ```typescript
-// Confirm match and request merge (Phase 8 feature)
+// Confirm match and trigger merge
 const merged = await resolver.queue.merge('queue-item-id', {
   selectedMatchId: 'match-record-id',
   notes: 'Merging customer records',
   confidence: 1.0,
   decidedBy: 'admin@example.com',
-  mergeStrategy: 'prefer-newer'
 })
 
 console.log('Status:', merged.status) // 'merged'
-// Note: Actual merge execution will be implemented in Phase 8
+// The merge uses the configured merge strategies from the builder
 ```
+
+When `.merge()` is called on a queue item:
+
+1. The queue item is marked as `merged`
+2. The configured merge strategies are applied to create a golden record
+3. Source records are archived (preserved for potential unmerge)
+4. Provenance is created linking the queue item to the merge
+5. The golden record is persisted to the database
+
+See [Golden Record](./golden-record.md) for merge configuration details.
 
 ### Updating Status
 
@@ -429,6 +438,74 @@ try {
 - `QueueOperationError`: Generic queue operation failure
 - `QueueValidationError`: Invalid queue item data
 
+## Merge Integration
+
+The review queue integrates with the golden record merge system. When a reviewer confirms a match and chooses to merge:
+
+### Queue Merge Workflow
+
+```typescript
+// Reviewer confirms a match should be merged
+const merged = await resolver.queue.merge('queue-item-id', {
+  selectedMatchId: 'match-record-id',
+  notes: 'Same customer, verified by support ticket',
+  decidedBy: 'reviewer@example.com',
+})
+
+// Result includes merge details
+console.log('Queue status:', merged.status)  // 'merged'
+console.log('Golden record ID:', merged.decision?.mergeResult?.goldenRecordId)
+```
+
+### Merge Configuration
+
+Configure merge strategies when setting up the resolver:
+
+```typescript
+const resolver = HaveWeMet.create<Customer>()
+  .schema(schema => { /* ... */ })
+  .matching(match => { /* ... */ })
+  .merge(merge => merge
+    .timestampField('updatedAt')
+    .defaultStrategy('preferNonNull')
+    .field('firstName').strategy('preferLonger')
+    .field('lastName').strategy('preferLonger')
+    .field('email').strategy('preferNewer')
+    .field('phone').strategy('preferNonNull')
+  )
+  .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
+  .build()
+```
+
+When a queue merge occurs:
+1. Candidate record and selected match are merged using configured strategies
+2. Golden record is created and persisted
+3. Source records are archived
+4. Provenance links the merge to the queue item
+5. Queue item status becomes `merged`
+
+### Unmerging Queue-Triggered Merges
+
+If a queue-triggered merge was incorrect:
+
+```typescript
+const provenance = await provenanceStore.get(goldenRecordId)
+
+// Check if this merge came from queue
+if (provenance.queueItemId) {
+  console.log('Originated from queue item:', provenance.queueItemId)
+}
+
+// Unmerge to restore original records
+await unmergeExecutor.unmerge({
+  goldenRecordId,
+  unmergedBy: 'admin',
+  reason: 'Queue decision was incorrect - false positive',
+})
+```
+
+See [Golden Record](./golden-record.md), [Provenance](./provenance.md), and [Unmerge](./unmerge.md) for complete merge documentation.
+
 ## Next Steps
 
 - [Queue Workflows](./queue-workflows.md): Common workflow patterns
@@ -436,3 +513,4 @@ try {
 - [Queue UI Guide](./queue-ui-guide.md): Building review interfaces
 - [Database Adapters](./database-adapters.md): Queue persistence details
 - [Migration Guide](./migration-guide.md): Adding queue to existing databases
+- [Golden Record](./golden-record.md): Merge configuration and workflows
