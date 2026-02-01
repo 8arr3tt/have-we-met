@@ -24,7 +24,11 @@ import type {
   MergeResult,
 } from '../adapters/types'
 import { ReviewQueue } from '../queue/review-queue.js'
-import type { ReviewQueue as IReviewQueue, QueueItem, MergeDecision } from '../queue/types.js'
+import type {
+  ReviewQueue as IReviewQueue,
+  QueueItem,
+  MergeDecision,
+} from '../queue/types.js'
 import { QueueError } from '../queue/queue-error.js'
 import { matchResultToQueueItem } from './queue-resolver-integration.js'
 import type {
@@ -56,6 +60,13 @@ import {
   ServiceExecutorImpl,
   createServiceExecutor,
 } from '../services/service-executor.js'
+import type { MLModel, MLIntegrationConfig, FeatureVector } from '../ml/types.js'
+import {
+  MLMatchIntegrator,
+  type MLMatchResult,
+  type MLMatchOptions,
+  type MLMatchStats,
+} from '../ml/integration/resolver-integration.js'
 
 /**
  * Options for resolver operations
@@ -69,7 +80,14 @@ export interface ResolverOptions {
   queueContext?: Partial<import('../queue/types.js').QueueContext>
   /** Whether to skip external service execution */
   skipServices?: boolean
+  /** Whether to skip ML matching */
+  skipML?: boolean
 }
+
+/**
+ * Options for ML-enhanced resolution
+ */
+export interface MLResolverOptions extends ResolverOptions, MLMatchOptions {}
 
 /**
  * Extended match result that includes service execution information
@@ -139,7 +157,9 @@ export interface DirectMergeOptions {
  *
  * @typeParam T - The record type being matched
  */
-export class Resolver<T extends Record<string, unknown> = Record<string, unknown>> {
+export class Resolver<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   private schema: SchemaDefinition<T>
   private comparisons: FieldComparison[]
   private thresholds: MatchThresholds
@@ -157,6 +177,8 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   private _unmergeExecutor?: UnmergeExecutor<T>
   private _serviceExecutor?: ServiceExecutorImpl
   private _servicesConfig?: ServicesConfig
+  private _mlIntegrator?: MLMatchIntegrator<T>
+  private _mlConfig?: MLIntegrationConfig
 
   constructor(config: ResolverConfig<T>) {
     this.validateConfig(config)
@@ -267,7 +289,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
    */
   async getServiceHealthStatus(): Promise<Record<string, HealthCheckResult>> {
     if (!this._serviceExecutor) {
-      throw new Error('Services are not configured. Use .services() in the builder.')
+      throw new Error(
+        'Services are not configured. Use .services() in the builder.'
+      )
     }
     return this._serviceExecutor.getHealthStatus()
   }
@@ -288,7 +312,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
    */
   getServiceCircuitStatus(): Record<string, CircuitBreakerStatus> {
     if (!this._serviceExecutor) {
-      throw new Error('Services are not configured. Use .services() in the builder.')
+      throw new Error(
+        'Services are not configured. Use .services() in the builder.'
+      )
     }
     return this._serviceExecutor.getCircuitStatus()
   }
@@ -309,6 +335,335 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     if (this._serviceExecutor) {
       await this._serviceExecutor.dispose()
     }
+  }
+
+  // ==================== ML MATCHING ====================
+
+  /**
+   * Configure ML matching for the resolver.
+   *
+   * @param model - The ML model to use for matching
+   * @param config - Optional ML integration configuration
+   *
+   * @example
+   * ```typescript
+   * import { createPretrainedClassifier } from 'have-we-met'
+   *
+   * const classifier = await createPretrainedClassifier()
+   * resolver.configureML(classifier, {
+   *   mode: 'hybrid',
+   *   mlWeight: 0.4,
+   * })
+   * ```
+   */
+  configureML(model: MLModel<T>, config?: Partial<MLIntegrationConfig>): void {
+    this._mlIntegrator = new MLMatchIntegrator<T>(model, config)
+    this._mlConfig = this._mlIntegrator.getConfig()
+  }
+
+  /**
+   * Check if ML matching is configured.
+   */
+  get hasML(): boolean {
+    return this._mlIntegrator !== undefined && this._mlIntegrator.isReady()
+  }
+
+  /**
+   * Get the ML integration configuration.
+   */
+  getMLConfig(): MLIntegrationConfig | undefined {
+    return this._mlConfig
+  }
+
+  /**
+   * Get the ML model (if configured).
+   */
+  getMLModel(): MLModel<T> | undefined {
+    return this._mlIntegrator?.getModel()
+  }
+
+  /**
+   * Update the ML integration configuration.
+   *
+   * @param config - Partial configuration to update
+   */
+  setMLConfig(config: Partial<MLIntegrationConfig>): void {
+    if (!this._mlIntegrator) {
+      throw new Error(
+        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+      )
+    }
+    this._mlIntegrator.setConfig(config)
+    this._mlConfig = this._mlIntegrator.getConfig()
+  }
+
+  /**
+   * Find matches using ML-enhanced matching.
+   *
+   * This method:
+   * 1. Performs standard probabilistic matching
+   * 2. Enhances results with ML predictions based on configured mode
+   * 3. Returns results with ML prediction details
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param existingRecords - The dataset to search within
+   * @param options - Optional ML-specific configuration
+   * @returns Promise resolving to ML-enhanced match results
+   *
+   * @throws Error if ML is not configured
+   *
+   * @example
+   * ```typescript
+   * const results = await resolver.resolveWithML(newRecord, existingRecords)
+   *
+   * results.forEach(result => {
+   *   console.log(result.outcome)
+   *   console.log(result.mlUsed)
+   *   if (result.mlPrediction) {
+   *     console.log(result.mlPrediction.probability)
+   *     console.log(result.mlPrediction.featureImportance)
+   *   }
+   * })
+   * ```
+   */
+  async resolveWithML(
+    candidateRecord: T,
+    existingRecords: T[],
+    options?: MLResolverOptions
+  ): Promise<MLMatchResult<T>[]> {
+    if (!this._mlIntegrator) {
+      throw new Error(
+        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+      )
+    }
+
+    // First perform standard probabilistic matching
+    const probabilisticResults = this.executeMatching(
+      candidateRecord as Record<string, unknown>,
+      existingRecords as Record<string, unknown>[],
+      options
+    ) as MatchResult<T>[]
+
+    // Apply blocking to get the actual records that were compared
+    let recordsToCompare = existingRecords
+    if (this.blockingStrategy) {
+      const allRecords = [candidateRecord, ...existingRecords]
+      const blockGenerator = new BlockGenerator()
+      const blocks = blockGenerator.generateBlocks(
+        allRecords,
+        this.blockingStrategy
+      )
+
+      const candidatesSet = new Set<T>()
+      for (const block of blocks.values()) {
+        if (block.includes(candidateRecord as Record<string, unknown>)) {
+          for (const record of block) {
+            if (record !== candidateRecord) {
+              candidatesSet.add(record as T)
+            }
+          }
+        }
+      }
+      recordsToCompare = Array.from(candidatesSet)
+    }
+
+    // Enhance results with ML predictions
+    return this._mlIntegrator.enhanceMatchResults(
+      candidateRecord,
+      recordsToCompare,
+      probabilisticResults,
+      {
+        ...options,
+        skipML: options?.skipML,
+      }
+    )
+  }
+
+  /**
+   * Find matches using ML-enhanced matching with batch optimization.
+   *
+   * This method is more efficient for comparing against many records
+   * as it batches ML predictions.
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param existingRecords - The dataset to search within
+   * @param options - Optional ML-specific configuration
+   * @returns Promise resolving to ML-enhanced results with statistics
+   *
+   * @example
+   * ```typescript
+   * const { results, stats } = await resolver.resolveWithMLBatch(
+   *   newRecord,
+   *   existingRecords
+   * )
+   *
+   * console.log(`ML used for ${stats.mlUsedCount} of ${stats.totalMatches} matches`)
+   * console.log(`Average ML time: ${stats.avgMLPredictionTimeMs}ms`)
+   * ```
+   */
+  async resolveWithMLBatch(
+    candidateRecord: T,
+    existingRecords: T[],
+    options?: MLResolverOptions
+  ): Promise<{ results: MLMatchResult<T>[]; stats: MLMatchStats }> {
+    if (!this._mlIntegrator) {
+      throw new Error(
+        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+      )
+    }
+
+    // First perform standard probabilistic matching
+    const probabilisticResults = this.executeMatching(
+      candidateRecord as Record<string, unknown>,
+      existingRecords as Record<string, unknown>[],
+      options
+    ) as MatchResult<T>[]
+
+    // Apply blocking to get the actual records that were compared
+    let recordsToCompare = existingRecords
+    if (this.blockingStrategy) {
+      const allRecords = [candidateRecord, ...existingRecords]
+      const blockGenerator = new BlockGenerator()
+      const blocks = blockGenerator.generateBlocks(
+        allRecords,
+        this.blockingStrategy
+      )
+
+      const candidatesSet = new Set<T>()
+      for (const block of blocks.values()) {
+        if (block.includes(candidateRecord as Record<string, unknown>)) {
+          for (const record of block) {
+            if (record !== candidateRecord) {
+              candidatesSet.add(record as T)
+            }
+          }
+        }
+      }
+      recordsToCompare = Array.from(candidatesSet)
+    }
+
+    // Enhance results with ML predictions using batch processing
+    return this._mlIntegrator.enhanceMatchResultsBatch(
+      candidateRecord,
+      recordsToCompare,
+      probabilisticResults,
+      options
+    )
+  }
+
+  /**
+   * Find matches using ML-only mode (no probabilistic scoring).
+   *
+   * This method bypasses the probabilistic matching engine entirely
+   * and relies solely on the ML model for match predictions.
+   *
+   * @param candidateRecord - The record to find matches for
+   * @param existingRecords - The dataset to search within
+   * @param options - Optional configuration
+   * @returns Promise resolving to ML match results
+   *
+   * @throws Error if ML is not configured
+   *
+   * @example
+   * ```typescript
+   * const results = await resolver.resolveMLOnly(newRecord, existingRecords)
+   *
+   * results.forEach(result => {
+   *   // Result is based entirely on ML prediction
+   *   console.log(result.mlPrediction?.probability)
+   *   console.log(result.mlPrediction?.featureImportance)
+   * })
+   * ```
+   */
+  async resolveMLOnly(
+    candidateRecord: T,
+    existingRecords: T[],
+    options?: ResolverOptions
+  ): Promise<MLMatchResult<T>[]> {
+    if (!this._mlIntegrator) {
+      throw new Error(
+        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+      )
+    }
+
+    // Apply blocking if configured
+    let recordsToCompare = existingRecords
+    if (this.blockingStrategy) {
+      const allRecords = [candidateRecord, ...existingRecords]
+      const blockGenerator = new BlockGenerator()
+      const blocks = blockGenerator.generateBlocks(
+        allRecords,
+        this.blockingStrategy
+      )
+
+      const candidatesSet = new Set<T>()
+      for (const block of blocks.values()) {
+        if (block.includes(candidateRecord as Record<string, unknown>)) {
+          for (const record of block) {
+            if (record !== candidateRecord) {
+              candidatesSet.add(record as T)
+            }
+          }
+        }
+      }
+      recordsToCompare = Array.from(candidatesSet)
+    }
+
+    // Match each record using ML-only
+    const results: MLMatchResult<T>[] = []
+
+    for (const existingRecord of recordsToCompare) {
+      const result = await this._mlIntegrator.matchWithMLOnly(
+        candidateRecord,
+        existingRecord,
+        this.thresholds
+      )
+      results.push(result)
+    }
+
+    // Sort by score and apply max results
+    results.sort((a, b) => b.score.totalScore - a.score.totalScore)
+
+    if (options?.maxResults && options.maxResults > 0) {
+      return results.slice(0, options.maxResults)
+    }
+
+    return results
+  }
+
+  /**
+   * Extract ML features from a record pair without making a prediction.
+   *
+   * Useful for debugging, understanding what features the ML model sees,
+   * and for pre-computing features for batch operations.
+   *
+   * @param candidateRecord - First record in the pair
+   * @param existingRecord - Second record in the pair
+   * @returns Feature vector with names and values
+   *
+   * @throws Error if ML is not configured
+   *
+   * @example
+   * ```typescript
+   * const features = resolver.extractMLFeatures(record1, record2)
+   *
+   * console.log('Feature names:', features.names)
+   * console.log('Feature values:', features.values)
+   *
+   * // Inspect individual features
+   * features.names.forEach((name, i) => {
+   *   console.log(`${name}: ${features.values[i]}`)
+   * })
+   * ```
+   */
+  extractMLFeatures(candidateRecord: T, existingRecord: T): FeatureVector {
+    if (!this._mlIntegrator) {
+      throw new Error(
+        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+      )
+    }
+
+    return this._mlIntegrator.extractFeatures(candidateRecord, existingRecord)
   }
 
   /**
@@ -393,7 +748,11 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
   ): Promise<ResolutionResult<T>> {
     // If services are not configured or skipped, fall back to basic resolve
     if (!this._serviceExecutor || options?.skipServices) {
-      const matches = this.executeMatching(candidateRecord, existingRecords, options)
+      const matches = this.executeMatching(
+        candidateRecord,
+        existingRecords,
+        options
+      )
       return {
         matches,
         rejected: false,
@@ -407,7 +766,8 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     let allScoreAdjustments: number[] = []
 
     // Execute pre-match services
-    const preMatchResult = await this._serviceExecutor.executePreMatch(candidateRecord)
+    const preMatchResult =
+      await this._serviceExecutor.executePreMatch(candidateRecord)
     allServiceResults = { ...preMatchResult.results }
     if (preMatchResult.flags) {
       allFlags = [...preMatchResult.flags]
@@ -431,7 +791,11 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     }
 
     // Execute matching with enriched record
-    let matches = this.executeMatching(processedRecord, existingRecords, options)
+    let matches = this.executeMatching(
+      processedRecord,
+      existingRecords,
+      options
+    )
 
     // Execute post-match services if there are matches
     if (matches.length > 0) {
@@ -448,7 +812,10 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
         allFlags = [...allFlags, ...postMatchResult.flags]
       }
       if (postMatchResult.scoreAdjustments) {
-        allScoreAdjustments = [...allScoreAdjustments, ...postMatchResult.scoreAdjustments]
+        allScoreAdjustments = [
+          ...allScoreAdjustments,
+          ...postMatchResult.scoreAdjustments,
+        ]
       }
 
       if (!postMatchResult.proceed) {
@@ -467,7 +834,7 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
       // Apply score adjustments from post-match services
       if (allScoreAdjustments.length > 0) {
         const totalAdjustment = allScoreAdjustments.reduce((a, b) => a + b, 0)
-        matches = matches.map(match => ({
+        matches = matches.map((match) => ({
           ...match,
           score: {
             ...match.score,
@@ -479,25 +846,33 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
         matches.sort((a, b) => b.score.totalScore - a.score.totalScore)
 
         // Re-classify outcomes based on adjusted scores
-        matches = matches.map(match => ({
+        matches = matches.map((match) => ({
           ...match,
-          outcome: this.outcomeClassifier.classify(match.score, this.thresholds),
+          outcome: this.outcomeClassifier.classify(
+            match.score,
+            this.thresholds
+          ),
         }))
       }
     }
 
     // Add service results to each match result
-    const matchesWithServices: MatchResultWithServices[] = matches.map(match => ({
-      ...match,
-      serviceResults: allServiceResults,
-      enrichedRecord: processedRecord,
-      serviceFlags: allFlags.length > 0 ? allFlags : undefined,
-    }))
+    const matchesWithServices: MatchResultWithServices[] = matches.map(
+      (match) => ({
+        ...match,
+        serviceResults: allServiceResults,
+        enrichedRecord: processedRecord,
+        serviceFlags: allFlags.length > 0 ? allFlags : undefined,
+      })
+    )
 
     return {
       matches: matchesWithServices,
       serviceResults: allServiceResults,
-      enrichedRecord: processedRecord !== candidateRecord ? processedRecord as T : undefined,
+      enrichedRecord:
+        processedRecord !== candidateRecord
+          ? (processedRecord as T)
+          : undefined,
       rejected: false,
       serviceFlags: allFlags.length > 0 ? allFlags : undefined,
       serviceExecutionTimeMs: Date.now() - startTime,
@@ -682,7 +1057,10 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     let pairs: Array<[Record<string, unknown>, Record<string, unknown>]>
 
     if (this.blockingStrategy) {
-      const blocks = blockGenerator.generateBlocks(records, this.blockingStrategy)
+      const blocks = blockGenerator.generateBlocks(
+        records,
+        this.blockingStrategy
+      )
       pairs = blockGenerator.generatePairs(blocks)
     } else {
       pairs = []
@@ -693,10 +1071,7 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
       }
     }
 
-    const matchesByRecord = new Map<
-      Record<string, unknown>,
-      MatchResult[]
-    >()
+    const matchesByRecord = new Map<Record<string, unknown>, MatchResult[]>()
 
     for (const record of records) {
       matchesByRecord.set(record, [])
@@ -814,7 +1189,8 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
 
       if (queueItems.length > 0) {
         // Queue asynchronously without blocking
-        void this._queue.addBatch(queueItems)
+        void this._queue
+          .addBatch(queueItems)
           .then((queued) => {
             stats.queuedCount = queued.length
           })
@@ -865,7 +1241,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     options?: DatabaseResolveOptions
   ): Promise<MatchResult[]> {
     if (!this.adapter) {
-      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+      throw new Error(
+        'Database adapter is not configured. Use .adapter() in the builder.'
+      )
     }
 
     const useBlocking = options?.useBlocking ?? true
@@ -880,10 +1258,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
         this.blockingStrategy
       )
 
-      existingRecords = await this.adapter.findByBlockingKeys(
-        blockingKeys,
-        { limit: maxFetchSize }
-      )
+      existingRecords = await this.adapter.findByBlockingKeys(blockingKeys, {
+        limit: maxFetchSize,
+      })
     } else {
       existingRecords = await this.adapter.findAll({ limit: maxFetchSize })
     }
@@ -931,7 +1308,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     options?: DatabaseResolveOptions & { skipServices?: boolean }
   ): Promise<ResolutionResult<T>> {
     if (!this.adapter) {
-      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+      throw new Error(
+        'Database adapter is not configured. Use .adapter() in the builder.'
+      )
     }
 
     const useBlocking = options?.useBlocking ?? true
@@ -946,10 +1325,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
         this.blockingStrategy
       )
 
-      existingRecords = await this.adapter.findByBlockingKeys(
-        blockingKeys,
-        { limit: maxFetchSize }
-      )
+      existingRecords = await this.adapter.findByBlockingKeys(blockingKeys, {
+        limit: maxFetchSize,
+      })
     } else {
       existingRecords = await this.adapter.findAll({ limit: maxFetchSize })
     }
@@ -988,7 +1366,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     options?: DatabaseDeduplicationOptions
   ): Promise<DeduplicationBatchResult> {
     if (!this.adapter) {
-      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+      throw new Error(
+        'Database adapter is not configured. Use .adapter() in the builder.'
+      )
     }
 
     const batchSize = options?.batchSize ?? 1000
@@ -996,7 +1376,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
     const persistResults = options?.persistResults ?? false
 
     const totalRecords = await this.adapter.count()
-    const recordsToProcess = maxRecords ? Math.min(maxRecords, totalRecords) : totalRecords
+    const recordsToProcess = maxRecords
+      ? Math.min(maxRecords, totalRecords)
+      : totalRecords
 
     let allResults: DeduplicationResult[] = []
     const totalStats = {
@@ -1016,7 +1398,10 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
       if (records.length === 0) break
 
       const batchResult = this.deduplicateBatch(records, {
-        minScore: options?.returnExplanation === false ? this.thresholds.noMatch : undefined,
+        minScore:
+          options?.returnExplanation === false
+            ? this.thresholds.noMatch
+            : undefined,
         autoQueue: options?.autoQueue,
         queueContext: options?.queueContext,
       })
@@ -1025,10 +1410,12 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
       totalStats.recordsProcessed += batchResult.stats.recordsProcessed
       totalStats.comparisonsMade += batchResult.stats.comparisonsMade
       totalStats.definiteMatchesFound += batchResult.stats.definiteMatchesFound
-      totalStats.potentialMatchesFound += batchResult.stats.potentialMatchesFound
+      totalStats.potentialMatchesFound +=
+        batchResult.stats.potentialMatchesFound
       totalStats.noMatchesFound += batchResult.stats.noMatchesFound
       totalStats.recordsWithMatches += batchResult.stats.recordsWithMatches
-      totalStats.recordsWithoutMatches += batchResult.stats.recordsWithoutMatches
+      totalStats.recordsWithoutMatches +=
+        batchResult.stats.recordsWithoutMatches
     }
 
     if (persistResults) {
@@ -1079,7 +1466,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
    */
   async findAndMergeDuplicates(options?: MergeOptions): Promise<MergeResult[]> {
     if (!this.adapter) {
-      throw new Error('Database adapter is not configured. Use .adapter() in the builder.')
+      throw new Error(
+        'Database adapter is not configured. Use .adapter() in the builder.'
+      )
     }
 
     const useTransaction = options?.useTransaction ?? true
@@ -1119,7 +1508,9 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
 
       const mergeOperation = async (txAdapter: DatabaseAdapter<T>) => {
         const mergedRecord = await txAdapter.update(masterRecordId, {
-          mergedCount: ((masterRecord as T & { mergedCount?: number }).mergedCount ?? 0) + duplicateIds.length,
+          mergedCount:
+            ((masterRecord as T & { mergedCount?: number }).mergedCount ?? 0) +
+            duplicateIds.length,
         } as unknown as Partial<T>)
 
         if (deleteAfterMerge) {
@@ -1202,7 +1593,10 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
           if (this.adapter) {
             // Mark records as archived (soft delete) or delete them
             for (const id of ids) {
-              await this.adapter.update(id, { _archived: true, _archivedAt: new Date() } as unknown as Partial<T>)
+              await this.adapter.update(id, {
+                _archived: true,
+                _archivedAt: new Date(),
+              } as unknown as Partial<T>)
             }
           }
         },
@@ -1275,7 +1669,10 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
 
     // Archive source records in memory for potential unmerge
     if (this._sourceRecordArchive) {
-      await this._sourceRecordArchive.archive(sourceRecords, mergeResult.goldenRecordId)
+      await this._sourceRecordArchive.archive(
+        sourceRecords,
+        mergeResult.goldenRecordId
+      )
     }
 
     // Save provenance
@@ -1449,13 +1846,25 @@ export class Resolver<T extends Record<string, unknown> = Record<string, unknown
         options.caseSensitive = matchConfig.caseSensitive
       }
 
-      if (matchConfig.strategy === 'levenshtein' && matchConfig.levenshteinOptions) {
+      if (
+        matchConfig.strategy === 'levenshtein' &&
+        matchConfig.levenshteinOptions
+      ) {
         Object.assign(options, matchConfig.levenshteinOptions)
-      } else if (matchConfig.strategy === 'jaro-winkler' && matchConfig.jaroWinklerOptions) {
+      } else if (
+        matchConfig.strategy === 'jaro-winkler' &&
+        matchConfig.jaroWinklerOptions
+      ) {
         Object.assign(options, matchConfig.jaroWinklerOptions)
-      } else if (matchConfig.strategy === 'soundex' && matchConfig.soundexOptions) {
+      } else if (
+        matchConfig.strategy === 'soundex' &&
+        matchConfig.soundexOptions
+      ) {
         Object.assign(options, matchConfig.soundexOptions)
-      } else if (matchConfig.strategy === 'metaphone' && matchConfig.metaphoneOptions) {
+      } else if (
+        matchConfig.strategy === 'metaphone' &&
+        matchConfig.metaphoneOptions
+      ) {
         Object.assign(options, matchConfig.metaphoneOptions)
       }
 

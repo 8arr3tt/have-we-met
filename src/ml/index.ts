@@ -139,3 +139,16 @@ export type {
   TrainerOptions,
   TrainingProgressCallback,
 } from './training';
+
+// Integration
+export {
+  MLMatchIntegrator,
+  createMLIntegrator,
+  isMLMatchResult,
+} from './integration';
+
+export type {
+  MLMatchResult,
+  MLMatchOptions,
+  MLMatchStats,
+} from './integration';
