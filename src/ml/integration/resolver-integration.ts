@@ -6,13 +6,13 @@
  */
 
 import type {
-  MLModel,
   MLPrediction,
   RecordPair,
   MLIntegrationConfig,
   MLIntegrationMode,
   FeatureVector,
 } from '../types';
+import type { MLModel } from '../model-interface';
 import { DEFAULT_ML_INTEGRATION_CONFIG } from '../types';
 import type { MatchResult, MatchScore, MatchOutcome, FieldScore } from '../../core/scoring/types';
 

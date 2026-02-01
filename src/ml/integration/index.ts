@@ -15,3 +15,17 @@ export type {
   MLMatchOptions,
   MLMatchStats,
 } from './resolver-integration';
+
+// Builder integration
+export {
+  MLBuilder,
+  FieldFeatureBuilder,
+  mlBuilder,
+  createModelFromConfig,
+  validateMLBuilderConfig,
+} from './builder-integration';
+
+export type {
+  MLBuilderConfig,
+  MLBuilderResult,
+} from './builder-integration';

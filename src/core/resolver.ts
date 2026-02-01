@@ -60,13 +60,18 @@ import {
   ServiceExecutorImpl,
   createServiceExecutor,
 } from '../services/service-executor.js'
-import type { MLModel, MLIntegrationConfig, FeatureVector } from '../ml/types.js'
+import type { MLIntegrationConfig, FeatureVector } from '../ml/types.js'
+import type { MLModel } from '../ml/model-interface.js'
 import {
   MLMatchIntegrator,
   type MLMatchResult,
   type MLMatchOptions,
   type MLMatchStats,
 } from '../ml/integration/resolver-integration.js'
+import {
+  createModelFromConfig,
+  type MLBuilderConfig,
+} from '../ml/integration/builder-integration.js'
 
 /**
  * Options for resolver operations
@@ -217,6 +222,32 @@ export class Resolver<
         this._serviceExecutor.register(serviceConfig)
       }
     }
+
+    // Store ML configuration for lazy initialization
+    // ML model is created asynchronously, so we initialize it on first use
+    if (config.ml) {
+      this._mlBuilderConfig = config.ml
+    }
+  }
+
+  // ML builder configuration (used for lazy initialization)
+  private _mlBuilderConfig?: MLBuilderConfig<T>
+
+  /**
+   * Initialize ML from builder configuration.
+   * Called lazily on first ML use to handle async model creation.
+   */
+  private async initializeMLFromConfig(): Promise<void> {
+    if (!this._mlBuilderConfig || this._mlIntegrator) {
+      return
+    }
+
+    const model = await createModelFromConfig<T>(this._mlBuilderConfig)
+    this._mlIntegrator = new MLMatchIntegrator<T>(
+      model,
+      this._mlBuilderConfig.integrationConfig
+    )
+    this._mlConfig = this._mlIntegrator.getConfig()
   }
 
   /**
@@ -363,9 +394,21 @@ export class Resolver<
 
   /**
    * Check if ML matching is configured.
+   * Note: This returns true if ML is configured via builder even if not yet initialized.
    */
   get hasML(): boolean {
-    return this._mlIntegrator !== undefined && this._mlIntegrator.isReady()
+    return (
+      (this._mlIntegrator !== undefined && this._mlIntegrator.isReady()) ||
+      this._mlBuilderConfig !== undefined
+    )
+  }
+
+  /**
+   * Check if ML matching is configured via the builder API.
+   * This indicates ML was set up through the fluent builder.
+   */
+  get hasMLConfig(): boolean {
+    return this._mlBuilderConfig !== undefined
   }
 
   /**
@@ -431,6 +474,11 @@ export class Resolver<
     existingRecords: T[],
     options?: MLResolverOptions
   ): Promise<MLMatchResult<T>[]> {
+    // Lazily initialize ML from builder config if needed
+    if (!this._mlIntegrator && this._mlBuilderConfig) {
+      await this.initializeMLFromConfig()
+    }
+
     if (!this._mlIntegrator) {
       throw new Error(
         'ML is not configured. Call configureML() first or use .ml() in the builder.'
@@ -506,6 +554,11 @@ export class Resolver<
     existingRecords: T[],
     options?: MLResolverOptions
   ): Promise<{ results: MLMatchResult<T>[]; stats: MLMatchStats }> {
+    // Lazily initialize ML from builder config if needed
+    if (!this._mlIntegrator && this._mlBuilderConfig) {
+      await this.initializeMLFromConfig()
+    }
+
     if (!this._mlIntegrator) {
       throw new Error(
         'ML is not configured. Call configureML() first or use .ml() in the builder.'
@@ -580,6 +633,11 @@ export class Resolver<
     existingRecords: T[],
     options?: ResolverOptions
   ): Promise<MLMatchResult<T>[]> {
+    // Lazily initialize ML from builder config if needed
+    if (!this._mlIntegrator && this._mlBuilderConfig) {
+      await this.initializeMLFromConfig()
+    }
+
     if (!this._mlIntegrator) {
       throw new Error(
         'ML is not configured. Call configureML() first or use .ml() in the builder.'
@@ -659,11 +717,38 @@ export class Resolver<
   extractMLFeatures(candidateRecord: T, existingRecord: T): FeatureVector {
     if (!this._mlIntegrator) {
       throw new Error(
-        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+        'ML is not configured. Call configureML() first, use .ml() in the builder, ' +
+        'or call an async ML method (resolveWithML, resolveMLOnly) first to initialize.'
       )
     }
 
     return this._mlIntegrator.extractFeatures(candidateRecord, existingRecord)
+  }
+
+  /**
+   * Initialize and ensure ML is ready for use.
+   *
+   * This method is useful when you need to ensure ML is initialized before
+   * calling synchronous methods like extractMLFeatures().
+   *
+   * @throws Error if ML is not configured
+   *
+   * @example
+   * ```typescript
+   * await resolver.ensureMLReady()
+   * const features = resolver.extractMLFeatures(record1, record2)
+   * ```
+   */
+  async ensureMLReady(): Promise<void> {
+    if (!this._mlIntegrator && this._mlBuilderConfig) {
+      await this.initializeMLFromConfig()
+    }
+
+    if (!this._mlIntegrator) {
+      throw new Error(
+        'ML is not configured. Call configureML() first or use .ml() in the builder.'
+      )
+    }
   }
 
   /**

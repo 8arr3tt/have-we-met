@@ -8,6 +8,7 @@ import type {
 import type { BlockingConfig as BlockingConfigType } from '../core/blocking/types'
 import type { DatabaseAdapter } from '../adapters/types'
 import type { ServicesConfig } from '../services/types.js'
+import type { MLBuilderConfig } from '../ml/integration/builder-integration.js'
 
 /**
  * Configuration for match score thresholds that determine outcomes.
@@ -82,7 +83,9 @@ export type BlockingConfig<T = unknown> = BlockingConfigType<T>
  *
  * @typeParam T - The shape of the user's data object
  */
-export interface ResolverConfig<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface ResolverConfig<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   /** Schema defining the structure of records */
   schema: SchemaDefinition<T>
   /** Configuration for the matching process */
@@ -93,6 +96,8 @@ export interface ResolverConfig<T extends Record<string, unknown> = Record<strin
   adapter?: DatabaseAdapter<T>
   /** Optional external services configuration */
   services?: ServicesConfig
+  /** Optional ML matching configuration */
+  ml?: MLBuilderConfig<T>
 }
 
 /**

@@ -58,10 +58,7 @@ export type {
 } from './types/schema'
 
 // Builders
-export {
-  SchemaBuilder,
-  FieldDefinitionBuilder,
-} from './builder/schema-builder'
+export { SchemaBuilder, FieldDefinitionBuilder } from './builder/schema-builder'
 export { MatchingBuilder, FieldMatchBuilder } from './builder/matching-builder'
 export {
   BlockingBuilder,
@@ -82,7 +79,10 @@ export {
   applyNormalizer,
   composeNormalizers,
 } from './core/normalizers/registry'
-export type { NormalizerFunction, NormalizerMetadata } from './core/normalizers/types'
+export type {
+  NormalizerFunction,
+  NormalizerMetadata,
+} from './core/normalizers/types'
 export {
   trim,
   lowercase,
@@ -176,10 +176,7 @@ export type {
   QueueFilter,
   QueueAdapter,
 } from './queue'
-export type {
-  QueueOptions,
-  AlertThresholds,
-} from './builder/queue-options'
+export type { QueueOptions, AlertThresholds } from './builder/queue-options'
 export {
   QueueError,
   QueueItemNotFoundError,
@@ -191,3 +188,77 @@ export {
   validateQueueDecision,
   validateCompleteQueueItem,
 } from './queue'
+
+// ML Matching
+export {
+  // Types
+  DEFAULT_ML_MODEL_CONFIG,
+  DEFAULT_TRAINING_CONFIG,
+  DEFAULT_FEATURE_EXTRACTION_CONFIG,
+  DEFAULT_ML_INTEGRATION_CONFIG,
+  // Model interface
+  BaseMLModel,
+  // Prediction utilities
+  createPrediction,
+  createFeatureVector,
+  createFeatureImportance,
+  // Feature extraction
+  FeatureExtractor,
+  FeatureExtractionConfigBuilder,
+  featureConfig,
+  builtInExtractors,
+  // Built-in models
+  SimpleClassifier,
+  createPersonMatchingClassifier,
+  createClassifierFromFields,
+  createPretrainedClassifier,
+  pretrainedWeights,
+  // Training
+  ModelTrainer,
+  createTrainingExample,
+  createTrainingDataset,
+  // Integration
+  MLMatchIntegrator,
+  createMLIntegrator,
+  isMLMatchResult,
+  // Builder
+  MLBuilder,
+  FieldFeatureBuilder,
+  mlBuilder,
+  createModelFromConfig,
+  validateMLBuilderConfig,
+} from './ml'
+
+export type {
+  // Core ML types
+  MLMatchOutcome,
+  RecordPair as MLRecordPair,
+  FeatureVector,
+  FeatureImportance,
+  MLPrediction,
+  BatchMLPrediction,
+  ModelMetadata,
+  MLModelConfig,
+  TrainingExample,
+  TrainingDataset,
+  TrainingConfig,
+  TrainingMetrics,
+  TrainingResult,
+  FieldFeatureConfig,
+  FeatureExtractorType,
+  FeatureExtractionConfig,
+  CustomFeatureExtractor,
+  MLIntegrationMode,
+  MLIntegrationConfig,
+  // Model interface
+  MLModel,
+  MLModelWeights,
+  MLModelFactory,
+  // Builder
+  MLBuilderConfig,
+  MLBuilderResult,
+  // Integration
+  MLMatchResult,
+  MLMatchOptions,
+  MLMatchStats,
+} from './ml'

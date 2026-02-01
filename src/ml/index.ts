@@ -145,10 +145,19 @@ export {
   MLMatchIntegrator,
   createMLIntegrator,
   isMLMatchResult,
+  // Builder integration
+  MLBuilder,
+  FieldFeatureBuilder,
+  mlBuilder,
+  createModelFromConfig,
+  validateMLBuilderConfig,
 } from './integration';
 
 export type {
   MLMatchResult,
   MLMatchOptions,
   MLMatchStats,
+  // Builder types
+  MLBuilderConfig,
+  MLBuilderResult,
 } from './integration';

@@ -19,6 +19,12 @@ import {
   CustomServiceBuilder,
   type ServiceBuilderResult,
 } from './service-builder.js'
+import {
+  MLBuilder,
+  FieldFeatureBuilder,
+  type MLBuilderConfig,
+  type MLBuilderResult,
+} from '../ml/integration/builder-integration.js'
 
 /**
  * Fluent builder for configuring and creating a Resolver instance.
@@ -44,13 +50,16 @@ import {
  *
  * @typeParam T - The record type being matched
  */
-export class ResolverBuilder<T extends Record<string, unknown> = Record<string, unknown>> {
+export class ResolverBuilder<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   private schemaDefinition?: SchemaDefinition<T>
   private matchingConfig?: MatchingConfig
   private blockingConfiguration?: BlockingConfig<T>
   private databaseAdapter?: DatabaseAdapter<T>
   private mergeConfiguration?: MergeConfig
   private servicesConfiguration?: ServicesConfig
+  private mlConfiguration?: MLBuilderConfig<T>
 
   /**
    * Configure the schema defining field types and normalizers.
@@ -109,7 +118,9 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
    * ```
    */
   matching(
-    configurator: (builder: MatchingBuilder) => MatchingBuilder | FieldMatchBuilder | void
+    configurator: (
+      builder: MatchingBuilder
+    ) => MatchingBuilder | FieldMatchBuilder | void
   ): this {
     const builder = new MatchingBuilder()
     const result = configurator(builder)
@@ -263,7 +274,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
    * ```
    */
   services(
-    configurator: (builder: ServiceBuilder<T>) => ServiceBuilderResult<T>,
+    configurator: (builder: ServiceBuilder<T>) => ServiceBuilderResult<T>
   ): this {
     const builder = new ServiceBuilder<T>()
     const result = configurator(builder)
@@ -296,6 +307,71 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
   }
 
   /**
+   * Configure ML matching for enhanced identity resolution.
+   *
+   * ML matching can work alongside probabilistic matching (hybrid mode),
+   * replace it entirely (mlOnly mode), or provide a fallback for uncertain
+   * probabilistic results (fallback mode).
+   *
+   * @param configurator - Callback that receives an MLBuilder
+   * @returns This builder for chaining
+   *
+   * @example
+   * ```typescript
+   * // Use built-in pre-trained model with hybrid mode
+   * .ml(ml => ml
+   *   .usePretrained()
+   *   .mode('hybrid')
+   *   .mlWeight(0.4)  // 40% ML, 60% probabilistic
+   * )
+   *
+   * // Use custom model with ML-only mode
+   * .ml(ml => ml
+   *   .model(myTrainedClassifier)
+   *   .mode('mlOnly')
+   *   .matchThreshold(0.8)
+   * )
+   *
+   * // Configure custom feature extraction
+   * .ml(ml => ml
+   *   .usePretrained()
+   *   .mode('hybrid')
+   *   .field('firstName').forName().weight(1.2)
+   *   .field('email').forIdentifier().weight(1.5)
+   *   .field('dateOfBirth').forDate()
+   * )
+   * ```
+   */
+  ml(
+    configurator: (builder: MLBuilder<T>) => MLBuilderResult<T>
+  ): this {
+    const builder = new MLBuilder<T>()
+    const result = configurator(builder)
+
+    // Handle different return types
+    if (result instanceof FieldFeatureBuilder) {
+      result.finalize()
+      this.mlConfiguration = result.parent.build()
+    } else if (result instanceof MLBuilder) {
+      this.mlConfiguration = result.build()
+    } else {
+      this.mlConfiguration = builder.build()
+    }
+
+    return this
+  }
+
+  /**
+   * Get the configured ML configuration.
+   * Useful for inspecting the ML configuration before building.
+   *
+   * @returns The ML configuration or undefined if not configured
+   */
+  getMLConfig(): MLBuilderConfig<T> | undefined {
+    return this.mlConfiguration
+  }
+
+  /**
    * Build and return the configured Resolver instance.
    *
    * @returns Configured Resolver ready for matching operations
@@ -315,6 +391,7 @@ export class ResolverBuilder<T extends Record<string, unknown> = Record<string, 
       blocking: this.blockingConfiguration,
       adapter: this.databaseAdapter,
       services: this.servicesConfiguration,
+      ml: this.mlConfiguration,
     })
   }
 }
@@ -345,7 +422,9 @@ export const HaveWeMet = {
    * @typeParam T - The record type being matched
    * @returns A new ResolverBuilder instance
    */
-  create<T extends Record<string, unknown> = Record<string, unknown>>(): ResolverBuilder<T> {
+  create<
+    T extends Record<string, unknown> = Record<string, unknown>,
+  >(): ResolverBuilder<T> {
     return new ResolverBuilder<T>()
   },
 
