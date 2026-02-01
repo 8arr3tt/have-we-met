@@ -107,6 +107,19 @@ export {
   createPersonMatchingClassifier,
   createClassifierFromFields,
   isValidSimpleClassifierWeights,
+  // Pre-trained weights and default features
+  createPretrainedClassifier,
+  pretrainedWeights,
+  DEFAULT_PERSON_FEATURE_CONFIG,
+  DEFAULT_PERSON_FEATURE_NAMES,
+  DEFAULT_PERSON_FEATURE_COUNT,
+  MINIMAL_FEATURE_CONFIG,
+  MINIMAL_FEATURE_NAMES,
+  EXTENDED_FEATURE_CONFIG,
+  PATIENT_FEATURE_CONFIG,
+  getFeatureConfig,
+  calculateFeatureCount,
+  generateFeatureNames,
 } from './builtin';
 
 export type { SimpleClassifierConfig } from './builtin';

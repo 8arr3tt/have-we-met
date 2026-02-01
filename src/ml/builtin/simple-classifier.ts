@@ -18,10 +18,10 @@ import type {
 import { DEFAULT_ML_MODEL_CONFIG } from '../types';
 import {
   createPrediction,
-  createFeatureVector,
   calculateFeatureImportance,
 } from '../prediction';
-import { FeatureExtractor, type FeatureExtractionConfig } from '../feature-extractor';
+import { FeatureExtractor } from '../feature-extractor';
+import type { FeatureExtractionConfig } from '../types';
 
 /**
  * Configuration options for SimpleClassifier
