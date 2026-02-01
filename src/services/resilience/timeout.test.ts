@@ -44,10 +44,17 @@ describe('Timeout', () => {
         serviceName: 'test-service',
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(100)
 
-      await expect(resultPromise).rejects.toThrow(ServiceTimeoutError)
-      await expect(resultPromise).rejects.toThrow("Service 'test-service' timed out after 100ms")
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
+      expect(error.message).toBe("Service 'test-service' timed out after 100ms")
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(100)
     })
 
     it('includes timeout duration in error', async () => {
@@ -60,15 +67,17 @@ describe('Timeout', () => {
         serviceName: 'test-service',
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(100)
 
-      try {
-        await resultPromise
-        expect.fail('Should have thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(ServiceTimeoutError)
-        expect((error as ServiceTimeoutError).timeoutMs).toBe(100)
-      }
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
+      expect((error as ServiceTimeoutError).timeoutMs).toBe(100)
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(400)
     })
 
     it('cancels operation via abort signal', async () => {
@@ -84,11 +93,18 @@ describe('Timeout', () => {
         signal: controller.signal,
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       // Abort before timeout or completion
       setTimeout(() => controller.abort(), 50)
       await vi.advanceTimersByTimeAsync(50)
 
-      await expect(resultPromise).rejects.toThrow(ServiceTimeoutError)
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(150)
     })
 
     it('rejects immediately if already aborted', async () => {
@@ -99,6 +115,7 @@ describe('Timeout', () => {
         setTimeout(() => resolve('success'), 100)
       })
 
+      // This should reject immediately (synchronously)
       await expect(
         withTimeout(promise, {
           timeoutMs: 200,
@@ -106,6 +123,9 @@ describe('Timeout', () => {
           signal: controller.signal,
         }),
       ).rejects.toThrow(ServiceTimeoutError)
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(100)
     })
 
     it('throws error for non-positive timeout', async () => {
@@ -127,9 +147,14 @@ describe('Timeout', () => {
 
       const resultPromise = withTimeout(promise, { timeoutMs: 200 })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(50)
 
-      await expect(resultPromise).rejects.toThrow('custom error')
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(Error)
+      expect(error.message).toBe('custom error')
     })
 
     it('uses default service name when not provided', async () => {
@@ -139,9 +164,17 @@ describe('Timeout', () => {
 
       const resultPromise = withTimeout(promise, { timeoutMs: 100 })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(100)
 
-      await expect(resultPromise).rejects.toThrow("Service 'unknown' timed out after 100ms")
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
+      expect(error.message).toBe("Service 'unknown' timed out after 100ms")
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(100)
     })
 
     it('cleans up timeout on success', async () => {
@@ -165,16 +198,14 @@ describe('Timeout', () => {
 
       const resultPromise = withTimeout(promise, { timeoutMs: 200 })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(50)
 
-      try {
-        await resultPromise
-      } catch {
-        // Expected
-      }
-
-      // If we got here without hanging, cleanup worked
-      expect(true).toBe(true)
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(Error)
+      expect(error.message).toBe('fail')
     })
   })
 
@@ -201,9 +232,16 @@ describe('Timeout', () => {
       const wrappedFn = withTimeoutFn(fn, { timeoutMs: 100, serviceName: 'test' })
       const resultPromise = wrappedFn()
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(100)
 
-      await expect(resultPromise).rejects.toThrow(ServiceTimeoutError)
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(100)
     })
   })
 
@@ -230,9 +268,16 @@ describe('Timeout', () => {
 
       const resultPromise = withTimeoutTimed(promise, { timeoutMs: 100 })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(100)
 
-      await expect(resultPromise).rejects.toThrow(ServiceTimeoutError)
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
+
+      // Advance past the inner promise resolution to clean up
+      await vi.advanceTimersByTimeAsync(100)
     })
   })
 

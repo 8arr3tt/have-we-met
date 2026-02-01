@@ -156,10 +156,14 @@ describe('Retry', () => {
         maxAttempts: 3,
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       // Advance through all retries
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.maxDelayMs * 3)
 
-      await expect(resultPromise).rejects.toThrow(error)
+      const thrownError = await errorPromise
+      expect(thrownError).toBe(error)
       expect(fn).toHaveBeenCalledTimes(3)
     })
 
@@ -231,12 +235,16 @@ describe('Retry', () => {
         signal: controller.signal,
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       // Abort after first failure
       await vi.advanceTimersByTimeAsync(1)
       controller.abort()
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.maxDelayMs)
 
-      await expect(resultPromise).rejects.toThrow('aborted')
+      const error = await errorPromise
+      expect(error.message).toContain('aborted')
     })
 
     it('does not wait between attempts when already aborted', async () => {
@@ -321,19 +329,18 @@ describe('Retry', () => {
         maxAttempts: 2,
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.maxDelayMs * 2)
 
-      try {
-        await resultPromise
-        expect.fail('Should have thrown')
-      } catch (err) {
-        const errorWithDetails = err as Error & {
-          attempts: number
-          attemptDetails: unknown[]
-        }
-        expect(errorWithDetails.attempts).toBe(2)
-        expect(errorWithDetails.attemptDetails).toHaveLength(2)
+      const err = await errorPromise
+      const errorWithDetails = err as Error & {
+        attempts: number
+        attemptDetails: unknown[]
       }
+      expect(errorWithDetails.attempts).toBe(2)
+      expect(errorWithDetails.attemptDetails).toHaveLength(2)
     })
   })
 

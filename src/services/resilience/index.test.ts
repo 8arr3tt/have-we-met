@@ -89,10 +89,14 @@ describe('Combined Resilience', () => {
         circuitBreaker: breaker,
       })
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       // Advance through retries
       await vi.advanceTimersByTimeAsync(500)
 
-      await expect(resultPromise).rejects.toThrow(ServiceTimeoutError)
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
 
       // Check that circuit breaker recorded ONE failure (after retries exhausted)
       expect(breaker.failureCount).toBe(1)
@@ -102,7 +106,7 @@ describe('Combined Resilience', () => {
       const breaker = new CircuitBreaker({ failureThreshold: 3 })
       const fn = vi.fn().mockRejectedValue(new ServiceTimeoutError('test', 100))
 
-      // First call with retries
+      // First call with retries - attach error handler immediately
       const promise1 = withResilience(fn, {
         retry: {
           maxAttempts: 3,
@@ -111,10 +115,10 @@ describe('Combined Resilience', () => {
           maxDelayMs: 100,
         },
         circuitBreaker: breaker,
-      })
+      }).catch(() => {})
 
       await vi.advanceTimersByTimeAsync(1000)
-      await promise1.catch(() => {})
+      await promise1
 
       // Should only count as 1 failure despite 3 retry attempts
       expect(breaker.failureCount).toBe(1)
@@ -366,9 +370,13 @@ describe('Combined Resilience', () => {
 
       const resultPromise = executeWithAbortableTimeout(fn, 100, 'test-service')
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(200)
 
-      await expect(resultPromise).rejects.toThrow(ServiceTimeoutError)
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(ServiceTimeoutError)
     })
 
     it('cleans up timeout on success', async () => {
@@ -397,9 +405,14 @@ describe('Combined Resilience', () => {
 
       const resultPromise = executeWithAbortableTimeout(fn, 1000, 'test')
 
+      // Attach the rejection handler BEFORE advancing timers
+      const errorPromise = resultPromise.catch(e => e)
+
       await vi.advanceTimersByTimeAsync(50)
 
-      await expect(resultPromise).rejects.toThrow('custom error')
+      const error = await errorPromise
+      expect(error).toBeInstanceOf(Error)
+      expect(error.message).toBe('custom error')
       expect(clearTimeoutSpy).toHaveBeenCalled()
     })
 
