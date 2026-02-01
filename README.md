@@ -4,7 +4,7 @@ An identity resolution library for TypeScript/JavaScript.
 
 ## Status
 
-Currently in development. Phase 9 (External Services) is complete.
+Currently in development. Phase 10 (ML Matching) is complete.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ interface Person {
 }
 
 const resolver = HaveWeMet.create<Person>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
@@ -29,34 +29,47 @@ const resolver = HaveWeMet.create<Person>()
       .field('email', { type: 'email' })
   })
   // Blocking reduces O(n²) comparisons by 95-99%+
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-  )
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
   // Weighted scoring with configurable thresholds
-  .matching(match => {
+  .matching((match) => {
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('dateOfBirth').strategy('exact').weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(10)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   })
   .build()
 
 // Find matches for a single record
-const newRecord = { firstName: 'John', lastName: 'Smith', email: 'john@example.com', dateOfBirth: '1985-03-15' }
+const newRecord = {
+  firstName: 'John',
+  lastName: 'Smith',
+  email: 'john@example.com',
+  dateOfBirth: '1985-03-15',
+}
 const results = resolver.resolve(newRecord, existingRecords)
 
 // Results include detailed explanations
-results.forEach(result => {
-  console.log(result.outcome)         // 'definite-match', 'potential-match', or 'no-match'
-  console.log(result.score.totalScore)  // 38
-  console.log(result.explanation)     // Field-by-field breakdown
+results.forEach((result) => {
+  console.log(result.outcome) // 'definite-match', 'potential-match', or 'no-match'
+  console.log(result.score.totalScore) // 38
+  console.log(result.explanation) // Field-by-field breakdown
 })
 
 // Batch deduplication for finding all duplicates
 const batchResult = resolver.deduplicateBatch(records)
-console.log(batchResult.stats.definiteMatchesFound)  // Number of duplicates found
+console.log(batchResult.stats.definiteMatchesFound) // Number of duplicates found
 ```
 
 ### Database Integration
@@ -69,9 +82,15 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 const resolver = HaveWeMet.create<Person>()
-  .schema(schema => { /* ... */ })
-  .blocking(block => { /* ... */ })
-  .matching(match => { /* ... */ })
+  .schema((schema) => {
+    /* ... */
+  })
+  .blocking((block) => {
+    /* ... */
+  })
+  .matching((match) => {
+    /* ... */
+  })
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
 
@@ -81,7 +100,7 @@ const matches = await resolver.resolveWithDatabase(newRecord)
 // Batch deduplicate entire database
 const result = await resolver.deduplicateBatchFromDatabase({
   batchSize: 1000,
-  persistResults: true
+  persistResults: true,
 })
 ```
 
@@ -92,16 +111,22 @@ import { HaveWeMet } from 'have-we-met'
 import { prismaAdapter } from 'have-we-met/adapters/prisma'
 
 const resolver = HaveWeMet.create<Person>()
-  .schema(schema => { /* ... */ })
-  .blocking(block => { /* ... */ })
-  .matching(match => { /* ... */ })
+  .schema((schema) => {
+    /* ... */
+  })
+  .blocking((block) => {
+    /* ... */
+  })
+  .matching((match) => {
+    /* ... */
+  })
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
 
 // Automatically queue ambiguous matches for human review
 const results = await resolver.resolve(newRecord, {
   autoQueue: true,
-  queueContext: { source: 'customer-import', userId: 'admin' }
+  queueContext: { source: 'customer-import', userId: 'admin' },
 })
 
 // Review queued items
@@ -109,14 +134,14 @@ const pending = await resolver.queue.list({
   status: 'pending',
   limit: 10,
   orderBy: 'priority',
-  orderDirection: 'desc'
+  orderDirection: 'desc',
 })
 
 // Make decisions
 await resolver.queue.confirm(itemId, {
   selectedMatchId: matchId,
   notes: 'Verified by phone number',
-  decidedBy: 'reviewer@example.com'
+  decidedBy: 'reviewer@example.com',
 })
 
 // Track queue health
@@ -129,17 +154,29 @@ console.log(`Throughput: ${stats.throughput?.last24h} decisions/day`)
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(schema => { /* ... */ })
-  .blocking(block => { /* ... */ })
-  .matching(match => { /* ... */ })
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNonNull')
-    .field('addresses').strategy('union')
+  .schema((schema) => {
+    /* ... */
+  })
+  .blocking((block) => {
+    /* ... */
+  })
+  .matching((match) => {
+    /* ... */
+  })
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('lastName')
+      .strategy('preferLonger')
+      .field('email')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNonNull')
+      .field('addresses')
+      .strategy('union')
   )
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
@@ -148,7 +185,7 @@ const resolver = HaveWeMet.create<Person>()
 await resolver.queue.merge(itemId, {
   selectedMatchId: matchId,
   notes: 'Same customer, merging records',
-  decidedBy: 'reviewer@example.com'
+  decidedBy: 'reviewer@example.com',
 })
 
 // Direct merge operation
@@ -159,7 +196,7 @@ const result = await mergeExecutor.merge({
 
 // Access the golden record and provenance
 console.log(result.goldenRecord)
-console.log(result.provenance.fieldSources)  // Which source contributed each field
+console.log(result.provenance.fieldSources) // Which source contributed each field
 ```
 
 ### External Services (Validation & Enrichment)
@@ -173,32 +210,44 @@ import {
 } from 'have-we-met/services'
 
 const resolver = HaveWeMet.create<PatientRecord>()
-  .schema(schema => { /* ... */ })
-  .blocking(block => { /* ... */ })
-  .matching(match => { /* ... */ })
-  .services(services => services
-    .defaultTimeout(5000)
-    .defaultRetry({ maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 1000 })
-    .caching(true)
+  .schema((schema) => {
+    /* ... */
+  })
+  .blocking((block) => {
+    /* ... */
+  })
+  .matching((match) => {
+    /* ... */
+  })
+  .services((services) =>
+    services
+      .defaultTimeout(5000)
+      .defaultRetry({
+        maxAttempts: 3,
+        initialDelayMs: 100,
+        backoffMultiplier: 2,
+        maxDelayMs: 1000,
+      })
+      .caching(true)
 
-    // Validate NHS number format and checksum
-    .validate('nhsNumber')
+      // Validate NHS number format and checksum
+      .validate('nhsNumber')
       .using(nhsNumberValidator)
       .onInvalid('reject')
       .required(true)
 
-    // Validate email format
-    .validate('email')
+      // Validate email format
+      .validate('email')
       .using(emailValidator)
       .onInvalid('flag')
 
-    // Enrich address data from external API
-    .lookup('address')
+      // Enrich address data from external API
+      .lookup('address')
       .using(createAddressStandardization({ provider: 'mock' }))
       .mapFields({
-        'streetAddress': 'address.street',
-        'city': 'address.city',
-        'postalCode': 'address.postcode'
+        streetAddress: 'address.street',
+        city: 'address.city',
+        postalCode: 'address.postcode',
       })
       .onNotFound('continue')
   )
@@ -207,14 +256,74 @@ const resolver = HaveWeMet.create<PatientRecord>()
 
 // Resolution now includes service results
 const result = await resolver.resolve(newRecord)
-console.log(result.serviceResults)   // Validation and lookup results
-console.log(result.enrichedRecord)   // Record with lookup data merged in
-console.log(result.serviceFlags)     // Any flags from services
+console.log(result.serviceResults) // Validation and lookup results
+console.log(result.enrichedRecord) // Record with lookup data merged in
+console.log(result.serviceFlags) // Any flags from services
+```
+
+### ML Matching
+
+```typescript
+import { HaveWeMet } from 'have-we-met'
+
+const resolver = HaveWeMet.create<Person>()
+  .schema((schema) => {
+    /* ... */
+  })
+  .blocking((block) => {
+    /* ... */
+  })
+  .matching((match) => {
+    /* ... */
+  })
+  // Add ML matching in hybrid mode
+  .ml((ml) =>
+    ml
+      .usePretrained() // Use built-in pre-trained model
+      .mode('hybrid') // Combine ML with probabilistic scoring
+      .mlWeight(0.4) // 40% ML, 60% probabilistic
+  )
+  .build()
+
+// Resolution now includes ML predictions
+const results = resolver.resolve(newRecord, existingRecords)
+results.forEach((result) => {
+  console.log(result.mlUsed) // Whether ML was used
+  console.log(result.mlPrediction?.probability) // ML match probability
+  console.log(result.mlPrediction?.confidence) // ML confidence score
+})
+```
+
+ML matching can also be used directly:
+
+```typescript
+import { createPretrainedClassifier, FeedbackCollector, ModelTrainer } from 'have-we-met/ml'
+
+// Use pre-trained classifier
+const classifier = await createPretrainedClassifier<Person>()
+const prediction = await classifier.predict({
+  record1: newRecord,
+  record2: existingRecord,
+})
+
+console.log(prediction.probability) // 0.92 (92% match probability)
+console.log(prediction.classification) // 'match'
+console.log(prediction.featureImportance) // Which features contributed
+
+// Train custom models from review queue decisions
+const collector = new FeedbackCollector<Person>()
+collector.collectFromQueueItems(decidedQueueItems)
+
+const trainer = new ModelTrainer({ featureExtractor })
+const { classifier: customModel } = await trainer.trainClassifier(
+  collector.exportAsTrainingDataset()
+)
 ```
 
 ## Documentation
 
 ### Database Adapters
+
 - [Database Adapters](docs/database-adapters.md) - Overview of database integration
 - [Prisma Adapter](docs/adapter-guides/prisma.md) - Prisma ORM integration guide
 - [Drizzle Adapter](docs/adapter-guides/drizzle.md) - Drizzle ORM integration guide
@@ -223,29 +332,43 @@ console.log(result.serviceFlags)     // Any flags from services
 - [Migration Guide](docs/migration-guide.md) - Deduplicate existing databases
 
 ### Probabilistic Matching
+
 - [Probabilistic Matching](docs/probabilistic-matching.md) - How weighted scoring works
 - [Tuning Guide](docs/tuning-guide.md) - Configure weights and thresholds for your use case
 - [Examples](docs/examples.md) - Real-world configurations for common scenarios
 
 ### Review Queue
+
 - [Review Queue Overview](docs/review-queue.md) - Human-in-the-loop review workflows
 - [Queue Workflows](docs/queue-workflows.md) - Common patterns and best practices
 - [Queue Metrics](docs/queue-metrics.md) - Monitoring and analytics
 - [Queue UI Guide](docs/queue-ui-guide.md) - Building review interfaces
 
 ### Golden Record (Merge)
+
 - [Golden Record Overview](docs/golden-record.md) - Merge configuration and workflows
 - [Merge Strategies](docs/merge-strategies.md) - Complete guide to merge strategies
 - [Provenance](docs/provenance.md) - Audit trail and field attribution
 - [Unmerge](docs/unmerge.md) - Reversing incorrect merges
 
 ### External Services
+
 - [External Services Overview](docs/external-services.md) - Validation and enrichment integration
 - [Service Plugins Guide](docs/service-plugins.md) - Creating custom service plugins
 - [Built-in Services](docs/built-in-services.md) - Reference for included validators and lookups
 - [Service Resilience](docs/service-resilience.md) - Timeout, retry, and circuit breaker patterns
 
+### ML Matching
+
+- [ML Matching Overview](docs/ml-matching/overview.md) - When and why to use ML matching
+- [Getting Started](docs/ml-matching/getting-started.md) - Quick start guide
+- [Feature Extraction](docs/ml-matching/feature-extraction.md) - Configure feature extractors
+- [Custom Models](docs/ml-matching/custom-models.md) - Train domain-specific models
+- [Training Guide](docs/ml-matching/training.md) - Model training best practices
+- [Feedback Loop](docs/ml-matching/feedback-loop.md) - Learn from human decisions
+
 ### Blocking Strategies
+
 - [Blocking Overview](docs/blocking/overview.md) - Why blocking is essential for large datasets
 - [Blocking Strategies](docs/blocking/strategies.md) - Standard, sorted neighbourhood, and composite blocking
 - [Selection Guide](docs/blocking/selection-guide.md) - Choose the right strategy for your data
@@ -253,9 +376,11 @@ console.log(result.serviceFlags)     // Any flags from services
 - [Tuning Guide](docs/blocking/tuning.md) - Optimize performance and recall
 
 ### Algorithms
+
 - [String Similarity Algorithms](docs/algorithms/string-similarity.md) - Comprehensive guide to fuzzy matching algorithms
 
 ### Normalizers
+
 - [Normalizers Overview](docs/normalizers/overview.md) - Introduction to data normalization
 - [Name Normalizer](docs/normalizers/name.md) - Parse and standardize personal names
 - [Email Normalizer](docs/normalizers/email.md) - Normalize email addresses
