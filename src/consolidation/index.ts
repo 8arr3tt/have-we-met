@@ -58,3 +58,13 @@ export {
   SourceAwareMerger,
   createSourceAwareMerger,
 } from './source-aware-merger'
+
+// Consolidation Executor
+export type {
+  ExecuteOptions,
+} from './consolidation-executor'
+
+export {
+  ConsolidationExecutor,
+  createConsolidationExecutor,
+} from './consolidation-executor'
