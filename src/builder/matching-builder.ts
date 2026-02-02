@@ -10,6 +10,14 @@ import type {
   SoundexOptions,
   MetaphoneOptions,
 } from '../core/comparators'
+import {
+  requirePositive,
+  requireInRange,
+  requireOneOf,
+  requireLessThan,
+  requireNonEmptyString,
+  requirePlainObject,
+} from '../utils/errors.js'
 
 export class FieldMatchBuilder {
   private config: FieldMatchConfig = {
@@ -23,16 +31,27 @@ export class FieldMatchBuilder {
   ) {}
 
   strategy(strategy: MatchingStrategy): this {
+    const allowedStrategies: readonly MatchingStrategy[] = [
+      'exact',
+      'levenshtein',
+      'jaro-winkler',
+      'soundex',
+      'metaphone',
+      'custom',
+    ] as const
+    requireOneOf(strategy, allowedStrategies, 'strategy')
     this.config.strategy = strategy
     return this
   }
 
   weight(weight: number): this {
+    requirePositive(weight, 'weight')
     this.config.weight = weight
     return this
   }
 
   threshold(threshold: number): this {
+    requireInRange(threshold, 0, 1, 'threshold')
     this.config.threshold = threshold
     return this
   }
@@ -58,6 +77,7 @@ export class FieldMatchBuilder {
    * ```
    */
   levenshteinOptions(options: LevenshteinOptions): this {
+    requirePlainObject(options, 'levenshteinOptions')
     this.config.levenshteinOptions = options
     return this
   }
@@ -79,6 +99,13 @@ export class FieldMatchBuilder {
    * ```
    */
   jaroWinklerOptions(options: JaroWinklerOptions): this {
+    requirePlainObject(options, 'jaroWinklerOptions')
+    if (options.prefixScale !== undefined) {
+      requireInRange(options.prefixScale, 0, 1, 'jaroWinklerOptions.prefixScale')
+    }
+    if (options.maxPrefixLength !== undefined) {
+      requirePositive(options.maxPrefixLength, 'jaroWinklerOptions.maxPrefixLength')
+    }
     this.config.jaroWinklerOptions = options
     return this
   }
@@ -99,6 +126,7 @@ export class FieldMatchBuilder {
    * ```
    */
   soundexOptions(options: SoundexOptions): this {
+    requirePlainObject(options, 'soundexOptions')
     this.config.soundexOptions = options
     return this
   }
@@ -119,6 +147,10 @@ export class FieldMatchBuilder {
    * ```
    */
   metaphoneOptions(options: MetaphoneOptions): this {
+    requirePlainObject(options, 'metaphoneOptions')
+    if (options.maxLength !== undefined) {
+      requirePositive(options.maxLength, 'metaphoneOptions.maxLength')
+    }
     this.config.metaphoneOptions = options
     return this
   }
@@ -151,6 +183,7 @@ export class MatchingBuilder {
   }
 
   field(name: string): FieldMatchBuilder {
+    requireNonEmptyString(name, 'field name')
     return new FieldMatchBuilder(this, name)
   }
 
@@ -159,6 +192,20 @@ export class MatchingBuilder {
   }
 
   thresholds(config: ThresholdConfig): this {
+    requirePlainObject(config, 'thresholds')
+
+    if (config.noMatch !== undefined) {
+      requirePositive(config.noMatch, 'thresholds.noMatch')
+    }
+    if (config.definiteMatch !== undefined) {
+      requirePositive(config.definiteMatch, 'thresholds.definiteMatch')
+    }
+
+    // Validate that noMatch < definiteMatch
+    const noMatch = config.noMatch ?? this.thresholdConfig.noMatch
+    const definiteMatch = config.definiteMatch ?? this.thresholdConfig.definiteMatch
+    requireLessThan(noMatch, definiteMatch, 'thresholds.noMatch', 'thresholds.definiteMatch')
+
     this.thresholdConfig = config
     return this
   }

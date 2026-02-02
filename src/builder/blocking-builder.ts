@@ -11,6 +11,13 @@ import {
   CompositeBlockingStrategy,
 } from '../core/blocking'
 import type { BlockingStrategy } from '../core/blocking/types'
+import {
+  requirePositive,
+  requireNonEmptyString,
+  requireNonEmptyArray,
+  requireOneOf,
+  requirePlainObject,
+} from '../utils/errors.js'
 
 /**
  * Builder for configuring composite blocking strategies.
@@ -116,6 +123,14 @@ export class CompositeBlockingBuilder<T extends object = object> {
       nullStrategy?: NullStrategy
     }
   ): this {
+    requirePlainObject(options, 'sortedNeighbourhood options')
+    requirePositive(options.windowSize, 'windowSize')
+
+    if (options.nullStrategy !== undefined) {
+      const allowedStrategies: readonly NullStrategy[] = ['skip', 'block', 'compare']
+      requireOneOf(options.nullStrategy, allowedStrategies, 'nullStrategy')
+    }
+
     // Convert simple field to SortField format
     let sortBy: string | SortField | Array<string | SortField>
 

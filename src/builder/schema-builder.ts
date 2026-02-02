@@ -1,4 +1,10 @@
 import type { FieldDefinition, SchemaDefinition, FieldType } from '../types'
+import {
+  requireNonEmptyString,
+  requirePlainObject,
+  requireFunction,
+  requireOneOf,
+} from '../utils/errors.js'
 
 export class FieldDefinitionBuilder<T extends object = object> {
   private definition: Partial<FieldDefinition> = {}
@@ -24,6 +30,18 @@ export class FieldDefinitionBuilder<T extends object = object> {
    * ```
    */
   type(type: FieldType): this {
+    const allowedTypes: readonly FieldType[] = [
+      'name',
+      'email',
+      'phone',
+      'date',
+      'address',
+      'string',
+      'number',
+      'boolean',
+      'custom',
+    ] as const
+    requireOneOf(type, allowedTypes, 'type')
     this.definition.type = type
     return this
   }
@@ -44,6 +62,7 @@ export class FieldDefinitionBuilder<T extends object = object> {
    * ```
    */
   component(component: string): this {
+    requireNonEmptyString(component, 'component')
     this.definition.component = component
     return this
   }
@@ -108,6 +127,10 @@ export class FieldDefinitionBuilder<T extends object = object> {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   normalizer(name: string, options?: any): this {
+    requireNonEmptyString(name, 'normalizer')
+    if (options !== undefined) {
+      requirePlainObject(options, 'normalizer options')
+    }
     this.definition.normalizer = name
     if (options !== undefined) {
       this.definition.normalizerOptions = options
@@ -134,6 +157,7 @@ export class FieldDefinitionBuilder<T extends object = object> {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   normalizerOptions(options: any): this {
+    requirePlainObject(options, 'normalizerOptions')
     this.definition.normalizerOptions = options
     return this
   }
@@ -164,6 +188,7 @@ export class FieldDefinitionBuilder<T extends object = object> {
    * ```
    */
   customNormalizer(fn: (value: unknown) => unknown): this {
+    requireFunction(fn, 'customNormalizer')
     this.definition.customNormalizer = fn
     return this
   }
