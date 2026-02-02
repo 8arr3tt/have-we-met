@@ -13,8 +13,6 @@ import {
 import type { BlockingStrategy } from '../core/blocking/types'
 import {
   requirePositive,
-  requireNonEmptyString,
-  requireNonEmptyArray,
   requireOneOf,
   requirePlainObject,
 } from '../utils/errors.js'

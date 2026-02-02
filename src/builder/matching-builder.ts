@@ -37,7 +37,6 @@ export class FieldMatchBuilder {
       'jaro-winkler',
       'soundex',
       'metaphone',
-      'custom',
     ] as const
     requireOneOf(strategy, allowedStrategies, 'strategy')
     this.config.strategy = strategy

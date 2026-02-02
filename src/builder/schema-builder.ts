@@ -38,7 +38,6 @@ export class FieldDefinitionBuilder<T extends object = object> {
       'address',
       'string',
       'number',
-      'boolean',
       'custom',
     ] as const
     requireOneOf(type, allowedTypes, 'type')

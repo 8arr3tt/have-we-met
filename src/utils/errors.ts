@@ -23,9 +23,11 @@ export class HaveWeMetError extends Error {
     this.code = code
     this.context = context
 
-    // Maintains proper stack trace
-    if (typeof (Error as typeof Error & { captureStackTrace?: typeof Error.captureStackTrace }).captureStackTrace === 'function') {
-      (Error as typeof Error & { captureStackTrace: typeof Error.captureStackTrace }).captureStackTrace(this, this.constructor)
+    // Maintains proper stack trace (Node.js specific)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof (Error as any).captureStackTrace === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(Error as any).captureStackTrace(this, this.constructor)
     }
   }
 }
