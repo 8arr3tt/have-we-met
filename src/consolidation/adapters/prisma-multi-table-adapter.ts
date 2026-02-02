@@ -8,11 +8,7 @@
  */
 
 import type { DatabaseAdapter } from '../../adapters/types.js'
-import type {
-  ConsolidationSource,
-  MappedRecord,
-  FieldMapping,
-} from '../types.js'
+import type { ConsolidationSource, MappedRecord } from '../types.js'
 import { ConsolidationError } from '../types.js'
 import {
   MultiTableAdapter,

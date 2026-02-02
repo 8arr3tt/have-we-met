@@ -9,11 +9,7 @@
  */
 
 import type { DatabaseAdapter, QueryOptions } from '../../adapters/types.js'
-import type {
-  ConsolidationSource,
-  MappedRecord,
-  FieldMapping,
-} from '../types.js'
+import type { ConsolidationSource, FieldMapping } from '../types.js'
 import { ConsolidationError } from '../types.js'
 
 /**
@@ -461,7 +457,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    * @throws ConsolidationError if source mapping not configured
    */
   async getSourceMappings(
-    goldenRecordId: string,
+    _goldenRecordId: string,
   ): Promise<SourceMappingRecord[]> {
     if (!this.sourceMappingConfig) {
       throw new ConsolidationError(
@@ -485,8 +481,8 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    * @throws ConsolidationError if source mapping not configured
    */
   async getGoldenRecordId(
-    sourceId: string,
-    sourceRecordId: string,
+    _sourceId: string,
+    _sourceRecordId: string,
   ): Promise<string | null> {
     if (!this.sourceMappingConfig) {
       throw new ConsolidationError(

@@ -262,7 +262,7 @@ const resolver = HaveWeMet
   .build()
 ```
 
-See [Performance Optimization Guide](./guides/advanced-tuning.md) for tuning recommendations.
+See [Performance Optimization Guide](./tuning/performance-optimization.md) for tuning recommendations.
 
 ## Code Injection
 

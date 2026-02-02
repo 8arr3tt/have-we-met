@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# Check links from docs/README.md
+docs_dir="C:/Users/Matt/Projects/have-we-met/docs"
+broken=()
+
+declare -A links=(
+    [9]="./examples.md"
+    [10]="./tuning-guide.md"
+    [11]="./api/index.md"
+    [19]="./probabilistic-matching.md"
+    [20]="./ml-matching/overview.md"
+    [24]="./blocking/overview.md"
+    [25]="./normalizers/overview.md"
+    [26]="./algorithms/comparison.md"
+    [27]="./database-adapters.md"
+    [33]="./consolidation/overview.md"
+    [34]="./consolidation/getting-started.md"
+    [35]="./consolidation/schema-mapping.md"
+    [36]="./consolidation/conflict-resolution.md"
+    [37]="./consolidation/matching-scopes.md"
+    [38]="./consolidation/etl-workflow.md"
+    [39]="./api-reference/consolidation-builder.md"
+    [45]="./use-cases/customer-deduplication.md"
+    [46]="./use-cases/patient-matching.md"
+    [47]="./use-cases/real-time-lookup.md"
+    [48]="./use-cases/batch-migration.md"
+    [54]="./api/schema-builder.md"
+    [55]="./api/matching-builder.md"
+    [56]="./api/blocking-builder.md"
+    [57]="./api/resolver.md"
+    [58]="./api/adapters.md"
+    [64]="./tuning/threshold-optimization.md"
+    [65]="./tuning/blocking-optimization.md"
+    [66]="./tuning/performance-optimization.md"
+    [70]="./review-queue.md"
+    [71]="./golden-record.md"
+    [72]="./merge-strategies.md"
+    [73]="./unmerge.md"
+    [74]="./provenance.md"
+    [78]="./ml-matching/overview.md"
+    [79]="./ml-matching/getting-started.md"
+    [80]="./ml-matching/feature-extraction.md"
+    [81]="./ml-matching/custom-models.md"
+    [82]="./ml-matching/training.md"
+    [83]="./ml-matching/feedback-loop.md"
+    [87]="./database-adapters.md"
+    [88]="./adapter-guides/prisma.md"
+    [89]="./adapter-guides/drizzle.md"
+    [90]="./adapter-guides/typeorm.md"
+    [91]="./database-performance.md"
+    [95]="./queue-workflows.md"
+    [96]="./queue-metrics.md"
+    [97]="./queue-ui-guide.md"
+    [98]="./service-plugins.md"
+    [99]="./service-resilience.md"
+    [100]="./migration-guide.md"
+    [106]="./blocking/strategies.md"
+    [107]="./blocking/selection-guide.md"
+    [108]="./blocking/transforms.md"
+    [109]="./blocking/tuning.md"
+    [113]="./normalizers/name.md"
+    [114]="./normalizers/email.md"
+    [115]="./normalizers/phone.md"
+    [116]="./normalizers/address.md"
+    [117]="./normalizers/date.md"
+    [118]="./normalizers/custom.md"
+    [119]="./normalizers/performance.md"
+    [120]="./normalizers/uk-address-support.md"
+    [124]="./algorithms/comparison.md"
+    [125]="./algorithms/selection-flowchart.md"
+    [126]="./algorithms/string-similarity.md"
+    [130]="./built-in-services.md"
+    [131]="./external-services.md"
+    [137]="../benchmarks/BENCHMARK-RESULTS.md"
+    [138]="../benchmarks/results/scalability-results.md"
+    [156]="../CLAUDE.md"
+)
+
+echo "Checking links from docs/README.md..."
+for line_num in "${!links[@]}"; do
+    link="${links[$line_num]}"
+    # Convert relative path to absolute
+    if [[ "$link" == ../* ]]; then
+        target="C:/Users/Matt/Projects/have-we-met/${link#../}"
+    else
+        target="$docs_dir/${link#./}"
+    fi
+
+    if [ ! -f "$target" ]; then
+        echo "BROKEN: Line $line_num: $link -> $target"
+    fi
+done

@@ -959,7 +959,7 @@ const result = await consolidation.consolidate({ debug: true })
 ### Read API Reference
 
 - **[ConsolidationBuilder API](../api-reference/consolidation-builder.md)**: Complete API documentation
-- **[Core API](../api-reference/index.md)**: Schema, matching, blocking APIs
+- **[Core API](../api/index.md)**: Schema, matching, blocking APIs
 
 ---
 

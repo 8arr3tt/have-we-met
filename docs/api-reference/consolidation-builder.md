@@ -155,7 +155,7 @@ schema(
 )
 ```
 
-**See**: [Core API Reference](./index.md#schemabuilder) for SchemaBuilder documentation
+**See**: [Core API Reference](../api/schema-builder.md) for SchemaBuilder documentation
 
 #### matching()
 
@@ -182,7 +182,7 @@ matching(
 )
 ```
 
-**See**: [Core API Reference](./index.md#matchingbuilder) for MatchingBuilder documentation
+**See**: [Core API Reference](../api/matching-builder.md) for MatchingBuilder documentation
 
 #### thresholds()
 
@@ -234,7 +234,7 @@ blocking(
 )
 ```
 
-**See**: [Core API Reference](./index.md#blockingbuilder) for BlockingBuilder documentation
+**See**: [Core API Reference](../api/blocking-builder.md) for BlockingBuilder documentation
 
 #### conflictResolution()
 
@@ -1274,4 +1274,4 @@ const result = await HaveWeMet.consolidation<Patient>()
 
 ---
 
-**Previous**: [ETL Workflow](../consolidation/etl-workflow.md) | **Next**: [Core API Reference](./index.md)
+**Previous**: [ETL Workflow](../consolidation/etl-workflow.md) | **Next**: [Core API Reference](../api/index.md)

@@ -728,7 +728,7 @@ Jane Doe <jane@example.com>
 ### Reference
 
 - **[API Reference](../api-reference/consolidation-builder.md)**: Complete API documentation
-- **[Core API Reference](../api-reference/index.md)**: Schema, matching, blocking APIs
+- **[Core API Reference](../api/index.md)**: Schema, matching, blocking APIs
 
 ### Support
 

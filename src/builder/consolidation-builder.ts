@@ -116,13 +116,12 @@ export class ConsolidationBuilder<TOutput extends Record<string, unknown>> {
    * ```
    */
   matchingScope(scope: 'within-source-first' | 'unified-pool' | MatchingScope): this {
-    const allowedScopes = ['within-source-first', 'unified-pool', MS.WithinSourceFirst, MS.UnifiedPool]
-    requireOneOf(scope, allowedScopes, 'matchingScope')
-
-    if (scope === 'unified-pool' || scope === MS.UnifiedPool) {
+    if (scope === 'unified-pool' || (scope as MatchingScope) === MS.UnifiedPool) {
       this.scope = MS.UnifiedPool
-    } else {
+    } else if (scope === 'within-source-first' || (scope as MatchingScope) === MS.WithinSourceFirst) {
       this.scope = MS.WithinSourceFirst
+    } else {
+      throw new Error(`Invalid matching scope: ${String(scope)}`)
     }
     return this
   }

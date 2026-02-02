@@ -13,7 +13,6 @@ import type {
   MergeConfig,
   SourceRecord,
   MergeResult,
-  MergeRequest,
   MergeConflict,
   FieldProvenance,
   Provenance,
@@ -111,7 +110,6 @@ export interface SourceAwareProvenance extends Provenance {
  */
 export class SourceAwareMerger<T extends Record<string, unknown>> {
   private readonly config: SourceAwareMergeConfig
-  private readonly schema?: SchemaDefinition<T>
   private readonly baseExecutor: MergeExecutor<T>
 
   /**
@@ -130,8 +128,6 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
       priorityMode: 'priority-first',
       ...config,
     } as SourceAwareMergeConfig
-
-    this.schema = schema
 
     // Create base executor for strategy application
     this.baseExecutor = new MergeExecutor<T>(this.config, schema)
@@ -259,11 +255,10 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
       conflicts,
       stats: {
         totalFields: fieldPaths.length,
-        mergedFields: Object.keys(goldenRecord).length,
-        conflictCount: conflicts.length,
-        autoResolvedConflicts: conflicts.filter((c) => c.resolution === 'auto')
+        fieldsFromEachSource: {},
+        conflictsResolved: conflicts.filter((c) => c.resolution === 'auto')
           .length,
-        deferredConflicts: conflicts.filter((c) => c.resolution === 'deferred')
+        conflictsDeferred: conflicts.filter((c) => c.resolution === 'deferred')
           .length,
       },
     }
@@ -275,7 +270,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
   private async processFieldWithPriority(
     field: string,
     records: SourceAwareRecord<T>[],
-    allFields: string[]
+    _allFields: string[]
   ): Promise<{
     value: unknown
     sourceId?: string
@@ -425,7 +420,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
     const provenance: FieldProvenance = {
       sourceRecordId: fieldValues.find((fv) => fv.sourceId === sourceId)
         ?.recordId || fieldValues[0].recordId,
-      strategyApplied: 'source-priority',
+      strategyApplied: 'preferFirst',
       allValues: fieldValues.map((fv) => ({
         recordId: fv.recordId,
         value: fv.value,
@@ -447,7 +442,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
    */
   private async applyStrategyForField(
     field: string,
-    values: unknown[],
+    _values: unknown[],
     records: SourceRecord<T>[]
   ): Promise<{ value: unknown; strategy: string }> {
     // Get field strategy from config
@@ -469,7 +464,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
       )
 
       return { value, strategy }
-    } catch (error) {
+    } catch {
       // Strategy failed - return undefined
       return { value: undefined, strategy }
     }
@@ -495,7 +490,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
     records: MappedRecord<T>[],
     priorityMap: Map<string, number>
   ): SourceAwareRecord<T>[] {
-    return records.map((record, idx) => ({
+    return records.map((record) => ({
       id: typeof record.sourceRecordId === 'string'
         ? record.sourceRecordId
         : `${record.sourceId}-${record.sourceRecordId}`,

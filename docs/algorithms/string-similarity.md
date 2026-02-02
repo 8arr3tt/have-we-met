@@ -721,7 +721,7 @@ All algorithms are suitable for real-time matching. See [Performance Report](../
 
 ## Additional Resources
 
-- [API Reference](../api/README.md) - Full API documentation
+- [API Reference](../api/index.md) - Full API documentation
 - [Phase 2 Plan](../../phase-2-plan.md) - Implementation details
 - [Performance Report](../../benchmarks/PERFORMANCE-REPORT.md) - Benchmark results
 - [Integration Tests](../../tests/integration/string-similarity.test.ts) - Usage examples

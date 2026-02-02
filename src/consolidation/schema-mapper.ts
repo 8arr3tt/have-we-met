@@ -7,6 +7,7 @@ import { ConsolidationError } from './types'
 interface MappingEntry<TInput, TOutput> {
   source: keyof TInput | string
   target: keyof TOutput | string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transform?: (value: any, record?: TInput) => any
 }
 
@@ -33,6 +34,7 @@ interface MappingEntry<TInput, TOutput> {
  * const output = mapper.map(inputRecord)
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class SchemaMapper<TInput = any, TOutput = any> {
   private readonly mappings: MappingEntry<TInput, TOutput>[]
   private readonly targetFields: Set<string>
@@ -58,6 +60,7 @@ export class SchemaMapper<TInput = any, TOutput = any> {
       )
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: any = {}
 
     for (const mapping of this.mappings) {
@@ -116,6 +119,7 @@ export class SchemaMapper<TInput = any, TOutput = any> {
    * getNestedValue({ address: { city: 'NYC' } }, 'address.city') // 'NYC'
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private getNestedValue(obj: any, path: keyof TInput | string): any {
     const pathStr = String(path)
 
@@ -146,6 +150,7 @@ export class SchemaMapper<TInput = any, TOutput = any> {
    * setNestedValue({}, 'address.city', 'NYC') // { address: { city: 'NYC' } }
    * ```
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private setNestedValue(obj: any, path: keyof TOutput | string, value: any): void {
     const pathStr = String(path)
 
@@ -287,6 +292,7 @@ export function createSchemaMapper<
     }
 
     if (config.transform) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       entry.transform = (_value: any, record?: TInput) =>
         config.transform!(record!, targetField as keyof TOutput)
     }
@@ -306,6 +312,7 @@ export const TypeCoercions = {
   /**
    * Coerce value to string.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toString(value: any): string {
     if (value === null || value === undefined) {
       return ''
@@ -316,6 +323,7 @@ export const TypeCoercions = {
   /**
    * Coerce value to number.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toNumber(value: any): number | null {
     if (value === null || value === undefined || value === '') {
       return null
@@ -327,6 +335,7 @@ export const TypeCoercions = {
   /**
    * Coerce value to boolean.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toBoolean(value: any): boolean {
     if (value === null || value === undefined) {
       return false
@@ -344,6 +353,7 @@ export const TypeCoercions = {
   /**
    * Coerce value to Date.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toDate(value: any): Date | null {
     if (value === null || value === undefined || value === '') {
       return null
@@ -358,6 +368,7 @@ export const TypeCoercions = {
   /**
    * Coerce value to array.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toArray<T>(value: any): T[] {
     if (value === null || value === undefined) {
       return []
@@ -373,16 +384,19 @@ export const CommonTransforms = {
   /**
    * Uppercase string value.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uppercase: (value: any) => (value ? String(value).toUpperCase() : value),
 
   /**
    * Lowercase string value.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lowercase: (value: any) => (value ? String(value).toLowerCase() : value),
 
   /**
    * Trim whitespace from string value.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   trim: (value: any) => (value ? String(value).trim() : value),
 
   /**
@@ -390,12 +404,14 @@ export const CommonTransforms = {
    */
   defaultValue:
     <T>(defaultVal: T) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (value: any) =>
       value === null || value === undefined ? defaultVal : value,
 
   /**
    * Parse JSON string.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parseJSON: (value: any) => {
     if (typeof value === 'string') {
       try {
@@ -410,6 +426,7 @@ export const CommonTransforms = {
   /**
    * Stringify value to JSON.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stringifyJSON: (value: any) => {
     try {
       return JSON.stringify(value)
@@ -422,7 +439,9 @@ export const CommonTransforms = {
    * Compose multiple transforms into a single transform.
    */
   compose:
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (...transforms: ((value: any, record?: any) => any)[]) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (value: any, record?: any) => {
       let result = value
       for (const transform of transforms) {
