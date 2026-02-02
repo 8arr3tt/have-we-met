@@ -75,7 +75,8 @@ const createMockAdapter = (): DatabaseAdapter<Customer> => {
       return newRecord
     },
     findById: async (id: string) => mockData.find((r) => r.id === id) || null,
-    findByIds: async (ids: string[]) => mockData.filter((r) => ids.includes(r.id)),
+    findByIds: async (ids: string[]) =>
+      mockData.filter((r) => ids.includes(r.id)),
     findAll: async (options?: { limit?: number; offset?: number }) => {
       const { limit = mockData.length, offset = 0 } = options || {}
       return mockData.slice(offset, offset + limit)
@@ -165,14 +166,20 @@ const newCustomer: Omit<Customer, 'id'> = {
     if (matches.length > 0 && matches[0].outcome === 'definite-match') {
       console.log('✓ Found existing customer:')
       console.log(`  ID: ${matches[0].record.id}`)
-      console.log(`  Name: ${matches[0].record.firstName} ${matches[0].record.lastName}`)
+      console.log(
+        `  Name: ${matches[0].record.firstName} ${matches[0].record.lastName}`
+      )
       console.log(`  Email: ${matches[0].record.email}`)
       console.log(`  Match score: ${matches[0].score.totalScore}`)
-      console.log('\n  Action: Use existing record instead of creating duplicate\n')
+      console.log(
+        '\n  Action: Use existing record instead of creating duplicate\n'
+      )
     } else if (matches.length > 0 && matches[0].outcome === 'potential-match') {
       console.log('⚠ Found potential match (needs review):')
       console.log(`  ID: ${matches[0].record.id}`)
-      console.log(`  Name: ${matches[0].record.firstName} ${matches[0].record.lastName}`)
+      console.log(
+        `  Name: ${matches[0].record.firstName} ${matches[0].record.lastName}`
+      )
       console.log(`  Match score: ${matches[0].score.totalScore}`)
       console.log('\n  Action: Queue for human review before proceeding\n')
     } else {
@@ -190,13 +197,23 @@ const newCustomer: Omit<Customer, 'id'> = {
 
     console.log('Deduplication results:')
     console.log(`  Total records: ${dedupeResult.stats.totalRecords}`)
-    console.log(`  Definite matches: ${dedupeResult.stats.definiteMatchesFound}`)
-    console.log(`  Potential matches: ${dedupeResult.stats.potentialMatchesFound}`)
+    console.log(
+      `  Definite matches: ${dedupeResult.stats.definiteMatchesFound}`
+    )
+    console.log(
+      `  Potential matches: ${dedupeResult.stats.potentialMatchesFound}`
+    )
     console.log(`  Comparisons: ${dedupeResult.stats.totalComparisons}`)
 
     if (dedupeResult.stats.totalRecords > 1) {
-      const theoreticalComparisons = (dedupeResult.stats.totalRecords * (dedupeResult.stats.totalRecords - 1)) / 2
-      const reduction = ((1 - dedupeResult.stats.totalComparisons / theoreticalComparisons) * 100).toFixed(1)
+      const theoreticalComparisons =
+        (dedupeResult.stats.totalRecords *
+          (dedupeResult.stats.totalRecords - 1)) /
+        2
+      const reduction = (
+        (1 - dedupeResult.stats.totalComparisons / theoreticalComparisons) *
+        100
+      ).toFixed(1)
       console.log(`  Comparison reduction: ${reduction}% (thanks to blocking!)`)
     }
     console.log()
@@ -209,7 +226,9 @@ const newCustomer: Omit<Customer, 'id'> = {
     console.log('  Then compare ALL records in memory (O(n²) complexity)')
     console.log()
 
-    console.log('With blocking on lastName (firstLetter) and dateOfBirth (year):')
+    console.log(
+      'With blocking on lastName (firstLetter) and dateOfBirth (year):'
+    )
     console.log('  SELECT * FROM customers')
     console.log(`  WHERE SUBSTRING(lastName, 1, 1) = 'A'`)
     console.log(`  AND YEAR(dateOfBirth) = 1990`)
@@ -251,20 +270,22 @@ const newCustomer: Omit<Customer, 'id'> = {
     console.log('  .matching((match) => /* ... */)')
     console.log('  .adapter(prismaAdapter(prisma, {')
     console.log("    tableName: 'customers',")
-    console.log('    idField: \'id\',')
+    console.log("    idField: 'id',")
     console.log('  }))')
     console.log('  .build()')
     console.log()
     console.log('// Use in API endpoint')
-    console.log('app.post(\'/customers\', async (req, res) => {')
+    console.log("app.post('/customers', async (req, res) => {")
     console.log('  const customerData = req.body')
     console.log()
     console.log('  // Check for duplicates before creating')
-    console.log('  const matches = await resolver.resolveWithDatabase(customerData)')
+    console.log(
+      '  const matches = await resolver.resolveWithDatabase(customerData)'
+    )
     console.log()
-    console.log('  if (matches[0]?.outcome === \'definite-match\') {')
+    console.log("  if (matches[0]?.outcome === 'definite-match') {")
     console.log('    return res.status(409).json({')
-    console.log('      error: \'Customer already exists\',')
+    console.log("      error: 'Customer already exists',")
     console.log('      existingId: matches[0].record.id')
     console.log('    })')
     console.log('  }')

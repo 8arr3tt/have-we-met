@@ -13,7 +13,7 @@ describe('Performance: Real-time Matching', () => {
         firstName: `Person${i}`,
         lastName: `Family${i % 100}`,
         email: `person${i}@example.com`,
-        phone: `555-010${String(i).padStart(4, '0')}`
+        phone: `555-010${String(i).padStart(4, '0')}`,
       })
     }
   })
@@ -23,16 +23,23 @@ describe('Performance: Real-time Matching', () => {
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
       email: { type: 'email' },
-      phone: { type: 'phone' }
+      phone: { type: 'phone' },
     })
       .blocking((block) =>
         block.onField('lastName', { transform: 'firstLetter' })
       )
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('phone').strategy('exact').weight(15)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('phone')
+          .strategy('exact')
+          .weight(15)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 20, definiteMatch: 35 })
       .build()
@@ -42,7 +49,7 @@ describe('Performance: Real-time Matching', () => {
       firstName: 'Person500',
       lastName: 'Family50',
       email: 'person500@example.com',
-      phone: '555-0100500'
+      phone: '555-0100500',
     }
 
     const start = performance.now()
@@ -58,15 +65,20 @@ describe('Performance: Real-time Matching', () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
       .blocking((block) =>
         block.onField('lastName', { transform: 'firstLetter' })
       )
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 20, definiteMatch: 30 })
       .build()
@@ -78,7 +90,7 @@ describe('Performance: Real-time Matching', () => {
         id: `new-${i}`,
         firstName: `NewPerson${i}`,
         lastName: `NewFamily${i}`,
-        email: `newperson${i}@example.com`
+        email: `newperson${i}@example.com`,
       }
 
       const start = performance.now()
@@ -92,22 +104,22 @@ describe('Performance: Real-time Matching', () => {
 
     expect(avgDuration).toBeLessThan(100)
     expect(maxDuration).toBeLessThan(150) // Allow some variance
-    console.log(`Average: ${avgDuration.toFixed(2)}ms, Max: ${maxDuration.toFixed(2)}ms`)
+    console.log(
+      `Average: ${avgDuration.toFixed(2)}ms, Max: ${maxDuration.toFixed(2)}ms`
+    )
   })
 
   it('should match quickly without blocking strategy', async () => {
     const resolver = HaveWeMet.schema({
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
-      .matching((match) =>
-        match.field('email').strategy('exact').weight(20)
-      )
+      .matching((match) => match.field('email').strategy('exact').weight(20))
       .thresholds({ noMatch: 15, definiteMatch: 20 })
       .build()
 
     const newRecord: InternalRecord = {
       id: 'new-1',
-      email: 'person500@example.com'
+      email: 'person500@example.com',
     }
 
     const start = performance.now()
@@ -123,15 +135,20 @@ describe('Performance: Real-time Matching', () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
       .blocking((block) =>
         block.onField('lastName', { transform: 'firstLetter' })
       )
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 20, definiteMatch: 30 })
       .build()
@@ -140,12 +157,12 @@ describe('Performance: Real-time Matching', () => {
       id: `new-${i}`,
       firstName: `NewPerson${i}`,
       lastName: `NewFamily${i}`,
-      email: `newperson${i}@example.com`
+      email: `newperson${i}@example.com`,
     }))
 
     const start = performance.now()
     await Promise.all(
-      newRecords.map(record => resolver.resolve(record, existingRecords))
+      newRecords.map((record) => resolver.resolve(record, existingRecords))
     )
     const duration = performance.now() - start
 
@@ -157,16 +174,22 @@ describe('Performance: Real-time Matching', () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
-      .blocking((block) =>
-        block.onField('lastName', { transform: 'soundex' })
-      )
+      .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
       .matching((match) =>
         match
-          .field('firstName').strategy('jaro-winkler').weight(15).threshold(0.85)
-          .field('lastName').strategy('levenshtein').weight(15).threshold(0.85)
-          .field('email').strategy('exact').weight(10)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(15)
+          .threshold(0.85)
+          .field('lastName')
+          .strategy('levenshtein')
+          .weight(15)
+          .threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(10)
       )
       .thresholds({ noMatch: 20, definiteMatch: 35 })
       .build()
@@ -175,7 +198,7 @@ describe('Performance: Real-time Matching', () => {
       id: 'new-1',
       firstName: 'Persen500', // Typo
       lastName: 'Fammily50', // Typo
-      email: 'person500@example.com'
+      email: 'person500@example.com',
     }
 
     const start = performance.now()

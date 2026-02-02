@@ -19,7 +19,11 @@ import {
   mlBuilder,
   createModelFromConfig,
 } from '../../src/ml'
-import type { FieldFeatureConfig, FeatureExtractionConfig, MLModelWeights } from '../../src/ml'
+import type {
+  FieldFeatureConfig,
+  FeatureExtractionConfig,
+  MLModelWeights,
+} from '../../src/ml'
 
 interface Patient {
   patientId?: string
@@ -93,7 +97,9 @@ async function customModelExample() {
   console.log('Feature configuration:')
   console.log(`  Fields configured: ${patientFeatureConfig.fields.length}`)
   for (const field of patientFeatureConfig.fields) {
-    console.log(`    - ${field.field}: extractors=[${field.extractors.join(', ')}], weight=${field.weight}`)
+    console.log(
+      `    - ${field.field}: extractors=[${field.extractors.join(', ')}], weight=${field.weight}`
+    )
   }
   console.log()
 
@@ -249,7 +255,9 @@ async function customModelExample() {
   console.log()
 
   // Step 8: Create classifier for companies
-  console.log('Step 8: Creating classifier for a different entity type (Company)...')
+  console.log(
+    'Step 8: Creating classifier for a different entity type (Company)...'
+  )
 
   const companyConfig = mlBuilder<Company>()
     .field('legalName')
@@ -277,7 +285,9 @@ async function customModelExample() {
   console.log('Company classifier configuration:')
   console.log(`  Mode: ${companyConfig.integrationConfig.mode}`)
   console.log(`  ML Weight: ${companyConfig.integrationConfig.mlWeight}`)
-  console.log(`  Fields: ${companyConfig.featureConfig?.fields.map((f) => f.field).join(', ')}`)
+  console.log(
+    `  Fields: ${companyConfig.featureConfig?.fields.map((f) => f.field).join(', ')}`
+  )
   console.log()
 
   // Step 9: Using helper methods for quick setup
@@ -293,7 +303,9 @@ async function customModelExample() {
     .build()
 
   console.log('Quick configuration:')
-  console.log(`  Fields configured: ${quickConfig.featureConfig?.fields.length}`)
+  console.log(
+    `  Fields configured: ${quickConfig.featureConfig?.fields.length}`
+  )
   for (const field of quickConfig.featureConfig?.fields ?? []) {
     console.log(`    - ${field.field}: [${field.extractors.join(', ')}]`)
   }

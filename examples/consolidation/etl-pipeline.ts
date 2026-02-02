@@ -233,7 +233,10 @@ class CSVAdapter implements DatabaseAdapter<LegacyCSVRecord> {
     return record
   }
 
-  async update(id: string, updates: Partial<LegacyCSVRecord>): Promise<LegacyCSVRecord> {
+  async update(
+    id: string,
+    updates: Partial<LegacyCSVRecord>
+  ): Promise<LegacyCSVRecord> {
     const index = this.data.findIndex((r) => r.legacy_id === id)
     if (index >= 0) {
       this.data[index] = { ...this.data[index], ...updates }
@@ -262,10 +265,12 @@ function createMockAdapter<T>(data: T[]): DatabaseAdapter<T> {
   return {
     count: async () => data.length,
     findAll: async () => data,
-    findById: async (id) => data.find((record: any) => record.id === id) ?? null,
-    findByField: async (field, value) => data.filter((record: any) => record[field] === value),
+    findById: async (id) =>
+      data.find((record: any) => record.id === id) ?? null,
+    findByField: async (field, value) =>
+      data.filter((record: any) => record[field] === value),
     create: async (record) => record,
-    update: async (id, updates) => ({ ...updates, id } as T),
+    update: async (id, updates) => ({ ...updates, id }) as T,
     delete: async () => undefined,
     findMany: async () => data,
   }
@@ -300,7 +305,10 @@ class APIAdapter implements DatabaseAdapter<CRMAPIContact> {
     return record
   }
 
-  async update(id: string, updates: Partial<CRMAPIContact>): Promise<CRMAPIContact> {
+  async update(
+    id: string,
+    updates: Partial<CRMAPIContact>
+  ): Promise<CRMAPIContact> {
     const index = this.data.findIndex((r) => r.contactId === id)
     if (index >= 0) {
       this.data[index] = { ...this.data[index], ...updates }
@@ -345,104 +353,111 @@ const outputAdapter = {
  */
 const etlConfig = HaveWeMet.consolidation<UnifiedContact>()
   // Source 1: Legacy CSV (priority 1 - oldest data)
-  .source<LegacyCSVRecord>('legacy_csv', (source) =>
-    source
-      .name('Legacy System CSV Export')
-      .adapter(csvAdapter)
-      .mapping((map) =>
-        map
-          .field('email')
-          .from('email')
-          .field('firstName')
-          .from('fname')
-          .field('lastName')
-          .from('lname')
-          .field('company')
-          .from('company')
-          .field('phone')
-          .from('phone')
-          .field('tags')
-          .transform((input) => {
-            const tags: string[] = ['legacy']
-            if (input.notes?.toLowerCase().includes('vip')) tags.push('vip')
-            if (input.notes?.toLowerCase().includes('inactive')) tags.push('inactive')
-            return tags
-          })
-          .field('metadata')
-          .transform((input) => ({
-            sources: ['legacy'],
-            legacyId: input.legacy_id,
-          }))
-          .field('firstSeen')
-          .transform((input) => new Date(input.created))
-          .field('lastUpdated')
-          .transform((input) => new Date(input.created))
-      )
-      .priority(1) // Lowest priority - old data
+  .source<LegacyCSVRecord>(
+    'legacy_csv',
+    (source) =>
+      source
+        .name('Legacy System CSV Export')
+        .adapter(csvAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('fname')
+            .field('lastName')
+            .from('lname')
+            .field('company')
+            .from('company')
+            .field('phone')
+            .from('phone')
+            .field('tags')
+            .transform((input) => {
+              const tags: string[] = ['legacy']
+              if (input.notes?.toLowerCase().includes('vip')) tags.push('vip')
+              if (input.notes?.toLowerCase().includes('inactive'))
+                tags.push('inactive')
+              return tags
+            })
+            .field('metadata')
+            .transform((input) => ({
+              sources: ['legacy'],
+              legacyId: input.legacy_id,
+            }))
+            .field('firstSeen')
+            .transform((input) => new Date(input.created))
+            .field('lastUpdated')
+            .transform((input) => new Date(input.created))
+        )
+        .priority(1) // Lowest priority - old data
   )
 
   // Source 2: Current Database (priority 3 - most authoritative)
-  .source<DatabaseContact>('database', (source) =>
-    source
-      .name('Current Database (Prisma)')
-      .adapter(dbAdapter)
-      .mapping((map) =>
-        map
-          .field('email')
-          .from('emailAddress')
-          .field('firstName')
-          .from('firstName')
-          .field('lastName')
-          .from('lastName')
-          .field('company')
-          .from('companyName')
-          .field('phone')
-          .from('phoneNumber')
-          .field('tags')
-          .transform((input) => ['database', ...(input.tags || [])])
-          .field('metadata')
-          .transform((input) => ({
-            sources: ['database'],
-            databaseId: input.id,
-          }))
-          .field('firstSeen')
-          .from('createdAt')
-          .field('lastUpdated')
-          .from('updatedAt')
-      )
-      .priority(3) // Highest priority - current authoritative data
+  .source<DatabaseContact>(
+    'database',
+    (source) =>
+      source
+        .name('Current Database (Prisma)')
+        .adapter(dbAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('emailAddress')
+            .field('firstName')
+            .from('firstName')
+            .field('lastName')
+            .from('lastName')
+            .field('company')
+            .from('companyName')
+            .field('phone')
+            .from('phoneNumber')
+            .field('tags')
+            .transform((input) => ['database', ...(input.tags || [])])
+            .field('metadata')
+            .transform((input) => ({
+              sources: ['database'],
+              databaseId: input.id,
+            }))
+            .field('firstSeen')
+            .from('createdAt')
+            .field('lastUpdated')
+            .from('updatedAt')
+        )
+        .priority(3) // Highest priority - current authoritative data
   )
 
   // Source 3: CRM API (priority 2 - external but recent)
-  .source<CRMAPIContact>('crm_api', (source) =>
-    source
-      .name('Third-Party CRM API')
-      .adapter(apiAdapter)
-      .mapping((map) =>
-        map
-          .field('email')
-          .from('email')
-          .field('firstName')
-          .from('givenName')
-          .field('lastName')
-          .from('familyName')
-          .field('company')
-          .from('organization')
-          .field('phone')
-          .from('mobile')
-          .field('tags')
-          .transform((input) => ['crm', input.source])
-          .field('metadata')
-          .transform((input) => ({
-            sources: ['crm_api'],
-            crmId: input.contactId,
-          }))
-          .field('firstSeen')
-          .transform((input) => new Date(input.timestamp))
-          .field('lastUpdated')
-          .transform((input) => new Date(input.timestamp))
-      )
-      .priority(2) // Medium priority
+  .source<CRMAPIContact>(
+    'crm_api',
+    (source) =>
+      source
+        .name('Third-Party CRM API')
+        .adapter(apiAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('givenName')
+            .field('lastName')
+            .from('familyName')
+            .field('company')
+            .from('organization')
+            .field('phone')
+            .from('mobile')
+            .field('tags')
+            .transform((input) => ['crm', input.source])
+            .field('metadata')
+            .transform((input) => ({
+              sources: ['crm_api'],
+              crmId: input.contactId,
+            }))
+            .field('firstSeen')
+            .transform((input) => new Date(input.timestamp))
+            .field('lastUpdated')
+            .transform((input) => new Date(input.timestamp))
+        )
+        .priority(2) // Medium priority
   )
 
   // Use within-source-first matching
@@ -472,7 +487,7 @@ const etlConfig = HaveWeMet.consolidation<UnifiedContact>()
       .field('company')
       .strategy('jaro-winkler')
       .weight(8)
-      .threshold(0.80)
+      .threshold(0.8)
   )
 
   .thresholds({
@@ -525,7 +540,9 @@ async function runETLPipeline() {
   console.log('EXTRACT Phase:')
   console.log('-'.repeat(80))
   console.log(`✓ Loaded ${legacyCSVData.length} records from Legacy CSV`)
-  console.log(`✓ Loaded ${databaseContacts.length} records from Current Database`)
+  console.log(
+    `✓ Loaded ${databaseContacts.length} records from Current Database`
+  )
   console.log(`✓ Loaded ${crmAPIContacts.length} records from CRM API`)
   console.log(
     `Total extracted: ${legacyCSVData.length + databaseContacts.length + crmAPIContacts.length} records`
@@ -632,7 +649,9 @@ async function runETLPipeline() {
 
   console.log('LOAD Phase:')
   console.log('-'.repeat(80))
-  console.log(`✓ Writing ${consolidatedContacts.length} unified contacts to output database`)
+  console.log(
+    `✓ Writing ${consolidatedContacts.length} unified contacts to output database`
+  )
   console.log()
 
   console.log('='.repeat(80))
@@ -647,9 +666,12 @@ async function runETLPipeline() {
     if (contact.phone) console.log(`   Phone: ${contact.phone}`)
     console.log(`   Tags: ${contact.tags.join(', ')}`)
     console.log(`   Sources: ${contact.metadata.sources.join(', ')}`)
-    if (contact.metadata.legacyId) console.log(`     - Legacy ID: ${contact.metadata.legacyId}`)
-    if (contact.metadata.databaseId) console.log(`     - Database ID: ${contact.metadata.databaseId}`)
-    if (contact.metadata.crmId) console.log(`     - CRM ID: ${contact.metadata.crmId}`)
+    if (contact.metadata.legacyId)
+      console.log(`     - Legacy ID: ${contact.metadata.legacyId}`)
+    if (contact.metadata.databaseId)
+      console.log(`     - Database ID: ${contact.metadata.databaseId}`)
+    if (contact.metadata.crmId)
+      console.log(`     - CRM ID: ${contact.metadata.crmId}`)
     console.log(
       `   First Seen: ${contact.firstSeen.toISOString().split('T')[0]} | Last Updated: ${contact.lastUpdated.toISOString().split('T')[0]}`
     )

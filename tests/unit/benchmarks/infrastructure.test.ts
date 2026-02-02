@@ -197,9 +197,7 @@ id,name
     it('should parse pairs from JSON', () => {
       const json = JSON.stringify({
         records: [{ id: 1 }, { id: 2 }],
-        pairs: [
-          { id1: 1, id2: 2, isMatch: true },
-        ],
+        pairs: [{ id1: 1, id2: 2, isMatch: true }],
       })
 
       const { records, pairs } = parseJSON(json)
@@ -210,10 +208,7 @@ id,name
     })
 
     it('should auto-generate IDs when missing', () => {
-      const json = JSON.stringify([
-        { name: 'John' },
-        { name: 'Jane' },
-      ])
+      const json = JSON.stringify([{ name: 'John' }, { name: 'Jane' }])
 
       const { records } = parseJSON(json)
 
@@ -329,7 +324,9 @@ rec-0-dup,Jon,rec-0-org`
     })
 
     it('should throw on unsupported format', () => {
-      expect(() => loadDataset('test', '', 'xml' as 'csv')).toThrow('Unsupported format')
+      expect(() => loadDataset('test', '', 'xml' as 'csv')).toThrow(
+        'Unsupported format'
+      )
     })
   })
 
@@ -527,7 +524,13 @@ describe('Metrics Collection', () => {
         { id1: 5, id2: 6, isMatch: false },
       ]
 
-      const { threshold, metrics } = findOptimalThreshold(predicted, truth, 0, 1, 0.1)
+      const { threshold, metrics } = findOptimalThreshold(
+        predicted,
+        truth,
+        0,
+        1,
+        0.1
+      )
 
       expect(threshold).toBeLessThanOrEqual(0.7)
       expect(metrics.f1Score).toBeGreaterThan(0)
@@ -767,7 +770,11 @@ describe('Metrics Collection', () => {
 describe('Benchmark Runner', () => {
   describe('createMatchingFunction', () => {
     it('should create weighted matching function', () => {
-      const matchFn = createMatchingFunction<{ id: number; name: string; email: string }>([
+      const matchFn = createMatchingFunction<{
+        id: number
+        name: string
+        email: string
+      }>([
         {
           field: 'name',
           comparator: (a, b) => (a === b ? 1 : 0),
@@ -1136,7 +1143,16 @@ describe('Report Generation', () => {
       const metadata = {
         recordCount: 5000,
         fieldCount: 8,
-        fields: ['id', 'firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state'],
+        fields: [
+          'id',
+          'firstName',
+          'lastName',
+          'email',
+          'phone',
+          'address',
+          'city',
+          'state',
+        ],
         truePairCount: 250,
         loadTimeMs: 150,
         format: 'csv' as const,

@@ -35,25 +35,25 @@ interface UnifiedCustomer {
 }
 
 // Mock adapter factory
-function createMockAdapter<T>(
-  records: T[]
-): DatabaseAdapter<T> {
+function createMockAdapter<T>(records: T[]): DatabaseAdapter<T> {
   return {
     findAll: vi.fn(async () => records),
     findById: vi.fn(async (id: string | number) =>
       records.find((r: any) => r.id === id)
     ),
-    create: vi.fn(async (record: Partial<T>) => ({ ...record, id: Date.now() } as T)),
+    create: vi.fn(
+      async (record: Partial<T>) => ({ ...record, id: Date.now() }) as T
+    ),
     update: vi.fn(async (id: string | number, data: Partial<T>) => {
       const record = records.find((r: any) => r.id === id)
       return record ? { ...record, ...data } : undefined
     }),
     delete: vi.fn(async (_id: string | number) => true),
     createBatch: vi.fn(async (batch: Partial<T>[]) =>
-      batch.map((r, i) => ({ ...r, id: Date.now() + i } as T))
+      batch.map((r, i) => ({ ...r, id: Date.now() + i }) as T)
     ),
     batchInsert: vi.fn(async (batch: T[]) =>
-      batch.map((r, i) => ({ ...r, id: Date.now() + i } as T))
+      batch.map((r, i) => ({ ...r, id: Date.now() + i }) as T)
     ),
     findByBlocking: vi.fn(async () => []),
     transaction: vi.fn(async (callback: any) => callback()),

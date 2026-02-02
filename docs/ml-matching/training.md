@@ -18,7 +18,7 @@ import {
   ModelTrainer,
   createTrainingDataset,
   createTrainingExample,
-  FeatureExtractor
+  FeatureExtractor,
 } from 'have-we-met/ml'
 
 // 1. Create feature extractor
@@ -47,16 +47,20 @@ const trainer = new ModelTrainer({
   config: {
     learningRate: 0.01,
     maxIterations: 1000,
-    validationSplit: 0.2
-  }
+    validationSplit: 0.2,
+  },
 })
 
 const { classifier, result } = await trainer.trainClassifier(dataset)
 
 // 4. Check results
 if (classifier) {
-  console.log(`Training accuracy: ${(result.finalMetrics.trainingAccuracy * 100).toFixed(1)}%`)
-  console.log(`Validation accuracy: ${(result.finalMetrics.validationAccuracy * 100).toFixed(1)}%`)
+  console.log(
+    `Training accuracy: ${(result.finalMetrics.trainingAccuracy * 100).toFixed(1)}%`
+  )
+  console.log(
+    `Validation accuracy: ${(result.finalMetrics.validationAccuracy * 100).toFixed(1)}%`
+  )
   console.log(`Training time: ${result.trainingTimeMs.toFixed(0)}ms`)
   console.log(`Iterations: ${result.finalMetrics.iteration}`)
   console.log(`Early stopped: ${result.earlyStopped}`)
@@ -69,41 +73,44 @@ if (classifier) {
 
 ```typescript
 const DEFAULT_TRAINING_CONFIG = {
-  learningRate: 0.01,          // Step size for gradient updates
-  maxIterations: 1000,         // Maximum training iterations
-  regularization: 0.001,       // L2 regularization strength
-  validationSplit: 0.2,        // 20% held out for validation
-  earlyStoppingPatience: 10,   // Stop after 10 iterations without improvement
-  minImprovement: 0.001        // Minimum loss decrease to count as improvement
+  learningRate: 0.01, // Step size for gradient updates
+  maxIterations: 1000, // Maximum training iterations
+  regularization: 0.001, // L2 regularization strength
+  validationSplit: 0.2, // 20% held out for validation
+  earlyStoppingPatience: 10, // Stop after 10 iterations without improvement
+  minImprovement: 0.001, // Minimum loss decrease to count as improvement
 }
 ```
 
 ### Configuration Options
 
-| Parameter | Description | Recommendation |
-|-----------|-------------|----------------|
-| `learningRate` | Step size for weight updates | 0.001-0.1; lower is more stable |
-| `maxIterations` | Training iteration limit | 500-2000 based on dataset size |
-| `regularization` | L2 penalty strength | 0.0001-0.01; higher prevents overfitting |
-| `validationSplit` | Fraction held for validation | 0.2-0.3 for typical datasets |
-| `earlyStoppingPatience` | Iterations without improvement | 5-20; higher explores more |
-| `minImprovement` | Minimum meaningful improvement | 0.0001-0.01 |
-| `seed` | Random seed for reproducibility | Set for reproducible results |
+| Parameter               | Description                     | Recommendation                           |
+| ----------------------- | ------------------------------- | ---------------------------------------- |
+| `learningRate`          | Step size for weight updates    | 0.001-0.1; lower is more stable          |
+| `maxIterations`         | Training iteration limit        | 500-2000 based on dataset size           |
+| `regularization`        | L2 penalty strength             | 0.0001-0.01; higher prevents overfitting |
+| `validationSplit`       | Fraction held for validation    | 0.2-0.3 for typical datasets             |
+| `earlyStoppingPatience` | Iterations without improvement  | 5-20; higher explores more               |
+| `minImprovement`        | Minimum meaningful improvement  | 0.0001-0.01                              |
+| `seed`                  | Random seed for reproducibility | Set for reproducible results             |
 
 ### Tuning Tips
 
 **High training accuracy, low validation accuracy (overfitting):**
+
 - Increase `regularization` (e.g., 0.01)
 - Decrease `maxIterations`
 - Add more training data
 
 **Low training accuracy (underfitting):**
+
 - Decrease `regularization`
 - Increase `maxIterations`
 - Increase `learningRate` slightly
 - Add more/better features
 
 **Training is slow:**
+
 - Decrease `maxIterations`
 - Increase `earlyStoppingPatience` (stops sooner)
 - Consider smaller training dataset
@@ -140,7 +147,7 @@ console.log(`Total examples: ${stats.totalExamples}`)
 console.log(`Matches: ${stats.matchCount}`)
 console.log(`Non-matches: ${stats.nonMatchCount}`)
 console.log(`Match ratio: ${(stats.matchRatio * 100).toFixed(1)}%`)
-console.log(`Balanced: ${stats.isBalanced}`)  // true if ratio is 40-60%
+console.log(`Balanced: ${stats.isBalanced}`) // true if ratio is 40-60%
 ```
 
 ### Balancing Datasets
@@ -151,10 +158,12 @@ Imbalanced datasets (e.g., 95% non-matches) can bias the model:
 import { balanceDataset } from 'have-we-met/ml'
 
 // Undersample majority class
-const balancedDataset = balanceDataset(dataset, 42)  // seed for reproducibility
+const balancedDataset = balanceDataset(dataset, 42) // seed for reproducibility
 
 const stats = getDatasetStats(balancedDataset)
-console.log(`After balancing: ${stats.matchCount} matches, ${stats.nonMatchCount} non-matches`)
+console.log(
+  `After balancing: ${stats.matchCount} matches, ${stats.nonMatchCount} non-matches`
+)
 ```
 
 ### Merging Datasets
@@ -183,17 +192,17 @@ Monitor training in real-time:
 const trainer = new ModelTrainer({
   featureExtractor,
   config: {
-    maxIterations: 1000
+    maxIterations: 1000,
   },
   onProgress: (metrics) => {
     console.log(
       `Iteration ${metrics.iteration}: ` +
-      `loss=${metrics.trainingLoss.toFixed(4)}, ` +
-      `acc=${(metrics.trainingAccuracy * 100).toFixed(1)}%, ` +
-      `val_acc=${((metrics.validationAccuracy ?? 0) * 100).toFixed(1)}%`
+        `loss=${metrics.trainingLoss.toFixed(4)}, ` +
+        `acc=${(metrics.trainingAccuracy * 100).toFixed(1)}%, ` +
+        `val_acc=${((metrics.validationAccuracy ?? 0) * 100).toFixed(1)}%`
     )
   },
-  progressInterval: 50  // Report every 50 iterations
+  progressInterval: 50, // Report every 50 iterations
 })
 ```
 
@@ -205,8 +214,8 @@ Use seeds for reproducible training:
 const trainer = new ModelTrainer({
   featureExtractor,
   config: {
-    seed: 42  // Deterministic weight initialization and data shuffling
-  }
+    seed: 42, // Deterministic weight initialization and data shuffling
+  },
 })
 ```
 
@@ -237,7 +246,7 @@ When you have sufficient domain-specific data:
 // Initialize random weights
 const trainer = new ModelTrainer({
   featureExtractor: domainSpecificExtractor,
-  config: { maxIterations: 2000 }
+  config: { maxIterations: 2000 },
 })
 
 const { classifier } = await trainer.trainClassifier(domainDataset)
@@ -254,7 +263,7 @@ const initialWeights = pretrained.exportWeights()
 
 // Create new classifier with same architecture
 const classifier = new SimpleClassifier({
-  featureExtractor: pretrained.getFeatureExtractor()
+  featureExtractor: pretrained.getFeatureExtractor(),
 })
 
 // Load pre-trained weights as starting point
@@ -264,9 +273,9 @@ await classifier.loadWeights(initialWeights)
 const trainer = new ModelTrainer({
   featureExtractor: pretrained.getFeatureExtractor(),
   config: {
-    learningRate: 0.001,  // Lower for fine-tuning
-    maxIterations: 500
-  }
+    learningRate: 0.001, // Lower for fine-tuning
+    maxIterations: 500,
+  },
 })
 
 // Continue training
@@ -291,7 +300,8 @@ console.log(`Validation accuracy: ${result.finalMetrics.validationAccuracy}`)
 // Check for overfitting
 const overfit =
   result.finalMetrics.trainingAccuracy -
-  (result.finalMetrics.validationAccuracy ?? 0) > 0.1
+    (result.finalMetrics.validationAccuracy ?? 0) >
+  0.1
 
 if (overfit) {
   console.warn('Warning: Model may be overfitting (training >> validation)')
@@ -317,7 +327,8 @@ const { classifier } = await trainer.trainClassifier(
 let correct = 0
 for (const example of testExamples) {
   const prediction = await classifier.predict(example.pair)
-  const predictedLabel = prediction.classification === 'match' ? 'match' : 'nonMatch'
+  const predictedLabel =
+    prediction.classification === 'match' ? 'match' : 'nonMatch'
   if (predictedLabel === example.label) {
     correct++
   }
@@ -332,8 +343,10 @@ console.log(`Test accuracy: ${(testAccuracy * 100).toFixed(1)}%`)
 Understand prediction errors:
 
 ```typescript
-let truePositive = 0, falsePositive = 0
-let trueNegative = 0, falseNegative = 0
+let truePositive = 0,
+  falsePositive = 0
+let trueNegative = 0,
+  falseNegative = 0
 
 for (const example of testExamples) {
   const prediction = await classifier.predict(example.pair)
@@ -354,7 +367,7 @@ console.log(`  False Negatives: ${falseNegative}`)
 
 const precision = truePositive / (truePositive + falsePositive)
 const recall = truePositive / (truePositive + falseNegative)
-const f1 = 2 * precision * recall / (precision + recall)
+const f1 = (2 * precision * recall) / (precision + recall)
 
 console.log(`Precision: ${(precision * 100).toFixed(1)}%`)
 console.log(`Recall: ${(recall * 100).toFixed(1)}%`)

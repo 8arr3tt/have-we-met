@@ -11,12 +11,14 @@ This dataset pairs restaurants from Fodors and Zagat restaurant guides, commonly
 ## Dataset Characteristics
 
 ### Overview
+
 - **Total Records**: 864 (Fodors: 533, Zagat: 331)
 - **True Matches**: 112 matching pairs
 - **Match Rate**: ~13% of possible pairs are matches
 - **Domain**: Restaurant entities (US-based)
 
 ### Challenges
+
 - **Name Variations**: "Mc Donald's" vs "McDonald's", abbreviations
 - **Address Formats**: Different formatting, abbreviations (St. vs Street)
 - **City/Location**: Slight variations in city names
@@ -25,14 +27,14 @@ This dataset pairs restaurants from Fodors and Zagat restaurant guides, commonly
 
 ## Record Fields
 
-| Field | Description | Example (Fodors) | Example (Zagat) |
-|-------|-------------|------------------|-----------------|
-| `name` | Restaurant name | "arnie morton's of chicago" | "arnie morton's of chicago" |
-| `addr` | Street address | "435 s. la cienega blv." | "435 s. la cienega blvd." |
-| `city` | City name | "los angeles" | "los angeles" |
-| `phone` | Phone number | "310-246-1501" | "310/246-1501" |
-| `type` | Cuisine type | "american" | "steakhouse" |
-| `class` | Price class | "$$$$" | "expensive" |
+| Field   | Description     | Example (Fodors)            | Example (Zagat)             |
+| ------- | --------------- | --------------------------- | --------------------------- |
+| `name`  | Restaurant name | "arnie morton's of chicago" | "arnie morton's of chicago" |
+| `addr`  | Street address  | "435 s. la cienega blv."    | "435 s. la cienega blvd."   |
+| `city`  | City name       | "los angeles"               | "los angeles"               |
+| `phone` | Phone number    | "310-246-1501"              | "310/246-1501"              |
+| `type`  | Cuisine type    | "american"                  | "steakhouse"                |
+| `class` | Price class     | "$$$$"                      | "expensive"                 |
 
 ## Data Quality Issues
 
@@ -57,20 +59,20 @@ const dataset = generateSyntheticRestaurantData({
   corruptionProbability: 0.25,
 })
 
-console.log(dataset.metadata.recordCount)  // 500
-console.log(dataset.truePairs?.length)     // ~150 pairs
+console.log(dataset.metadata.recordCount) // 500
+console.log(dataset.truePairs?.length) // ~150 pairs
 ```
 
 ## Expected Results
 
 Well-tuned record linkage systems typically achieve:
 
-| Configuration | Precision | Recall | F1 Score |
-|---------------|-----------|--------|----------|
-| Exact match only | 100% | 15-25% | 26-40% |
-| Levenshtein (0.8 threshold) | 85-92% | 70-82% | 77-87% |
-| Jaro-Winkler (0.85 threshold) | 88-95% | 75-88% | 81-91% |
-| Combined with blocking | 90-96% | 72-85% | 80-90% |
+| Configuration                 | Precision | Recall | F1 Score |
+| ----------------------------- | --------- | ------ | -------- |
+| Exact match only              | 100%      | 15-25% | 26-40%   |
+| Levenshtein (0.8 threshold)   | 85-92%    | 70-82% | 77-87%   |
+| Jaro-Winkler (0.85 threshold) | 88-95%    | 75-88% | 81-91%   |
+| Combined with blocking        | 90-96%    | 72-85% | 80-90%   |
 
 ## Why This Dataset Matters
 
@@ -84,13 +86,13 @@ Well-tuned record linkage systems typically achieve:
 
 Based on benchmark results:
 
-| Field | Recommended Algorithm | Rationale |
-|-------|----------------------|-----------|
-| `name` | Jaro-Winkler | Handles word transpositions well |
-| `addr` | Levenshtein | Better for longer strings with abbreviations |
-| `city` | Exact or Soundex | City names should match closely |
-| `phone` | Exact (after normalization) | Phone numbers are identifiers |
-| `type` | Token overlap or custom | Semantic similarity needed |
+| Field   | Recommended Algorithm       | Rationale                                    |
+| ------- | --------------------------- | -------------------------------------------- |
+| `name`  | Jaro-Winkler                | Handles word transpositions well             |
+| `addr`  | Levenshtein                 | Better for longer strings with abbreviations |
+| `city`  | Exact or Soundex            | City names should match closely              |
+| `phone` | Exact (after normalization) | Phone numbers are identifiers                |
+| `type`  | Token overlap or custom     | Semantic similarity needed                   |
 
 ## Blocking Recommendations
 

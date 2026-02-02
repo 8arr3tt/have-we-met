@@ -11,27 +11,32 @@ import type {
   MLIntegrationConfig,
   MLIntegrationMode,
   FeatureVector,
-} from '../types';
-import type { MLModel } from '../model-interface';
-import { DEFAULT_ML_INTEGRATION_CONFIG } from '../types';
-import type { MatchResult, MatchScore, MatchOutcome, FieldScore } from '../../core/scoring/types';
+} from '../types'
+import type { MLModel } from '../model-interface'
+import { DEFAULT_ML_INTEGRATION_CONFIG } from '../types'
+import type {
+  MatchResult,
+  MatchScore,
+  MatchOutcome,
+  FieldScore,
+} from '../../core/scoring/types'
 
 /**
  * Result of ML-enhanced matching
  */
 export interface MLMatchResult<T = unknown> extends MatchResult<T> {
   /** ML prediction details (if ML was used) */
-  mlPrediction?: MLPrediction;
+  mlPrediction?: MLPrediction
   /** Whether ML was used for this match */
-  mlUsed: boolean;
+  mlUsed: boolean
   /** ML score contribution (when in hybrid mode) */
-  mlScoreContribution?: number;
+  mlScoreContribution?: number
   /** Probabilistic score contribution (when in hybrid mode) */
-  probabilisticScoreContribution?: number;
+  probabilisticScoreContribution?: number
   /** Time taken for ML prediction in milliseconds */
-  mlPredictionTimeMs?: number;
+  mlPredictionTimeMs?: number
   /** Error message if ML failed */
-  mlError?: string;
+  mlError?: string
 }
 
 /**
@@ -39,13 +44,13 @@ export interface MLMatchResult<T = unknown> extends MatchResult<T> {
  */
 export interface MLMatchOptions {
   /** Override the integration mode for this call */
-  mode?: MLIntegrationMode;
+  mode?: MLIntegrationMode
   /** Override the ML weight for this call */
-  mlWeight?: number;
+  mlWeight?: number
   /** Whether to skip ML for this call */
-  skipML?: boolean;
+  skipML?: boolean
   /** Timeout override in milliseconds */
-  timeoutMs?: number;
+  timeoutMs?: number
 }
 
 /**
@@ -53,15 +58,15 @@ export interface MLMatchOptions {
  */
 export interface MLMatchStats {
   /** Total matches processed */
-  totalMatches: number;
+  totalMatches: number
   /** Matches where ML was used */
-  mlUsedCount: number;
+  mlUsedCount: number
   /** Matches where ML failed */
-  mlFailedCount: number;
+  mlFailedCount: number
   /** Average ML prediction time in milliseconds */
-  avgMLPredictionTimeMs: number;
+  avgMLPredictionTimeMs: number
   /** Total ML prediction time in milliseconds */
-  totalMLPredictionTimeMs: number;
+  totalMLPredictionTimeMs: number
 }
 
 /**
@@ -70,40 +75,40 @@ export interface MLMatchStats {
  * Handles integration of ML predictions into the match scoring workflow.
  */
 export class MLMatchIntegrator<T = Record<string, unknown>> {
-  private model: MLModel<T>;
-  private config: MLIntegrationConfig;
+  private model: MLModel<T>
+  private config: MLIntegrationConfig
 
   constructor(model: MLModel<T>, config: Partial<MLIntegrationConfig> = {}) {
-    this.model = model;
-    this.config = { ...DEFAULT_ML_INTEGRATION_CONFIG, ...config };
+    this.model = model
+    this.config = { ...DEFAULT_ML_INTEGRATION_CONFIG, ...config }
   }
 
   /**
    * Get the current configuration
    */
   getConfig(): MLIntegrationConfig {
-    return { ...this.config };
+    return { ...this.config }
   }
 
   /**
    * Update the configuration
    */
   setConfig(config: Partial<MLIntegrationConfig>): void {
-    this.config = { ...this.config, ...config };
+    this.config = { ...this.config, ...config }
   }
 
   /**
    * Get the ML model
    */
   getModel(): MLModel<T> {
-    return this.model;
+    return this.model
   }
 
   /**
    * Check if the model is ready
    */
   isReady(): boolean {
-    return this.model.isReady();
+    return this.model.isReady()
   }
 
   /**
@@ -115,26 +120,29 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     probabilisticResult: MatchResult<T>,
     options?: MLMatchOptions
   ): Promise<MLMatchResult<T>> {
-    const effectiveConfig = this.getEffectiveConfig(options);
+    const effectiveConfig = this.getEffectiveConfig(options)
 
     // Check if we should use ML for this match
-    if (options?.skipML || !this.shouldUseML(probabilisticResult, effectiveConfig)) {
+    if (
+      options?.skipML ||
+      !this.shouldUseML(probabilisticResult, effectiveConfig)
+    ) {
       return {
         ...probabilisticResult,
         mlUsed: false,
-      };
+      }
     }
 
-    const startTime = performance.now();
+    const startTime = performance.now()
 
     try {
       // Get ML prediction with timeout
       const prediction = await this.predictWithTimeout(
         { record1: candidateRecord, record2: existingRecord },
         effectiveConfig.timeoutMs
-      );
+      )
 
-      const mlPredictionTimeMs = performance.now() - startTime;
+      const mlPredictionTimeMs = performance.now() - startTime
 
       // Calculate combined result based on mode
       return this.combineResults(
@@ -142,9 +150,9 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
         prediction,
         effectiveConfig,
         mlPredictionTimeMs
-      );
+      )
     } catch (error) {
-      const mlPredictionTimeMs = performance.now() - startTime;
+      const mlPredictionTimeMs = performance.now() - startTime
 
       // Handle ML failure based on configuration
       if (effectiveConfig.fallbackOnError) {
@@ -153,11 +161,11 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
           mlUsed: false,
           mlPredictionTimeMs,
           mlError: error instanceof Error ? error.message : String(error),
-        };
+        }
       }
 
       // Re-throw if not configured to fallback
-      throw error;
+      throw error
     }
   }
 
@@ -170,35 +178,35 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     probabilisticResults: MatchResult<T>[],
     options?: MLMatchOptions
   ): Promise<MLMatchResult<T>[]> {
-    const effectiveConfig = this.getEffectiveConfig(options);
+    const effectiveConfig = this.getEffectiveConfig(options)
 
     if (options?.skipML) {
       return probabilisticResults.map((result) => ({
         ...result,
         mlUsed: false,
-      }));
+      }))
     }
 
-    const results: MLMatchResult<T>[] = [];
+    const results: MLMatchResult<T>[] = []
 
     for (let i = 0; i < probabilisticResults.length; i++) {
-      const existingRecord = existingRecords[i];
-      const probabilisticResult = probabilisticResults[i];
+      const existingRecord = existingRecords[i]
+      const probabilisticResult = probabilisticResults[i]
 
       const mlResult = await this.enhanceMatchResult(
         candidateRecord,
         existingRecord,
         probabilisticResult,
         { ...options, ...effectiveConfig }
-      );
+      )
 
-      results.push(mlResult);
+      results.push(mlResult)
     }
 
     // Re-sort by combined score
-    results.sort((a, b) => b.score.totalScore - a.score.totalScore);
+    results.sort((a, b) => b.score.totalScore - a.score.totalScore)
 
-    return results;
+    return results
   }
 
   /**
@@ -210,14 +218,14 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     probabilisticResults: MatchResult<T>[],
     options?: MLMatchOptions
   ): Promise<{ results: MLMatchResult<T>[]; stats: MLMatchStats }> {
-    const effectiveConfig = this.getEffectiveConfig(options);
+    const effectiveConfig = this.getEffectiveConfig(options)
     const stats: MLMatchStats = {
       totalMatches: probabilisticResults.length,
       mlUsedCount: 0,
       mlFailedCount: 0,
       avgMLPredictionTimeMs: 0,
       totalMLPredictionTimeMs: 0,
-    };
+    }
 
     if (options?.skipML) {
       return {
@@ -226,69 +234,71 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
           mlUsed: false,
         })),
         stats,
-      };
+      }
     }
 
     // Determine which results need ML
-    const mlIndices: number[] = [];
-    const mlPairs: RecordPair<T>[] = [];
+    const mlIndices: number[] = []
+    const mlPairs: RecordPair<T>[] = []
 
     for (let i = 0; i < probabilisticResults.length; i++) {
       if (this.shouldUseML(probabilisticResults[i], effectiveConfig)) {
-        mlIndices.push(i);
+        mlIndices.push(i)
         mlPairs.push({
           record1: candidateRecord,
           record2: existingRecords[i],
-        });
+        })
       }
     }
 
     // Get ML predictions in batch
-    let predictions: MLPrediction[] = [];
-    const startTime = performance.now();
+    let predictions: MLPrediction[] = []
+    const startTime = performance.now()
 
     if (mlPairs.length > 0) {
       try {
-        const batchResults = await this.model.predictBatch(mlPairs);
-        predictions = batchResults.map((r) => r.prediction);
-        stats.mlUsedCount = predictions.length;
+        const batchResults = await this.model.predictBatch(mlPairs)
+        predictions = batchResults.map((r) => r.prediction)
+        stats.mlUsedCount = predictions.length
       } catch (error) {
         if (!effectiveConfig.fallbackOnError) {
-          throw error;
+          throw error
         }
-        stats.mlFailedCount = mlPairs.length;
+        stats.mlFailedCount = mlPairs.length
       }
     }
 
-    stats.totalMLPredictionTimeMs = performance.now() - startTime;
+    stats.totalMLPredictionTimeMs = performance.now() - startTime
     stats.avgMLPredictionTimeMs =
       stats.mlUsedCount > 0
         ? stats.totalMLPredictionTimeMs / stats.mlUsedCount
-        : 0;
+        : 0
 
     // Build final results
-    const results: MLMatchResult<T>[] = probabilisticResults.map((result, i) => {
-      const mlIndex = mlIndices.indexOf(i);
+    const results: MLMatchResult<T>[] = probabilisticResults.map(
+      (result, i) => {
+        const mlIndex = mlIndices.indexOf(i)
 
-      if (mlIndex === -1 || mlIndex >= predictions.length) {
-        return {
-          ...result,
-          mlUsed: false,
-        };
+        if (mlIndex === -1 || mlIndex >= predictions.length) {
+          return {
+            ...result,
+            mlUsed: false,
+          }
+        }
+
+        return this.combineResults(
+          result,
+          predictions[mlIndex],
+          effectiveConfig,
+          stats.avgMLPredictionTimeMs
+        )
       }
-
-      return this.combineResults(
-        result,
-        predictions[mlIndex],
-        effectiveConfig,
-        stats.avgMLPredictionTimeMs
-      );
-    });
+    )
 
     // Re-sort by combined score
-    results.sort((a, b) => b.score.totalScore - a.score.totalScore);
+    results.sort((a, b) => b.score.totalScore - a.score.totalScore)
 
-    return { results, stats };
+    return { results, stats }
   }
 
   /**
@@ -299,26 +309,26 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     existingRecord: T,
     thresholds: { noMatch: number; definiteMatch: number }
   ): Promise<MLMatchResult<T>> {
-    const startTime = performance.now();
+    const startTime = performance.now()
 
     try {
       const prediction = await this.model.predict({
         record1: candidateRecord,
         record2: existingRecord,
-      });
+      })
 
-      const mlPredictionTimeMs = performance.now() - startTime;
+      const mlPredictionTimeMs = performance.now() - startTime
 
       // Convert ML probability to score
-      const maxScore = 100; // Use 100-point scale for compatibility
-      const totalScore = prediction.probability * maxScore;
+      const maxScore = 100 // Use 100-point scale for compatibility
+      const totalScore = prediction.probability * maxScore
 
       // Determine outcome based on ML classification and thresholds
       const outcome = this.mlClassificationToOutcome(
         prediction.classification,
         totalScore,
         thresholds
-      );
+      )
 
       // Create synthetic score object from ML prediction
       const score: MatchScore = {
@@ -326,7 +336,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
         maxPossibleScore: maxScore,
         normalizedScore: prediction.probability,
         fieldScores: this.mlFeaturesToFieldScores(prediction),
-      };
+      }
 
       return {
         outcome,
@@ -336,25 +346,22 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
         mlPrediction: prediction,
         mlUsed: true,
         mlPredictionTimeMs,
-      };
+      }
     } catch (error) {
       throw new Error(
         `ML prediction failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+      )
     }
   }
 
   /**
    * Extract features from a record pair without predicting
    */
-  extractFeatures(
-    candidateRecord: T,
-    existingRecord: T
-  ): FeatureVector {
+  extractFeatures(candidateRecord: T, existingRecord: T): FeatureVector {
     return this.model.extractFeatures({
       record1: candidateRecord,
       record2: existingRecord,
-    });
+    })
   }
 
   /**
@@ -365,15 +372,15 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     config: MLIntegrationConfig
   ): boolean {
     if (!this.model.isReady()) {
-      return false;
+      return false
     }
 
     if (config.applyTo === 'all') {
-      return true;
+      return true
     }
 
     // Only apply to uncertain cases (potential matches)
-    return result.outcome === 'potential-match';
+    return result.outcome === 'potential-match'
   }
 
   /**
@@ -381,7 +388,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
    */
   private getEffectiveConfig(options?: MLMatchOptions): MLIntegrationConfig {
     if (!options) {
-      return this.config;
+      return this.config
     }
 
     return {
@@ -389,7 +396,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
       mode: options.mode ?? this.config.mode,
       mlWeight: options.mlWeight ?? this.config.mlWeight,
       timeoutMs: options.timeoutMs ?? this.config.timeoutMs,
-    };
+    }
   }
 
   /**
@@ -399,16 +406,16 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     pair: RecordPair<T>,
     timeoutMs: number
   ): Promise<MLPrediction> {
-    const predictionPromise = this.model.predict(pair);
+    const predictionPromise = this.model.predict(pair)
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(
         () => reject(new Error(`ML prediction timed out after ${timeoutMs}ms`)),
         timeoutMs
-      );
-    });
+      )
+    })
 
-    return Promise.race([predictionPromise, timeoutPromise]);
+    return Promise.race([predictionPromise, timeoutPromise])
   }
 
   /**
@@ -426,7 +433,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
           probabilisticResult,
           mlPrediction,
           mlPredictionTimeMs
-        );
+        )
 
       case 'hybrid':
         return this.createHybridResult(
@@ -434,7 +441,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
           mlPrediction,
           config.mlWeight,
           mlPredictionTimeMs
-        );
+        )
 
       case 'fallback':
         // Only use ML if probabilistic result is uncertain
@@ -443,20 +450,20 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
             probabilisticResult,
             mlPrediction,
             mlPredictionTimeMs
-          );
+          )
         }
         return {
           ...probabilisticResult,
           mlUsed: false,
           mlPrediction,
           mlPredictionTimeMs,
-        };
+        }
 
       default:
         return {
           ...probabilisticResult,
           mlUsed: false,
-        };
+        }
     }
   }
 
@@ -468,13 +475,13 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     mlPrediction: MLPrediction,
     mlPredictionTimeMs: number
   ): MLMatchResult<T> {
-    const maxScore = probabilisticResult.score.maxPossibleScore;
-    const totalScore = mlPrediction.probability * maxScore;
+    const maxScore = probabilisticResult.score.maxPossibleScore
+    const totalScore = mlPrediction.probability * maxScore
 
     const outcome = this.determineOutcomeFromScores(
       totalScore,
       probabilisticResult
-    );
+    )
 
     return {
       outcome,
@@ -492,7 +499,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
       mlPrediction,
       mlUsed: true,
       mlPredictionTimeMs,
-    };
+    }
   }
 
   /**
@@ -504,22 +511,21 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     mlWeight: number,
     mlPredictionTimeMs: number
   ): MLMatchResult<T> {
-    const probWeight = 1 - mlWeight;
-    const maxScore = probabilisticResult.score.maxPossibleScore;
+    const probWeight = 1 - mlWeight
+    const maxScore = probabilisticResult.score.maxPossibleScore
 
     // Calculate ML contribution as score on the same scale
-    const mlScore = mlPrediction.probability * maxScore;
+    const mlScore = mlPrediction.probability * maxScore
 
     // Combine scores
-    const probabilisticScore = probabilisticResult.score.totalScore;
-    const combinedScore =
-      probWeight * probabilisticScore + mlWeight * mlScore;
+    const probabilisticScore = probabilisticResult.score.totalScore
+    const combinedScore = probWeight * probabilisticScore + mlWeight * mlScore
 
     // Determine outcome from combined score
     const outcome = this.determineOutcomeFromScores(
       combinedScore,
       probabilisticResult
-    );
+    )
 
     return {
       outcome,
@@ -545,7 +551,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
       mlScoreContribution: mlWeight * mlScore,
       probabilisticScoreContribution: probWeight * probabilisticScore,
       mlPredictionTimeMs,
-    };
+    }
   }
 
   /**
@@ -557,8 +563,8 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
   ): MatchOutcome {
     // Use the original result's threshold boundaries implicitly
     // by checking against the known outcomes and scores
-    const originalScore = originalResult.score.totalScore;
-    const originalOutcome = originalResult.outcome;
+    const originalScore = originalResult.score.totalScore
+    const originalOutcome = originalResult.outcome
 
     // If the new score moves us across a boundary, recalculate
     if (originalOutcome === 'definite-match' && score < originalScore) {
@@ -568,15 +574,15 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
 
     // Simple heuristic: use normalized score boundaries
     // These roughly correspond to typical threshold settings
-    const normalizedScore = score / originalResult.score.maxPossibleScore;
+    const normalizedScore = score / originalResult.score.maxPossibleScore
 
     if (normalizedScore >= 0.65) {
-      return 'definite-match';
+      return 'definite-match'
     }
     if (normalizedScore < 0.3) {
-      return 'no-match';
+      return 'no-match'
     }
-    return 'potential-match';
+    return 'potential-match'
   }
 
   /**
@@ -589,18 +595,18 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
   ): MatchOutcome {
     // Use both ML classification and score for outcome
     if (classification === 'match' && score >= thresholds.definiteMatch) {
-      return 'definite-match';
+      return 'definite-match'
     }
     if (classification === 'nonMatch' && score < thresholds.noMatch) {
-      return 'no-match';
+      return 'no-match'
     }
     if (classification === 'match') {
-      return 'potential-match'; // High confidence but below threshold
+      return 'potential-match' // High confidence but below threshold
     }
     if (classification === 'nonMatch') {
-      return 'no-match';
+      return 'no-match'
     }
-    return 'potential-match'; // uncertain
+    return 'potential-match' // uncertain
   }
 
   /**
@@ -611,15 +617,15 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     mlPrediction: MLPrediction
   ): FieldScore[] {
     // Create a lookup of ML feature importance by field
-    const featureByField = new Map<string, number>();
+    const featureByField = new Map<string, number>()
 
     for (const feature of mlPrediction.featureImportance) {
       // Extract field name from feature name (e.g., "firstName_jaroWinkler" -> "firstName")
-      const fieldMatch = feature.name.match(/^([^_]+)_/);
+      const fieldMatch = feature.name.match(/^([^_]+)_/)
       if (fieldMatch) {
-        const fieldName = fieldMatch[1];
-        const current = featureByField.get(fieldName) ?? 0;
-        featureByField.set(fieldName, current + feature.importance);
+        const fieldName = fieldMatch[1]
+        const current = featureByField.get(fieldName) ?? 0
+        featureByField.set(fieldName, current + feature.importance)
       }
     }
 
@@ -627,24 +633,24 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     return fieldScores.map((score) => ({
       ...score,
       // Could add mlImportance field if we extend the type
-    }));
+    }))
   }
 
   /**
    * Convert ML features to field scores for ML-only mode
    */
   private mlFeaturesToFieldScores(mlPrediction: MLPrediction): FieldScore[] {
-    const fieldMap = new Map<string, FieldScore>();
+    const fieldMap = new Map<string, FieldScore>()
 
     for (let i = 0; i < mlPrediction.features.names.length; i++) {
-      const featureName = mlPrediction.features.names[i];
-      const featureValue = mlPrediction.features.values[i];
+      const featureName = mlPrediction.features.names[i]
+      const featureValue = mlPrediction.features.values[i]
 
       // Extract field and extractor from feature name
-      const match = featureName.match(/^([^_]+)_(.+)$/);
-      if (!match) continue;
+      const match = featureName.match(/^([^_]+)_(.+)$/)
+      if (!match) continue
 
-      const fieldName = match[1];
+      const fieldName = match[1]
       // extractorType available at match[2] if needed for field-specific handling
 
       if (!fieldMap.has(fieldName)) {
@@ -656,18 +662,18 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
           threshold: 0,
           metThreshold: true,
           strategy: 'exact', // Default - ML doesn't use strategies
-        });
+        })
       } else {
         // Update with highest similarity for this field
-        const existing = fieldMap.get(fieldName)!;
+        const existing = fieldMap.get(fieldName)!
         if (featureValue > existing.similarity) {
-          existing.similarity = featureValue;
-          existing.contribution = featureValue;
+          existing.similarity = featureValue
+          existing.contribution = featureValue
         }
       }
     }
 
-    return Array.from(fieldMap.values());
+    return Array.from(fieldMap.values())
   }
 
   /**
@@ -677,21 +683,21 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     mlPrediction: MLPrediction,
     outcome: MatchOutcome
   ): string {
-    const probability = (mlPrediction.probability * 100).toFixed(1);
-    const confidence = (mlPrediction.confidence * 100).toFixed(1);
+    const probability = (mlPrediction.probability * 100).toFixed(1)
+    const confidence = (mlPrediction.confidence * 100).toFixed(1)
 
     const outcomeText = {
       'definite-match': 'definite match',
       'potential-match': 'potential match',
       'no-match': 'no match',
-    }[outcome];
+    }[outcome]
 
     const topFeatures = mlPrediction.featureImportance
       .slice(0, 3)
       .map((f) => `${f.name} (${(f.importance * 100).toFixed(0)}%)`)
-      .join(', ');
+      .join(', ')
 
-    return `ML prediction: ${probability}% match probability with ${confidence}% confidence. Classified as ${outcomeText}. Top features: ${topFeatures}.`;
+    return `ML prediction: ${probability}% match probability with ${confidence}% confidence. Classified as ${outcomeText}. Top features: ${topFeatures}.`
   }
 
   /**
@@ -704,19 +710,19 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
     mlWeight: number,
     outcome: MatchOutcome
   ): string {
-    const probScore = probabilisticResult.score.totalScore.toFixed(1);
-    const mlProb = (mlPrediction.probability * 100).toFixed(1);
-    const combined = combinedScore.toFixed(1);
-    const mlWeightPct = (mlWeight * 100).toFixed(0);
-    const probWeightPct = ((1 - mlWeight) * 100).toFixed(0);
+    const probScore = probabilisticResult.score.totalScore.toFixed(1)
+    const mlProb = (mlPrediction.probability * 100).toFixed(1)
+    const combined = combinedScore.toFixed(1)
+    const mlWeightPct = (mlWeight * 100).toFixed(0)
+    const probWeightPct = ((1 - mlWeight) * 100).toFixed(0)
 
     const outcomeText = {
       'definite-match': 'definite match',
       'potential-match': 'potential match',
       'no-match': 'no match',
-    }[outcome];
+    }[outcome]
 
-    return `Hybrid score: ${combined} (${probWeightPct}% probabilistic [${probScore}] + ${mlWeightPct}% ML [${mlProb}%]). Classified as ${outcomeText}.`;
+    return `Hybrid score: ${combined} (${probWeightPct}% probabilistic [${probScore}] + ${mlWeightPct}% ML [${mlProb}%]). Classified as ${outcomeText}.`
   }
 }
 
@@ -727,7 +733,7 @@ export function createMLIntegrator<T>(
   model: MLModel<T>,
   config?: Partial<MLIntegrationConfig>
 ): MLMatchIntegrator<T> {
-  return new MLMatchIntegrator(model, config);
+  return new MLMatchIntegrator(model, config)
 }
 
 /**
@@ -736,5 +742,5 @@ export function createMLIntegrator<T>(
 export function isMLMatchResult<T>(
   result: MatchResult<T>
 ): result is MLMatchResult<T> {
-  return 'mlUsed' in result;
+  return 'mlUsed' in result
 }

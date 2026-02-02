@@ -125,7 +125,11 @@ export class CompositeBlockingBuilder<T extends object = object> {
     requirePositive(options.windowSize, 'windowSize')
 
     if (options.nullStrategy !== undefined) {
-      const allowedStrategies: readonly NullStrategy[] = ['skip', 'block', 'compare']
+      const allowedStrategies: readonly NullStrategy[] = [
+        'skip',
+        'block',
+        'compare',
+      ]
       requireOneOf(options.nullStrategy, allowedStrategies, 'nullStrategy')
     }
 

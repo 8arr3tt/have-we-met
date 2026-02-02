@@ -53,86 +53,226 @@ function generateSyntheticTrainingData(): {
   const matches: Array<{ record1: Customer; record2: Customer }> = [
     // Exact duplicates
     {
-      record1: { firstName: 'John', lastName: 'Smith', email: 'john.smith@email.com', phone: '555-1234' },
-      record2: { firstName: 'John', lastName: 'Smith', email: 'john.smith@email.com', phone: '555-1234' },
+      record1: {
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john.smith@email.com',
+        phone: '555-1234',
+      },
+      record2: {
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john.smith@email.com',
+        phone: '555-1234',
+      },
     },
     // Name variations
     {
-      record1: { firstName: 'Robert', lastName: 'Johnson', email: 'bob.johnson@company.com' },
-      record2: { firstName: 'Bob', lastName: 'Johnson', email: 'bob.johnson@company.com' },
+      record1: {
+        firstName: 'Robert',
+        lastName: 'Johnson',
+        email: 'bob.johnson@company.com',
+      },
+      record2: {
+        firstName: 'Bob',
+        lastName: 'Johnson',
+        email: 'bob.johnson@company.com',
+      },
     },
     // Typos
     {
-      record1: { firstName: 'Michael', lastName: 'Williams', email: 'mwilliams@test.org' },
-      record2: { firstName: 'Micheal', lastName: 'Williams', email: 'mwilliams@test.org' },
+      record1: {
+        firstName: 'Michael',
+        lastName: 'Williams',
+        email: 'mwilliams@test.org',
+      },
+      record2: {
+        firstName: 'Micheal',
+        lastName: 'Williams',
+        email: 'mwilliams@test.org',
+      },
     },
     // Different formats
     {
-      record1: { firstName: 'Sarah', lastName: 'Davis', email: 'sarah.davis@mail.net', phone: '+1-555-567-8901' },
-      record2: { firstName: 'Sarah', lastName: 'Davis', email: 'sarah.davis@mail.net', phone: '5555678901' },
+      record1: {
+        firstName: 'Sarah',
+        lastName: 'Davis',
+        email: 'sarah.davis@mail.net',
+        phone: '+1-555-567-8901',
+      },
+      record2: {
+        firstName: 'Sarah',
+        lastName: 'Davis',
+        email: 'sarah.davis@mail.net',
+        phone: '5555678901',
+      },
     },
     // Address variations
     {
-      record1: { firstName: 'David', lastName: 'Brown', email: 'dbrown@example.com', address: '123 Main Street' },
-      record2: { firstName: 'David', lastName: 'Brown', email: 'dbrown@example.com', address: '123 Main St' },
+      record1: {
+        firstName: 'David',
+        lastName: 'Brown',
+        email: 'dbrown@example.com',
+        address: '123 Main Street',
+      },
+      record2: {
+        firstName: 'David',
+        lastName: 'Brown',
+        email: 'dbrown@example.com',
+        address: '123 Main St',
+      },
     },
     // Multiple small differences (still matches)
     {
-      record1: { firstName: 'Jennifer', lastName: 'Taylor', email: 'jtaylor@work.com', city: 'New York' },
-      record2: { firstName: 'Jenny', lastName: 'Taylor', email: 'jtaylor@work.com', city: 'New York City' },
+      record1: {
+        firstName: 'Jennifer',
+        lastName: 'Taylor',
+        email: 'jtaylor@work.com',
+        city: 'New York',
+      },
+      record2: {
+        firstName: 'Jenny',
+        lastName: 'Taylor',
+        email: 'jtaylor@work.com',
+        city: 'New York City',
+      },
     },
     // Case differences
     {
-      record1: { firstName: 'JAMES', lastName: 'WILSON', email: 'jwilson@domain.org' },
-      record2: { firstName: 'James', lastName: 'Wilson', email: 'JWILSON@DOMAIN.ORG' },
+      record1: {
+        firstName: 'JAMES',
+        lastName: 'WILSON',
+        email: 'jwilson@domain.org',
+      },
+      record2: {
+        firstName: 'James',
+        lastName: 'Wilson',
+        email: 'JWILSON@DOMAIN.ORG',
+      },
     },
     // Middle name omitted
     {
-      record1: { firstName: 'Mary Elizabeth', lastName: 'Anderson', email: 'me.anderson@email.com' },
-      record2: { firstName: 'Mary', lastName: 'Anderson', email: 'me.anderson@email.com' },
+      record1: {
+        firstName: 'Mary Elizabeth',
+        lastName: 'Anderson',
+        email: 'me.anderson@email.com',
+      },
+      record2: {
+        firstName: 'Mary',
+        lastName: 'Anderson',
+        email: 'me.anderson@email.com',
+      },
     },
   ]
 
   const nonMatches: Array<{ record1: Customer; record2: Customer }> = [
     // Completely different people
     {
-      record1: { firstName: 'John', lastName: 'Smith', email: 'john.smith@email.com' },
-      record2: { firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@other.com' },
+      record1: {
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john.smith@email.com',
+      },
+      record2: {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        email: 'jane.doe@other.com',
+      },
     },
     // Same last name, different people
     {
-      record1: { firstName: 'Robert', lastName: 'Johnson', email: 'robert.j@mail.com' },
-      record2: { firstName: 'Alice', lastName: 'Johnson', email: 'alice.johnson@work.net' },
+      record1: {
+        firstName: 'Robert',
+        lastName: 'Johnson',
+        email: 'robert.j@mail.com',
+      },
+      record2: {
+        firstName: 'Alice',
+        lastName: 'Johnson',
+        email: 'alice.johnson@work.net',
+      },
     },
     // Similar names, different emails
     {
-      record1: { firstName: 'Michael', lastName: 'Williams', email: 'mike.w@company.org' },
-      record2: { firstName: 'Michael', lastName: 'Williams', email: 'mwill@different.com' },
+      record1: {
+        firstName: 'Michael',
+        lastName: 'Williams',
+        email: 'mike.w@company.org',
+      },
+      record2: {
+        firstName: 'Michael',
+        lastName: 'Williams',
+        email: 'mwill@different.com',
+      },
     },
     // Same email domain, different people
     {
-      record1: { firstName: 'Sarah', lastName: 'Davis', email: 'sdavis@bigcorp.com' },
-      record2: { firstName: 'Tom', lastName: 'Miller', email: 'tmiller@bigcorp.com' },
+      record1: {
+        firstName: 'Sarah',
+        lastName: 'Davis',
+        email: 'sdavis@bigcorp.com',
+      },
+      record2: {
+        firstName: 'Tom',
+        lastName: 'Miller',
+        email: 'tmiller@bigcorp.com',
+      },
     },
     // Similar addresses, different people
     {
-      record1: { firstName: 'David', lastName: 'Brown', email: 'david@email.com', address: '123 Main Street' },
-      record2: { firstName: 'Peter', lastName: 'White', email: 'peter@mail.net', address: '125 Main Street' },
+      record1: {
+        firstName: 'David',
+        lastName: 'Brown',
+        email: 'david@email.com',
+        address: '123 Main Street',
+      },
+      record2: {
+        firstName: 'Peter',
+        lastName: 'White',
+        email: 'peter@mail.net',
+        address: '125 Main Street',
+      },
     },
     // Common name collision
     {
-      record1: { firstName: 'James', lastName: 'Smith', email: 'james.smith1@gmail.com' },
-      record2: { firstName: 'James', lastName: 'Smith', email: 'james.smith99@yahoo.com' },
+      record1: {
+        firstName: 'James',
+        lastName: 'Smith',
+        email: 'james.smith1@gmail.com',
+      },
+      record2: {
+        firstName: 'James',
+        lastName: 'Smith',
+        email: 'james.smith99@yahoo.com',
+      },
     },
     // One field match, rest different
     {
-      record1: { firstName: 'William', lastName: 'Taylor', email: 'wt@email.com', phone: '555-1111' },
-      record2: { firstName: 'William', lastName: 'Jones', email: 'wj@other.com', phone: '555-2222' },
+      record1: {
+        firstName: 'William',
+        lastName: 'Taylor',
+        email: 'wt@email.com',
+        phone: '555-1111',
+      },
+      record2: {
+        firstName: 'William',
+        lastName: 'Jones',
+        email: 'wj@other.com',
+        phone: '555-2222',
+      },
     },
     // Near-miss (very similar but different people)
     {
-      record1: { firstName: 'Elizabeth', lastName: 'Anderson', email: 'e.anderson@mail.com' },
-      record2: { firstName: 'Elisabeth', lastName: 'Andersen', email: 'ea@different.org' },
+      record1: {
+        firstName: 'Elizabeth',
+        lastName: 'Anderson',
+        email: 'e.anderson@mail.com',
+      },
+      record2: {
+        firstName: 'Elisabeth',
+        lastName: 'Andersen',
+        email: 'ea@different.org',
+      },
     },
   ]
 
@@ -154,11 +294,19 @@ async function modelTrainingExample() {
   console.log('Step 2: Converting to training examples...')
 
   const matchExamples: TrainingExample<Customer>[] = matches.map((pair) =>
-    createTrainingExample({ record1: pair.record1, record2: pair.record2 }, 'match', 'synthetic')
+    createTrainingExample(
+      { record1: pair.record1, record2: pair.record2 },
+      'match',
+      'synthetic'
+    )
   )
 
   const nonMatchExamples: TrainingExample<Customer>[] = nonMatches.map((pair) =>
-    createTrainingExample({ record1: pair.record1, record2: pair.record2 }, 'nonMatch', 'synthetic')
+    createTrainingExample(
+      { record1: pair.record1, record2: pair.record2 },
+      'nonMatch',
+      'synthetic'
+    )
   )
 
   const allExamples = [...matchExamples, ...nonMatchExamples]
@@ -187,11 +335,23 @@ async function modelTrainingExample() {
 
   const featureExtractor = new FeatureExtractor<Customer>({
     fields: [
-      { field: 'firstName', extractors: ['jaroWinkler', 'soundex', 'exact'], weight: 1.2 },
-      { field: 'lastName', extractors: ['jaroWinkler', 'soundex', 'exact'], weight: 1.2 },
+      {
+        field: 'firstName',
+        extractors: ['jaroWinkler', 'soundex', 'exact'],
+        weight: 1.2,
+      },
+      {
+        field: 'lastName',
+        extractors: ['jaroWinkler', 'soundex', 'exact'],
+        weight: 1.2,
+      },
       { field: 'email', extractors: ['exact', 'levenshtein'], weight: 1.5 },
       { field: 'phone', extractors: ['exact', 'levenshtein'], weight: 1.3 },
-      { field: 'address', extractors: ['jaroWinkler', 'levenshtein'], weight: 0.8 },
+      {
+        field: 'address',
+        extractors: ['jaroWinkler', 'levenshtein'],
+        weight: 0.8,
+      },
       { field: 'city', extractors: ['jaroWinkler', 'exact'], weight: 0.6 },
       { field: 'postalCode', extractors: ['exact'], weight: 0.7 },
     ],
@@ -199,7 +359,9 @@ async function modelTrainingExample() {
   })
 
   console.log(`  Feature count: ${featureExtractor.getFeatureCount()}`)
-  console.log(`  Feature names: ${featureExtractor.getFeatureNames().slice(0, 5).join(', ')}...`)
+  console.log(
+    `  Feature names: ${featureExtractor.getFeatureNames().slice(0, 5).join(', ')}...`
+  )
   console.log()
 
   // Step 5: Configure trainer
@@ -235,7 +397,9 @@ async function modelTrainingExample() {
   console.log(`  Max iterations: ${trainingConfig.maxIterations}`)
   console.log(`  Regularization: ${trainingConfig.regularization}`)
   console.log(`  Validation split: ${trainingConfig.validationSplit}`)
-  console.log(`  Early stopping patience: ${trainingConfig.earlyStoppingPatience}`)
+  console.log(
+    `  Early stopping patience: ${trainingConfig.earlyStoppingPatience}`
+  )
   console.log()
 
   // Step 6: Train the model
@@ -247,10 +411,16 @@ async function modelTrainingExample() {
   console.log(`  Training time: ${trainingResult.trainingTimeMs.toFixed(2)}ms`)
   console.log(`  Early stopped: ${trainingResult.earlyStopped}`)
   console.log(`  Final iteration: ${trainingResult.finalMetrics.iteration}`)
-  console.log(`  Final training loss: ${trainingResult.finalMetrics.trainingLoss.toFixed(4)}`)
-  console.log(`  Final training accuracy: ${(trainingResult.finalMetrics.trainingAccuracy * 100).toFixed(1)}%`)
+  console.log(
+    `  Final training loss: ${trainingResult.finalMetrics.trainingLoss.toFixed(4)}`
+  )
+  console.log(
+    `  Final training accuracy: ${(trainingResult.finalMetrics.trainingAccuracy * 100).toFixed(1)}%`
+  )
   if (trainingResult.finalMetrics.validationAccuracy !== undefined) {
-    console.log(`  Final validation accuracy: ${(trainingResult.finalMetrics.validationAccuracy * 100).toFixed(1)}%`)
+    console.log(
+      `  Final validation accuracy: ${(trainingResult.finalMetrics.validationAccuracy * 100).toFixed(1)}%`
+    )
   }
   console.log()
 
@@ -275,25 +445,45 @@ async function modelTrainingExample() {
     console.log('Step 8: Testing trained model on new data...')
 
     const testMatch: RecordPair<Customer> = {
-      record1: { firstName: 'Christopher', lastName: 'Lee', email: 'chris.lee@email.com' },
-      record2: { firstName: 'Chris', lastName: 'Lee', email: 'chris.lee@email.com' },
+      record1: {
+        firstName: 'Christopher',
+        lastName: 'Lee',
+        email: 'chris.lee@email.com',
+      },
+      record2: {
+        firstName: 'Chris',
+        lastName: 'Lee',
+        email: 'chris.lee@email.com',
+      },
     }
 
     const testNonMatch: RecordPair<Customer> = {
-      record1: { firstName: 'Christopher', lastName: 'Lee', email: 'chris.lee@email.com' },
-      record2: { firstName: 'Christopher', lastName: 'Wong', email: 'cwong@other.org' },
+      record1: {
+        firstName: 'Christopher',
+        lastName: 'Lee',
+        email: 'chris.lee@email.com',
+      },
+      record2: {
+        firstName: 'Christopher',
+        lastName: 'Wong',
+        email: 'cwong@other.org',
+      },
     }
 
     const matchPrediction = await classifier.predict(testMatch)
     const nonMatchPrediction = await classifier.predict(testNonMatch)
 
     console.log('  Test match pair (Chris/Christopher Lee):')
-    console.log(`    Probability: ${(matchPrediction.probability * 100).toFixed(1)}%`)
+    console.log(
+      `    Probability: ${(matchPrediction.probability * 100).toFixed(1)}%`
+    )
     console.log(`    Classification: ${matchPrediction.classification}`)
     console.log()
 
     console.log('  Test non-match pair (Lee vs Wong):')
-    console.log(`    Probability: ${(nonMatchPrediction.probability * 100).toFixed(1)}%`)
+    console.log(
+      `    Probability: ${(nonMatchPrediction.probability * 100).toFixed(1)}%`
+    )
     console.log(`    Classification: ${nonMatchPrediction.classification}`)
     console.log()
 
@@ -346,12 +536,16 @@ async function modelTrainingExample() {
   console.log(`  Total feedback: ${feedbackStats.total}`)
   console.log(`  Matches: ${feedbackStats.byLabel.match}`)
   console.log(`  Non-matches: ${feedbackStats.byLabel.nonMatch}`)
-  console.log(`  Avg confidence: ${(feedbackStats.avgConfidence * 100).toFixed(1)}%`)
+  console.log(
+    `  Avg confidence: ${(feedbackStats.avgConfidence * 100).toFixed(1)}%`
+  )
   console.log()
 
   // Export feedback as training dataset
   const feedbackDataset = collector.exportAsTrainingDataset({ balance: true })
-  console.log(`Exported ${feedbackDataset.examples.length} examples from feedback`)
+  console.log(
+    `Exported ${feedbackDataset.examples.length} examples from feedback`
+  )
   console.log()
 
   // Step 11: Merging datasets
@@ -371,7 +565,9 @@ async function modelTrainingExample() {
     const balanced = balanceDataset(combinedDataset, 42)
     const balancedStats = getDatasetStats(balanced)
     console.log(`  After balancing: ${balancedStats.totalExamples} examples`)
-    console.log(`  Match ratio: ${(balancedStats.matchRatio * 100).toFixed(1)}%`)
+    console.log(
+      `  Match ratio: ${(balancedStats.matchRatio * 100).toFixed(1)}%`
+    )
     console.log(`  Is balanced: ${balancedStats.isBalanced}`)
   }
   console.log()

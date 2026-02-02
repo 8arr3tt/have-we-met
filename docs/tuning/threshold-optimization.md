@@ -31,12 +31,12 @@ Score: 0 ────────────[noMatch]────────�
 
 ### Impact of Threshold Choices
 
-| Threshold Setting | Effect |
-|-------------------|--------|
-| Lower noMatch | More candidates reach review (higher recall, more work) |
-| Higher noMatch | Fewer candidates reach review (lower recall, less work) |
-| Lower definiteMatch | More auto-accepted matches (higher throughput, more false positives) |
-| Higher definiteMatch | Fewer auto-accepted matches (more review, fewer false positives) |
+| Threshold Setting    | Effect                                                               |
+| -------------------- | -------------------------------------------------------------------- |
+| Lower noMatch        | More candidates reach review (higher recall, more work)              |
+| Higher noMatch       | Fewer candidates reach review (lower recall, less work)              |
+| Lower definiteMatch  | More auto-accepted matches (higher throughput, more false positives) |
+| Higher definiteMatch | Fewer auto-accepted matches (more review, fewer false positives)     |
 
 ---
 
@@ -46,33 +46,33 @@ Score: 0 ────────────[noMatch]────────�
 
 Based on Febrl dataset (1,000 records) with Soundex blocking and Jaro-Winkler matching:
 
-| Threshold | Precision | Recall | F1 Score | Use Case Fit |
-|-----------|-----------|--------|----------|--------------|
-| 0.50 | 78.23% | 96.42% | 86.38% | High-recall discovery |
-| 0.55 | 82.45% | 95.18% | 88.35% | Discovery with some filtering |
-| 0.60 | 85.67% | 93.24% | 89.29% | Balanced recall |
-| 0.65 | 89.12% | 91.05% | 90.07% | Balanced (slightly precision-favored) |
-| **0.67** | **90.42%** | **90.18%** | **90.30%** | **Optimal F1** |
-| 0.70 | 92.31% | 87.93% | 90.07% | Balanced (precision-favored) |
-| 0.75 | 94.56% | 83.42% | 88.64% | Precision-focused |
-| 0.80 | 96.23% | 76.89% | 85.47% | High-precision required |
-| 0.85 | 97.45% | 68.24% | 80.28% | Very high precision |
-| 0.90 | 98.12% | 54.67% | 70.21% | Critical precision only |
-| 0.95 | 99.01% | 38.42% | 55.35% | Extreme precision (not recommended) |
+| Threshold | Precision  | Recall     | F1 Score   | Use Case Fit                          |
+| --------- | ---------- | ---------- | ---------- | ------------------------------------- |
+| 0.50      | 78.23%     | 96.42%     | 86.38%     | High-recall discovery                 |
+| 0.55      | 82.45%     | 95.18%     | 88.35%     | Discovery with some filtering         |
+| 0.60      | 85.67%     | 93.24%     | 89.29%     | Balanced recall                       |
+| 0.65      | 89.12%     | 91.05%     | 90.07%     | Balanced (slightly precision-favored) |
+| **0.67**  | **90.42%** | **90.18%** | **90.30%** | **Optimal F1**                        |
+| 0.70      | 92.31%     | 87.93%     | 90.07%     | Balanced (precision-favored)          |
+| 0.75      | 94.56%     | 83.42%     | 88.64%     | Precision-focused                     |
+| 0.80      | 96.23%     | 76.89%     | 85.47%     | High-precision required               |
+| 0.85      | 97.45%     | 68.24%     | 80.28%     | Very high precision                   |
+| 0.90      | 98.12%     | 54.67%     | 70.21%     | Critical precision only               |
+| 0.95      | 99.01%     | 38.42%     | 55.35%     | Extreme precision (not recommended)   |
 
 ### Restaurant Dataset Results
 
 For business entity matching (600 records) with city blocking:
 
-| Threshold | Precision | Recall | F1 Score |
-|-----------|-----------|--------|----------|
-| 0.55 | 78.56% | 92.86% | 85.12% |
-| 0.60 | 83.21% | 90.71% | 86.80% |
-| 0.65 | 86.78% | 87.86% | 87.32% |
-| **0.67** | **88.12%** | **86.43%** | **87.27%** |
-| 0.70 | 89.28% | 84.93% | 87.05% |
-| 0.75 | 91.45% | 80.00% | 85.35% |
-| 0.80 | 93.67% | 72.14% | 81.55% |
+| Threshold | Precision  | Recall     | F1 Score   |
+| --------- | ---------- | ---------- | ---------- |
+| 0.55      | 78.56%     | 92.86%     | 85.12%     |
+| 0.60      | 83.21%     | 90.71%     | 86.80%     |
+| 0.65      | 86.78%     | 87.86%     | 87.32%     |
+| **0.67**  | **88.12%** | **86.43%** | **87.27%** |
+| 0.70      | 89.28%     | 84.93%     | 87.05%     |
+| 0.75      | 91.45%     | 80.00%     | 85.35%     |
+| 0.80      | 93.67%     | 72.14%     | 81.55%     |
 
 ### Key Findings
 
@@ -97,11 +97,13 @@ For business entity matching (600 records) with city blocking:
 ```
 
 **Expected outcomes:**
+
 - Precision: ~96%
 - Recall: ~77%
 - Most matches go to review queue
 
 **When to use:**
+
 - Patient record matching (HIPAA)
 - Financial fraud detection
 - Legal entity matching
@@ -119,11 +121,13 @@ For business entity matching (600 records) with city blocking:
 ```
 
 **Expected outcomes:**
+
 - Precision: ~90%
 - Recall: ~90%
 - Balanced review queue
 
 **When to use:**
+
 - Customer database deduplication
 - CRM data quality initiatives
 - General-purpose identity resolution
@@ -141,11 +145,13 @@ For business entity matching (600 records) with city blocking:
 ```
 
 **Expected outcomes:**
+
 - Precision: ~83%
 - Recall: ~95%
 - More auto-merging, minimal review
 
 **When to use:**
+
 - Marketing campaign deduplication
 - Lead matching
 - Customer re-engagement campaigns
@@ -163,11 +169,13 @@ For business entity matching (600 records) with city blocking:
 ```
 
 **Expected outcomes:**
+
 - Nearly all potential matches surface for review
 - Very few auto-merged (only extremely high confidence)
 - Large review queue
 
 **When to use:**
+
 - Initial data quality assessment
 - Pre-migration duplicate analysis
 - Establishing ground truth for tuning
@@ -187,8 +195,8 @@ let truePositives = 0
 let falsePositives = 0
 let falseNegatives = 0
 
-results.results.forEach(result => {
-  result.matches.forEach(match => {
+results.results.forEach((result) => {
+  result.matches.forEach((match) => {
     const isActualMatch = groundTruth.isMatch(result.record, match.candidate)
     const isPredictedMatch = match.outcome === 'definite-match'
 
@@ -200,38 +208,41 @@ results.results.forEach(result => {
 
 const precision = truePositives / (truePositives + falsePositives)
 const recall = truePositives / (truePositives + falseNegatives)
-const f1 = 2 * (precision * recall) / (precision + recall)
+const f1 = (2 * (precision * recall)) / (precision + recall)
 
 console.log({ precision, recall, f1 })
 ```
 
 ### Step 2: Identify Your Priority
 
-| If your priority is... | Optimize for... | Adjust... |
-|------------------------|-----------------|-----------|
-| Minimize false merges | Precision | Raise definiteMatch threshold |
-| Find all duplicates | Recall | Lower noMatch threshold |
-| Balance both | F1 Score | Target 0.65-0.70 range |
-| Minimize review work | Throughput | Narrow the potential-match gap |
+| If your priority is... | Optimize for... | Adjust...                      |
+| ---------------------- | --------------- | ------------------------------ |
+| Minimize false merges  | Precision       | Raise definiteMatch threshold  |
+| Find all duplicates    | Recall          | Lower noMatch threshold        |
+| Balance both           | F1 Score        | Target 0.65-0.70 range         |
+| Minimize review work   | Throughput      | Narrow the potential-match gap |
 
 ### Step 3: Generate a Threshold Curve
 
 Test multiple thresholds systematically:
 
 ```typescript
-const thresholds = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
+const thresholds = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
 
 for (const threshold of thresholds) {
   const resolver = HaveWeMet.create()
     .schema(/* ... */)
-    .matching(match => match
-      /* ... field config ... */
-      .thresholds({ noMatch: threshold * 0.3, definiteMatch: threshold })
+    .matching((match) =>
+      match
+        /* ... field config ... */
+        .thresholds({ noMatch: threshold * 0.3, definiteMatch: threshold })
     )
     .build()
 
   const metrics = calculateMetrics(resolver, sampleRecords, groundTruth)
-  console.log(`Threshold ${threshold}: P=${metrics.precision}, R=${metrics.recall}, F1=${metrics.f1}`)
+  console.log(
+    `Threshold ${threshold}: P=${metrics.precision}, R=${metrics.recall}, F1=${metrics.f1}`
+  )
 }
 ```
 
@@ -265,7 +276,9 @@ After tuning, validate on data not used for tuning:
 const tuningSet = sampleRecords.slice(0, Math.floor(sampleRecords.length * 0.7))
 
 // Validation set: 30%
-const validationSet = sampleRecords.slice(Math.floor(sampleRecords.length * 0.7))
+const validationSet = sampleRecords.slice(
+  Math.floor(sampleRecords.length * 0.7)
+)
 
 // Tune on tuningSet, then validate
 const validationMetrics = calculateMetrics(resolver, validationSet, groundTruth)
@@ -290,26 +303,26 @@ Field thresholds control the minimum similarity for a field to contribute:
 
 Based on Febrl and restaurant dataset analysis:
 
-| Field Type | Algorithm | Recommended Threshold | Rationale |
-|------------|-----------|----------------------|-----------|
-| Names (first/last) | Jaro-Winkler | 0.80-0.90 | Handles typos, nicknames |
-| Email | Exact | N/A (exact match) | Binary match |
-| Phone | Exact | N/A (exact match) | Binary match |
-| Address | Levenshtein | 0.70-0.80 | Handles abbreviations |
-| Date of Birth | Exact | N/A (exact match) | Binary match |
-| Business Name | Jaro-Winkler | 0.75-0.85 | More variation than personal names |
-| City/Postcode | Exact or Jaro-Winkler | 0.90+ | Low variation expected |
+| Field Type         | Algorithm             | Recommended Threshold | Rationale                          |
+| ------------------ | --------------------- | --------------------- | ---------------------------------- |
+| Names (first/last) | Jaro-Winkler          | 0.80-0.90             | Handles typos, nicknames           |
+| Email              | Exact                 | N/A (exact match)     | Binary match                       |
+| Phone              | Exact                 | N/A (exact match)     | Binary match                       |
+| Address            | Levenshtein           | 0.70-0.80             | Handles abbreviations              |
+| Date of Birth      | Exact                 | N/A (exact match)     | Binary match                       |
+| Business Name      | Jaro-Winkler          | 0.75-0.85             | More variation than personal names |
+| City/Postcode      | Exact or Jaro-Winkler | 0.90+                 | Low variation expected             |
 
 ### Field Threshold Impact
 
 Setting field thresholds affects what contributes to scores:
 
-| Field Threshold | Effect |
-|-----------------|--------|
-| No threshold | Any similarity > 0 contributes |
-| 0.70 | Only 70%+ similarity contributes |
-| 0.85 | Only 85%+ similarity contributes |
-| 0.95 | Only near-exact matches contribute |
+| Field Threshold | Effect                             |
+| --------------- | ---------------------------------- |
+| No threshold    | Any similarity > 0 contributes     |
+| 0.70            | Only 70%+ similarity contributes   |
+| 0.85            | Only 85%+ similarity contributes   |
+| 0.95            | Only near-exact matches contribute |
 
 **Example: Impact on a name comparison**
 
@@ -336,22 +349,22 @@ With threshold 0.85: Does NOT contribute (score = 0)
 
 Monitor these metrics in production:
 
-| Metric | Target | Action if Off-Target |
-|--------|--------|---------------------|
-| Auto-merge rate | 40-60% | Adjust definiteMatch threshold |
-| Review queue size | Manageable volume | Widen/narrow threshold gap |
-| Review accept rate | >70% | Lower definiteMatch (too conservative) |
-| Review reject rate | >30% | Raise definiteMatch (too aggressive) |
-| False positive reports | <5% | Raise thresholds |
-| Missed match reports | <5% | Lower thresholds |
+| Metric                 | Target            | Action if Off-Target                   |
+| ---------------------- | ----------------- | -------------------------------------- |
+| Auto-merge rate        | 40-60%            | Adjust definiteMatch threshold         |
+| Review queue size      | Manageable volume | Widen/narrow threshold gap             |
+| Review accept rate     | >70%              | Lower definiteMatch (too conservative) |
+| Review reject rate     | >30%              | Raise definiteMatch (too aggressive)   |
+| False positive reports | <5%               | Raise thresholds                       |
+| Missed match reports   | <5%               | Lower thresholds                       |
 
 ### Establishing Alerting Thresholds
 
 ```typescript
 interface ThresholdMonitor {
   // Alert if metrics deviate significantly
-  autoMergeRate: { min: 0.30, max: 0.70 }
-  reviewAcceptRate: { min: 0.60, max: 0.95 }
+  autoMergeRate: { min: 0.3; max: 0.7 }
+  reviewAcceptRate: { min: 0.6; max: 0.95 }
   dailyReviewVolume: { max: 1000 }
 }
 
@@ -391,12 +404,12 @@ When adjusting thresholds in production:
 
 ### Quick Reference
 
-| Use Case | noMatch | definiteMatch | Expected Precision | Expected Recall |
-|----------|---------|---------------|-------------------|-----------------|
-| Healthcare/Finance | 0.25 | 0.80 | ~96% | ~77% |
-| Balanced | 0.20 | 0.67 | ~90% | ~90% |
-| Marketing | 0.15 | 0.55 | ~83% | ~95% |
-| Audit/Analysis | 0.10 | 0.90 | Variable | Variable |
+| Use Case           | noMatch | definiteMatch | Expected Precision | Expected Recall |
+| ------------------ | ------- | ------------- | ------------------ | --------------- |
+| Healthcare/Finance | 0.25    | 0.80          | ~96%               | ~77%            |
+| Balanced           | 0.20    | 0.67          | ~90%               | ~90%            |
+| Marketing          | 0.15    | 0.55          | ~83%               | ~95%            |
+| Audit/Analysis     | 0.10    | 0.90          | Variable           | Variable        |
 
 ### Key Takeaways
 

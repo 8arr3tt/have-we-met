@@ -32,15 +32,31 @@ import { StandardBlockingStrategy } from '../src/core/blocking/strategies/standa
 import { soundexTransform, firstLetter } from '../src/core/blocking/transforms'
 
 // Generate datasets of various sizes
-const smallDataset = generateSyntheticFebrlData({ recordCount: 500, duplicateRate: 0.5, corruptionProbability: 0.3 })
-const mediumDataset = generateSyntheticFebrlData({ recordCount: 1000, duplicateRate: 0.5, corruptionProbability: 0.3 })
-const largeDataset = generateSyntheticFebrlData({ recordCount: 2000, duplicateRate: 0.5, corruptionProbability: 0.3 })
+const smallDataset = generateSyntheticFebrlData({
+  recordCount: 500,
+  duplicateRate: 0.5,
+  corruptionProbability: 0.3,
+})
+const mediumDataset = generateSyntheticFebrlData({
+  recordCount: 1000,
+  duplicateRate: 0.5,
+  corruptionProbability: 0.3,
+})
+const largeDataset = generateSyntheticFebrlData({
+  recordCount: 2000,
+  duplicateRate: 0.5,
+  corruptionProbability: 0.3,
+})
 
 // Matching function using Jaro-Winkler for names
 const jaroWinklerMatcher = createMatchingFunction<FebrlRecord>([
   { field: 'given_name', comparator: (a, b) => jaroWinkler(a, b), weight: 15 },
   { field: 'surname', comparator: (a, b) => jaroWinkler(a, b), weight: 20 },
-  { field: 'date_of_birth', comparator: (a, b) => exactMatch(a, b), weight: 15 },
+  {
+    field: 'date_of_birth',
+    comparator: (a, b) => exactMatch(a, b),
+    weight: 15,
+  },
   { field: 'soc_sec_id', comparator: (a, b) => exactMatch(a, b), weight: 25 },
   { field: 'postcode', comparator: (a, b) => exactMatch(a, b), weight: 10 },
   { field: 'address_1', comparator: (a, b) => levenshtein(a, b), weight: 10 },
@@ -51,7 +67,11 @@ const jaroWinklerMatcher = createMatchingFunction<FebrlRecord>([
 const levenshteinMatcher = createMatchingFunction<FebrlRecord>([
   { field: 'given_name', comparator: (a, b) => levenshtein(a, b), weight: 15 },
   { field: 'surname', comparator: (a, b) => levenshtein(a, b), weight: 20 },
-  { field: 'date_of_birth', comparator: (a, b) => exactMatch(a, b), weight: 15 },
+  {
+    field: 'date_of_birth',
+    comparator: (a, b) => exactMatch(a, b),
+    weight: 15,
+  },
   { field: 'soc_sec_id', comparator: (a, b) => exactMatch(a, b), weight: 25 },
   { field: 'postcode', comparator: (a, b) => exactMatch(a, b), weight: 10 },
   { field: 'address_1', comparator: (a, b) => levenshtein(a, b), weight: 10 },
@@ -64,7 +84,11 @@ const soundexMatcher = createMatchingFunction<FebrlRecord>([
   { field: 'surname', comparator: (a, b) => soundex(a, b), weight: 15 },
   { field: 'given_name', comparator: (a, b) => jaroWinkler(a, b), weight: 10 },
   { field: 'surname', comparator: (a, b) => jaroWinkler(a, b), weight: 15 },
-  { field: 'date_of_birth', comparator: (a, b) => exactMatch(a, b), weight: 15 },
+  {
+    field: 'date_of_birth',
+    comparator: (a, b) => exactMatch(a, b),
+    weight: 15,
+  },
   { field: 'soc_sec_id', comparator: (a, b) => exactMatch(a, b), weight: 20 },
   { field: 'postcode', comparator: (a, b) => exactMatch(a, b), weight: 10 },
   { field: 'address_1', comparator: (a, b) => levenshtein(a, b), weight: 5 },
@@ -81,7 +105,9 @@ function soundexBlocking(records: FebrlRecord[]): Map<string, FebrlRecord[]> {
 }
 
 // Blocking function using first letter of surname
-function firstLetterBlocking(records: FebrlRecord[]): Map<string, FebrlRecord[]> {
+function firstLetterBlocking(
+  records: FebrlRecord[]
+): Map<string, FebrlRecord[]> {
   const strategy = new StandardBlockingStrategy<FebrlRecord>({
     field: 'surname',
     transform: firstLetter,
@@ -154,7 +180,11 @@ describe('Febrl Benchmarks - Blocking Strategies', () => {
 
   bench('First letter blocking (500 records)', async () => {
     await runBenchmark(
-      { name: 'First Letter Blocking (500)', warmupRuns: 0, measurementRuns: 1 },
+      {
+        name: 'First Letter Blocking (500)',
+        warmupRuns: 0,
+        measurementRuns: 1,
+      },
       {
         dataset: smallDataset,
         matchingFn: jaroWinklerMatcher,
@@ -227,9 +257,15 @@ export async function runFebrlBenchmarks(): Promise<{
 
   // Analyze the datasets
   console.log('Dataset Analysis:')
-  console.log(`Small dataset: ${smallDataset.records.length} records, ${smallDataset.truePairs?.length} true pairs`)
-  console.log(`Medium dataset: ${mediumDataset.records.length} records, ${mediumDataset.truePairs?.length} true pairs`)
-  console.log(`Large dataset: ${largeDataset.records.length} records, ${largeDataset.truePairs?.length} true pairs`)
+  console.log(
+    `Small dataset: ${smallDataset.records.length} records, ${smallDataset.truePairs?.length} true pairs`
+  )
+  console.log(
+    `Medium dataset: ${mediumDataset.records.length} records, ${mediumDataset.truePairs?.length} true pairs`
+  )
+  console.log(
+    `Large dataset: ${largeDataset.records.length} records, ${largeDataset.truePairs?.length} true pairs`
+  )
   console.log('')
 
   const analysis = analyzeFebrlDataset(smallDataset)

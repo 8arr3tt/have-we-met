@@ -3,7 +3,12 @@
  * Provides utilities for loading and working with Fodors-Zagat style restaurant benchmark datasets.
  */
 
-import { parseCSV, createLoadedDataset, type LoadedDataset, type LabeledPair } from '../../infrastructure/dataset-loader'
+import {
+  parseCSV,
+  createLoadedDataset,
+  type LoadedDataset,
+  type LabeledPair,
+} from '../../infrastructure/dataset-loader'
 
 export interface RestaurantRecord {
   id: string
@@ -72,46 +77,136 @@ export function generateSyntheticRestaurantData(
   const startTime = performance.now()
 
   const restaurantNames = [
-    "joe's crab shack", "olive garden", "red lobster", "applebee's",
-    "chili's grill & bar", "outback steakhouse", "the cheesecake factory",
-    "buffalo wild wings", "texas roadhouse", "cracker barrel",
-    "ihop", "denny's", "waffle house", "panera bread", "chipotle",
-    "five guys", "shake shack", "in-n-out burger", "whataburger",
-    "panda express", "p.f. chang's", "benihana", "nobu", "masa",
-    "le bernardin", "eleven madison park", "per se", "alinea",
-    "french laundry", "noma", "el bulli", "osteria francescana",
-    "the fat duck", "central", "gaggan", "mirazur", "geranium",
-    "asador etxebarri", "mugaritz", "steirereck", "tickets",
-    "momofuku ko", "blue hill", "gramercy tavern", "daniel",
+    "joe's crab shack",
+    'olive garden',
+    'red lobster',
+    "applebee's",
+    "chili's grill & bar",
+    'outback steakhouse',
+    'the cheesecake factory',
+    'buffalo wild wings',
+    'texas roadhouse',
+    'cracker barrel',
+    'ihop',
+    "denny's",
+    'waffle house',
+    'panera bread',
+    'chipotle',
+    'five guys',
+    'shake shack',
+    'in-n-out burger',
+    'whataburger',
+    'panda express',
+    "p.f. chang's",
+    'benihana',
+    'nobu',
+    'masa',
+    'le bernardin',
+    'eleven madison park',
+    'per se',
+    'alinea',
+    'french laundry',
+    'noma',
+    'el bulli',
+    'osteria francescana',
+    'the fat duck',
+    'central',
+    'gaggan',
+    'mirazur',
+    'geranium',
+    'asador etxebarri',
+    'mugaritz',
+    'steirereck',
+    'tickets',
+    'momofuku ko',
+    'blue hill',
+    'gramercy tavern',
+    'daniel',
   ]
 
   const streetNames = [
-    'main street', 'broadway', 'park avenue', 'first avenue', 'second street',
-    'oak lane', 'maple drive', 'elm street', 'washington blvd', 'market street',
-    'high street', 'church road', 'mill lane', 'river road', 'lake drive',
-    'sunset boulevard', 'hollywood blvd', 'wilshire blvd', 'rodeo drive',
-    'fifth avenue', 'madison avenue', 'lexington ave', 'michigan avenue',
+    'main street',
+    'broadway',
+    'park avenue',
+    'first avenue',
+    'second street',
+    'oak lane',
+    'maple drive',
+    'elm street',
+    'washington blvd',
+    'market street',
+    'high street',
+    'church road',
+    'mill lane',
+    'river road',
+    'lake drive',
+    'sunset boulevard',
+    'hollywood blvd',
+    'wilshire blvd',
+    'rodeo drive',
+    'fifth avenue',
+    'madison avenue',
+    'lexington ave',
+    'michigan avenue',
   ]
 
   const cities = [
-    'new york', 'los angeles', 'chicago', 'houston', 'phoenix',
-    'philadelphia', 'san antonio', 'san diego', 'dallas', 'san jose',
-    'austin', 'jacksonville', 'fort worth', 'columbus', 'charlotte',
-    'san francisco', 'indianapolis', 'seattle', 'denver', 'boston',
-    'las vegas', 'portland', 'miami', 'atlanta', 'minneapolis',
+    'new york',
+    'los angeles',
+    'chicago',
+    'houston',
+    'phoenix',
+    'philadelphia',
+    'san antonio',
+    'san diego',
+    'dallas',
+    'san jose',
+    'austin',
+    'jacksonville',
+    'fort worth',
+    'columbus',
+    'charlotte',
+    'san francisco',
+    'indianapolis',
+    'seattle',
+    'denver',
+    'boston',
+    'las vegas',
+    'portland',
+    'miami',
+    'atlanta',
+    'minneapolis',
   ]
 
   const cuisineTypes = [
-    'american', 'italian', 'mexican', 'chinese', 'japanese',
-    'indian', 'thai', 'french', 'mediterranean', 'steakhouse',
-    'seafood', 'bbq', 'pizza', 'burger', 'sushi',
-    'vietnamese', 'korean', 'greek', 'spanish', 'middle eastern',
+    'american',
+    'italian',
+    'mexican',
+    'chinese',
+    'japanese',
+    'indian',
+    'thai',
+    'french',
+    'mediterranean',
+    'steakhouse',
+    'seafood',
+    'bbq',
+    'pizza',
+    'burger',
+    'sushi',
+    'vietnamese',
+    'korean',
+    'greek',
+    'spanish',
+    'middle eastern',
   ]
 
   const priceClasses = ['$', '$$', '$$$', '$$$$']
 
-  const randomChoice = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
-  const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
+  const randomChoice = <T>(arr: T[]): T =>
+    arr[Math.floor(Math.random() * arr.length)]
+  const randomInt = (min: number, max: number) =>
+    Math.floor(Math.random() * (max - min + 1)) + min
 
   const generatePhone = (): string => {
     const area = randomInt(200, 999)
@@ -152,12 +247,12 @@ export function generateSyntheticRestaurantData(
         break
       case 3: // Abbreviation changes
         const abbrevs: Record<string, string[]> = {
-          'street': ['st', 'st.', 'str'],
-          'avenue': ['ave', 'ave.', 'av'],
-          'boulevard': ['blvd', 'blvd.', 'blv'],
-          'drive': ['dr', 'dr.'],
-          'road': ['rd', 'rd.'],
-          'lane': ['ln', 'ln.'],
+          street: ['st', 'st.', 'str'],
+          avenue: ['ave', 'ave.', 'av'],
+          boulevard: ['blvd', 'blvd.', 'blv'],
+          drive: ['dr', 'dr.'],
+          road: ['rd', 'rd.'],
+          lane: ['ln', 'ln.'],
         }
         for (const [full, shorts] of Object.entries(abbrevs)) {
           if (s.toLowerCase().includes(full)) {
@@ -207,14 +302,14 @@ export function generateSyntheticRestaurantData(
 
     // Semantic variations
     const synonyms: Record<string, string[]> = {
-      'american': ['new american', 'traditional american', 'usa'],
-      'steakhouse': ['steak', 'steaks', 'american steakhouse'],
-      'italian': ['ital', 'tuscan', 'roman'],
-      'mexican': ['tex-mex', 'mex', 'latin'],
-      'chinese': ['cantonese', 'szechuan', 'asian'],
-      'japanese': ['sushi', 'asian', 'ramen'],
-      'seafood': ['fish', 'oyster bar', 'shellfish'],
-      'bbq': ['barbecue', 'barbeque', 'smokehouse'],
+      american: ['new american', 'traditional american', 'usa'],
+      steakhouse: ['steak', 'steaks', 'american steakhouse'],
+      italian: ['ital', 'tuscan', 'roman'],
+      mexican: ['tex-mex', 'mex', 'latin'],
+      chinese: ['cantonese', 'szechuan', 'asian'],
+      japanese: ['sushi', 'asian', 'ramen'],
+      seafood: ['fish', 'oyster bar', 'shellfish'],
+      bbq: ['barbecue', 'barbeque', 'smokehouse'],
     }
 
     if (synonyms[type.toLowerCase()]) {
@@ -248,9 +343,13 @@ export function generateSyntheticRestaurantData(
   for (const original of records.slice(0, numOriginals)) {
     if (records.length >= recordCount) break
 
-    const dupCount = duplicateRate >= 1
-      ? Math.floor(duplicateRate) + (Math.random() < duplicateRate % 1 ? 1 : 0)
-      : (Math.random() < duplicateRate ? 1 : 0)
+    const dupCount =
+      duplicateRate >= 1
+        ? Math.floor(duplicateRate) +
+          (Math.random() < duplicateRate % 1 ? 1 : 0)
+        : Math.random() < duplicateRate
+          ? 1
+          : 0
 
     for (let d = 0; d < dupCount && records.length < recordCount; d++) {
       const dupId = `rest-${dupIndex}-dup-${d}`
@@ -263,7 +362,10 @@ export function generateSyntheticRestaurantData(
         city: corruptString(original.city, corruptionProbability * 0.3), // Cities less likely to be corrupted
         phone: corruptPhone(original.phone, corruptionProbability),
         type: corruptType(original.type, corruptionProbability * 0.5),
-        class: Math.random() > corruptionProbability ? original.class : randomChoice(priceClasses),
+        class:
+          Math.random() > corruptionProbability
+            ? original.class
+            : randomChoice(priceClasses),
         source: 'synthetic',
       }
       records.push(duplicate)
@@ -297,10 +399,10 @@ export function createRestaurantSubset(
   const startTime = performance.now()
 
   const records = dataset.records.slice(0, maxRecords)
-  const recordIds = new Set(records.map(r => r.id))
+  const recordIds = new Set(records.map((r) => r.id))
 
   const pairs = dataset.truePairs?.filter(
-    p => recordIds.has(String(p.id1)) && recordIds.has(String(p.id2))
+    (p) => recordIds.has(String(p.id1)) && recordIds.has(String(p.id2))
   )
 
   const loadTimeMs = performance.now() - startTime
@@ -317,7 +419,9 @@ export function createRestaurantSubset(
 /**
  * Gets field statistics from a restaurant dataset.
  */
-export function analyzeRestaurantDataset(dataset: LoadedDataset<RestaurantRecord>): {
+export function analyzeRestaurantDataset(
+  dataset: LoadedDataset<RestaurantRecord>
+): {
   nullRates: Record<string, number>
   uniqueValues: Record<string, number>
   avgFieldLength: Record<string, number>
@@ -331,15 +435,16 @@ export function analyzeRestaurantDataset(dataset: LoadedDataset<RestaurantRecord
   const n = dataset.records.length
 
   for (const field of fields) {
-    const values = dataset.records.map(r => r[field])
-    const nonNull = values.filter(v => v != null && v !== '')
+    const values = dataset.records.map((r) => r[field])
+    const nonNull = values.filter((v) => v != null && v !== '')
     const unique = new Set(nonNull)
 
     nullRates[field] = (n - nonNull.length) / n
     uniqueValues[field] = unique.size
-    avgFieldLength[field] = nonNull.length > 0
-      ? nonNull.reduce((sum, v) => sum + String(v).length, 0) / nonNull.length
-      : 0
+    avgFieldLength[field] =
+      nonNull.length > 0
+        ? nonNull.reduce((sum, v) => sum + String(v).length, 0) / nonNull.length
+        : 0
   }
 
   return { nullRates, uniqueValues, avgFieldLength }
@@ -369,10 +474,7 @@ export function getDefaultRestaurantBlockingConfig(): Array<{
   fields: Array<keyof RestaurantRecord>
   transform?: 'firstLetter' | 'soundex' | 'exact'
 }> {
-  return [
-    { fields: ['city'] },
-    { fields: ['name'], transform: 'firstLetter' },
-  ]
+  return [{ fields: ['city'] }, { fields: ['name'], transform: 'firstLetter' }]
 }
 
 /**

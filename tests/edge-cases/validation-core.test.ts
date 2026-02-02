@@ -35,7 +35,9 @@ describe('Validation Utilities', () => {
 
     it('should throw error for non-number', () => {
       // @ts-expect-error - testing invalid input
-      expect(() => requirePositive('10', 'value')).toThrow(InvalidParameterError)
+      expect(() => requirePositive('10', 'value')).toThrow(
+        InvalidParameterError
+      )
     })
 
     it('should accept positive numbers', () => {
@@ -144,7 +146,9 @@ describe('Validation Utilities', () => {
     })
 
     it('should throw error for array', () => {
-      expect(() => requirePlainObject([], 'config')).toThrow(InvalidParameterError)
+      expect(() => requirePlainObject([], 'config')).toThrow(
+        InvalidParameterError
+      )
     })
 
     it('should throw error for primitive', () => {
@@ -169,7 +173,9 @@ describe('Validation Utilities', () => {
       expect(() => requireFunction('not a function', 'callback')).toThrow(
         InvalidParameterError
       )
-      expect(() => requireFunction({}, 'callback')).toThrow(InvalidParameterError)
+      expect(() => requireFunction({}, 'callback')).toThrow(
+        InvalidParameterError
+      )
       expect(() => requireFunction(null, 'callback')).toThrow(
         InvalidParameterError
       )

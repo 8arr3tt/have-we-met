@@ -27,7 +27,7 @@ import type { DatabaseAdapter } from '../adapters/types'
  */
 export type TransformFunction<TInput, TOutput> = (
   input: TInput,
-  fieldName: keyof TOutput,
+  fieldName: keyof TOutput
 ) => TOutput[keyof TOutput]
 
 /**
@@ -415,7 +415,7 @@ export class ConsolidationError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly details?: Record<string, unknown>,
+    public readonly details?: Record<string, unknown>
   ) {
     super(message)
     this.name = 'ConsolidationError'

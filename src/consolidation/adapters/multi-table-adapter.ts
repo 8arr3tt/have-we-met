@@ -223,20 +223,20 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
       throw new ConsolidationError(
         'At least one source table configuration is required',
         'INVALID_CONFIG',
-        { providedSources: config.sources?.length || 0 },
+        { providedSources: config.sources?.length || 0 }
       )
     }
 
     // Check for duplicate source IDs
     const sourceIds = config.sources.map((s) => s.sourceId)
     const duplicates = sourceIds.filter(
-      (id, index) => sourceIds.indexOf(id) !== index,
+      (id, index) => sourceIds.indexOf(id) !== index
     )
     if (duplicates.length > 0) {
       throw new ConsolidationError(
         'Duplicate source IDs found',
         'DUPLICATE_SOURCE_IDS',
-        { duplicates },
+        { duplicates }
       )
     }
 
@@ -260,7 +260,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    * @returns Source configuration or undefined if not found
    */
   getSource(
-    sourceId: string,
+    sourceId: string
   ): SourceTableConfig<Record<string, unknown>, TOutput> | undefined {
     return this.sources.get(sourceId)
   }
@@ -275,14 +275,14 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    */
   async loadFromSource(
     sourceId: string,
-    options?: QueryOptions,
+    options?: QueryOptions
   ): Promise<Array<Record<string, unknown>>> {
     const source = this.sources.get(sourceId)
     if (!source) {
       throw new ConsolidationError(
         `Source '${sourceId}' not found`,
         'SOURCE_NOT_FOUND',
-        { sourceId, availableSources: this.getSourceIds() },
+        { sourceId, availableSources: this.getSourceIds() }
       )
     }
 
@@ -293,7 +293,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
       throw new ConsolidationError(
         `Failed to load records from source '${sourceId}': ${error instanceof Error ? error.message : String(error)}`,
         'SOURCE_LOAD_ERROR',
-        { sourceId, error },
+        { sourceId, error }
       )
     }
   }
@@ -305,7 +305,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    * @returns Map of source ID to records array
    */
   async loadFromAllSources(
-    options?: LoadOptions,
+    options?: LoadOptions
   ): Promise<Map<string, Array<Record<string, unknown>>>> {
     const sourceIds = options?.sourceIds || this.getSourceIds()
     const results = new Map<string, Array<Record<string, unknown>>>()
@@ -331,7 +331,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
       throw new ConsolidationError(
         `Source '${sourceId}' not found`,
         'SOURCE_NOT_FOUND',
-        { sourceId },
+        { sourceId }
       )
     }
 
@@ -341,7 +341,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
       throw new ConsolidationError(
         `Failed to count records in source '${sourceId}': ${error instanceof Error ? error.message : String(error)}`,
         'SOURCE_COUNT_ERROR',
-        { sourceId, error },
+        { sourceId, error }
       )
     }
   }
@@ -372,12 +372,12 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    */
   async writeGoldenRecords(
     goldenRecords: TOutput[],
-    options?: WriteGoldenRecordsOptions,
+    options?: WriteGoldenRecordsOptions
   ): Promise<WriteGoldenRecordsResult> {
     if (!this.outputAdapter) {
       throw new ConsolidationError(
         'No output adapter configured',
-        'NO_OUTPUT_ADAPTER',
+        'NO_OUTPUT_ADAPTER'
       )
     }
 
@@ -386,7 +386,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
 
     // Helper function to perform the writes
     const performWrites = async (
-      adapter: DatabaseAdapter<TOutput>,
+      adapter: DatabaseAdapter<TOutput>
     ): Promise<WriteGoldenRecordsResult> => {
       // Write golden records
       const written = await adapter.batchInsert(goldenRecords)
@@ -396,7 +396,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
           throw new ConsolidationError(
             'Golden record missing ID after insert',
             'MISSING_GOLDEN_RECORD_ID',
-            { record: r },
+            { record: r }
           )
         }
         return id
@@ -433,13 +433,11 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    * @param mappings - Source mapping records
    * @throws ConsolidationError if source mapping not configured
    */
-  async writeSourceMappings(
-    mappings: SourceMappingRecord[],
-  ): Promise<number> {
+  async writeSourceMappings(mappings: SourceMappingRecord[]): Promise<number> {
     if (!this.sourceMappingConfig) {
       throw new ConsolidationError(
         'No source mapping configuration provided',
-        'NO_SOURCE_MAPPING_CONFIG',
+        'NO_SOURCE_MAPPING_CONFIG'
       )
     }
 
@@ -457,12 +455,12 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    * @throws ConsolidationError if source mapping not configured
    */
   async getSourceMappings(
-    _goldenRecordId: string,
+    _goldenRecordId: string
   ): Promise<SourceMappingRecord[]> {
     if (!this.sourceMappingConfig) {
       throw new ConsolidationError(
         'No source mapping configuration provided',
-        'NO_SOURCE_MAPPING_CONFIG',
+        'NO_SOURCE_MAPPING_CONFIG'
       )
     }
 
@@ -482,12 +480,12 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    */
   async getGoldenRecordId(
     _sourceId: string,
-    _sourceRecordId: string,
+    _sourceRecordId: string
   ): Promise<string | null> {
     if (!this.sourceMappingConfig) {
       throw new ConsolidationError(
         'No source mapping configuration provided',
-        'NO_SOURCE_MAPPING_CONFIG',
+        'NO_SOURCE_MAPPING_CONFIG'
       )
     }
 
@@ -504,8 +502,8 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
    */
   async transactionAcrossSources<R>(
     callback: (
-      adapters: Map<string, DatabaseAdapter<Record<string, unknown>>>,
-    ) => Promise<R>,
+      adapters: Map<string, DatabaseAdapter<Record<string, unknown>>>
+    ) => Promise<R>
   ): Promise<R> {
     // Note: Cross-database transactions are complex and database-specific
     // This is a simplified implementation that executes the callback
@@ -533,7 +531,7 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
     TInput extends Record<string, unknown>,
     TOutput extends Record<string, unknown>,
   >(
-    source: ConsolidationSource<TInput, TOutput>,
+    source: ConsolidationSource<TInput, TOutput>
   ): SourceTableConfig<TInput, TOutput> {
     return {
       sourceId: source.sourceId,
@@ -555,12 +553,10 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
   static fromConsolidationSources<TOutput extends Record<string, unknown>>(
     sources: Array<ConsolidationSource<Record<string, unknown>, TOutput>>,
     outputAdapter?: DatabaseAdapter<TOutput>,
-    sourceMappingConfig?: SourceMappingConfig,
+    sourceMappingConfig?: SourceMappingConfig
   ): MultiTableAdapter<TOutput> {
     return new MultiTableAdapter({
-      sources: sources.map((s) =>
-        MultiTableAdapter.fromConsolidationSource(s),
-      ),
+      sources: sources.map((s) => MultiTableAdapter.fromConsolidationSource(s)),
       outputAdapter,
       sourceMappingConfig,
     })
@@ -573,12 +569,12 @@ export class MultiTableAdapter<TOutput extends Record<string, unknown>> {
  * @param config - Multi-table adapter configuration
  * @returns MultiTableAdapter instance
  */
-export function createMultiTableAdapter<TOutput extends Record<string, unknown>>(
-  config: {
-    sources: Array<SourceTableConfig<Record<string, unknown>, TOutput>>
-    outputAdapter?: DatabaseAdapter<TOutput>
-    sourceMappingConfig?: SourceMappingConfig
-  },
-): MultiTableAdapter<TOutput> {
+export function createMultiTableAdapter<
+  TOutput extends Record<string, unknown>,
+>(config: {
+  sources: Array<SourceTableConfig<Record<string, unknown>, TOutput>>
+  outputAdapter?: DatabaseAdapter<TOutput>
+  sourceMappingConfig?: SourceMappingConfig
+}): MultiTableAdapter<TOutput> {
   return new MultiTableAdapter(config)
 }

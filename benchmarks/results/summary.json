@@ -16,9 +16,9 @@
       "type": "person",
       "description": "Standard benchmark for person record linkage with controllable corruption",
       "sizes": {
-        "small": { "records": 500, "truePairs": 167, "corruption": 0.30 },
-        "medium": { "records": 1000, "truePairs": 333, "corruption": 0.30 },
-        "large": { "records": 2000, "truePairs": 667, "corruption": 0.30 }
+        "small": { "records": 500, "truePairs": 167, "corruption": 0.3 },
+        "medium": { "records": 1000, "truePairs": 333, "corruption": 0.3 },
+        "large": { "records": 2000, "truePairs": 667, "corruption": 0.3 }
       },
       "bestConfig": {
         "blocking": { "strategy": "soundex", "field": "surname" },
@@ -82,7 +82,7 @@
       "name": "Jaro-Winkler",
       "bestFor": ["names", "shortStrings"],
       "precision": { "min": 0.89, "max": 0.93 },
-      "recall": { "min": 0.85, "max": 0.90 },
+      "recall": { "min": 0.85, "max": 0.9 },
       "throughput": 400000
     },
     "levenshtein": {
@@ -96,7 +96,7 @@
       "name": "Soundex+JW Hybrid",
       "bestFor": ["phoneticNames"],
       "precision": { "min": 0.93, "max": 0.93 },
-      "recall": { "min": 0.90, "max": 0.90 },
+      "recall": { "min": 0.9, "max": 0.9 },
       "throughput": 360000
     },
     "exact": {
@@ -135,7 +135,7 @@
     "postcode": {
       "name": "Postcode Blocking",
       "pairReduction": { "min": 0.97, "max": 0.999 },
-      "recallImpact": { "min": -0.15, "max": -0.10 },
+      "recallImpact": { "min": -0.15, "max": -0.1 },
       "speedup": 1307.0,
       "bestFor": ["geographicFiltering"]
     },
@@ -149,7 +149,7 @@
     "composite": {
       "name": "Composite Blocking",
       "pairReduction": { "min": 0.99, "max": 0.99 },
-      "recallImpact": { "min": -0.20, "max": -0.10 },
+      "recallImpact": { "min": -0.2, "max": -0.1 },
       "speedup": 8.5,
       "bestFor": ["highVolume", "precisionFocused"]
     }
@@ -157,21 +157,21 @@
   "thresholds": {
     "highStakes": {
       "name": "High Stakes (Medical/Financial)",
-      "range": { "min": 0.80, "max": 0.85 },
+      "range": { "min": 0.8, "max": 0.85 },
       "expectedPrecision": { "min": 0.96, "max": 0.97 },
       "expectedRecall": { "min": 0.68, "max": 0.77 },
-      "expectedF1": { "min": 0.80, "max": 0.85 }
+      "expectedF1": { "min": 0.8, "max": 0.85 }
     },
     "balanced": {
       "name": "Balanced Deduplication",
-      "range": { "min": 0.65, "max": 0.70 },
+      "range": { "min": 0.65, "max": 0.7 },
       "expectedPrecision": { "min": 0.89, "max": 0.92 },
-      "expectedRecall": { "min": 0.87, "max": 0.90 },
-      "expectedF1": { "min": 0.90, "max": 0.90 }
+      "expectedRecall": { "min": 0.87, "max": 0.9 },
+      "expectedF1": { "min": 0.9, "max": 0.9 }
     },
     "discovery": {
       "name": "Discovery/Prospecting",
-      "range": { "min": 0.55, "max": 0.60 },
+      "range": { "min": 0.55, "max": 0.6 },
       "expectedPrecision": { "min": 0.78, "max": 0.85 },
       "expectedRecall": { "min": 0.93, "max": 0.96 },
       "expectedF1": { "min": 0.86, "max": 0.89 }
@@ -240,16 +240,56 @@
     }
   },
   "fieldWeights": {
-    "ssn": { "range": { "min": 20, "max": 25 }, "algorithm": "exact", "rationale": "Highest discriminating power" },
-    "surname": { "range": { "min": 15, "max": 20 }, "algorithm": "jaro-winkler", "rationale": "Good discriminator with typo tolerance" },
-    "givenName": { "range": { "min": 10, "max": 15 }, "algorithm": "jaro-winkler", "rationale": "Common names reduce power" },
-    "dateOfBirth": { "range": { "min": 10, "max": 15 }, "algorithm": "exact", "rationale": "Good discriminator" },
-    "phone": { "range": { "min": 15, "max": 25 }, "algorithm": "exact", "rationale": "Unique when present" },
-    "email": { "range": { "min": 15, "max": 25 }, "algorithm": "exact", "rationale": "Unique when present" },
-    "address": { "range": { "min": 10, "max": 15 }, "algorithm": "levenshtein", "rationale": "Variable quality" },
-    "postcode": { "range": { "min": 5, "max": 10 }, "algorithm": "exact", "rationale": "Moderate discriminator" },
-    "city": { "range": { "min": 5, "max": 10 }, "algorithm": "exact", "rationale": "Lower discriminator" },
-    "businessName": { "range": { "min": 25, "max": 35 }, "algorithm": "jaro-winkler", "rationale": "Primary identifier for businesses" }
+    "ssn": {
+      "range": { "min": 20, "max": 25 },
+      "algorithm": "exact",
+      "rationale": "Highest discriminating power"
+    },
+    "surname": {
+      "range": { "min": 15, "max": 20 },
+      "algorithm": "jaro-winkler",
+      "rationale": "Good discriminator with typo tolerance"
+    },
+    "givenName": {
+      "range": { "min": 10, "max": 15 },
+      "algorithm": "jaro-winkler",
+      "rationale": "Common names reduce power"
+    },
+    "dateOfBirth": {
+      "range": { "min": 10, "max": 15 },
+      "algorithm": "exact",
+      "rationale": "Good discriminator"
+    },
+    "phone": {
+      "range": { "min": 15, "max": 25 },
+      "algorithm": "exact",
+      "rationale": "Unique when present"
+    },
+    "email": {
+      "range": { "min": 15, "max": 25 },
+      "algorithm": "exact",
+      "rationale": "Unique when present"
+    },
+    "address": {
+      "range": { "min": 10, "max": 15 },
+      "algorithm": "levenshtein",
+      "rationale": "Variable quality"
+    },
+    "postcode": {
+      "range": { "min": 5, "max": 10 },
+      "algorithm": "exact",
+      "rationale": "Moderate discriminator"
+    },
+    "city": {
+      "range": { "min": 5, "max": 10 },
+      "algorithm": "exact",
+      "rationale": "Lower discriminator"
+    },
+    "businessName": {
+      "range": { "min": 25, "max": 35 },
+      "algorithm": "jaro-winkler",
+      "rationale": "Primary identifier for businesses"
+    }
   },
   "references": [
     {

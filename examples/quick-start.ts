@@ -115,7 +115,9 @@ console.log(`Outcome: ${result2[0]?.outcome}`)
 console.log(`Score: ${result2[0]?.score.totalScore}`)
 console.log('Field scores:')
 result2[0]?.explanation.fieldScores.forEach((field) => {
-  console.log(`  ${field.fieldName}: ${field.contributedScore} (similarity: ${field.similarity?.toFixed(2)})`)
+  console.log(
+    `  ${field.fieldName}: ${field.contributedScore} (similarity: ${field.similarity?.toFixed(2)})`
+  )
 })
 console.log()
 
@@ -152,4 +154,6 @@ console.log('\nKey Takeaways:')
 console.log('- definite-match: High confidence match (score >= 45)')
 console.log('- potential-match: Ambiguous match (score 20-45) - needs review')
 console.log('- no-match: New record (score < 20)')
-console.log('\nEach match includes a detailed explanation showing which fields contributed to the score.')
+console.log(
+  '\nEach match includes a detailed explanation showing which fields contributed to the score.'
+)

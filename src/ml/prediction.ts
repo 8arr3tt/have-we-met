@@ -11,7 +11,7 @@ import type {
   MLPrediction,
   BatchMLPrediction,
   RecordPair,
-} from './types';
+} from './types'
 
 /**
  * Create an ML prediction result
@@ -29,7 +29,7 @@ export function createPrediction(
     confidence,
     features,
     featureImportance,
-  };
+  }
 }
 
 /**
@@ -43,9 +43,9 @@ export function createFeatureVector(
   if (values.length !== names.length) {
     throw new Error(
       `Feature values length (${values.length}) must match names length (${names.length})`
-    );
+    )
   }
-  return { values, names, metadata };
+  return { values, names, metadata }
 }
 
 /**
@@ -61,7 +61,7 @@ export function createFeatureImportance(
     value,
     contribution,
     importance: Math.abs(contribution),
-  };
+  }
 }
 
 /**
@@ -74,18 +74,20 @@ export function calculateFeatureImportance(
   if (featureVector.values.length !== weights.length) {
     throw new Error(
       `Feature vector length (${featureVector.values.length}) must match weights length (${weights.length})`
-    );
+    )
   }
 
-  const importance: FeatureImportance[] = featureVector.names.map((name, i) => ({
-    name,
-    value: featureVector.values[i],
-    contribution: featureVector.values[i] * weights[i],
-    importance: Math.abs(featureVector.values[i] * weights[i]),
-  }));
+  const importance: FeatureImportance[] = featureVector.names.map(
+    (name, i) => ({
+      name,
+      value: featureVector.values[i],
+      contribution: featureVector.values[i] * weights[i],
+      importance: Math.abs(featureVector.values[i] * weights[i]),
+    })
+  )
 
   // Sort by absolute importance (descending)
-  return importance.sort((a, b) => b.importance - a.importance);
+  return importance.sort((a, b) => b.importance - a.importance)
 }
 
 /**
@@ -95,7 +97,7 @@ export function getTopFeatures(
   featureImportance: FeatureImportance[],
   n: number
 ): FeatureImportance[] {
-  return featureImportance.slice(0, Math.min(n, featureImportance.length));
+  return featureImportance.slice(0, Math.min(n, featureImportance.length))
 }
 
 /**
@@ -105,7 +107,9 @@ export function filterByClassification<T>(
   predictions: BatchMLPrediction<T>[],
   classification: MLMatchOutcome
 ): BatchMLPrediction<T>[] {
-  return predictions.filter((p) => p.prediction.classification === classification);
+  return predictions.filter(
+    (p) => p.prediction.classification === classification
+  )
 }
 
 /**
@@ -115,7 +119,7 @@ export function filterByMinProbability<T>(
   predictions: BatchMLPrediction<T>[],
   minProbability: number
 ): BatchMLPrediction<T>[] {
-  return predictions.filter((p) => p.prediction.probability >= minProbability);
+  return predictions.filter((p) => p.prediction.probability >= minProbability)
 }
 
 /**
@@ -125,7 +129,7 @@ export function filterByMinConfidence<T>(
   predictions: BatchMLPrediction<T>[],
   minConfidence: number
 ): BatchMLPrediction<T>[] {
-  return predictions.filter((p) => p.prediction.confidence >= minConfidence);
+  return predictions.filter((p) => p.prediction.confidence >= minConfidence)
 }
 
 /**
@@ -137,8 +141,8 @@ export function sortByProbability<T>(
 ): BatchMLPrediction<T>[] {
   const sorted = [...predictions].sort(
     (a, b) => b.prediction.probability - a.prediction.probability
-  );
-  return ascending ? sorted.reverse() : sorted;
+  )
+  return ascending ? sorted.reverse() : sorted
 }
 
 /**
@@ -150,28 +154,30 @@ export function sortByConfidence<T>(
 ): BatchMLPrediction<T>[] {
   const sorted = [...predictions].sort(
     (a, b) => b.prediction.confidence - a.prediction.confidence
-  );
-  return ascending ? sorted.reverse() : sorted;
+  )
+  return ascending ? sorted.reverse() : sorted
 }
 
 /**
  * Aggregate prediction statistics
  */
 export interface PredictionStats {
-  total: number;
-  matchCount: number;
-  nonMatchCount: number;
-  uncertainCount: number;
-  avgProbability: number;
-  avgConfidence: number;
-  minProbability: number;
-  maxProbability: number;
+  total: number
+  matchCount: number
+  nonMatchCount: number
+  uncertainCount: number
+  avgProbability: number
+  avgConfidence: number
+  minProbability: number
+  maxProbability: number
 }
 
 /**
  * Calculate statistics for a set of predictions
  */
-export function calculatePredictionStats<T>(predictions: BatchMLPrediction<T>[]): PredictionStats {
+export function calculatePredictionStats<T>(
+  predictions: BatchMLPrediction<T>[]
+): PredictionStats {
   if (predictions.length === 0) {
     return {
       total: 0,
@@ -182,33 +188,33 @@ export function calculatePredictionStats<T>(predictions: BatchMLPrediction<T>[])
       avgConfidence: 0,
       minProbability: 0,
       maxProbability: 0,
-    };
+    }
   }
 
-  let matchCount = 0;
-  let nonMatchCount = 0;
-  let uncertainCount = 0;
-  let sumProbability = 0;
-  let sumConfidence = 0;
-  let minProbability = 1;
-  let maxProbability = 0;
+  let matchCount = 0
+  let nonMatchCount = 0
+  let uncertainCount = 0
+  let sumProbability = 0
+  let sumConfidence = 0
+  let minProbability = 1
+  let maxProbability = 0
 
   for (const { prediction } of predictions) {
     switch (prediction.classification) {
       case 'match':
-        matchCount++;
-        break;
+        matchCount++
+        break
       case 'nonMatch':
-        nonMatchCount++;
-        break;
+        nonMatchCount++
+        break
       case 'uncertain':
-        uncertainCount++;
-        break;
+        uncertainCount++
+        break
     }
-    sumProbability += prediction.probability;
-    sumConfidence += prediction.confidence;
-    minProbability = Math.min(minProbability, prediction.probability);
-    maxProbability = Math.max(maxProbability, prediction.probability);
+    sumProbability += prediction.probability
+    sumConfidence += prediction.confidence
+    minProbability = Math.min(minProbability, prediction.probability)
+    maxProbability = Math.max(maxProbability, prediction.probability)
   }
 
   return {
@@ -220,7 +226,7 @@ export function calculatePredictionStats<T>(predictions: BatchMLPrediction<T>[])
     avgConfidence: sumConfidence / predictions.length,
     minProbability,
     maxProbability,
-  };
+  }
 }
 
 /**
@@ -231,18 +237,20 @@ export function formatPrediction(prediction: MLPrediction): string {
     `Classification: ${prediction.classification}`,
     `Probability: ${(prediction.probability * 100).toFixed(1)}%`,
     `Confidence: ${(prediction.confidence * 100).toFixed(1)}%`,
-  ];
+  ]
 
   if (prediction.featureImportance.length > 0) {
-    lines.push('Top Features:');
-    const topFeatures = getTopFeatures(prediction.featureImportance, 5);
+    lines.push('Top Features:')
+    const topFeatures = getTopFeatures(prediction.featureImportance, 5)
     for (const feature of topFeatures) {
-      const sign = feature.contribution >= 0 ? '+' : '';
-      lines.push(`  - ${feature.name}: ${sign}${feature.contribution.toFixed(3)}`);
+      const sign = feature.contribution >= 0 ? '+' : ''
+      lines.push(
+        `  - ${feature.name}: ${sign}${feature.contribution.toFixed(3)}`
+      )
     }
   }
 
-  return lines.join('\n');
+  return lines.join('\n')
 }
 
 /**
@@ -253,7 +261,7 @@ export function createLabeledPair<T>(
   record2: T,
   label: MLMatchOutcome
 ): RecordPair<T> {
-  return { record1, record2, label };
+  return { record1, record2, label }
 }
 
 /**
@@ -267,19 +275,21 @@ export function mergeFeatureVectors(
     values: [...vector1.values, ...vector2.values],
     names: [...vector1.names, ...vector2.names],
     metadata: { ...vector1.metadata, ...vector2.metadata },
-  };
+  }
 }
 
 /**
  * Normalize feature values to 0-1 range
  */
 export function normalizeFeatureVector(vector: FeatureVector): FeatureVector {
-  const min = Math.min(...vector.values);
-  const max = Math.max(...vector.values);
-  const range = max - min;
+  const min = Math.min(...vector.values)
+  const max = Math.max(...vector.values)
+  const range = max - min
 
   const normalizedValues =
-    range === 0 ? vector.values.map(() => 0.5) : vector.values.map((v) => (v - min) / range);
+    range === 0
+      ? vector.values.map(() => 0.5)
+      : vector.values.map((v) => (v - min) / range)
 
   return {
     ...vector,
@@ -290,18 +300,20 @@ export function normalizeFeatureVector(vector: FeatureVector): FeatureVector {
       originalMin: min,
       originalMax: max,
     },
-  };
+  }
 }
 
 /**
  * Validate that a prediction has all required fields
  */
-export function isValidPrediction(prediction: unknown): prediction is MLPrediction {
+export function isValidPrediction(
+  prediction: unknown
+): prediction is MLPrediction {
   if (!prediction || typeof prediction !== 'object') {
-    return false;
+    return false
   }
 
-  const p = prediction as Record<string, unknown>;
+  const p = prediction as Record<string, unknown>
 
   return (
     typeof p.probability === 'number' &&
@@ -313,7 +325,7 @@ export function isValidPrediction(prediction: unknown): prediction is MLPredicti
     p.confidence <= 1 &&
     isValidFeatureVector(p.features) &&
     Array.isArray(p.featureImportance)
-  );
+  )
 }
 
 /**
@@ -321,10 +333,10 @@ export function isValidPrediction(prediction: unknown): prediction is MLPredicti
  */
 export function isValidFeatureVector(vector: unknown): vector is FeatureVector {
   if (!vector || typeof vector !== 'object') {
-    return false;
+    return false
   }
 
-  const v = vector as Record<string, unknown>;
+  const v = vector as Record<string, unknown>
 
   return (
     Array.isArray(v.values) &&
@@ -332,5 +344,5 @@ export function isValidFeatureVector(vector: unknown): vector is FeatureVector {
     Array.isArray(v.names) &&
     v.names.every((name) => typeof name === 'string') &&
     v.values.length === v.names.length
-  );
+  )
 }

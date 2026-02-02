@@ -14,10 +14,10 @@ New to have-we-met? Start here:
 
 ### Matching Approaches
 
-| Approach | Description | When to Use |
-|----------|-------------|-------------|
-| [Probabilistic Matching](./probabilistic-matching.md) | Score-based matching with configurable weights and thresholds | Most use cases; offers transparency and fine-grained control |
-| [ML Matching](./ml-matching/overview.md) | Machine learning-enhanced matching | When you have training data or need to learn complex patterns |
+| Approach                                              | Description                                                   | When to Use                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| [Probabilistic Matching](./probabilistic-matching.md) | Score-based matching with configurable weights and thresholds | Most use cases; offers transparency and fine-grained control  |
+| [ML Matching](./ml-matching/overview.md)              | Machine learning-enhanced matching                            | When you have training data or need to learn complex patterns |
 
 ### Key Components
 
@@ -139,15 +139,15 @@ Performance benchmarks and results:
 
 ## Quick Links
 
-| Task | Documentation |
-|------|---------------|
-| Getting started | [Examples](./examples.md) |
-| Configure matching | [Matching Builder](./api/matching-builder.md) |
-| Tune thresholds | [Tuning Guide](./tuning-guide.md) |
-| Scale to large datasets | [Blocking Overview](./blocking/overview.md) |
-| Use machine learning | [ML Matching Overview](./ml-matching/overview.md) |
-| Connect a database | [Database Adapters](./database-adapters.md) |
-| Review potential matches | [Review Queue](./review-queue.md) |
+| Task                         | Documentation                                         |
+| ---------------------------- | ----------------------------------------------------- |
+| Getting started              | [Examples](./examples.md)                             |
+| Configure matching           | [Matching Builder](./api/matching-builder.md)         |
+| Tune thresholds              | [Tuning Guide](./tuning-guide.md)                     |
+| Scale to large datasets      | [Blocking Overview](./blocking/overview.md)           |
+| Use machine learning         | [ML Matching Overview](./ml-matching/overview.md)     |
+| Connect a database           | [Database Adapters](./database-adapters.md)           |
+| Review potential matches     | [Review Queue](./review-queue.md)                     |
 | Consolidate multiple sources | [Consolidation Overview](./consolidation/overview.md) |
 
 ## Support

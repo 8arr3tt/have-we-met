@@ -38,6 +38,7 @@ const resolver = HaveWeMet.schema<T>({ ... })
 ### Builder Methods
 
 All builder methods follow consistent patterns:
+
 - **Fluent chaining**: All methods return `this` for chaining
 - **Callback pattern**: Complex configurations use callback functions
 - **Type safety**: Full TypeScript support with generic constraints
@@ -56,6 +57,7 @@ ResolverBuilder<T>
 ```
 
 **Getter methods** for inspection:
+
 - `getMergeConfig()` - Get merge configuration
 - `getServicesConfig()` - Get services configuration
 - `getMLConfig()` - Get ML configuration
@@ -129,7 +131,7 @@ ensureMLReady()
 ### Queue Access
 
 ```typescript
-queue  // Property accessor for ReviewQueue instance
+queue // Property accessor for ReviewQueue instance
 ```
 
 **Status:** ✅ Simple property access
@@ -141,12 +143,14 @@ queue  // Property accessor for ReviewQueue instance
 ### Core Types
 
 **Record Types:**
+
 - `Record<T>` - Record with data, id, and metadata
 - `RecordId` - String record identifier
 - `RecordMetadata` - Timestamp and source metadata
 - `RecordPair` - Tuple of two records for comparison
 
 **Match Types:**
+
 - `MatchOutcome` - `'new' | 'match' | 'review'`
 - `MatchResult<T>` - Complete match result with outcome and candidates
 - `MatchCandidate<T>` - Single match candidate with score and explanation
@@ -155,6 +159,7 @@ queue  // Property accessor for ReviewQueue instance
 - `FieldComparison` - Single field comparison details
 
 **Configuration Types:**
+
 - `ThresholdConfig` - Match/no-match thresholds
 - `MatchingStrategy` - String literal union of comparison algorithms
 - `FieldMatchConfig` - Single field matching configuration
@@ -164,6 +169,7 @@ queue  // Property accessor for ReviewQueue instance
 - `ResolverOptions` - Runtime options for resolution
 
 **Schema Types:**
+
 - `FieldType` - Supported field types
 - `FieldDefinition` - Field metadata and normalizer configuration
 - `SchemaDefinition<T>` - Complete schema configuration
@@ -229,7 +235,7 @@ import {
 } from 'have-we-met'
 ```
 
-**Status:** ✅ Consistent naming (normalize* for transformers, parse* for parsers, is* for validators)
+**Status:** ✅ Consistent naming (normalize* for transformers, parse* for parsers, is\* for validators)
 
 ### Blocking
 
@@ -326,7 +332,7 @@ import {
 } from 'have-we-met'
 ```
 
-**Status:** ✅ Consistent naming (create* for factories, is* for type guards, DEFAULT_* for constants)
+**Status:** ✅ Consistent naming (create* for factories, is* for type guards, DEFAULT\_\* for constants)
 
 ### Merge
 
@@ -369,12 +375,14 @@ The library follows consistent naming conventions across all modules:
 ### Generic Constraints
 
 All generic types properly constrained:
+
 - `T extends Record<string, unknown>` for record types
 - `T extends object` for match candidate types
 
 ### Type Exports
 
 Both type and value exports properly distinguished:
+
 - `export type { ... }` for types
 - `export { ... }` for values
 
@@ -409,7 +417,7 @@ Both type and value exports properly distinguished:
 
 No breaking changes were made during Phase 12. The API has remained stable since Phase 11.
 
-**Previous phase changes** were documented in their respective phase-*-plan.md files.
+**Previous phase changes** were documented in their respective phase-\*-plan.md files.
 
 ---
 
@@ -428,6 +436,7 @@ No deprecated APIs exist in the codebase. All features are fully supported.
 **Added:** Central error utilities and input validation to all builder methods
 
 **Files Modified:**
+
 - `src/utils/errors.ts` - Created central error hierarchy
 - `src/builder/*.ts` - Added input validation
 - `tests/edge-cases/` - Added comprehensive edge case tests
@@ -439,6 +448,7 @@ No deprecated APIs exist in the codebase. All features are fully supported.
 **Fixed:** Removed invalid type values from builder validation arrays
 
 **Changes:**
+
 - Removed `'boolean'` from `FieldType` validation array in `schema-builder.ts`
 - Removed `'custom'` from `MatchingStrategy` validation array in `matching-builder.ts`
 - Removed unused imports from `blocking-builder.ts`
@@ -468,6 +478,7 @@ No deprecated APIs exist in the codebase. All features are fully supported.
 ## Conclusion
 
 The public API is **production-ready** with:
+
 - ✅ Consistent naming conventions throughout
 - ✅ Full TypeScript type safety
 - ✅ Comprehensive JSDoc documentation

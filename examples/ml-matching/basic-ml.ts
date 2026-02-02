@@ -100,7 +100,9 @@ async function basicMLMatchingExample() {
   const topFeatures = getTopFeatures(prediction1.featureImportance, 5)
   console.log('  Top contributing features:')
   for (const feature of topFeatures) {
-    console.log(`    - ${feature.name}: ${(feature.importance * 100).toFixed(1)}% importance`)
+    console.log(
+      `    - ${feature.name}: ${(feature.importance * 100).toFixed(1)}% importance`
+    )
   }
   console.log()
 
@@ -195,14 +197,18 @@ async function basicMLMatchingExample() {
   console.log('Top 5 most important features (by weight magnitude):')
   for (let i = 0; i < Math.min(5, importance.length); i++) {
     const feat = importance[i]
-    console.log(`  ${feat.name}: weight=${feat.weight.toFixed(4)}, importance=${feat.importance.toFixed(4)}`)
+    console.log(
+      `  ${feat.name}: weight=${feat.weight.toFixed(4)}, importance=${feat.importance.toFixed(4)}`
+    )
   }
   console.log()
 
   console.log('=== Example Complete ===')
   console.log('\nKey takeaways:')
   console.log('- The pre-trained model is ready to use out of the box')
-  console.log('- Predictions include probability, classification, and confidence')
+  console.log(
+    '- Predictions include probability, classification, and confidence'
+  )
   console.log('- Feature importance helps explain why a prediction was made')
   console.log('- Batch predictions are more efficient for multiple pairs')
   console.log('- The ML Builder API provides a fluent configuration interface')

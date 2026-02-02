@@ -3,7 +3,12 @@
  * Provides utilities for loading and working with Febrl synthetic benchmark datasets.
  */
 
-import { parseFebrl, createLoadedDataset, type LoadedDataset, type LabeledPair } from '../../infrastructure/dataset-loader'
+import {
+  parseFebrl,
+  createLoadedDataset,
+  type LoadedDataset,
+  type LabeledPair,
+} from '../../infrastructure/dataset-loader'
 
 export interface FebrlRecord {
   id: string
@@ -49,7 +54,8 @@ export const FEBRL_DATASETS: Record<FebrlDatasetName, FebrlDatasetInfo> = {
   },
   febrl3: {
     name: 'febrl3',
-    description: 'Challenging dataset with 5,000 records and 6,538 duplicate pairs',
+    description:
+      'Challenging dataset with 5,000 records and 6,538 duplicate pairs',
     recordCount: 5000,
     truePairCount: 6538,
     corruptionLevel: 'high',
@@ -101,35 +107,115 @@ export function generateSyntheticFebrlData(
   const startTime = performance.now()
 
   const firstNames = [
-    'james', 'robert', 'john', 'michael', 'william', 'david', 'richard', 'joseph',
-    'thomas', 'charles', 'mary', 'patricia', 'jennifer', 'linda', 'barbara',
-    'elizabeth', 'susan', 'jessica', 'sarah', 'karen', 'nancy', 'betty',
-    'margaret', 'sandra', 'ashley', 'dorothy', 'kimberly', 'emily', 'donna',
+    'james',
+    'robert',
+    'john',
+    'michael',
+    'william',
+    'david',
+    'richard',
+    'joseph',
+    'thomas',
+    'charles',
+    'mary',
+    'patricia',
+    'jennifer',
+    'linda',
+    'barbara',
+    'elizabeth',
+    'susan',
+    'jessica',
+    'sarah',
+    'karen',
+    'nancy',
+    'betty',
+    'margaret',
+    'sandra',
+    'ashley',
+    'dorothy',
+    'kimberly',
+    'emily',
+    'donna',
   ]
 
   const surnames = [
-    'smith', 'johnson', 'williams', 'brown', 'jones', 'garcia', 'miller', 'davis',
-    'rodriguez', 'martinez', 'hernandez', 'lopez', 'gonzalez', 'wilson', 'anderson',
-    'thomas', 'taylor', 'moore', 'jackson', 'martin', 'lee', 'perez', 'thompson',
-    'white', 'harris', 'sanchez', 'clark', 'ramirez', 'lewis', 'robinson',
+    'smith',
+    'johnson',
+    'williams',
+    'brown',
+    'jones',
+    'garcia',
+    'miller',
+    'davis',
+    'rodriguez',
+    'martinez',
+    'hernandez',
+    'lopez',
+    'gonzalez',
+    'wilson',
+    'anderson',
+    'thomas',
+    'taylor',
+    'moore',
+    'jackson',
+    'martin',
+    'lee',
+    'perez',
+    'thompson',
+    'white',
+    'harris',
+    'sanchez',
+    'clark',
+    'ramirez',
+    'lewis',
+    'robinson',
   ]
 
   const streets = [
-    'main street', 'oak avenue', 'maple road', 'cedar lane', 'pine drive',
-    'elm street', 'washington street', 'park avenue', 'lake road', 'hill street',
-    'river road', 'forest drive', 'sunset boulevard', 'spring lane', 'valley road',
+    'main street',
+    'oak avenue',
+    'maple road',
+    'cedar lane',
+    'pine drive',
+    'elm street',
+    'washington street',
+    'park avenue',
+    'lake road',
+    'hill street',
+    'river road',
+    'forest drive',
+    'sunset boulevard',
+    'spring lane',
+    'valley road',
   ]
 
   const suburbs = [
-    'lakeside', 'riverside', 'hillview', 'greenville', 'fairview', 'springfield',
-    'franklin', 'clinton', 'madison', 'georgetown', 'oakwood', 'pleasant hill',
-    'clearwater', 'northside', 'southgate', 'westview', 'eastgate', 'central',
+    'lakeside',
+    'riverside',
+    'hillview',
+    'greenville',
+    'fairview',
+    'springfield',
+    'franklin',
+    'clinton',
+    'madison',
+    'georgetown',
+    'oakwood',
+    'pleasant hill',
+    'clearwater',
+    'northside',
+    'southgate',
+    'westview',
+    'eastgate',
+    'central',
   ]
 
   const states = ['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'nt', 'act']
 
-  const randomChoice = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
-  const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
+  const randomChoice = <T>(arr: T[]): T =>
+    arr[Math.floor(Math.random() * arr.length)]
+  const randomInt = (min: number, max: number) =>
+    Math.floor(Math.random() * (max - min + 1)) + min
 
   const generateDateOfBirth = (): string => {
     const year = randomInt(1950, 2000)
@@ -152,7 +238,11 @@ export function generateSyntheticFebrlData(
         }
         break
       case 1: // Character insertion
-        result.splice(randomInt(0, result.length), 0, String.fromCharCode(97 + randomInt(0, 25)))
+        result.splice(
+          randomInt(0, result.length),
+          0,
+          String.fromCharCode(97 + randomInt(0, 25))
+        )
         break
       case 2: // Character deletion
         if (result.length > 1) {
@@ -167,10 +257,14 @@ export function generateSyntheticFebrlData(
         break
       case 4: // Phonetic variation
         const phonetic: Record<string, string[]> = {
-          'ph': ['f'], 'f': ['ph'],
-          'c': ['k', 's'], 'k': ['c'],
-          'ee': ['ie', 'ea'], 'ie': ['ee', 'y'],
-          'oo': ['u'], 'ou': ['ow'],
+          ph: ['f'],
+          f: ['ph'],
+          c: ['k', 's'],
+          k: ['c'],
+          ee: ['ie', 'ea'],
+          ie: ['ee', 'y'],
+          oo: ['u'],
+          ou: ['ow'],
         }
         for (const [from, tos] of Object.entries(phonetic)) {
           if (s.includes(from)) {
@@ -221,9 +315,13 @@ export function generateSyntheticFebrlData(
   for (const original of records.slice(0, numOriginals)) {
     if (records.length >= recordCount) break
 
-    const dupCount = duplicateRate >= 1
-      ? Math.floor(duplicateRate) + (Math.random() < duplicateRate % 1 ? 1 : 0)
-      : (Math.random() < duplicateRate ? 1 : 0)
+    const dupCount =
+      duplicateRate >= 1
+        ? Math.floor(duplicateRate) +
+          (Math.random() < duplicateRate % 1 ? 1 : 0)
+        : Math.random() < duplicateRate
+          ? 1
+          : 0
 
     for (let d = 0; d < dupCount && records.length < recordCount; d++) {
       const dupId = `rec-${dupIndex}-dup-${d}`
@@ -234,14 +332,26 @@ export function generateSyntheticFebrlData(
         rec_id: dupId,
         given_name: corruptString(original.given_name, corruptionProbability),
         surname: corruptString(original.surname, corruptionProbability),
-        street_number: Math.random() > corruptionProbability ? original.street_number : String(randomInt(1, 999)),
+        street_number:
+          Math.random() > corruptionProbability
+            ? original.street_number
+            : String(randomInt(1, 999)),
         address_1: corruptString(original.address_1, corruptionProbability),
         address_2: original.address_2,
         suburb: corruptString(original.suburb, corruptionProbability),
-        postcode: Math.random() > corruptionProbability ? original.postcode : String(randomInt(1000, 9999)),
+        postcode:
+          Math.random() > corruptionProbability
+            ? original.postcode
+            : String(randomInt(1000, 9999)),
         state: original.state,
-        date_of_birth: corruptDate(original.date_of_birth, corruptionProbability),
-        soc_sec_id: corruptString(original.soc_sec_id, corruptionProbability * 0.5),
+        date_of_birth: corruptDate(
+          original.date_of_birth,
+          corruptionProbability
+        ),
+        soc_sec_id: corruptString(
+          original.soc_sec_id,
+          corruptionProbability * 0.5
+        ),
         org_rec: original.rec_id,
       }
       records.push(duplicate)
@@ -275,10 +385,10 @@ export function createFebrlSubset(
   const startTime = performance.now()
 
   const records = dataset.records.slice(0, maxRecords)
-  const recordIds = new Set(records.map(r => r.rec_id))
+  const recordIds = new Set(records.map((r) => r.rec_id))
 
   const pairs = dataset.truePairs?.filter(
-    p => recordIds.has(String(p.id1)) && recordIds.has(String(p.id2))
+    (p) => recordIds.has(String(p.id1)) && recordIds.has(String(p.id2))
   )
 
   const loadTimeMs = performance.now() - startTime
@@ -301,8 +411,16 @@ export function analyzeFebrlDataset(dataset: LoadedDataset<FebrlRecord>): {
   avgFieldLength: Record<string, number>
 } {
   const fields = [
-    'given_name', 'surname', 'street_number', 'address_1', 'address_2',
-    'suburb', 'postcode', 'state', 'date_of_birth', 'soc_sec_id',
+    'given_name',
+    'surname',
+    'street_number',
+    'address_1',
+    'address_2',
+    'suburb',
+    'postcode',
+    'state',
+    'date_of_birth',
+    'soc_sec_id',
   ] as const
 
   const nullRates: Record<string, number> = {}
@@ -312,15 +430,16 @@ export function analyzeFebrlDataset(dataset: LoadedDataset<FebrlRecord>): {
   const n = dataset.records.length
 
   for (const field of fields) {
-    const values = dataset.records.map(r => r[field])
-    const nonNull = values.filter(v => v != null && v !== '')
+    const values = dataset.records.map((r) => r[field])
+    const nonNull = values.filter((v) => v != null && v !== '')
     const unique = new Set(nonNull)
 
     nullRates[field] = (n - nonNull.length) / n
     uniqueValues[field] = unique.size
-    avgFieldLength[field] = nonNull.length > 0
-      ? nonNull.reduce((sum, v) => sum + String(v).length, 0) / nonNull.length
-      : 0
+    avgFieldLength[field] =
+      nonNull.length > 0
+        ? nonNull.reduce((sum, v) => sum + String(v).length, 0) / nonNull.length
+        : 0
   }
 
   return { nullRates, uniqueValues, avgFieldLength }

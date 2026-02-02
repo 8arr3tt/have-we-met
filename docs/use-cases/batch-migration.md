@@ -160,7 +160,7 @@ function normalizeCRMRecord(record: CRMContact): UnifiedPerson {
     createdAt: new Date(record.created_date),
     updatedAt: new Date(record.modified_date),
     accountType: record.account_type,
-    status: record.status
+    status: record.status,
   }
 }
 
@@ -189,7 +189,7 @@ async function extractFromLegacy(): AsyncGenerator<UnifiedPerson> {
 function normalizeLegacyRecord(record: LegacyCustomer): UnifiedPerson {
   // Legacy system uses YYYYMMDD dates
   const dob = record.DOB
-    ? `${record.DOB.slice(0,4)}-${record.DOB.slice(4,6)}-${record.DOB.slice(6,8)}`
+    ? `${record.DOB.slice(0, 4)}-${record.DOB.slice(4, 6)}-${record.DOB.slice(6, 8)}`
     : undefined
 
   return {
@@ -210,7 +210,7 @@ function normalizeLegacyRecord(record: LegacyCustomer): UnifiedPerson {
     dateOfBirth: dob,
     createdAt: new Date(record.CREATE_DT),
     updatedAt: new Date(record.UPDATE_DT),
-    status: mapLegacyStatus(record.STATUS_CD)
+    status: mapLegacyStatus(record.STATUS_CD),
   }
 }
 
@@ -227,104 +227,167 @@ async function extractFromAcquired(): AsyncGenerator<UnifiedPerson> {
 const prisma = new PrismaClient()
 
 const resolver = HaveWeMet.create<UnifiedPerson>()
-  .schema(schema => schema
-    .field('email').type('email')
-    .field('phone').type('phone')
-    .field('alternatePhone').type('phone')
-    .field('firstName').type('name').component('first')
-    .field('middleName').type('name').component('middle')
-    .field('lastName').type('name').component('last')
-    .field('dateOfBirth').type('date')
-    .field('addressLine1').type('address')
-    .field('city').type('string')
-    .field('state').type('string')
-    .field('postalCode').type('string')
-    .field('country').type('string')
-    .field('createdAt').type('date')
-    .field('updatedAt').type('date')
-    .field('sourceSystem').type('string')
-    .field('sourceId').type('string')
+  .schema((schema) =>
+    schema
+      .field('email')
+      .type('email')
+      .field('phone')
+      .type('phone')
+      .field('alternatePhone')
+      .type('phone')
+      .field('firstName')
+      .type('name')
+      .component('first')
+      .field('middleName')
+      .type('name')
+      .component('middle')
+      .field('lastName')
+      .type('name')
+      .component('last')
+      .field('dateOfBirth')
+      .type('date')
+      .field('addressLine1')
+      .type('address')
+      .field('city')
+      .type('string')
+      .field('state')
+      .type('string')
+      .field('postalCode')
+      .type('string')
+      .field('country')
+      .type('string')
+      .field('createdAt')
+      .type('date')
+      .field('updatedAt')
+      .type('date')
+      .field('sourceSystem')
+      .type('string')
+      .field('sourceId')
+      .type('string')
   )
-  .blocking(block => block
-    // Composite blocking for maximum recall during migration
-    .composite('union', comp => comp
-      // Primary: Last name soundex + birth year
-      .onFields(['lastName', 'dateOfBirth'], {
-        transforms: {
-          lastName: 'soundex',
-          dateOfBirth: 'year'
-        }
+  .blocking((block) =>
+    block
+      // Composite blocking for maximum recall during migration
+      .composite('union', (comp) =>
+        comp
+          // Primary: Last name soundex + birth year
+          .onFields(['lastName', 'dateOfBirth'], {
+            transforms: {
+              lastName: 'soundex',
+              dateOfBirth: 'year',
+            },
+          })
+          // Secondary: Email domain
+          .onField('email', { transform: 'domain' })
+          // Tertiary: Phone area code
+          .onField('phone', { transform: 'firstN', n: 3 })
+      )
+  )
+  .matching((match) =>
+    match
+      // Email is highly reliable
+      .field('email')
+      .strategy('exact')
+      .weight(25)
+
+      // Phone numbers
+      .field('phone')
+      .strategy('exact')
+      .weight(15)
+      .field('alternatePhone')
+      .strategy('exact')
+      .weight(10)
+
+      // Names with fuzzy matching
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.88)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(15)
+      .threshold(0.9)
+      .field('middleName')
+      .strategy('jaro-winkler')
+      .weight(5)
+      .threshold(0.85)
+
+      // Date of birth - exact match
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(15)
+
+      // Address matching
+      .field('postalCode')
+      .strategy('exact')
+      .weight(8)
+      .field('city')
+      .strategy('jaro-winkler')
+      .weight(5)
+      .threshold(0.85)
+      .field('state')
+      .strategy('exact')
+      .weight(3)
+
+      // Balanced thresholds for migration
+      // Max: ~113, noMatch: 25, definiteMatch: 60
+      .thresholds({ noMatch: 25, definiteMatch: 60 })
+  )
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
+
+      // Names: prefer longer (more complete)
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('middleName')
+      .strategy('preferLonger')
+      .field('lastName')
+      .strategy('preferLonger')
+
+      // Contact: prefer most recent
+      .field('email')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNewer')
+      .field('alternatePhone')
+      .strategy('preferNonNull')
+
+      // Address: prefer most recent
+      .field('addressLine1')
+      .strategy('preferNewer')
+      .field('addressLine2')
+      .strategy('preferNewer')
+      .field('city')
+      .strategy('preferNewer')
+      .field('state')
+      .strategy('preferNewer')
+      .field('postalCode')
+      .strategy('preferNewer')
+
+      // Metadata: custom logic
+      .field('tags')
+      .strategy('union')
+      .field('status')
+      .custom((values, records) => {
+        // Prefer 'active' over other statuses
+        if (values.includes('active')) return 'active'
+        return values.find((v) => v) || 'unknown'
       })
-      // Secondary: Email domain
-      .onField('email', { transform: 'domain' })
-      // Tertiary: Phone area code
-      .onField('phone', { transform: 'firstN', n: 3 })
-    )
+
+      // Always track provenance
+      .trackProvenance(true)
   )
-  .matching(match => match
-    // Email is highly reliable
-    .field('email').strategy('exact').weight(25)
-
-    // Phone numbers
-    .field('phone').strategy('exact').weight(15)
-    .field('alternatePhone').strategy('exact').weight(10)
-
-    // Names with fuzzy matching
-    .field('firstName').strategy('jaro-winkler').weight(12).threshold(0.88)
-    .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.90)
-    .field('middleName').strategy('jaro-winkler').weight(5).threshold(0.85)
-
-    // Date of birth - exact match
-    .field('dateOfBirth').strategy('exact').weight(15)
-
-    // Address matching
-    .field('postalCode').strategy('exact').weight(8)
-    .field('city').strategy('jaro-winkler').weight(5).threshold(0.85)
-    .field('state').strategy('exact').weight(3)
-
-    // Balanced thresholds for migration
-    // Max: ~113, noMatch: 25, definiteMatch: 60
-    .thresholds({ noMatch: 25, definiteMatch: 60 })
-  )
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
-
-    // Names: prefer longer (more complete)
-    .field('firstName').strategy('preferLonger')
-    .field('middleName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-
-    // Contact: prefer most recent
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNewer')
-    .field('alternatePhone').strategy('preferNonNull')
-
-    // Address: prefer most recent
-    .field('addressLine1').strategy('preferNewer')
-    .field('addressLine2').strategy('preferNewer')
-    .field('city').strategy('preferNewer')
-    .field('state').strategy('preferNewer')
-    .field('postalCode').strategy('preferNewer')
-
-    // Metadata: custom logic
-    .field('tags').strategy('union')
-    .field('status').custom((values, records) => {
-      // Prefer 'active' over other statuses
-      if (values.includes('active')) return 'active'
-      return values.find(v => v) || 'unknown'
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'unified_persons',
+      queue: {
+        autoExpireAfter: 90 * 24 * 60 * 60 * 1000, // 90 days
+        defaultPriority: 0,
+      },
     })
-
-    // Always track provenance
-    .trackProvenance(true)
   )
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'unified_persons',
-    queue: {
-      autoExpireAfter: 90 * 24 * 60 * 60 * 1000,  // 90 days
-      defaultPriority: 0
-    }
-  }))
   .build()
 ```
 
@@ -350,7 +413,7 @@ async function runMigration(): Promise<MigrationStats> {
     noMatches: 0,
     merged: 0,
     errors: 0,
-    duration: 0
+    duration: 0,
   }
 
   console.log('Starting migration...')
@@ -376,14 +439,18 @@ async function runMigration(): Promise<MigrationStats> {
       console.log(`Extracted ${stats.extracted} records...`)
     }
   }
-  console.log(`Legacy extraction complete: ${stats.extracted - crmCount} additional records`)
+  console.log(
+    `Legacy extraction complete: ${stats.extracted - crmCount} additional records`
+  )
 
   const legacyCount = stats.extracted
   for await (const record of extractFromAcquired()) {
     allRecords.push(record)
     stats.extracted++
   }
-  console.log(`Acquired extraction complete: ${stats.extracted - legacyCount} additional records`)
+  console.log(
+    `Acquired extraction complete: ${stats.extracted - legacyCount} additional records`
+  )
 
   console.log(`\nTotal extracted: ${stats.extracted} records`)
 
@@ -393,7 +460,9 @@ async function runMigration(): Promise<MigrationStats> {
 
   for (let i = 0; i < allRecords.length; i += batchSize) {
     const batch = allRecords.slice(i, i + batchSize)
-    console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(allRecords.length/batchSize)}...`)
+    console.log(
+      `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(allRecords.length / batchSize)}...`
+    )
 
     try {
       const results = await resolver.deduplicateBatch(batch, {
@@ -401,10 +470,10 @@ async function runMigration(): Promise<MigrationStats> {
         queueContext: {
           source: 'batch-migration',
           metadata: {
-            batchNumber: Math.floor(i/batchSize) + 1,
-            migrationDate: new Date().toISOString()
-          }
-        }
+            batchNumber: Math.floor(i / batchSize) + 1,
+            migrationDate: new Date().toISOString(),
+          },
+        },
       })
 
       stats.definiteMatches += results.definiteMatches
@@ -412,10 +481,12 @@ async function runMigration(): Promise<MigrationStats> {
       stats.noMatches += results.noMatches
 
       // Auto-merge definite matches
-      for (const match of results.matches.filter(m => m.outcome === 'definite-match')) {
+      for (const match of results.matches.filter(
+        (m) => m.outcome === 'definite-match'
+      )) {
         try {
           await resolver.merge([match.recordA, match.recordB], {
-            mergedBy: 'migration-system'
+            mergedBy: 'migration-system',
           })
           stats.merged++
         } catch (error) {
@@ -457,7 +528,7 @@ async function processReviewQueue() {
     reviewed: 0,
     confirmed: 0,
     rejected: 0,
-    skipped: 0
+    skipped: 0,
   }
 
   // Get queue statistics
@@ -470,7 +541,7 @@ async function processReviewQueue() {
       status: 'pending',
       orderBy: 'priority',
       orderDirection: 'desc',
-      limit: 100
+      limit: 100,
     })
 
     if (batch.items.length === 0) break
@@ -486,14 +557,14 @@ async function processReviewQueue() {
           selectedMatchId: decision.matchId,
           notes: decision.reason,
           confidence: decision.confidence,
-          decidedBy: 'migration-auto-review'
+          decidedBy: 'migration-auto-review',
         })
         stats.confirmed++
       } else if (decision.action === 'reject') {
         await resolver.queue.reject(item.id, {
           notes: decision.reason,
           confidence: decision.confidence,
-          decidedBy: 'migration-auto-review'
+          decidedBy: 'migration-auto-review',
         })
         stats.rejected++
       } else {
@@ -537,7 +608,7 @@ function evaluateMatch(item: QueueItem<UnifiedPerson>): MatchDecision {
       action: 'confirm',
       matchId: match.record.id,
       reason: 'High score with identifier match',
-      confidence: 0.9
+      confidence: 0.9,
     }
   }
 
@@ -546,7 +617,7 @@ function evaluateMatch(item: QueueItem<UnifiedPerson>): MatchDecision {
     return {
       action: 'reject',
       reason: 'Same source system - likely distinct records',
-      confidence: 0.8
+      confidence: 0.8,
     }
   }
 
@@ -555,7 +626,7 @@ function evaluateMatch(item: QueueItem<UnifiedPerson>): MatchDecision {
     return {
       action: 'reject',
       reason: 'Score too low for probable match',
-      confidence: 0.85
+      confidence: 0.85,
     }
   }
 
@@ -563,19 +634,21 @@ function evaluateMatch(item: QueueItem<UnifiedPerson>): MatchDecision {
   return {
     action: 'manual',
     reason: 'Requires human judgment',
-    confidence: 0.5
+    confidence: 0.5,
   }
 }
 
-function hasStrongIdentifierMatch(match: MatchCandidate<UnifiedPerson>): boolean {
+function hasStrongIdentifierMatch(
+  match: MatchCandidate<UnifiedPerson>
+): boolean {
   const explanation = match.explanation
 
   // Check if email or phone contributed to score
   const emailMatch = explanation.fieldComparisons.find(
-    fc => fc.field === 'email' && fc.contributed && fc.similarity === 1
+    (fc) => fc.field === 'email' && fc.contributed && fc.similarity === 1
   )
   const phoneMatch = explanation.fieldComparisons.find(
-    fc => fc.field === 'phone' && fc.contributed && fc.similarity === 1
+    (fc) => fc.field === 'phone' && fc.contributed && fc.similarity === 1
   )
 
   return !!(emailMatch || phoneMatch)
@@ -608,22 +681,25 @@ async function parallelMigration(records: UnifiedPerson[]) {
   const workerResults = await Promise.all(workers)
 
   // Aggregate results
-  return workerResults.reduce((acc, result) => ({
-    definiteMatches: acc.definiteMatches + result.definiteMatches,
-    potentialMatches: acc.potentialMatches + result.potentialMatches,
-    noMatches: acc.noMatches + result.noMatches
-  }), { definiteMatches: 0, potentialMatches: 0, noMatches: 0 })
+  return workerResults.reduce(
+    (acc, result) => ({
+      definiteMatches: acc.definiteMatches + result.definiteMatches,
+      potentialMatches: acc.potentialMatches + result.potentialMatches,
+      noMatches: acc.noMatches + result.noMatches,
+    }),
+    { definiteMatches: 0, potentialMatches: 0, noMatches: 0 }
+  )
 }
 
 function runWorker(records: UnifiedPerson[]): Promise<BatchResult> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(__filename, {
-      workerData: { records }
+      workerData: { records },
     })
 
     worker.on('message', resolve)
     worker.on('error', reject)
-    worker.on('exit', code => {
+    worker.on('exit', (code) => {
       if (code !== 0) reject(new Error(`Worker exited with code ${code}`))
     })
   })
@@ -632,7 +708,7 @@ function runWorker(records: UnifiedPerson[]): Promise<BatchResult> {
 if (!isMainThread) {
   const { records } = workerData
   // Process chunk and send result back
-  resolver.deduplicateBatch(records).then(result => {
+  resolver.deduplicateBatch(records).then((result) => {
     parentPort?.postMessage(result)
   })
 }
@@ -656,7 +732,7 @@ async function* streamedMigration(
         batch = []
 
         // Allow GC to run
-        await new Promise(resolve => setImmediate(resolve))
+        await new Promise((resolve) => setImmediate(resolve))
       }
     }
   }
@@ -668,17 +744,13 @@ async function* streamedMigration(
 }
 
 async function runStreamedMigration() {
-  const sources = [
-    extractFromCRM(),
-    extractFromLegacy(),
-    extractFromAcquired()
-  ]
+  const sources = [extractFromCRM(), extractFromLegacy(), extractFromAcquired()]
 
   let totalStats = {
     batches: 0,
     definiteMatches: 0,
     potentialMatches: 0,
-    noMatches: 0
+    noMatches: 0,
   }
 
   for await (const batchResult of streamedMigration(sources)) {
@@ -706,7 +778,7 @@ async function bulkInsertGoldenRecords(records: UnifiedPerson[]) {
 
     await prisma.unifiedPerson.createMany({
       data: batch,
-      skipDuplicates: true
+      skipDuplicates: true,
     })
   }
 }
@@ -719,35 +791,35 @@ async function transactionalMerge(
   return prisma.$transaction(async (tx) => {
     // Create golden record
     const golden = await tx.unifiedPerson.create({
-      data: mergeRecords(sourceRecords)
+      data: mergeRecords(sourceRecords),
     })
 
     // Archive source records
     await tx.archivedPerson.createMany({
-      data: sourceRecords.map(sr => ({
+      data: sourceRecords.map((sr) => ({
         ...sr.record,
         goldenRecordId: golden.id,
-        archivedAt: new Date()
-      }))
+        archivedAt: new Date(),
+      })),
     })
 
     // Create provenance
     await tx.provenance.create({
       data: {
         goldenRecordId: golden.id,
-        sourceRecordIds: sourceRecords.map(sr => sr.id),
+        sourceRecordIds: sourceRecords.map((sr) => sr.id),
         mergedBy,
-        mergedAt: new Date()
-      }
+        mergedAt: new Date(),
+      },
     })
 
     // Update source mappings
     await tx.sourceMapping.createMany({
-      data: sourceRecords.map(sr => ({
+      data: sourceRecords.map((sr) => ({
         sourceSystem: sr.record.sourceSystem,
         sourceId: sr.record.sourceId,
-        goldenRecordId: golden.id
-      }))
+        goldenRecordId: golden.id,
+      })),
     })
 
     return golden
@@ -781,7 +853,7 @@ async function validateMigrationReadiness() {
     SELECT table_name FROM information_schema.tables
     WHERE table_schema = 'public'
   `
-  if (!tables.find(t => t.table_name === 'unified_persons')) {
+  if (!tables.find((t) => t.table_name === 'unified_persons')) {
     issues.push('Target table unified_persons does not exist')
   }
 
@@ -790,7 +862,7 @@ async function validateMigrationReadiness() {
 
   return {
     ready: issues.length === 0,
-    issues
+    issues,
   }
 }
 ```
@@ -801,7 +873,9 @@ async function validateMigrationReadiness() {
 async function reconcileMigration() {
   // Count source records
   const crmCount = await crmDb.query('SELECT COUNT(*) as cnt FROM contacts')
-  const legacyCount = await legacyDb.query('SELECT COUNT(*) as cnt FROM CUSTOMER_MASTER')
+  const legacyCount = await legacyDb.query(
+    'SELECT COUNT(*) as cnt FROM CUSTOMER_MASTER'
+  )
 
   // Count target records
   const goldenCount = await prisma.unifiedPerson.count()
@@ -844,11 +918,11 @@ async function createCheckpoint(name: string) {
     timestamp: new Date(),
     goldenRecordCount: await prisma.unifiedPerson.count(),
     archivedCount: await prisma.archivedPerson.count(),
-    queueStats: await resolver.queue.stats()
+    queueStats: await resolver.queue.stats(),
   }
 
   await prisma.migrationCheckpoint.create({
-    data: checkpoint
+    data: checkpoint,
   })
 
   console.log(`Checkpoint '${name}' created`)
@@ -861,28 +935,30 @@ async function createCheckpoint(name: string) {
 ```typescript
 async function rollbackToCheckpoint(name: string) {
   const checkpoint = await prisma.migrationCheckpoint.findUnique({
-    where: { name }
+    where: { name },
   })
 
   if (!checkpoint) {
     throw new Error(`Checkpoint '${name}' not found`)
   }
 
-  console.log(`Rolling back to checkpoint '${name}' from ${checkpoint.timestamp}`)
+  console.log(
+    `Rolling back to checkpoint '${name}' from ${checkpoint.timestamp}`
+  )
 
   // Delete records created after checkpoint
   await prisma.unifiedPerson.deleteMany({
-    where: { createdAt: { gt: checkpoint.timestamp } }
+    where: { createdAt: { gt: checkpoint.timestamp } },
   })
 
   await prisma.archivedPerson.deleteMany({
-    where: { archivedAt: { gt: checkpoint.timestamp } }
+    where: { archivedAt: { gt: checkpoint.timestamp } },
   })
 
   // Restore queue state
   await resolver.queue.cleanup({
     olderThan: checkpoint.timestamp,
-    status: ['confirmed', 'rejected', 'merged']
+    status: ['confirmed', 'rejected', 'merged'],
   })
 
   console.log('Rollback complete')
@@ -895,7 +971,7 @@ async function rollbackToCheckpoint(name: string) {
 async function undoMerge(goldenRecordId: string, reason: string) {
   const provenance = await prisma.provenance.findUnique({
     where: { goldenRecordId },
-    include: { sourceRecords: true }
+    include: { sourceRecords: true },
   })
 
   if (!provenance) {
@@ -909,16 +985,16 @@ async function undoMerge(goldenRecordId: string, reason: string) {
       await tx.unifiedPerson.create({
         data: {
           ...sourceRecord,
-          id: undefined,  // Generate new ID
+          id: undefined, // Generate new ID
           restoredFrom: goldenRecordId,
-          restoredAt: new Date()
-        }
+          restoredAt: new Date(),
+        },
       })
     }
 
     // Delete golden record
     await tx.unifiedPerson.delete({
-      where: { id: goldenRecordId }
+      where: { id: goldenRecordId },
     })
 
     // Mark provenance as undone
@@ -926,8 +1002,8 @@ async function undoMerge(goldenRecordId: string, reason: string) {
       where: { goldenRecordId },
       data: {
         undoneAt: new Date(),
-        undoneReason: reason
-      }
+        undoneReason: reason,
+      },
     })
   })
 
@@ -939,7 +1015,7 @@ async function undoMerge(goldenRecordId: string, reason: string) {
 
 ```typescript
 async function monitorMigration() {
-  const interval = 30000  // 30 seconds
+  const interval = 30000 // 30 seconds
 
   while (true) {
     const queueStats = await resolver.queue.stats()
@@ -952,7 +1028,7 @@ async function monitorMigration() {
     console.log(`  Queue Processing: ${queueStats.byStatus.reviewing}`)
     console.log(`  Memory: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`)
 
-    await new Promise(resolve => setTimeout(resolve, interval))
+    await new Promise((resolve) => setTimeout(resolve, interval))
   }
 }
 ```

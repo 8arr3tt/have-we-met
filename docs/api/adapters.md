@@ -4,30 +4,31 @@ Database adapters provide storage-agnostic persistence for the resolver, enablin
 
 ## Available Adapters
 
-| Adapter | Import | Description |
-|---------|--------|-------------|
-| Prisma | `prismaAdapter` | For Prisma ORM projects |
+| Adapter | Import           | Description              |
+| ------- | ---------------- | ------------------------ |
+| Prisma  | `prismaAdapter`  | For Prisma ORM projects  |
 | Drizzle | `drizzleAdapter` | For Drizzle ORM projects |
-| TypeORM | `typeormAdapter` | For TypeORM projects |
+| TypeORM | `typeormAdapter` | For TypeORM projects     |
 
 ## Quick Start
 
 ```typescript
-import { HaveWeMet, prismaAdapter } from 'have-we-met';
-import { PrismaClient } from '@prisma/client';
+import { HaveWeMet, prismaAdapter } from 'have-we-met'
+import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-const resolver = HaveWeMet
-  .create<Customer>()
+const resolver = HaveWeMet.create<Customer>()
   .schema(/* ... */)
   .blocking(/* ... */)
   .matching(/* ... */)
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'customers',
-    idField: 'id'
-  }))
-  .build();
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'customers',
+      idField: 'id',
+    })
+  )
+  .build()
 ```
 
 ---
@@ -43,6 +44,7 @@ The core interface that all adapters implement.
 Find records matching blocking criteria. Used internally by the resolver for efficient candidate retrieval.
 
 **Parameters:**
+
 - `blockingKeys: Map<string, unknown>` - Key-value pairs for blocking
 - `options?: QueryOptions`
   - `limit?: number` - Maximum records to return
@@ -52,11 +54,15 @@ Find records matching blocking criteria. Used internally by the resolver for eff
 **Returns:** `Promise<T[]>`
 
 **Example:**
+
 ```typescript
 const candidates = await adapter.findByBlockingKeys(
-  new Map([['lastName_soundex', 'S530'], ['dob_year', '1990']]),
+  new Map([
+    ['lastName_soundex', 'S530'],
+    ['dob_year', '1990'],
+  ]),
   { limit: 100 }
-);
+)
 ```
 
 #### `findByIds(ids: string[]): Promise<T[]>`
@@ -64,6 +70,7 @@ const candidates = await adapter.findByBlockingKeys(
 Find records by their primary keys.
 
 **Parameters:**
+
 - `ids: string[]` - Array of record IDs
 
 **Returns:** `Promise<T[]>`
@@ -73,6 +80,7 @@ Find records by their primary keys.
 Get all records with optional filtering and pagination.
 
 **Parameters:**
+
 - `options?: QueryOptions`
   - `filter?: FilterCriteria` - Filter conditions
   - `limit?: number` - Maximum records
@@ -82,12 +90,13 @@ Get all records with optional filtering and pagination.
 **Returns:** `Promise<T[]>`
 
 **Example:**
+
 ```typescript
 const recentCustomers = await adapter.findAll({
   filter: { createdAt: { gt: new Date('2024-01-01') } },
   orderBy: { createdAt: 'desc' },
-  limit: 1000
-});
+  limit: 1000,
+})
 ```
 
 #### `count(filter?): Promise<number>`
@@ -95,6 +104,7 @@ const recentCustomers = await adapter.findAll({
 Count total records, optionally filtered.
 
 **Parameters:**
+
 - `filter?: FilterCriteria` - Optional filter conditions
 
 **Returns:** `Promise<number>`
@@ -106,6 +116,7 @@ Count total records, optionally filtered.
 Insert a new record.
 
 **Parameters:**
+
 - `record: T` - Record to insert
 
 **Returns:** `Promise<T>` - Inserted record with generated ID
@@ -115,6 +126,7 @@ Insert a new record.
 Update an existing record.
 
 **Parameters:**
+
 - `id: string` - Record ID
 - `updates: Partial<T>` - Fields to update
 
@@ -125,6 +137,7 @@ Update an existing record.
 Delete a record.
 
 **Parameters:**
+
 - `id: string` - Record ID to delete
 
 #### `batchInsert(records: T[]): Promise<T[]>`
@@ -132,6 +145,7 @@ Delete a record.
 Insert multiple records efficiently.
 
 **Parameters:**
+
 - `records: T[]` - Records to insert
 
 **Returns:** `Promise<T[]>` - Inserted records
@@ -141,6 +155,7 @@ Insert multiple records efficiently.
 Update multiple records efficiently.
 
 **Parameters:**
+
 - `updates: Array<{ id: string; updates: Partial<T> }>` - Update specifications
 
 **Returns:** `Promise<T[]>` - Updated records
@@ -152,17 +167,19 @@ Update multiple records efficiently.
 Execute operations within a transaction.
 
 **Parameters:**
+
 - `callback: (adapter: DatabaseAdapter<T>) => Promise<R>` - Operations to execute
 
 **Returns:** `Promise<R>` - Callback result
 
 **Example:**
+
 ```typescript
 const result = await adapter.transaction(async (txAdapter) => {
-  const merged = await txAdapter.update(primaryId, mergedData);
-  await txAdapter.delete(duplicateId);
-  return merged;
-});
+  const merged = await txAdapter.update(primaryId, mergedData)
+  await txAdapter.delete(duplicateId)
+  return merged
+})
 ```
 
 ### Queue Support
@@ -180,6 +197,7 @@ Optional queue adapter for review queue persistence.
 Create a Prisma adapter.
 
 **Parameters:**
+
 - `client: PrismaClient` - Prisma client instance
 - `options: PrismaAdapterOptions`
   - `tableName: string` - Prisma model name (e.g., `'customer'`)
@@ -189,20 +207,21 @@ Create a Prisma adapter.
 **Returns:** `DatabaseAdapter<T>`
 
 **Example:**
-```typescript
-import { prismaAdapter } from 'have-we-met';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+```typescript
+import { prismaAdapter } from 'have-we-met'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 const adapter = prismaAdapter<Customer>(prisma, {
   tableName: 'customer',
   idField: 'id',
   fieldMapping: {
     firstName: 'first_name',
-    lastName: 'last_name'
-  }
-});
+    lastName: 'last_name',
+  },
+})
 ```
 
 ### Merge and Provenance Adapters
@@ -210,20 +229,20 @@ const adapter = prismaAdapter<Customer>(prisma, {
 ```typescript
 import {
   createPrismaMergeAdapter,
-  createPrismaProvenanceAdapter
-} from 'have-we-met';
+  createPrismaProvenanceAdapter,
+} from 'have-we-met'
 
 // Merge adapter for golden record persistence
 const mergeAdapter = createPrismaMergeAdapter(prisma, {
   tableName: 'customer',
   archiveTableName: 'customer_archive',
-  idField: 'id'
-});
+  idField: 'id',
+})
 
 // Provenance adapter for tracking field sources
 const provenanceAdapter = createPrismaProvenanceAdapter(prisma, {
-  tableName: 'provenance_records'
-});
+  tableName: 'provenance_records',
+})
 ```
 
 ---
@@ -235,6 +254,7 @@ const provenanceAdapter = createPrismaProvenanceAdapter(prisma, {
 Create a Drizzle adapter.
 
 **Parameters:**
+
 - `db: DrizzleDB` - Drizzle database instance
 - `options: DrizzleAdapterOptions`
   - `table: Table` - Drizzle table definition
@@ -244,17 +264,18 @@ Create a Drizzle adapter.
 **Returns:** `DatabaseAdapter<T>`
 
 **Example:**
-```typescript
-import { drizzleAdapter } from 'have-we-met';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { customers } from './schema';
 
-const db = drizzle(pool);
+```typescript
+import { drizzleAdapter } from 'have-we-met'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { customers } from './schema'
+
+const db = drizzle(pool)
 
 const adapter = drizzleAdapter<Customer>(db, {
   table: customers,
-  idField: 'id'
-});
+  idField: 'id',
+})
 ```
 
 ### Merge and Provenance Adapters
@@ -262,18 +283,18 @@ const adapter = drizzleAdapter<Customer>(db, {
 ```typescript
 import {
   createDrizzleMergeAdapter,
-  createDrizzleProvenanceAdapter
-} from 'have-we-met';
+  createDrizzleProvenanceAdapter,
+} from 'have-we-met'
 
 const mergeAdapter = createDrizzleMergeAdapter(db, {
   table: customers,
   archiveTable: customersArchive,
-  idField: 'id'
-});
+  idField: 'id',
+})
 
 const provenanceAdapter = createDrizzleProvenanceAdapter(db, {
-  table: provenanceRecords
-});
+  table: provenanceRecords,
+})
 ```
 
 ---
@@ -285,6 +306,7 @@ const provenanceAdapter = createDrizzleProvenanceAdapter(db, {
 Create a TypeORM adapter.
 
 **Parameters:**
+
 - `dataSource: DataSource` - TypeORM data source
 - `options: TypeORMAdapterOptions`
   - `entity: EntityTarget<T>` - TypeORM entity class
@@ -294,17 +316,20 @@ Create a TypeORM adapter.
 **Returns:** `DatabaseAdapter<T>`
 
 **Example:**
-```typescript
-import { typeormAdapter } from 'have-we-met';
-import { DataSource } from 'typeorm';
-import { Customer } from './entities/Customer';
 
-const dataSource = new DataSource({ /* ... */ });
+```typescript
+import { typeormAdapter } from 'have-we-met'
+import { DataSource } from 'typeorm'
+import { Customer } from './entities/Customer'
+
+const dataSource = new DataSource({
+  /* ... */
+})
 
 const adapter = typeormAdapter<Customer>(dataSource, {
   entity: Customer,
-  idField: 'id'
-});
+  idField: 'id',
+})
 ```
 
 ### Merge and Provenance Adapters
@@ -312,18 +337,18 @@ const adapter = typeormAdapter<Customer>(dataSource, {
 ```typescript
 import {
   createTypeORMMergeAdapter,
-  createTypeORMProvenanceAdapter
-} from 'have-we-met';
+  createTypeORMProvenanceAdapter,
+} from 'have-we-met'
 
 const mergeAdapter = createTypeORMMergeAdapter(dataSource, {
   entity: Customer,
   archiveEntity: CustomerArchive,
-  idField: 'id'
-});
+  idField: 'id',
+})
 
 const provenanceAdapter = createTypeORMProvenanceAdapter(dataSource, {
-  entity: ProvenanceRecord
-});
+  entity: ProvenanceRecord,
+})
 ```
 
 ---
@@ -341,9 +366,9 @@ const adapter = prismaAdapter<Customer>(prisma, {
     lastName: 'last_name',
     dateOfBirth: 'dob',
     'address.street': 'street_address',
-    'address.city': 'city'
-  }
-});
+    'address.city': 'city',
+  },
+})
 ```
 
 ---
@@ -355,12 +380,12 @@ const adapter = prismaAdapter<Customer>(prisma, {
 Analyze and suggest database indexes for blocking fields.
 
 ```typescript
-import { IndexAnalyzer } from 'have-we-met';
+import { IndexAnalyzer } from 'have-we-met'
 
-const analyzer = new IndexAnalyzer(blockingConfig);
-const recommendations = analyzer.analyze();
+const analyzer = new IndexAnalyzer(blockingConfig)
+const recommendations = analyzer.analyze()
 
-console.log(recommendations);
+console.log(recommendations)
 // [
 //   { field: 'lastName_soundex', type: 'btree', priority: 'high' },
 //   { field: 'email', type: 'hash', priority: 'high' },
@@ -368,8 +393,8 @@ console.log(recommendations);
 // ]
 
 // Generate SQL
-const sql = analyzer.generateSQL('customers');
-console.log(sql);
+const sql = analyzer.generateSQL('customers')
+console.log(sql)
 // CREATE INDEX idx_customers_lastname_soundex ON customers (last_name_soundex);
 // CREATE INDEX idx_customers_email ON customers USING hash (email);
 ```
@@ -379,18 +404,18 @@ console.log(sql);
 Profile query performance for optimization.
 
 ```typescript
-import { QueryProfiler } from 'have-we-met';
+import { QueryProfiler } from 'have-we-met'
 
-const profiler = new QueryProfiler(adapter);
+const profiler = new QueryProfiler(adapter)
 
 // Profile a blocking query
 const profile = await profiler.profileBlockingQuery({
   field: 'lastName',
   transform: 'soundex',
-  sampleSize: 1000
-});
+  sampleSize: 1000,
+})
 
-console.log(profile);
+console.log(profile)
 // {
 //   averageLatency: 12.5,
 //   p95Latency: 28.3,
@@ -410,45 +435,48 @@ The queue adapter extends the base adapter with review queue operations.
 ```typescript
 interface QueueAdapter<T> {
   // Add item to queue
-  addQueueItem(item: AddQueueItemRequest): Promise<QueueItem>;
+  addQueueItem(item: AddQueueItemRequest): Promise<QueueItem>
 
   // Batch add items
-  addQueueItems(items: AddQueueItemRequest[]): Promise<QueueItem[]>;
+  addQueueItems(items: AddQueueItemRequest[]): Promise<QueueItem[]>
 
   // Get queue item by ID
-  getQueueItem(id: string): Promise<QueueItem | null>;
+  getQueueItem(id: string): Promise<QueueItem | null>
 
   // List queue items with filtering
-  listQueueItems(options?: ListQueueOptions): Promise<QueueItemList>;
+  listQueueItems(options?: ListQueueOptions): Promise<QueueItemList>
 
   // Update queue item status
-  updateQueueItem(id: string, update: QueueItemUpdate): Promise<QueueItem>;
+  updateQueueItem(id: string, update: QueueItemUpdate): Promise<QueueItem>
 
   // Delete queue items
-  deleteQueueItems(ids: string[]): Promise<number>;
+  deleteQueueItems(ids: string[]): Promise<number>
 
   // Get queue statistics
-  getQueueStats(options?: StatsOptions): Promise<QueueStats>;
+  getQueueStats(options?: StatsOptions): Promise<QueueStats>
 }
 ```
 
 ### Usage
 
 ```typescript
-const resolver = HaveWeMet
-  .create<Customer>()
+const resolver = HaveWeMet.create<Customer>()
   .schema(/* ... */)
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'customers',
-    queue: {
-      tableName: 'review_queue'
-    }
-  }))
-  .build();
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'customers',
+      queue: {
+        tableName: 'review_queue',
+      },
+    })
+  )
+  .build()
 
 // Access queue through resolver
-const queue = resolver.queue;
-await queue.add({ /* ... */ });
+const queue = resolver.queue
+await queue.add({
+  /* ... */
+})
 ```
 
 ---
@@ -458,6 +486,7 @@ await queue.add({ /* ... */ });
 ### Main Table
 
 Your main table needs:
+
 - Primary key field (default: `id`)
 - All fields referenced in schema/blocking/matching configuration
 
@@ -525,10 +554,10 @@ CREATE INDEX idx_provenance_field ON provenance_records (golden_record_id, field
 ## Complete Example
 
 ```typescript
-import { HaveWeMet, prismaAdapter, IndexAnalyzer } from 'have-we-met';
-import { PrismaClient } from '@prisma/client';
+import { HaveWeMet, prismaAdapter, IndexAnalyzer } from 'have-we-met'
+import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 // Create adapter with all features
 const adapter = prismaAdapter<Patient>(prisma, {
@@ -537,32 +566,32 @@ const adapter = prismaAdapter<Patient>(prisma, {
   fieldMapping: {
     firstName: 'first_name',
     lastName: 'last_name',
-    dateOfBirth: 'dob'
-  }
-});
+    dateOfBirth: 'dob',
+  },
+})
 
 // Create resolver
-const resolver = HaveWeMet
-  .create<Patient>()
+const resolver = HaveWeMet.create<Patient>()
   .schema(/* ... */)
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-    .onField('dateOfBirth', { transform: 'year' })
+  .blocking((block) =>
+    block
+      .onField('lastName', { transform: 'soundex' })
+      .onField('dateOfBirth', { transform: 'year' })
   )
   .matching(/* ... */)
   .adapter(adapter)
-  .build();
+  .build()
 
 // Analyze index requirements
-const analyzer = new IndexAnalyzer(resolver.getBlockingConfig());
-console.log('Index recommendations:');
-console.log(analyzer.generateSQL('patients'));
+const analyzer = new IndexAnalyzer(resolver.getBlockingConfig())
+console.log('Index recommendations:')
+console.log(analyzer.generateSQL('patients'))
 
 // Use database operations
-const matches = await resolver.resolveWithDatabase(newPatient);
+const matches = await resolver.resolveWithDatabase(newPatient)
 const duplicates = await resolver.deduplicateBatchFromDatabase({
-  batchSize: 5000
-});
+  batchSize: 5000,
+})
 ```
 
 ---

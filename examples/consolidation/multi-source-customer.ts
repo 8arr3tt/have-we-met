@@ -161,11 +161,12 @@ function createMockAdapter<T>(data: T[]): DatabaseAdapter<T> {
   return {
     count: async () => data.length,
     findAll: async () => data,
-    findById: async (id) => data.find((record: any) => record.id === id) ?? null,
+    findById: async (id) =>
+      data.find((record: any) => record.id === id) ?? null,
     findByField: async (field, value) =>
       data.filter((record: any) => record[field] === value),
     create: async (record) => record,
-    update: async (id, updates) => ({ ...updates, id } as T),
+    update: async (id, updates) => ({ ...updates, id }) as T,
     delete: async () => undefined,
     findMany: async () => data,
   }
@@ -204,28 +205,30 @@ const outputAdapter = {
  */
 const consolidationConfig = HaveWeMet.consolidation<UnifiedCustomer>()
   // Configure CRM source (highest priority)
-  .source<CRMCustomer>('crm', (source) =>
-    source
-      .name('CRM Database')
-      .adapter(crmAdapter)
-      .mapping((map) =>
-        map
-          // Map fields from CRM schema to unified schema
-          .field('email')
-          .from('email_address')
-          .field('firstName')
-          .from('first_name')
-          .field('lastName')
-          .from('last_name')
-          .field('phone')
-          .from('phone')
-          .field('createdAt')
-          .from('created_at')
-          // Add source tracking
-          .field('source')
-          .transform(() => 'crm')
-      )
-      .priority(3) // Highest priority
+  .source<CRMCustomer>(
+    'crm',
+    (source) =>
+      source
+        .name('CRM Database')
+        .adapter(crmAdapter)
+        .mapping((map) =>
+          map
+            // Map fields from CRM schema to unified schema
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+            .field('phone')
+            .from('phone')
+            .field('createdAt')
+            .from('created_at')
+            // Add source tracking
+            .field('source')
+            .transform(() => 'crm')
+        )
+        .priority(3) // Highest priority
   )
 
   // Configure Billing source (medium priority)
@@ -252,26 +255,28 @@ const consolidationConfig = HaveWeMet.consolidation<UnifiedCustomer>()
   )
 
   // Configure Support source (lowest priority)
-  .source<SupportCustomer>('support', (source) =>
-    source
-      .name('Support Ticketing System')
-      .adapter(supportAdapter)
-      .mapping((map) =>
-        map
-          .field('email')
-          .from('contact_email')
-          .field('firstName')
-          .from('given_name')
-          .field('lastName')
-          .from('family_name')
-          .field('phone')
-          .from('phone_number')
-          .field('createdAt')
-          .from('registered')
-          .field('source')
-          .transform(() => 'support')
-      )
-      .priority(1) // Lowest priority
+  .source<SupportCustomer>(
+    'support',
+    (source) =>
+      source
+        .name('Support Ticketing System')
+        .adapter(supportAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('contact_email')
+            .field('firstName')
+            .from('given_name')
+            .field('lastName')
+            .from('family_name')
+            .field('phone')
+            .from('phone_number')
+            .field('createdAt')
+            .from('registered')
+            .field('source')
+            .transform(() => 'support')
+        )
+        .priority(1) // Lowest priority
   )
 
   // Use within-source-first matching strategy
@@ -339,7 +344,9 @@ async function runConsolidation() {
   console.log(`- CRM: ${crmCustomers.length} customers`)
   console.log(`- Billing: ${billingCustomers.length} customers`)
   console.log(`- Support: ${supportCustomers.length} customers`)
-  console.log(`- Total input records: ${crmCustomers.length + billingCustomers.length + supportCustomers.length}`)
+  console.log(
+    `- Total input records: ${crmCustomers.length + billingCustomers.length + supportCustomers.length}`
+  )
   console.log()
 
   console.log('Expected Consolidation:')
@@ -430,10 +437,16 @@ async function runConsolidation() {
   console.log('-'.repeat(80))
   console.log('Summary:')
   console.log('-'.repeat(80))
-  console.log(`Input records: ${crmCustomers.length + billingCustomers.length + supportCustomers.length}`)
+  console.log(
+    `Input records: ${crmCustomers.length + billingCustomers.length + supportCustomers.length}`
+  )
   console.log(`Output records: ${goldenRecords.length}`)
-  console.log(`Duplicates found: ${crmCustomers.length + billingCustomers.length + supportCustomers.length - goldenRecords.length}`)
-  console.log(`Deduplication rate: ${(((crmCustomers.length + billingCustomers.length + supportCustomers.length - goldenRecords.length) / (crmCustomers.length + billingCustomers.length + supportCustomers.length)) * 100).toFixed(1)}%`)
+  console.log(
+    `Duplicates found: ${crmCustomers.length + billingCustomers.length + supportCustomers.length - goldenRecords.length}`
+  )
+  console.log(
+    `Deduplication rate: ${(((crmCustomers.length + billingCustomers.length + supportCustomers.length - goldenRecords.length) / (crmCustomers.length + billingCustomers.length + supportCustomers.length)) * 100).toFixed(1)}%`
+  )
   console.log()
   console.log('Consolidation complete!')
 }

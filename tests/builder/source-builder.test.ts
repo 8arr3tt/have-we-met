@@ -50,14 +50,22 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy Database')
         .adapter(adapter)
-        .mapping(map => map
-          .field('email').from('email_address')
-          .field('firstName').from('first_name')
-          .field('lastName').from('last_name')
-          .field('phone').from('phone_number')
-          .field('fullName').transform((input) => `${input.first_name} ${input.last_name}`)
-          .field('age').from('age_str')
-          .field('city').from('address.city')
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+            .field('phone')
+            .from('phone_number')
+            .field('fullName')
+            .transform((input) => `${input.first_name} ${input.last_name}`)
+            .field('age')
+            .from('age_str')
+            .field('city')
+            .from('address.city')
         )
         .build()
 
@@ -79,7 +87,7 @@ describe('SourceBuilder', () => {
       expect(() => {
         new SourceBuilder<LegacyCustomer, Customer>('legacy')
           .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+          .mapping((map) => map.field('email').from('email_address'))
           .build()
       }).toThrow("name is required for source 'legacy'")
     })
@@ -88,7 +96,7 @@ describe('SourceBuilder', () => {
       expect(() => {
         new SourceBuilder<LegacyCustomer, Customer>('legacy')
           .name('Legacy')
-          .mapping(map => map.field('email').from('email_address'))
+          .mapping((map) => map.field('email').from('email_address'))
           .build()
       }).toThrow("adapter is required for source 'legacy'")
     })
@@ -112,7 +120,7 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => map.field('email').from('email_address'))
+        .mapping((map) => map.field('email').from('email_address'))
         .build()
 
       expect(source.priority).toBe(0)
@@ -124,7 +132,7 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => map.field('email').from('email_address'))
+        .mapping((map) => map.field('email').from('email_address'))
         .priority(5)
         .build()
 
@@ -137,7 +145,7 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => map.field('email').from('email_address'))
+        .mapping((map) => map.field('email').from('email_address'))
         .priority(-1)
         .build()
 
@@ -152,7 +160,7 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => map.field('email').from('email_address'))
+        .mapping((map) => map.field('email').from('email_address'))
         .build()
 
       expect(source.metadata).toEqual({})
@@ -164,7 +172,7 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => map.field('email').from('email_address'))
+        .mapping((map) => map.field('email').from('email_address'))
         .metadata({ region: 'US', vintage: '2020' })
         .build()
 
@@ -178,7 +186,7 @@ describe('SourceBuilder', () => {
         new SourceBuilder<LegacyCustomer, Customer>('legacy')
           .name('Legacy')
           .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+          .mapping((map) => map.field('email').from('email_address'))
           // @ts-expect-error Testing invalid input
           .metadata('not-an-object')
       }).toThrow('metadata')
@@ -194,14 +202,22 @@ describe('SourceBuilder', () => {
         .adapter(adapter)
         .priority(2)
         .metadata({ region: 'US' })
-        .mapping(map => map
-          .field('email').from('email_address')
-          .field('firstName').from('first_name')
-          .field('lastName').from('last_name')
-          .field('phone').from('phone_number')
-          .field('fullName').transform((input) => `${input.first_name} ${input.last_name}`)
-          .field('age').from('age_str')
-          .field('city').from('address.city')
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+            .field('phone')
+            .from('phone_number')
+            .field('fullName')
+            .transform((input) => `${input.first_name} ${input.last_name}`)
+            .field('age')
+            .from('age_str')
+            .field('city')
+            .from('address.city')
         )
         .build()
 
@@ -217,7 +233,7 @@ describe('SourceBuilder', () => {
       const source = new SourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => {
+        .mapping((map) => {
           map.field('email').from('email_address')
           return map
         })
@@ -239,7 +255,7 @@ describe('SourceBuilder', () => {
       const source = createSourceBuilder<LegacyCustomer, Customer>('legacy')
         .name('Legacy')
         .adapter(adapter)
-        .mapping(map => map.field('email').from('email_address'))
+        .mapping((map) => map.field('email').from('email_address'))
         .build()
 
       expect(source.sourceId).toBe('legacy')
@@ -251,9 +267,12 @@ describe('FieldMappingBuilder', () => {
   describe('static field mapping', () => {
     it('should map fields with from()', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('email_address')
-        .field('firstName').from('first_name')
-        .field('lastName').from('last_name')
+        .field('email')
+        .from('email_address')
+        .field('firstName')
+        .from('first_name')
+        .field('lastName')
+        .from('last_name')
         .build()
 
       expect(mapping.email).toBeDefined()
@@ -264,7 +283,8 @@ describe('FieldMappingBuilder', () => {
 
     it('should support nested field paths', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('city').from('address.city')
+        .field('city')
+        .from('address.city')
         .build()
 
       expect(mapping.city!.sourceField).toBe('address.city')
@@ -274,7 +294,8 @@ describe('FieldMappingBuilder', () => {
       expect(() => {
         new FieldMappingBuilder<LegacyCustomer, Customer>()
           // @ts-expect-error Testing invalid input
-          .field('').from('email')
+          .field('')
+          .from('email')
       }).toThrow('fieldName')
     })
 
@@ -289,7 +310,8 @@ describe('FieldMappingBuilder', () => {
     it('should throw if sourceField is empty', () => {
       expect(() => {
         new FieldMappingBuilder<LegacyCustomer, Customer>()
-          .field('email').from('')
+          .field('email')
+          .from('')
       }).toThrow('sourceField')
     })
   })
@@ -297,7 +319,8 @@ describe('FieldMappingBuilder', () => {
   describe('transform functions', () => {
     it('should map fields with transform()', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('fullName').transform((input) => `${input.first_name} ${input.last_name}`)
+        .field('fullName')
+        .transform((input) => `${input.first_name} ${input.last_name}`)
         .build()
 
       expect(mapping.fullName).toBeDefined()
@@ -307,7 +330,8 @@ describe('FieldMappingBuilder', () => {
 
     it('should execute transform function correctly', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('fullName').transform((input) => `${input.first_name} ${input.last_name}`)
+        .field('fullName')
+        .transform((input) => `${input.first_name} ${input.last_name}`)
         .build()
 
       const input: LegacyCustomer = {
@@ -316,7 +340,7 @@ describe('FieldMappingBuilder', () => {
         last_name: 'Doe',
         phone_number: '1234567890',
         age_str: '30',
-        address: { city: 'NYC', state: 'NY' }
+        address: { city: 'NYC', state: 'NY' },
       }
 
       const result = mapping.fullName!.transform!(input, 'fullName')
@@ -335,7 +359,8 @@ describe('FieldMappingBuilder', () => {
       expect(() => {
         new FieldMappingBuilder<LegacyCustomer, Customer>()
           // @ts-expect-error Testing invalid input
-          .field('fullName').transform('not-a-function')
+          .field('fullName')
+          .transform('not-a-function')
       }).toThrow('transform')
     })
   })
@@ -364,7 +389,9 @@ describe('FieldMappingBuilder', () => {
   describe('type coercion', () => {
     it('should set coerce for number', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('age').from('age_str').coerce('number')
+        .field('age')
+        .from('age_str')
+        .coerce('number')
         .build()
 
       expect(mapping.age!.coerce).toBe('number')
@@ -372,7 +399,9 @@ describe('FieldMappingBuilder', () => {
 
     it('should set coerce for string', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('email_address').coerce('string')
+        .field('email')
+        .from('email_address')
+        .coerce('string')
         .build()
 
       expect(mapping.email!.coerce).toBe('string')
@@ -383,7 +412,9 @@ describe('FieldMappingBuilder', () => {
 
       for (const type of types) {
         const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-          .field('email').from('email_address').coerce(type)
+          .field('email')
+          .from('email_address')
+          .coerce(type)
           .build()
 
         expect(mapping.email!.coerce).toBe(type)
@@ -402,7 +433,9 @@ describe('FieldMappingBuilder', () => {
       expect(() => {
         new FieldMappingBuilder<LegacyCustomer, Customer>()
           // @ts-expect-error Testing invalid input
-          .field('age').from('age_str').coerce('invalid-type')
+          .field('age')
+          .from('age_str')
+          .coerce('invalid-type')
       }).toThrow()
     })
   })
@@ -410,7 +443,9 @@ describe('FieldMappingBuilder', () => {
   describe('required fields', () => {
     it('should mark field as required', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('email_address').required()
+        .field('email')
+        .from('email_address')
+        .required()
         .build()
 
       expect(mapping.email!.required).toBe(true)
@@ -418,7 +453,9 @@ describe('FieldMappingBuilder', () => {
 
     it('should mark field as not required', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('email_address').required(false)
+        .field('email')
+        .from('email_address')
+        .required(false)
         .build()
 
       expect(mapping.email!.required).toBe(false)
@@ -426,7 +463,8 @@ describe('FieldMappingBuilder', () => {
 
     it('should default to undefined if not specified', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('email_address')
+        .field('email')
+        .from('email_address')
         .build()
 
       expect(mapping.email!.required).toBeUndefined()
@@ -453,9 +491,12 @@ describe('FieldMappingBuilder', () => {
     it('should not throw if all fields have mapping', () => {
       expect(() => {
         new FieldMappingBuilder<LegacyCustomer, Customer>()
-          .field('email').from('email_address')
-          .field('firstName').from('first_name')
-          .field('fullName').transform((input) => `${input.first_name} ${input.last_name}`)
+          .field('email')
+          .from('email_address')
+          .field('firstName')
+          .from('first_name')
+          .field('fullName')
+          .transform((input) => `${input.first_name} ${input.last_name}`)
           .build()
       }).not.toThrow()
     })
@@ -464,13 +505,23 @@ describe('FieldMappingBuilder', () => {
   describe('fluent API', () => {
     it('should support method chaining', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('email_address').required()
-        .field('firstName').from('first_name').required()
-        .field('lastName').from('last_name')
-        .field('phone').from('phone_number')
-        .field('fullName').transform((input) => `${input.first_name} ${input.last_name}`)
-        .field('age').from('age_str').coerce('number')
-        .field('city').from('address.city')
+        .field('email')
+        .from('email_address')
+        .required()
+        .field('firstName')
+        .from('first_name')
+        .required()
+        .field('lastName')
+        .from('last_name')
+        .field('phone')
+        .from('phone_number')
+        .field('fullName')
+        .transform((input) => `${input.first_name} ${input.last_name}`)
+        .field('age')
+        .from('age_str')
+        .coerce('number')
+        .field('city')
+        .from('address.city')
         .build()
 
       expect(Object.keys(mapping)).toHaveLength(7)
@@ -482,8 +533,11 @@ describe('FieldMappingBuilder', () => {
 
     it('should allow configuring same field multiple times (last wins)', () => {
       const mapping = new FieldMappingBuilder<LegacyCustomer, Customer>()
-        .field('email').from('old_field')
-        .field('email').from('email_address').required()
+        .field('email')
+        .from('old_field')
+        .field('email')
+        .from('email_address')
+        .required()
         .build()
 
       expect(mapping.email!.sourceField).toBe('email_address')

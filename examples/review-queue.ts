@@ -131,7 +131,11 @@ const resolver = HaveWeMet.create<Patient>()
       .field('email', { type: 'email' })
       .field('address', { type: 'string' })
   )
-  .blocking((block) => block.onField('lastName', { transform: 'soundex' }).onField('dateOfBirth', { transform: 'year' }))
+  .blocking((block) =>
+    block
+      .onField('lastName', { transform: 'soundex' })
+      .onField('dateOfBirth', { transform: 'year' })
+  )
   .matching((match) =>
     match
       .field('nhsNumber')
@@ -157,7 +161,6 @@ const resolver = HaveWeMet.create<Patient>()
   .build()
 
 console.log('=== Review Queue Example ===\n')
-
 ;(async () => {
   try {
     // ========================================================================
@@ -212,18 +215,24 @@ console.log('=== Review Queue Example ===\n')
       limit: 10,
     })
 
-    console.log(`Found ${pendingItems.items.length} pending items for review:\n`)
+    console.log(
+      `Found ${pendingItems.items.length} pending items for review:\n`
+    )
 
     pendingItems.items.forEach((item, index) => {
       console.log(`Item ${index + 1} [${item.id}]:`)
       console.log(`  Priority: ${item.priority || 'normal'}`)
       console.log(`  Source: ${item.context?.source || 'unknown'}`)
       console.log(`  New Record:`)
-      console.log(`    ${item.sourceRecord.firstName} ${item.sourceRecord.lastName}`)
+      console.log(
+        `    ${item.sourceRecord.firstName} ${item.sourceRecord.lastName}`
+      )
       console.log(`    DOB: ${item.sourceRecord.dateOfBirth}`)
       console.log(`  Potential Matches: ${item.potentialMatches.length}`)
       item.potentialMatches.forEach((match, i) => {
-        console.log(`    Match ${i + 1}: ${match.record.firstName} ${match.record.lastName} (score: ${match.score.totalScore})`)
+        console.log(
+          `    Match ${i + 1}: ${match.record.firstName} ${match.record.lastName} (score: ${match.score.totalScore})`
+        )
       })
       console.log()
     })
@@ -254,7 +263,9 @@ console.log('=== Review Queue Example ===\n')
 
       // Scenario B: Reject match (different patient)
       console.log('Scenario B: Rejecting match (different patient)')
-      console.log(`  Reviewer examined: name similar but phone/NHS number don't match`)
+      console.log(
+        `  Reviewer examined: name similar but phone/NHS number don't match`
+      )
       console.log(`  Decision: Not a match - create new record\n`)
 
       // Create another item for demonstration
@@ -266,11 +277,15 @@ console.log('=== Review Queue Example ===\n')
       }
 
       await resolver.resolve(anotherPatient, { autoQueue: true })
-      const items = await resolver.queue.list({ status: 'pending' as QueueItemStatus, limit: 1 })
+      const items = await resolver.queue.list({
+        status: 'pending' as QueueItemStatus,
+        limit: 1,
+      })
 
       if (items.items.length > 0) {
         await resolver.queue.reject(items.items[0].id, {
-          notes: 'Different patient - DOB differs by 2 days, different phone number',
+          notes:
+            'Different patient - DOB differs by 2 days, different phone number',
           decidedBy: 'dr.sarah.jones@hospital.nhs.uk',
         })
         console.log(`  ✓ Match rejected`)
@@ -321,7 +336,7 @@ console.log('=== Review Queue Example ===\n')
     console.log('// Remove items decided more than 90 days ago')
     console.log('const deleted = await resolver.queue.cleanup({')
     console.log('  olderThan: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),')
-    console.log('  statuses: [\'confirmed\', \'rejected\'],')
+    console.log("  statuses: ['confirmed', 'rejected'],")
     console.log('})')
     console.log('```')
     console.log()
@@ -331,7 +346,7 @@ console.log('=== Review Queue Example ===\n')
     console.log('// Items pending more than 30 days')
     console.log('const expired = await resolver.queue.cleanup({')
     console.log('  olderThan: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),')
-    console.log('  statuses: [\'pending\'],')
+    console.log("  statuses: ['pending'],")
     console.log('  markAsExpired: true,')
     console.log('})')
     console.log('```')
@@ -343,7 +358,9 @@ console.log('=== Review Queue Example ===\n')
     console.log('=== Best Practices ===\n')
 
     console.log('1. Priority Management:')
-    console.log('   - Use high priority for critical records (e.g., emergency admissions)')
+    console.log(
+      '   - Use high priority for critical records (e.g., emergency admissions)'
+    )
     console.log('   - Use normal priority for routine registrations')
     console.log('   - Use low priority for bulk data imports')
     console.log()
@@ -363,14 +380,18 @@ console.log('=== Review Queue Example ===\n')
 
     console.log('4. Monitoring:')
     console.log('   - Track queue size daily')
-    console.log('   - Monitor wait times (p95 should be < 24 hours for most use cases)')
+    console.log(
+      '   - Monitor wait times (p95 should be < 24 hours for most use cases)'
+    )
     console.log('   - Track reviewer throughput for capacity planning')
     console.log('   - Alert on growing backlogs')
     console.log()
 
     console.log('5. Integration with ML:')
     console.log('   - Use FeedbackCollector to gather decided items')
-    console.log('   - Retrain models periodically (e.g., monthly) with new decisions')
+    console.log(
+      '   - Retrain models periodically (e.g., monthly) with new decisions'
+    )
     console.log('   - Monitor ML accuracy over time')
     console.log('   - Adjust thresholds based on review rates')
   } catch (error) {

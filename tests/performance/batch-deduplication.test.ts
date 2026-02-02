@@ -11,7 +11,7 @@ describe('Performance: Batch Deduplication', () => {
         id: `rec-${i}`,
         firstName: `Person${i}`,
         lastName: `Family${i % 100}`, // 100 blocks
-        email: `person${i}@example.com`
+        email: `person${i}@example.com`,
       })
     }
     return records
@@ -21,15 +21,20 @@ describe('Performance: Batch Deduplication', () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
       .blocking((block) =>
         block.onField('lastName', { transform: 'firstLetter' })
       )
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 20, definiteMatch: 30 })
       .build()
@@ -48,12 +53,17 @@ describe('Performance: Batch Deduplication', () => {
   it.skip('should process smaller batches quickly', async () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 15, definiteMatch: 25 })
       .build()
@@ -71,11 +81,9 @@ describe('Performance: Batch Deduplication', () => {
 
   it.skip('should maintain memory efficiency', async () => {
     const resolver = HaveWeMet.schema({
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
-      .matching((match) =>
-        match.field('email').strategy('exact').weight(20)
-      )
+      .matching((match) => match.field('email').strategy('exact').weight(20))
       .thresholds({ noMatch: 15, definiteMatch: 20 })
       .build()
 

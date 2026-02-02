@@ -14,6 +14,7 @@ Point-of-entry systems need instant identity resolution:
 - **Lead capture**: Is this a new lead or existing contact?
 
 Real-time matching requires:
+
 - **Low latency**: Sub-second response times
 - **High availability**: Cannot block critical user flows
 - **Graceful degradation**: Handle failures without breaking checkout/registration
@@ -48,61 +49,89 @@ interface Contact {
 const prisma = new PrismaClient()
 
 const resolver = HaveWeMet.create<Contact>()
-  .schema(schema => schema
-    .field('email').type('email')
-    .field('phone').type('phone')
-    .field('firstName').type('name').component('first')
-    .field('lastName').type('name').component('last')
-    .field('company').type('string')
-    .field('createdAt').type('date')
-    .field('updatedAt').type('date')
+  .schema((schema) =>
+    schema
+      .field('email')
+      .type('email')
+      .field('phone')
+      .type('phone')
+      .field('firstName')
+      .type('name')
+      .component('first')
+      .field('lastName')
+      .type('name')
+      .component('last')
+      .field('company')
+      .type('string')
+      .field('createdAt')
+      .type('date')
+      .field('updatedAt')
+      .type('date')
   )
-  .blocking(block => block
-    // Single-field blocking for speed
-    // Email domain provides good grouping without excessive comparisons
-    .onField('email', { transform: 'domain' })
+  .blocking((block) =>
+    block
+      // Single-field blocking for speed
+      // Email domain provides good grouping without excessive comparisons
+      .onField('email', { transform: 'domain' })
   )
-  .matching(match => match
-    // Email is primary - if it matches, likely same person
-    .field('email').strategy('exact').weight(30)
+  .matching((match) =>
+    match
+      // Email is primary - if it matches, likely same person
+      .field('email')
+      .strategy('exact')
+      .weight(30)
 
-    // Phone is strong secondary identifier
-    .field('phone').strategy('exact').weight(20)
+      // Phone is strong secondary identifier
+      .field('phone')
+      .strategy('exact')
+      .weight(20)
 
-    // Names for verification
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(12).threshold(0.88)
+      // Names for verification
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.88)
 
-    // Company helps in B2B contexts
-    .field('company').strategy('jaro-winkler').weight(8).threshold(0.80)
+      // Company helps in B2B contexts
+      .field('company')
+      .strategy('jaro-winkler')
+      .weight(8)
+      .threshold(0.8)
 
-    // Balanced thresholds for real-time use
-    // Max: 80, noMatch: 15 (19%), definiteMatch: 45 (56%)
-    .thresholds({ noMatch: 15, definiteMatch: 45 })
+      // Balanced thresholds for real-time use
+      // Max: 80, noMatch: 15 (19%), definiteMatch: 45 (56%)
+      .thresholds({ noMatch: 15, definiteMatch: 45 })
   )
-  .services(services => services
-    // Aggressive timeouts for real-time
-    .defaultTimeout(500)  // 500ms max for any service
-    .defaultRetry({ maxAttempts: 1 })  // Single attempt only
+  .services((services) =>
+    services
+      // Aggressive timeouts for real-time
+      .defaultTimeout(500) // 500ms max for any service
+      .defaultRetry({ maxAttempts: 1 }) // Single attempt only
 
-    // Enable caching to speed up repeated lookups
-    .caching(true)
+      // Enable caching to speed up repeated lookups
+      .caching(true)
 
-    // Validate email format (fast, local)
-    .validate('email')
+      // Validate email format (fast, local)
+      .validate('email')
       .using(emailValidator)
       .onInvalid('flag')
-      .timeout(50)  // Very fast
+      .timeout(50) // Very fast
 
-    // Validate phone format (fast, local)
-    .validate('phone')
+      // Validate phone format (fast, local)
+      .validate('phone')
       .using(phoneValidator)
       .onInvalid('flag')
       .timeout(50)
   )
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'contacts'
-  }))
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'contacts',
+    })
+  )
   .build()
 ```
 
@@ -127,14 +156,14 @@ async function lookupContact(input: Partial<Contact>): Promise<LookupResult> {
       return {
         status: 'error',
         message: 'Email or phone required for lookup',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       }
     }
 
     // Run matching with timeout
     const result = await Promise.race([
       resolver.resolve(input as Contact),
-      timeoutPromise(2000)  // Hard 2 second timeout
+      timeoutPromise(2000), // Hard 2 second timeout
     ])
 
     if (result === 'timeout') {
@@ -143,7 +172,7 @@ async function lookupContact(input: Partial<Contact>): Promise<LookupResult> {
       return {
         status: 'not_found',
         message: 'Lookup timed out',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       }
     }
 
@@ -153,27 +182,27 @@ async function lookupContact(input: Partial<Contact>): Promise<LookupResult> {
           status: 'found',
           contact: result.matches[0].record,
           confidence: result.matches[0].score / result.matches[0].maxScore,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
 
       case 'potential-match':
         return {
           status: 'review',
-          suggestions: result.matches.map(m => m.record),
+          suggestions: result.matches.map((m) => m.record),
           confidence: result.matches[0].score / result.matches[0].maxScore,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
 
       case 'no-match':
         return {
           status: 'not_found',
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
 
       default:
         return {
           status: 'not_found',
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
     }
   } catch (error) {
@@ -182,13 +211,13 @@ async function lookupContact(input: Partial<Contact>): Promise<LookupResult> {
     return {
       status: 'error',
       message: 'Lookup service unavailable',
-      duration: Date.now() - startTime
+      duration: Date.now() - startTime,
     }
   }
 }
 
 function timeoutPromise(ms: number): Promise<'timeout'> {
-  return new Promise(resolve => setTimeout(() => resolve('timeout'), ms))
+  return new Promise((resolve) => setTimeout(() => resolve('timeout'), ms))
 }
 ```
 
@@ -211,7 +240,7 @@ app.post('/api/contacts/lookup', async (req, res) => {
     phone,
     firstName,
     lastName,
-    company
+    company,
   })
 
   // Add timing header for monitoring
@@ -222,7 +251,7 @@ app.post('/api/contacts/lookup', async (req, res) => {
       res.json({
         exists: true,
         contact: sanitizeContact(result.contact),
-        confidence: result.confidence
+        confidence: result.confidence,
       })
       break
 
@@ -230,13 +259,13 @@ app.post('/api/contacts/lookup', async (req, res) => {
       res.json({
         exists: 'maybe',
         suggestions: result.suggestions.map(sanitizeContact),
-        confidence: result.confidence
+        confidence: result.confidence,
       })
       break
 
     case 'not_found':
       res.json({
-        exists: false
+        exists: false,
       })
       break
 
@@ -244,7 +273,7 @@ app.post('/api/contacts/lookup', async (req, res) => {
       // Return 200 with error flag - don't block the user
       res.json({
         exists: false,
-        warning: result.message
+        warning: result.message,
       })
       break
   }
@@ -262,7 +291,7 @@ app.post('/api/contacts', async (req, res) => {
     res.status(200).json({
       created: false,
       contact: sanitizeContact(lookup.contact),
-      message: 'Existing contact found'
+      message: 'Existing contact found',
     })
     return
   }
@@ -274,7 +303,7 @@ app.post('/api/contacts', async (req, res) => {
       created: false,
       requiresReview: true,
       suggestions: lookup.suggestions.map(sanitizeContact),
-      message: 'Potential duplicates found'
+      message: 'Potential duplicates found',
     })
     return
   }
@@ -285,13 +314,13 @@ app.post('/api/contacts', async (req, res) => {
       ...contactData,
       id: generateId(),
       createdAt: new Date(),
-      updatedAt: new Date()
-    }
+      updatedAt: new Date(),
+    },
   })
 
   res.status(201).json({
     created: true,
-    contact: sanitizeContact(newContact)
+    contact: sanitizeContact(newContact),
   })
 })
 
@@ -407,9 +436,9 @@ function RegistrationForm() {
 import NodeCache from 'node-cache'
 
 const lookupCache = new NodeCache({
-  stdTTL: 300,      // 5 minute default TTL
-  checkperiod: 60,  // Check for expired keys every 60s
-  maxKeys: 10000    // Limit memory usage
+  stdTTL: 300, // 5 minute default TTL
+  checkperiod: 60, // Check for expired keys every 60s
+  maxKeys: 10000, // Limit memory usage
 })
 
 async function cachedLookup(input: Partial<Contact>): Promise<LookupResult> {
@@ -419,7 +448,7 @@ async function cachedLookup(input: Partial<Contact>): Promise<LookupResult> {
   // Check cache first
   const cached = lookupCache.get<LookupResult>(cacheKey)
   if (cached) {
-    return { ...cached, duration: 0 }  // Instant response
+    return { ...cached, duration: 0 } // Instant response
   }
 
   // Perform lookup
@@ -439,7 +468,7 @@ function createCacheKey(input: Partial<Contact>): string {
     email: input.email?.toLowerCase().trim(),
     phone: normalizePhone(input.phone),
     firstName: input.firstName?.toLowerCase().trim(),
-    lastName: input.lastName?.toLowerCase().trim()
+    lastName: input.lastName?.toLowerCase().trim(),
   }
   return JSON.stringify(normalized)
 }
@@ -452,7 +481,9 @@ import Redis from 'ioredis'
 
 const redis = new Redis(process.env.REDIS_URL)
 
-async function distributedLookup(input: Partial<Contact>): Promise<LookupResult> {
+async function distributedLookup(
+  input: Partial<Contact>
+): Promise<LookupResult> {
   const cacheKey = `contact:lookup:${createCacheKey(input)}`
 
   // Check Redis first
@@ -506,21 +537,22 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL
-    }
+      url: process.env.DATABASE_URL,
+    },
   },
   // Log slow queries
   log: [
     {
       emit: 'event',
-      level: 'query'
-    }
-  ]
+      level: 'query',
+    },
+  ],
 })
 
 // Monitor slow queries
 prisma.$on('query', (e) => {
-  if (e.duration > 100) {  // Log queries > 100ms
+  if (e.duration > 100) {
+    // Log queries > 100ms
     console.warn(`Slow query (${e.duration}ms): ${e.query}`)
   }
 })
@@ -547,11 +579,11 @@ For real-time scenarios, simpler blocking is faster:
 
 Choose based on your requirements:
 
-| Priority | Strategy | Typical Latency |
-|----------|----------|-----------------|
-| Speed | Single field (email domain) | 20-50ms |
-| Balance | Single field (last name soundex) | 30-80ms |
-| Recall | Composite blocking | 80-200ms |
+| Priority | Strategy                         | Typical Latency |
+| -------- | -------------------------------- | --------------- |
+| Speed    | Single field (email domain)      | 20-50ms         |
+| Balance  | Single field (last name soundex) | 30-80ms         |
+| Recall   | Composite blocking               | 80-200ms        |
 
 ## Graceful Degradation
 
@@ -561,9 +593,9 @@ Choose based on your requirements:
 import CircuitBreaker from 'opossum'
 
 const breakerOptions = {
-  timeout: 2000,        // 2 second timeout
-  errorThresholdPercentage: 50,  // Open after 50% failures
-  resetTimeout: 30000   // Try again after 30 seconds
+  timeout: 2000, // 2 second timeout
+  errorThresholdPercentage: 50, // Open after 50% failures
+  resetTimeout: 30000, // Try again after 30 seconds
 }
 
 const lookupBreaker = new CircuitBreaker(lookupContact, breakerOptions)
@@ -572,7 +604,7 @@ const lookupBreaker = new CircuitBreaker(lookupContact, breakerOptions)
 lookupBreaker.fallback(() => ({
   status: 'not_found' as const,
   message: 'Lookup service temporarily unavailable',
-  duration: 0
+  duration: 0,
 }))
 
 // Use the breaker-protected lookup
@@ -615,7 +647,7 @@ async function lookupWithTimeout(
       return {
         status: 'not_found',
         message: 'Lookup timed out',
-        duration: timeoutMs
+        duration: timeoutMs,
       }
     }
     throw error
@@ -633,16 +665,18 @@ import { Counter, Histogram } from 'prom-client'
 const lookupDuration = new Histogram({
   name: 'contact_lookup_duration_ms',
   help: 'Contact lookup duration in milliseconds',
-  buckets: [10, 25, 50, 100, 200, 500, 1000, 2000]
+  buckets: [10, 25, 50, 100, 200, 500, 1000, 2000],
 })
 
 const lookupOutcome = new Counter({
   name: 'contact_lookup_outcome_total',
   help: 'Contact lookup outcomes',
-  labelNames: ['status']
+  labelNames: ['status'],
 })
 
-async function instrumentedLookup(input: Partial<Contact>): Promise<LookupResult> {
+async function instrumentedLookup(
+  input: Partial<Contact>
+): Promise<LookupResult> {
   const end = lookupDuration.startTimer()
 
   const result = await lookupContact(input)
@@ -690,15 +724,15 @@ async function loadTest() {
     url: 'http://localhost:3000/api/contacts/lookup',
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       email: 'test@example.com',
       firstName: 'Test',
-      lastName: 'User'
+      lastName: 'User',
     }),
     connections: 100,
-    duration: 30
+    duration: 30,
   })
 
   console.log('Requests/sec:', result.requests.average)
@@ -718,9 +752,19 @@ describe('Real-time lookup', () => {
     // Seed test data
     await prisma.contact.createMany({
       data: [
-        { id: '1', email: 'john@example.com', firstName: 'John', lastName: 'Smith' },
-        { id: '2', email: 'jane@example.com', firstName: 'Jane', lastName: 'Doe' }
-      ]
+        {
+          id: '1',
+          email: 'john@example.com',
+          firstName: 'John',
+          lastName: 'Smith',
+        },
+        {
+          id: '2',
+          email: 'jane@example.com',
+          firstName: 'Jane',
+          lastName: 'Doe',
+        },
+      ],
     })
   })
 
@@ -747,7 +791,7 @@ describe('Real-time lookup', () => {
     // Simulate slow lookup
     const result = await lookupWithTimeout(
       { email: 'test@example.com' },
-      1  // 1ms timeout - will definitely timeout
+      1 // 1ms timeout - will definitely timeout
     )
 
     expect(result.status).toBe('not_found')

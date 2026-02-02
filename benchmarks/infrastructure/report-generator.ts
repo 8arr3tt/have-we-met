@@ -4,7 +4,12 @@
  */
 
 import type { BenchmarkResult, ThresholdAnalysis } from './benchmark-runner'
-import type { ClassificationMetrics, ThroughputMetrics, MemoryMetrics, BlockingMetrics } from './metrics-collector'
+import type {
+  ClassificationMetrics,
+  ThroughputMetrics,
+  MemoryMetrics,
+  BlockingMetrics,
+} from './metrics-collector'
 import type { DatasetMetadata } from './dataset-loader'
 
 export interface ReportOptions {
@@ -107,7 +112,9 @@ function generateClassificationSection(
     lines.push('')
     lines.push('| Metric | Std Dev |')
     lines.push('| --- | --- |')
-    lines.push(`| Precision | ${formatPercent(metrics.stdDev.precision ?? 0)} |`)
+    lines.push(
+      `| Precision | ${formatPercent(metrics.stdDev.precision ?? 0)} |`
+    )
     lines.push(`| Recall | ${formatPercent(metrics.stdDev.recall ?? 0)} |`)
     lines.push(`| F1 Score | ${formatPercent(metrics.stdDev.f1Score ?? 0)} |`)
     lines.push(`| Accuracy | ${formatPercent(metrics.stdDev.accuracy ?? 0)} |`)
@@ -252,7 +259,10 @@ export function generateMarkdownReport(
   sections.push('', '## Results')
 
   if (result.classification) {
-    sections.push('', generateClassificationSection(result.classification, decimalPlaces))
+    sections.push(
+      '',
+      generateClassificationSection(result.classification, decimalPlaces)
+    )
   }
 
   if (result.throughput) {
@@ -272,7 +282,13 @@ export function generateMarkdownReport(
   }
 
   if (Object.keys(result.custom).length > 0) {
-    sections.push('', '### Custom Metrics', '', '| Metric | Value |', '| --- | --- |')
+    sections.push(
+      '',
+      '### Custom Metrics',
+      '',
+      '| Metric | Value |',
+      '| --- | --- |'
+    )
     for (const [key, value] of Object.entries(result.custom)) {
       sections.push(`| ${key} | ${value} |`)
     }
@@ -362,7 +378,9 @@ export function generateComparisonReport(
           result.throughput.totalRecords.toLocaleString(),
           result.throughput.totalPairs.toLocaleString(),
           formatDuration(result.throughput.executionTimeMs),
-          result.throughput.pairsPerSecond.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+          result.throughput.pairsPerSecond.toLocaleString(undefined, {
+            maximumFractionDigits: 0,
+          }),
         ])
       }
     }
@@ -461,8 +479,12 @@ export function generateScalabilityReport(
         size.toLocaleString(),
         result.throughput.totalPairs.toLocaleString(),
         formatDuration(result.throughput.executionTimeMs),
-        result.throughput.recordsPerSecond.toLocaleString(undefined, { maximumFractionDigits: 0 }),
-        result.throughput.pairsPerSecond.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+        result.throughput.recordsPerSecond.toLocaleString(undefined, {
+          maximumFractionDigits: 0,
+        }),
+        result.throughput.pairsPerSecond.toLocaleString(undefined, {
+          maximumFractionDigits: 0,
+        }),
       ])
     }
   }
@@ -473,7 +495,12 @@ export function generateScalabilityReport(
   if (hasBlocking) {
     sections.push('', '### Blocking Effectiveness at Scale', '')
 
-    const blockHeaders = ['Records', 'Pairs (No Block)', 'Pairs (Blocked)', 'Reduction']
+    const blockHeaders = [
+      'Records',
+      'Pairs (No Block)',
+      'Pairs (Blocked)',
+      'Reduction',
+    ]
     const blockRows: string[][] = []
 
     for (const { size, result } of results) {
@@ -498,7 +525,9 @@ export function generateScalabilityReport(
 
     if (first.result.throughput && last.result.throughput) {
       const sizeRatio = last.size / first.size
-      const timeRatio = last.result.throughput.executionTimeMs / first.result.throughput.executionTimeMs
+      const timeRatio =
+        last.result.throughput.executionTimeMs /
+        first.result.throughput.executionTimeMs
 
       const complexityEstimate = Math.log(timeRatio) / Math.log(sizeRatio)
 

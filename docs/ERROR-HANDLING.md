@@ -30,11 +30,9 @@ import { InvalidParameterError } from 'have-we-met'
 
 // Example: Invalid weight value
 HaveWeMet.create()
-  .schema(schema => schema.field('name').type('string'))
-  .matching(match => match
-    .field('name')
-    .strategy('exact')
-    .weight(-5) // Throws: InvalidParameterError - weight must be positive
+  .schema((schema) => schema.field('name').type('string'))
+  .matching(
+    (match) => match.field('name').strategy('exact').weight(-5) // Throws: InvalidParameterError - weight must be positive
   )
 ```
 
@@ -44,12 +42,12 @@ HaveWeMet.create()
 import { MissingParameterError } from 'have-we-met'
 
 // Example: Missing required field type
-HaveWeMet.create()
-  .schema(schema => schema
+HaveWeMet.create().schema((schema) =>
+  schema
     .field('name')
     // Missing .type() call
     .build()
-  ) // Throws: MissingParameterError
+) // Throws: MissingParameterError
 ```
 
 **ConfigurationError**: Thrown when configuration is invalid
@@ -59,8 +57,8 @@ import { ConfigurationError } from 'have-we-met'
 
 // Example: Invalid threshold configuration
 HaveWeMet.create()
-  .schema(schema => schema.field('name').type('string'))
-  .matching(match => match.field('name').strategy('exact').weight(10))
+  .schema((schema) => schema.field('name').type('string'))
+  .matching((match) => match.field('name').strategy('exact').weight(10))
   .thresholds({ noMatch: 50, definiteMatch: 40 }) // Throws: ConfigurationError
 ```
 
@@ -70,8 +68,8 @@ HaveWeMet.create()
 import { NotConfiguredError } from 'have-we-met'
 
 const resolver = HaveWeMet.create()
-  .schema(schema => schema.field('name').type('string'))
-  .matching(match => match.field('name').strategy('exact').weight(10))
+  .schema((schema) => schema.field('name').type('string'))
+  .matching((match) => match.field('name').strategy('exact').weight(10))
   .thresholds({ noMatch: 10, definiteMatch: 50 })
   .build()
 
@@ -160,7 +158,11 @@ try {
 **ServiceAlreadyRegisteredError**: Service already registered
 
 ```typescript
-import { ServiceError, ServiceTimeoutError, isRetryableError } from 'have-we-met'
+import {
+  ServiceError,
+  ServiceTimeoutError,
+  isRetryableError,
+} from 'have-we-met'
 
 try {
   const result = await resolver.resolveWithServices(record, existing)
@@ -215,13 +217,17 @@ match.field('name').weight(NaN) // Error: weight must be a number
 
 ```typescript
 // ✓ Valid thresholds
-match.field('name').threshold(0.85) // 0-1 range for similarity strategies
-.thresholds({ noMatch: 20, definiteMatch: 80 })
+match
+  .field('name')
+  .threshold(0.85) // 0-1 range for similarity strategies
+  .thresholds({ noMatch: 20, definiteMatch: 80 })
 
 // ✗ Invalid thresholds
 match.field('name').threshold(1.5) // Error: must be between 0 and 1
-match.field('name').threshold(-0.5) // Error: must be between 0 and 1
-.thresholds({ noMatch: 50, definiteMatch: 40 }) // Error: noMatch must be < definiteMatch
+match
+  .field('name')
+  .threshold(-0.5) // Error: must be between 0 and 1
+  .thresholds({ noMatch: 50, definiteMatch: 40 }) // Error: noMatch must be < definiteMatch
 ```
 
 ### Strategy Validation
@@ -254,33 +260,33 @@ schema.field('email').type('invalid') // Error: must be one of: name, email, pho
 
 All errors include a `code` property for programmatic error handling:
 
-| Error Class | Code | Description |
-|-------------|------|-------------|
-| `InvalidParameterError` | `INVALID_PARAMETER` | Parameter value is invalid |
-| `MissingParameterError` | `MISSING_PARAMETER` | Required parameter is missing |
-| `ConfigurationError` | `CONFIGURATION_ERROR` | Configuration is invalid |
-| `BuilderSequenceError` | `BUILDER_SEQUENCE_ERROR` | Builder methods called in wrong order |
-| `NotConfiguredError` | `NOT_CONFIGURED` | Feature not configured |
-| `ConnectionError` | `CONNECTION_ERROR` | Database connection failed |
-| `QueryError` | `QUERY_ERROR` | Query execution failed |
-| `TransactionError` | `TRANSACTION_ERROR` | Transaction failed |
-| `ValidationError` | `VALIDATION_ERROR` | Validation failed |
-| `NotFoundError` | `NOT_FOUND_ERROR` | Record not found |
-| `QueueItemNotFoundError` | `QUEUE_ITEM_NOT_FOUND` | Queue item not found |
-| `InvalidStatusTransitionError` | `INVALID_STATUS_TRANSITION` | Invalid status transition |
-| `QueueOperationError` | `QUEUE_OPERATION_FAILED` | Queue operation failed |
-| `QueueValidationError` | `QUEUE_VALIDATION_ERROR` | Queue validation failed |
-| `ServiceTimeoutError` | `SERVICE_TIMEOUT` | Service timed out |
-| `ServiceNetworkError` | `SERVICE_NETWORK_ERROR` | Network error |
-| `ServiceInputValidationError` | `SERVICE_INPUT_VALIDATION_ERROR` | Input validation failed |
-| `ServiceNotFoundError` | `SERVICE_NOT_FOUND` | No result found |
-| `ServiceRejectedError` | `SERVICE_REJECTED` | Request rejected |
-| `ServiceUnavailableError` | `SERVICE_UNAVAILABLE` | Service unavailable |
-| `ServiceServerError` | `SERVICE_SERVER_ERROR` | Server error |
-| `ServiceConfigurationError` | `SERVICE_CONFIGURATION_ERROR` | Configuration invalid |
-| `ServicePluginError` | `SERVICE_PLUGIN_ERROR` | Plugin invalid |
-| `ServiceNotRegisteredError` | `SERVICE_NOT_REGISTERED` | Service not registered |
-| `ServiceAlreadyRegisteredError` | `SERVICE_ALREADY_REGISTERED` | Service already registered |
+| Error Class                     | Code                             | Description                           |
+| ------------------------------- | -------------------------------- | ------------------------------------- |
+| `InvalidParameterError`         | `INVALID_PARAMETER`              | Parameter value is invalid            |
+| `MissingParameterError`         | `MISSING_PARAMETER`              | Required parameter is missing         |
+| `ConfigurationError`            | `CONFIGURATION_ERROR`            | Configuration is invalid              |
+| `BuilderSequenceError`          | `BUILDER_SEQUENCE_ERROR`         | Builder methods called in wrong order |
+| `NotConfiguredError`            | `NOT_CONFIGURED`                 | Feature not configured                |
+| `ConnectionError`               | `CONNECTION_ERROR`               | Database connection failed            |
+| `QueryError`                    | `QUERY_ERROR`                    | Query execution failed                |
+| `TransactionError`              | `TRANSACTION_ERROR`              | Transaction failed                    |
+| `ValidationError`               | `VALIDATION_ERROR`               | Validation failed                     |
+| `NotFoundError`                 | `NOT_FOUND_ERROR`                | Record not found                      |
+| `QueueItemNotFoundError`        | `QUEUE_ITEM_NOT_FOUND`           | Queue item not found                  |
+| `InvalidStatusTransitionError`  | `INVALID_STATUS_TRANSITION`      | Invalid status transition             |
+| `QueueOperationError`           | `QUEUE_OPERATION_FAILED`         | Queue operation failed                |
+| `QueueValidationError`          | `QUEUE_VALIDATION_ERROR`         | Queue validation failed               |
+| `ServiceTimeoutError`           | `SERVICE_TIMEOUT`                | Service timed out                     |
+| `ServiceNetworkError`           | `SERVICE_NETWORK_ERROR`          | Network error                         |
+| `ServiceInputValidationError`   | `SERVICE_INPUT_VALIDATION_ERROR` | Input validation failed               |
+| `ServiceNotFoundError`          | `SERVICE_NOT_FOUND`              | No result found                       |
+| `ServiceRejectedError`          | `SERVICE_REJECTED`               | Request rejected                      |
+| `ServiceUnavailableError`       | `SERVICE_UNAVAILABLE`            | Service unavailable                   |
+| `ServiceServerError`            | `SERVICE_SERVER_ERROR`           | Server error                          |
+| `ServiceConfigurationError`     | `SERVICE_CONFIGURATION_ERROR`    | Configuration invalid                 |
+| `ServicePluginError`            | `SERVICE_PLUGIN_ERROR`           | Plugin invalid                        |
+| `ServiceNotRegisteredError`     | `SERVICE_NOT_REGISTERED`         | Service not registered                |
+| `ServiceAlreadyRegisteredError` | `SERVICE_ALREADY_REGISTERED`     | Service already registered            |
 
 ## Best Practices
 
@@ -319,7 +325,7 @@ try {
         // Handle missing configuration
         break
       default:
-        // Handle other errors
+      // Handle other errors
     }
   }
 }
@@ -346,8 +352,8 @@ try {
 ```typescript
 // ✓ Good: Validation happens at builder level
 const resolver = HaveWeMet.create()
-  .schema(schema => schema.field('name').type('string'))
-  .matching(match => match.field('name').strategy('exact').weight(10))
+  .schema((schema) => schema.field('name').type('string'))
+  .matching((match) => match.field('name').strategy('exact').weight(10))
   .thresholds({ noMatch: 10, definiteMatch: 50 })
   .build() // Errors thrown here, before any matching
 
@@ -389,18 +395,22 @@ try {
 ### Common Issues
 
 **Issue**: `TypeError: (result ?? builder).build is not a function`
+
 - **Cause**: Schema builder returned without calling `.build()`
 - **Fix**: Always call `.build()` on nested builders
 
 **Issue**: `InvalidParameterError: weight must be positive`
+
 - **Cause**: Weight set to 0 or negative value
 - **Fix**: Use positive weights (> 0)
 
 **Issue**: `ConfigurationError: noMatch must be less than definiteMatch`
+
 - **Cause**: Threshold order is incorrect
 - **Fix**: Ensure `noMatch < definiteMatch`
 
 **Issue**: `NotConfiguredError: ML is not configured`
+
 - **Cause**: Attempting to use ML features without configuration
 - **Fix**: Call `.ml()` in builder or `configureML()` on resolver
 
@@ -415,8 +425,8 @@ import { expect } from 'vitest'
 it('should throw error for invalid weight', () => {
   expect(() => {
     HaveWeMet.create()
-      .schema(schema => schema.field('name').type('string'))
-      .matching(match => match.field('name').strategy('exact').weight(-5))
+      .schema((schema) => schema.field('name').type('string'))
+      .matching((match) => match.field('name').strategy('exact').weight(-5))
       .build()
   }).toThrow(InvalidParameterError)
 })

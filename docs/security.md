@@ -64,12 +64,11 @@ const blocks = await generator.generateBlocks(records)
 Always configure timeouts for external services to prevent hanging operations:
 
 ```typescript
-const resolver = HaveWeMet
-  .schema(schema)
-  .services(s => s
-    .validation('nhs', {
+const resolver = HaveWeMet.schema(schema)
+  .services((s) =>
+    s.validation('nhs', {
       timeout: 5000, // 5 second timeout
-      retryAttempts: 2
+      retryAttempts: 2,
     })
   )
   .build()
@@ -80,14 +79,13 @@ const resolver = HaveWeMet
 Use circuit breakers to prevent cascading failures:
 
 ```typescript
-const resolver = HaveWeMet
-  .schema(schema)
-  .services(s => s
-    .validation('email', {
+const resolver = HaveWeMet.schema(schema)
+  .services((s) =>
+    s.validation('email', {
       circuitBreaker: {
         failureThreshold: 5,
-        resetTimeout: 60000 // 60 seconds
-      }
+        resetTimeout: 60000, // 60 seconds
+      },
     })
   )
   .build()
@@ -100,16 +98,17 @@ const resolver = HaveWeMet
 ```typescript
 // ❌ DON'T: Hardcode secrets
 const service = customValidation('ssn', {
-  apiKey: 'sk_live_abc123...' // NEVER DO THIS
+  apiKey: 'sk_live_abc123...', // NEVER DO THIS
 })
 
 // ✅ DO: Use environment variables
 const service = customValidation('ssn', {
-  apiKey: process.env.SSN_VALIDATION_API_KEY
+  apiKey: process.env.SSN_VALIDATION_API_KEY,
 })
 ```
 
 Store secrets in:
+
 - Environment variables
 - Secret management systems (AWS Secrets Manager, HashiCorp Vault)
 - Encrypted configuration files
@@ -130,7 +129,7 @@ const myService = {
     }
 
     return { valid: data.valid }
-  }
+  },
 }
 ```
 
@@ -204,6 +203,7 @@ const model = SimpleClassifier.fromJSON(modelData)
 ```
 
 **Never load models from:**
+
 - Untrusted third parties
 - User uploads without validation
 - Public URLs without verification
@@ -218,7 +218,7 @@ Implement rate limiting for matching operations:
 // Example using express-rate-limit
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
 })
 
 app.post('/api/match', limiter, async (req, res) => {
@@ -256,9 +256,8 @@ Poor blocking configuration can cause performance issues:
 const resolver = HaveWeMet.schema(schema).build()
 
 // ✅ GOOD: Blocking reduces comparison space
-const resolver = HaveWeMet
-  .schema(schema)
-  .blocking(b => b.onField('lastName', { transform: 'soundex' }))
+const resolver = HaveWeMet.schema(schema)
+  .blocking((b) => b.onField('lastName', { transform: 'soundex' }))
   .build()
 ```
 
@@ -290,8 +289,8 @@ const userComparator = new Function('a', 'b', userProvidedCode)
 
 // ✅ DO: Use predefined, safe functions
 const allowedComparators = {
-  'exact': exactComparator,
-  'levenshtein': levenshteinComparator
+  exact: exactComparator,
+  levenshtein: levenshteinComparator,
 }
 const comparator = allowedComparators[userSelection]
 ```

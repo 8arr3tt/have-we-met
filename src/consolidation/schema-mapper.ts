@@ -151,7 +151,11 @@ export class SchemaMapper<TInput = any, TOutput = any> {
    * ```
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private setNestedValue(obj: any, path: keyof TOutput | string, value: any): void {
+  private setNestedValue(
+    obj: any,
+    path: keyof TOutput | string,
+    value: any
+  ): void {
     const pathStr = String(path)
 
     // Handle simple field access
@@ -168,10 +172,7 @@ export class SchemaMapper<TInput = any, TOutput = any> {
       const part = parts[i]
       if (!(part in current)) {
         current[part] = {}
-      } else if (
-        typeof current[part] !== 'object' ||
-        current[part] === null
-      ) {
+      } else if (typeof current[part] !== 'object' || current[part] === null) {
         throw new ConsolidationError(
           `Cannot set nested value: "${parts.slice(0, i + 1).join('.')}" is not an object`,
           'MAPPING_ERROR'
@@ -190,7 +191,11 @@ export class SchemaMapper<TInput = any, TOutput = any> {
     configs: MappingEntry<TInput, TOutput>[]
   ): MappingEntry<TInput, TOutput>[] {
     return configs.map((config) => {
-      if (typeof config === 'object' && 'source' in config && 'target' in config) {
+      if (
+        typeof config === 'object' &&
+        'source' in config &&
+        'target' in config
+      ) {
         return config as MappingEntry<TInput, TOutput>
       }
 
@@ -441,12 +446,12 @@ export const CommonTransforms = {
   compose:
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (...transforms: ((value: any, record?: any) => any)[]) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (value: any, record?: any) => {
-      let result = value
-      for (const transform of transforms) {
-        result = transform(result, record)
-      }
-      return result
-    },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (value: any, record?: any) => {
+        let result = value
+        for (const transform of transforms) {
+          result = transform(result, record)
+        }
+        return result
+      },
 }

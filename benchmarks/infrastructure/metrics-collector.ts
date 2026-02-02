@@ -158,7 +158,11 @@ export function calculateClassificationMetrics(
  * Calculates metrics at multiple threshold values.
  */
 export function calculateMetricsAtThresholds(
-  predictedPairs: Array<{ id1: string | number; id2: string | number; score: number }>,
+  predictedPairs: Array<{
+    id1: string | number
+    id2: string | number
+    score: number
+  }>,
   truePairs: TruePair[],
   thresholds: number[],
   totalPossiblePairs?: number
@@ -173,7 +177,11 @@ export function calculateMetricsAtThresholds(
 
     results.set(
       threshold,
-      calculateClassificationMetrics(classifiedPairs, truePairs, totalPossiblePairs)
+      calculateClassificationMetrics(
+        classifiedPairs,
+        truePairs,
+        totalPossiblePairs
+      )
     )
   }
 
@@ -184,7 +192,11 @@ export function calculateMetricsAtThresholds(
  * Finds the optimal threshold that maximizes F1 score.
  */
 export function findOptimalThreshold(
-  predictedPairs: Array<{ id1: string | number; id2: string | number; score: number }>,
+  predictedPairs: Array<{
+    id1: string | number
+    id2: string | number
+    score: number
+  }>,
   truePairs: TruePair[],
   minThreshold: number = 0,
   maxThreshold: number = 1,
@@ -243,9 +255,11 @@ export function calculateThroughputMetrics(
     totalRecords,
     totalPairs,
     executionTimeMs,
-    recordsPerSecond: executionTimeSec > 0 ? totalRecords / executionTimeSec : 0,
+    recordsPerSecond:
+      executionTimeSec > 0 ? totalRecords / executionTimeSec : 0,
     pairsPerSecond: executionTimeSec > 0 ? totalPairs / executionTimeSec : 0,
-    comparisonsPerSecond: executionTimeSec > 0 ? totalPairs / executionTimeSec : 0,
+    comparisonsPerSecond:
+      executionTimeSec > 0 ? totalPairs / executionTimeSec : 0,
   }
 }
 
@@ -386,7 +400,8 @@ export function aggregateMetrics(
  * Creates a confusion matrix summary string.
  */
 export function formatConfusionMatrix(metrics: ClassificationMetrics): string {
-  const { truePositives, falsePositives, trueNegatives, falseNegatives } = metrics
+  const { truePositives, falsePositives, trueNegatives, falseNegatives } =
+    metrics
 
   return `
               Predicted
@@ -424,7 +439,9 @@ export class MetricsCollector {
     this.customMetrics[name].push(value)
   }
 
-  getAggregatedClassification(): ClassificationMetrics & { stdDev: Record<string, number> } {
+  getAggregatedClassification(): ClassificationMetrics & {
+    stdDev: Record<string, number>
+  } {
     return aggregateMetrics(this.runs)
   }
 
@@ -443,12 +460,16 @@ export class MetricsCollector {
     const avg = (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length
 
     return {
-      totalRecords: Math.round(avg(this.throughputRuns.map((r) => r.totalRecords))),
+      totalRecords: Math.round(
+        avg(this.throughputRuns.map((r) => r.totalRecords))
+      ),
       totalPairs: Math.round(avg(this.throughputRuns.map((r) => r.totalPairs))),
       executionTimeMs: avg(this.throughputRuns.map((r) => r.executionTimeMs)),
       recordsPerSecond: avg(this.throughputRuns.map((r) => r.recordsPerSecond)),
       pairsPerSecond: avg(this.throughputRuns.map((r) => r.pairsPerSecond)),
-      comparisonsPerSecond: avg(this.throughputRuns.map((r) => r.comparisonsPerSecond)),
+      comparisonsPerSecond: avg(
+        this.throughputRuns.map((r) => r.comparisonsPerSecond)
+      ),
     }
   }
 
@@ -472,8 +493,14 @@ export class MetricsCollector {
     }
   }
 
-  getCustomMetrics(): Record<string, { avg: number; min: number; max: number; stdDev: number }> {
-    const result: Record<string, { avg: number; min: number; max: number; stdDev: number }> = {}
+  getCustomMetrics(): Record<
+    string,
+    { avg: number; min: number; max: number; stdDev: number }
+  > {
+    const result: Record<
+      string,
+      { avg: number; min: number; max: number; stdDev: number }
+    > = {}
 
     for (const [name, values] of Object.entries(this.customMetrics)) {
       if (values.length === 0) continue

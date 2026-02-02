@@ -7,24 +7,25 @@ The Schema Builder configures your record structure, defining fields with their 
 Access the schema builder through `HaveWeMet.create()` or `HaveWeMet.schema()`:
 
 ```typescript
-import { HaveWeMet } from 'have-we-met';
+import { HaveWeMet } from 'have-we-met'
 
 // Option 1: Through create()
-const resolver = HaveWeMet
-  .create<Person>()
-  .schema(schema => schema
-    .field('email').type('email')
-    .field('firstName').type('name').component('first')
-  )
-  // ... continue configuration
+const resolver = HaveWeMet.create<Person>().schema((schema) =>
+  schema
+    .field('email')
+    .type('email')
+    .field('firstName')
+    .type('name')
+    .component('first')
+)
+// ... continue configuration
 
 // Option 2: Direct schema (shortcut)
-const resolver = HaveWeMet
-  .schema<Person>({
-    email: { type: 'email' },
-    firstName: { type: 'name', component: 'first' }
-  })
-  // ... continue configuration
+const resolver = HaveWeMet.schema<Person>({
+  email: { type: 'email' },
+  firstName: { type: 'name', component: 'first' },
+})
+// ... continue configuration
 ```
 
 ## SchemaBuilder<T>
@@ -38,15 +39,18 @@ Main builder class for configuring record schemas.
 Start configuring a field using the fluent builder.
 
 **Parameters:**
+
 - `name: K` - Field name from your record type (type-safe)
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-schema => schema
-  .field('email')  // Returns FieldDefinitionBuilder
-  .type('email')   // Configure the field
+;(schema) =>
+  schema
+    .field('email') // Returns FieldDefinitionBuilder
+    .type('email') // Configure the field
 ```
 
 #### `field<K>(name: K, definition: FieldDefinition): this`
@@ -54,16 +58,19 @@ schema => schema
 Configure a field with a direct definition object (backward compatible).
 
 **Parameters:**
+
 - `name: K` - Field name from your record type
 - `definition: FieldDefinition` - Field configuration object
 
 **Returns:** `SchemaBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-schema => schema
-  .field('email', { type: 'email', required: true })
-  .field('phone', { type: 'phone', normalizer: 'phone' })
+;(schema) =>
+  schema
+    .field('email', { type: 'email', required: true })
+    .field('phone', { type: 'phone', normalizer: 'phone' })
 ```
 
 #### `build(): SchemaDefinition<T>`
@@ -85,11 +92,13 @@ Fluent builder for configuring individual field properties.
 Set the semantic field type.
 
 **Parameters:**
+
 - `type: FieldType` - One of: `'name'`, `'email'`, `'phone'`, `'date'`, `'address'`, `'string'`, `'number'`, `'custom'`
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
 .field('email').type('email')
 .field('dateOfBirth').type('date')
@@ -101,11 +110,13 @@ Set the semantic field type.
 Set the component name for composite field types (e.g., name parts).
 
 **Parameters:**
+
 - `component: string` - Component identifier (e.g., `'first'`, `'last'`, `'middle'`, `'suffix'`)
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
 .field('firstName').type('name').component('first')
 .field('lastName').type('name').component('last')
@@ -117,11 +128,13 @@ Set the component name for composite field types (e.g., name parts).
 Mark field as required for matching. Required fields that are null/undefined will affect match scoring.
 
 **Parameters:**
+
 - `required: boolean` - Whether the field is required (default: `true`)
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
 .field('ssn').type('string').required()
 .field('middleName').type('name').component('middle').required(false)
@@ -132,12 +145,14 @@ Mark field as required for matching. Required fields that are null/undefined wil
 Apply a named normalizer to the field value before comparison.
 
 **Parameters:**
+
 - `name: string` - Normalizer name (see [Available Normalizers](#available-normalizers))
 - `options?: any` - Normalizer-specific options
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
 .field('email').type('email').normalizer('email')
 .field('phone').type('phone').normalizer('phone', { defaultCountry: 'US' })
@@ -149,11 +164,13 @@ Apply a named normalizer to the field value before comparison.
 Set options for an already-configured normalizer.
 
 **Parameters:**
+
 - `options: any` - Normalizer-specific options
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
 .field('phone')
   .type('phone')
@@ -166,11 +183,13 @@ Set options for an already-configured normalizer.
 Apply a custom normalizer function.
 
 **Parameters:**
+
 - `fn: (value: unknown) => unknown` - Custom normalization function
 
 **Returns:** `FieldDefinitionBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
 .field('customId')
   .type('string')
@@ -185,16 +204,22 @@ Apply a custom normalizer function.
 Configure another field (returns to schema context).
 
 **Parameters:**
+
 - `name: K` - Field name from your record type
 
 **Returns:** `FieldDefinitionBuilder<T>` for the new field
 
 **Example:**
+
 ```typescript
-schema => schema
-  .field('email').type('email')
-  .field('phone').type('phone')  // Switch to configuring phone
-  .field('name').type('name')    // Switch to configuring name
+;(schema) =>
+  schema
+    .field('email')
+    .type('email')
+    .field('phone')
+    .type('phone') // Switch to configuring phone
+    .field('name')
+    .type('name') // Switch to configuring name
 ```
 
 #### `build(): SchemaDefinition<T>`
@@ -207,16 +232,16 @@ Complete schema configuration and return the definition.
 
 ## Field Types
 
-| Type | Description | Recommended Normalizer |
-|------|-------------|----------------------|
-| `'name'` | Person names (first, last, middle, etc.) | `'name'` |
-| `'email'` | Email addresses | `'email'` |
-| `'phone'` | Phone numbers | `'phone'` |
-| `'date'` | Dates (birth dates, timestamps) | `'date'` |
-| `'address'` | Physical addresses | `'address'` |
-| `'string'` | Generic string fields | `'trim'`, `'lowercase'` |
-| `'number'` | Numeric fields | None |
-| `'custom'` | Custom field type | Custom normalizer |
+| Type        | Description                              | Recommended Normalizer  |
+| ----------- | ---------------------------------------- | ----------------------- |
+| `'name'`    | Person names (first, last, middle, etc.) | `'name'`                |
+| `'email'`   | Email addresses                          | `'email'`               |
+| `'phone'`   | Phone numbers                            | `'phone'`               |
+| `'date'`    | Dates (birth dates, timestamps)          | `'date'`                |
+| `'address'` | Physical addresses                       | `'address'`             |
+| `'string'`  | Generic string fields                    | `'trim'`, `'lowercase'` |
+| `'number'`  | Numeric fields                           | None                    |
+| `'custom'`  | Custom field type                        | Custom normalizer       |
 
 ---
 
@@ -224,24 +249,24 @@ Complete schema configuration and return the definition.
 
 ### Basic Normalizers
 
-| Name | Description |
-|------|-------------|
-| `'trim'` | Remove leading/trailing whitespace |
-| `'lowercase'` | Convert to lowercase |
-| `'uppercase'` | Convert to uppercase |
+| Name                    | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `'trim'`                | Remove leading/trailing whitespace       |
+| `'lowercase'`           | Convert to lowercase                     |
+| `'uppercase'`           | Convert to uppercase                     |
 | `'normalizeWhitespace'` | Collapse multiple spaces to single space |
-| `'alphanumericOnly'` | Remove non-alphanumeric characters |
-| `'numericOnly'` | Keep only numeric characters |
+| `'alphanumericOnly'`    | Remove non-alphanumeric characters       |
+| `'numericOnly'`         | Keep only numeric characters             |
 
 ### Domain-Specific Normalizers
 
-| Name | Description | Options |
-|------|-------------|---------|
-| `'name'` | Parse and normalize names | `{ removeTitles, preserveCase }` |
-| `'email'` | Normalize email addresses | `{ lowercase, removePlusAddressing }` |
-| `'phone'` | Parse and format phone numbers | `{ defaultCountry, format }` |
-| `'address'` | Parse and standardize addresses | `{ standardizeAbbreviations }` |
-| `'date'` | Parse various date formats | `{ outputFormat }` |
+| Name        | Description                     | Options                               |
+| ----------- | ------------------------------- | ------------------------------------- |
+| `'name'`    | Parse and normalize names       | `{ removeTitles, preserveCase }`      |
+| `'email'`   | Normalize email addresses       | `{ lowercase, removePlusAddressing }` |
+| `'phone'`   | Parse and format phone numbers  | `{ defaultCountry, format }`          |
+| `'address'` | Parse and standardize addresses | `{ standardizeAbbreviations }`        |
+| `'date'`    | Parse various date formats      | `{ outputFormat }`                    |
 
 See [Normalizers Overview](../normalizers/overview.md) for detailed documentation.
 
@@ -254,22 +279,22 @@ The underlying type for field configurations:
 ```typescript
 interface FieldDefinition {
   /** Semantic field type */
-  type: FieldType;
+  type: FieldType
 
   /** Component for composite types (e.g., 'first' for name) */
-  component?: string;
+  component?: string
 
   /** Whether field is required for matching */
-  required?: boolean;
+  required?: boolean
 
   /** Named normalizer to apply */
-  normalizer?: string;
+  normalizer?: string
 
   /** Options for the normalizer */
-  normalizerOptions?: any;
+  normalizerOptions?: any
 
   /** Custom normalizer function */
-  customNormalizer?: (value: unknown) => unknown;
+  customNormalizer?: (value: unknown) => unknown
 }
 ```
 
@@ -281,8 +306,8 @@ The complete schema definition type:
 
 ```typescript
 type SchemaDefinition<T> = {
-  [K in keyof T]?: FieldDefinition;
-};
+  [K in keyof T]?: FieldDefinition
+}
 ```
 
 ---
@@ -290,65 +315,63 @@ type SchemaDefinition<T> = {
 ## Complete Example
 
 ```typescript
-import { HaveWeMet } from 'have-we-met';
+import { HaveWeMet } from 'have-we-met'
 
 interface Person {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: Date;
-  ssn?: string;
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  dateOfBirth: Date
+  ssn?: string
   address: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
+    street: string
+    city: string
+    state: string
+    zip: string
+  }
 }
 
-const resolver = HaveWeMet
-  .create<Person>()
-  .schema(schema => schema
-    // Name fields with components
-    .field('firstName')
+const resolver = HaveWeMet.create<Person>()
+  .schema((schema) =>
+    schema
+      // Name fields with components
+      .field('firstName')
       .type('name')
       .component('first')
       .normalizer('name')
 
-    .field('lastName')
+      .field('lastName')
       .type('name')
       .component('last')
       .normalizer('name')
       .required()
 
-    // Contact fields
-    .field('email')
+      // Contact fields
+      .field('email')
       .type('email')
       .normalizer('email')
 
-    .field('phone')
+      .field('phone')
       .type('phone')
       .normalizer('phone', { defaultCountry: 'US' })
 
-    // Date field
-    .field('dateOfBirth')
+      // Date field
+      .field('dateOfBirth')
       .type('date')
       .normalizer('date')
 
-    // Optional identifier
-    .field('ssn')
+      // Optional identifier
+      .field('ssn')
       .type('string')
       .required(false)
-      .customNormalizer(val =>
-        typeof val === 'string'
-          ? val.replace(/\D/g, '')
-          : val
+      .customNormalizer((val) =>
+        typeof val === 'string' ? val.replace(/\D/g, '') : val
       )
   )
   // Continue with blocking, matching, etc.
-  .build();
+  .build()
 ```
 
 ---

@@ -13,15 +13,20 @@ describe.skip('Performance: Memory Leak Detection', () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
       .blocking((block) =>
         block.onField('lastName', { transform: 'firstLetter' })
       )
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 20, definiteMatch: 30 })
       .build()
@@ -31,7 +36,7 @@ describe.skip('Performance: Memory Leak Detection', () => {
         id: `rec-${offset + i}`,
         firstName: `Person${offset + i}`,
         lastName: `Family${(offset + i) % 100}`,
-        email: `person${offset + i}@example.com`
+        email: `person${offset + i}@example.com`,
       }))
     }
 
@@ -48,32 +53,42 @@ describe.skip('Performance: Memory Leak Detection', () => {
     const memIncrease = (memAfter - memBaseline) / 1024 / 1024 // MB
 
     expect(memIncrease).toBeLessThan(50) // Should not grow significantly
-    console.log(`Memory increase after 5x1k batches: ${memIncrease.toFixed(2)}MB`)
+    console.log(
+      `Memory increase after 5x1k batches: ${memIncrease.toFixed(2)}MB`
+    )
   })
 
   it('should not leak memory during repeated single matches', async () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
       lastName: { type: 'name', component: 'last' },
-      email: { type: 'email' }
+      email: { type: 'email' },
     })
       .blocking((block) =>
         block.onField('lastName', { transform: 'firstLetter' })
       )
       .matching((match) =>
         match
-          .field('email').strategy('exact').weight(20)
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('email')
+          .strategy('exact')
+          .weight(20)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 20, definiteMatch: 30 })
       .build()
 
-    const existingRecords: InternalRecord[] = Array.from({ length: 1000 }, (_, i) => ({
-      id: `existing-${i}`,
-      firstName: `Person${i}`,
-      lastName: `Family${i % 100}`,
-      email: `person${i}@example.com`
-    }))
+    const existingRecords: InternalRecord[] = Array.from(
+      { length: 1000 },
+      (_, i) => ({
+        id: `existing-${i}`,
+        firstName: `Person${i}`,
+        lastName: `Family${i % 100}`,
+        email: `person${i}@example.com`,
+      })
+    )
 
     forceGC()
     const memBaseline = process.memoryUsage().heapUsed
@@ -83,7 +98,7 @@ describe.skip('Performance: Memory Leak Detection', () => {
         id: `new-${i}`,
         firstName: `NewPerson${i}`,
         lastName: `NewFamily${i % 100}`,
-        email: `newperson${i}@example.com`
+        email: `newperson${i}@example.com`,
       }
       await resolver.resolve(newRecord, existingRecords)
     }
@@ -93,27 +108,38 @@ describe.skip('Performance: Memory Leak Detection', () => {
     const memIncrease = (memAfter - memBaseline) / 1024 / 1024 // MB
 
     expect(memIncrease).toBeLessThan(30) // Should not grow significantly
-    console.log(`Memory increase after 1000 single matches: ${memIncrease.toFixed(2)}MB`)
+    console.log(
+      `Memory increase after 1000 single matches: ${memIncrease.toFixed(2)}MB`
+    )
   })
 
   it('should not leak memory with string similarity operations', async () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
-      lastName: { type: 'name', component: 'last' }
+      lastName: { type: 'name', component: 'last' },
     })
       .matching((match) =>
         match
-          .field('firstName').strategy('levenshtein').weight(10).threshold(0.8)
-          .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.8)
+          .field('firstName')
+          .strategy('levenshtein')
+          .weight(10)
+          .threshold(0.8)
+          .field('lastName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.8)
       )
       .thresholds({ noMatch: 10, definiteMatch: 18 })
       .build()
 
-    const existingRecords: InternalRecord[] = Array.from({ length: 500 }, (_, i) => ({
-      id: `existing-${i}`,
-      firstName: `PersonNameExample${i}`,
-      lastName: `FamilyNameExample${i % 50}`
-    }))
+    const existingRecords: InternalRecord[] = Array.from(
+      { length: 500 },
+      (_, i) => ({
+        id: `existing-${i}`,
+        firstName: `PersonNameExample${i}`,
+        lastName: `FamilyNameExample${i % 50}`,
+      })
+    )
 
     forceGC()
     const memBaseline = process.memoryUsage().heapUsed
@@ -122,7 +148,7 @@ describe.skip('Performance: Memory Leak Detection', () => {
       const newRecord: InternalRecord = {
         id: `new-${i}`,
         firstName: `PersonNameExmple${i}`, // Typos
-        lastName: `FammlyNameExmple${i % 50}` // Typos
+        lastName: `FammlyNameExmple${i % 50}`, // Typos
       }
       await resolver.resolve(newRecord, existingRecords)
     }
@@ -132,13 +158,15 @@ describe.skip('Performance: Memory Leak Detection', () => {
     const memIncrease = (memAfter - memBaseline) / 1024 / 1024 // MB
 
     expect(memIncrease).toBeLessThan(25)
-    console.log(`Memory increase after 500 fuzzy matches: ${memIncrease.toFixed(2)}MB`)
+    console.log(
+      `Memory increase after 500 fuzzy matches: ${memIncrease.toFixed(2)}MB`
+    )
   })
 
   it('should clean up blocking structures after use', async () => {
     const resolver = HaveWeMet.schema({
       firstName: { type: 'name', component: 'first' },
-      lastName: { type: 'name', component: 'last' }
+      lastName: { type: 'name', component: 'last' },
     })
       .blocking((block) =>
         block
@@ -147,8 +175,14 @@ describe.skip('Performance: Memory Leak Detection', () => {
       )
       .matching((match) =>
         match
-          .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-          .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+          .field('firstName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
+          .field('lastName')
+          .strategy('jaro-winkler')
+          .weight(10)
+          .threshold(0.85)
       )
       .thresholds({ noMatch: 10, definiteMatch: 18 })
       .build()
@@ -160,7 +194,7 @@ describe.skip('Performance: Memory Leak Detection', () => {
       const batch = Array.from({ length: 5000 }, (_, i) => ({
         id: `rec-${iteration * 5000 + i}`,
         firstName: `Person${i}`,
-        lastName: `Family${i % 100}`
+        lastName: `Family${i % 100}`,
       }))
       await resolver.deduplicateBatch(batch)
     }
@@ -170,6 +204,8 @@ describe.skip('Performance: Memory Leak Detection', () => {
     const memIncrease = (memAfter - memBaseline) / 1024 / 1024 // MB
 
     expect(memIncrease).toBeLessThan(100)
-    console.log(`Memory increase after 3x5k batches with blocking: ${memIncrease.toFixed(2)}MB`)
+    console.log(
+      `Memory increase after 3x5k batches with blocking: ${memIncrease.toFixed(2)}MB`
+    )
   })
 })

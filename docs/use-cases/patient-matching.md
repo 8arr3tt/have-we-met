@@ -15,6 +15,7 @@ Healthcare organizations face unique identity matching challenges:
 - **Life changes**: Addresses and phones change over time
 
 Incorrect matching has serious consequences:
+
 - **False positives**: Mixing patient records can lead to wrong treatments
 - **False negatives**: Fragmented records miss critical history (allergies, medications)
 
@@ -64,7 +65,7 @@ async function matchWithAudit(record: Patient, userId: string) {
     matchesFound: result.matches.length,
     outcome: result.outcome,
     duration: Date.now() - startTime,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return result
@@ -103,7 +104,7 @@ async function enforceRetention() {
 
   await resolver.queue.cleanup({
     olderThan: new Date(Date.now() - retentionPeriod),
-    status: ['confirmed', 'rejected', 'expired']
+    status: ['confirmed', 'rejected', 'expired'],
   })
 }
 ```
@@ -119,14 +120,14 @@ import { nhsNumberValidator, ssnValidator } from 'have-we-met/services'
 
 interface Patient {
   id?: string
-  mrn?: string             // Medical Record Number (facility-specific)
-  ssn?: string             // Social Security Number (when available)
-  nhsNumber?: string       // UK NHS Number (when applicable)
+  mrn?: string // Medical Record Number (facility-specific)
+  ssn?: string // Social Security Number (when available)
+  nhsNumber?: string // UK NHS Number (when applicable)
   firstName: string
   middleName?: string
   lastName: string
   previousLastName?: string // Maiden name
-  dateOfBirth: string      // ISO date format
+  dateOfBirth: string // ISO date format
   gender: 'M' | 'F' | 'O' | 'U'
   motherMaidenName?: string
   addressLine1?: string
@@ -148,127 +149,205 @@ interface Patient {
 const prisma = new PrismaClient()
 
 const resolver = HaveWeMet.create<Patient>()
-  .schema(schema => schema
-    .field('mrn').type('string')
-    .field('ssn').type('string')
-    .field('nhsNumber').type('string')
-    .field('firstName').type('name').component('first')
-    .field('middleName').type('name').component('middle')
-    .field('lastName').type('name').component('last')
-    .field('previousLastName').type('name').component('last')
-    .field('dateOfBirth').type('date')
-    .field('gender').type('string')
-    .field('motherMaidenName').type('name').component('last')
-    .field('addressLine1').type('address')
-    .field('city').type('string')
-    .field('state').type('string')
-    .field('postalCode').type('string')
-    .field('phone').type('phone')
-    .field('email').type('email')
-    .field('createdAt').type('date')
-    .field('updatedAt').type('date')
+  .schema((schema) =>
+    schema
+      .field('mrn')
+      .type('string')
+      .field('ssn')
+      .type('string')
+      .field('nhsNumber')
+      .type('string')
+      .field('firstName')
+      .type('name')
+      .component('first')
+      .field('middleName')
+      .type('name')
+      .component('middle')
+      .field('lastName')
+      .type('name')
+      .component('last')
+      .field('previousLastName')
+      .type('name')
+      .component('last')
+      .field('dateOfBirth')
+      .type('date')
+      .field('gender')
+      .type('string')
+      .field('motherMaidenName')
+      .type('name')
+      .component('last')
+      .field('addressLine1')
+      .type('address')
+      .field('city')
+      .type('string')
+      .field('state')
+      .type('string')
+      .field('postalCode')
+      .type('string')
+      .field('phone')
+      .type('phone')
+      .field('email')
+      .type('email')
+      .field('createdAt')
+      .type('date')
+      .field('updatedAt')
+      .type('date')
   )
-  .blocking(block => block
-    // Composite blocking for maximum recall with safety
-    .composite('union', comp => comp
-      // Block by last name + birth year (most common)
-      .onFields(['lastName', 'dateOfBirth'], {
-        transforms: {
-          lastName: 'soundex',
-          dateOfBirth: 'year'
-        }
-      })
-      // Also block by SSN when available
-      .onField('ssn')
-      // Block by NHS number when available
-      .onField('nhsNumber')
-    )
+  .blocking((block) =>
+    block
+      // Composite blocking for maximum recall with safety
+      .composite('union', (comp) =>
+        comp
+          // Block by last name + birth year (most common)
+          .onFields(['lastName', 'dateOfBirth'], {
+            transforms: {
+              lastName: 'soundex',
+              dateOfBirth: 'year',
+            },
+          })
+          // Also block by SSN when available
+          .onField('ssn')
+          // Block by NHS number when available
+          .onField('nhsNumber')
+      )
   )
-  .matching(match => match
-    // Unique identifiers - very high weight
-    .field('mrn').strategy('exact').weight(35)
-    .field('ssn').strategy('exact').weight(35)
-    .field('nhsNumber').strategy('exact').weight(35)
+  .matching((match) =>
+    match
+      // Unique identifiers - very high weight
+      .field('mrn')
+      .strategy('exact')
+      .weight(35)
+      .field('ssn')
+      .strategy('exact')
+      .weight(35)
+      .field('nhsNumber')
+      .strategy('exact')
+      .weight(35)
 
-    // Names - high weight with strict thresholds
-    .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.92)
-    .field('firstName').strategy('jaro-winkler').weight(12).threshold(0.90)
-    .field('middleName').strategy('jaro-winkler').weight(6).threshold(0.88)
+      // Names - high weight with strict thresholds
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(15)
+      .threshold(0.92)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.9)
+      .field('middleName')
+      .strategy('jaro-winkler')
+      .weight(6)
+      .threshold(0.88)
 
-    // Handle name changes (maiden name matching)
-    .field('previousLastName').strategy('jaro-winkler').weight(12).threshold(0.92)
+      // Handle name changes (maiden name matching)
+      .field('previousLastName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.92)
 
-    // Date of birth - critical identifier
-    .field('dateOfBirth').strategy('exact').weight(20)
+      // Date of birth - critical identifier
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(20)
 
-    // Gender - must match exactly
-    .field('gender').strategy('exact').weight(8)
+      // Gender - must match exactly
+      .field('gender')
+      .strategy('exact')
+      .weight(8)
 
-    // Mother's maiden name - strong verification
-    .field('motherMaidenName').strategy('jaro-winkler').weight(10).threshold(0.90)
+      // Mother's maiden name - strong verification
+      .field('motherMaidenName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.9)
 
-    // Address - supporting evidence
-    .field('postalCode').strategy('exact').weight(6)
-    .field('city').strategy('jaro-winkler').weight(4).threshold(0.85)
+      // Address - supporting evidence
+      .field('postalCode')
+      .strategy('exact')
+      .weight(6)
+      .field('city')
+      .strategy('jaro-winkler')
+      .weight(4)
+      .threshold(0.85)
 
-    // Contact info - weak signals (change frequently)
-    .field('phone').strategy('exact').weight(5)
-    .field('email').strategy('exact').weight(5)
+      // Contact info - weak signals (change frequently)
+      .field('phone')
+      .strategy('exact')
+      .weight(5)
+      .field('email')
+      .strategy('exact')
+      .weight(5)
 
-    // Very conservative thresholds for patient safety
-    // Max possible: ~188 (if all fields present and match)
-    // noMatch: 35 (~19%) - clear non-matches
-    // definiteMatch: 95 (~51%) - requires strong identifier + demographics
-    .thresholds({ noMatch: 35, definiteMatch: 95 })
+      // Very conservative thresholds for patient safety
+      // Max possible: ~188 (if all fields present and match)
+      // noMatch: 35 (~19%) - clear non-matches
+      // definiteMatch: 95 (~51%) - requires strong identifier + demographics
+      .thresholds({ noMatch: 35, definiteMatch: 95 })
   )
-  .services(services => services
-    .defaultTimeout(5000)
-    .defaultRetry({ maxAttempts: 2, initialDelayMs: 100 })
+  .services((services) =>
+    services
+      .defaultTimeout(5000)
+      .defaultRetry({ maxAttempts: 2, initialDelayMs: 100 })
 
-    // Validate SSN format and checksum (US)
-    .validate('ssn')
+      // Validate SSN format and checksum (US)
+      .validate('ssn')
       .using(ssnValidator)
-      .onInvalid('flag')  // Don't reject - data may be legacy
+      .onInvalid('flag') // Don't reject - data may be legacy
 
-    // Validate NHS number (UK)
-    .validate('nhsNumber')
+      // Validate NHS number (UK)
+      .validate('nhsNumber')
       .using(nhsNumberValidator)
       .onInvalid('flag')
       .required(false)
   )
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
 
-    // Names: prefer longer/more complete
-    .field('firstName').strategy('preferLonger')
-    .field('middleName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('previousLastName').strategy('preferNonNull')
+      // Names: prefer longer/more complete
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('middleName')
+      .strategy('preferLonger')
+      .field('lastName')
+      .strategy('preferLonger')
+      .field('previousLastName')
+      .strategy('preferNonNull')
 
-    // Identifiers: prefer non-null (keep any ID we have)
-    .field('mrn').strategy('preferNonNull')
-    .field('ssn').strategy('preferNonNull')
-    .field('nhsNumber').strategy('preferNonNull')
+      // Identifiers: prefer non-null (keep any ID we have)
+      .field('mrn')
+      .strategy('preferNonNull')
+      .field('ssn')
+      .strategy('preferNonNull')
+      .field('nhsNumber')
+      .strategy('preferNonNull')
 
-    // Demographics: prefer newer (more current)
-    .field('addressLine1').strategy('preferNewer')
-    .field('city').strategy('preferNewer')
-    .field('state').strategy('preferNewer')
-    .field('postalCode').strategy('preferNewer')
-    .field('phone').strategy('preferNewer')
-    .field('email').strategy('preferNewer')
+      // Demographics: prefer newer (more current)
+      .field('addressLine1')
+      .strategy('preferNewer')
+      .field('city')
+      .strategy('preferNewer')
+      .field('state')
+      .strategy('preferNewer')
+      .field('postalCode')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNewer')
+      .field('email')
+      .strategy('preferNewer')
 
-    // Always track provenance for audit
-    .trackProvenance(true)
+      // Always track provenance for audit
+      .trackProvenance(true)
   )
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'patients',
-    queue: {
-      defaultPriority: 5,  // Medium priority
-      enableMetrics: true
-    }
-  }))
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'patients',
+      queue: {
+        defaultPriority: 5, // Medium priority
+        enableMetrics: true,
+      },
+    })
+  )
   .build()
 ```
 
@@ -281,8 +360,14 @@ async function matchPatientAtRegistration(
   facilityId: string
 ): Promise<MatchResult> {
   // Validate required fields
-  if (!incomingPatient.lastName || !incomingPatient.firstName || !incomingPatient.dateOfBirth) {
-    throw new ValidationError('lastName, firstName, and dateOfBirth are required')
+  if (
+    !incomingPatient.lastName ||
+    !incomingPatient.firstName ||
+    !incomingPatient.dateOfBirth
+  ) {
+    throw new ValidationError(
+      'lastName, firstName, and dateOfBirth are required'
+    )
   }
 
   // Enrich with facility context
@@ -290,7 +375,7 @@ async function matchPatientAtRegistration(
     ...incomingPatient,
     facilityId,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   } as Patient
 
   // Run matching
@@ -302,10 +387,10 @@ async function matchPatientAtRegistration(
       facilityId,
       metadata: {
         registrationTime: new Date().toISOString(),
-        workstation: 'ADMIT-01'
-      }
+        workstation: 'ADMIT-01',
+      },
     },
-    queuePriority: 8  // Higher priority for active registrations
+    queuePriority: 8, // Higher priority for active registrations
   })
 
   // Log the match attempt
@@ -315,7 +400,7 @@ async function matchPatientAtRegistration(
     facilityId,
     outcome: result.outcome,
     matchCount: result.matches?.length || 0,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return result
@@ -336,12 +421,12 @@ async function handleMatchResult(
       const newPatient = await prisma.patient.create({
         data: {
           ...incomingPatient,
-          id: generatePatientId()
-        }
+          id: generatePatientId(),
+        },
       })
       return {
         action: 'created',
-        patientId: newPatient.id
+        patientId: newPatient.id,
       }
 
     case 'definite-match':
@@ -355,13 +440,13 @@ async function handleMatchResult(
         incomingPatient: hashIdentifier(incomingPatient.mrn),
         linkedTo: match.record.id,
         score: match.score,
-        maxScore: match.maxScore
+        maxScore: match.maxScore,
       })
 
       return {
         action: 'linked',
         patientId: match.record.id,
-        confidence: match.score / match.maxScore
+        confidence: match.score / match.maxScore,
       }
 
     case 'potential-match':
@@ -370,14 +455,14 @@ async function handleMatchResult(
         action: 'queued',
         queueItemId: result.queueItemId,
         potentialMatches: result.matches.length,
-        message: 'Patient queued for identity verification'
+        message: 'Patient queued for identity verification',
       }
 
     case 'rejected':
       // Validation failed (e.g., invalid SSN format)
       return {
         action: 'validation_failed',
-        errors: result.serviceResults?.validationErrors
+        errors: result.serviceResults?.validationErrors,
       }
   }
 }
@@ -394,16 +479,17 @@ interface ReviewContext {
 
 async function getReviewQueue(ctx: ReviewContext) {
   // HIM specialists see all; others see their facility
-  const filter = ctx.role === 'him_specialist'
-    ? {}
-    : { 'context.facilityId': ctx.facilityId }
+  const filter =
+    ctx.role === 'him_specialist'
+      ? {}
+      : { 'context.facilityId': ctx.facilityId }
 
   return resolver.queue.list({
     status: 'pending',
     orderBy: 'priority',
     orderDirection: 'desc',
     limit: 20,
-    ...filter
+    ...filter,
   })
 }
 
@@ -424,22 +510,23 @@ async function reviewPatientMatch(
   return {
     itemId: item.id,
     incomingPatient: formatPatientForDisplay(item.candidateRecord),
-    potentialMatches: item.potentialMatches.map(match => ({
+    potentialMatches: item.potentialMatches.map((match) => ({
       patient: formatPatientForDisplay(match.record),
       score: match.score,
       maxScore: match.explanation.maxScore,
-      confidence: (match.score / match.explanation.maxScore * 100).toFixed(1) + '%',
-      fieldComparisons: match.explanation.fieldComparisons.map(fc => ({
+      confidence:
+        ((match.score / match.explanation.maxScore) * 100).toFixed(1) + '%',
+      fieldComparisons: match.explanation.fieldComparisons.map((fc) => ({
         field: fc.field,
         incoming: fc.valueA,
         existing: fc.valueB,
         similarity: (fc.similarity * 100).toFixed(0) + '%',
         contributed: fc.contributed,
-        points: fc.contribution.toFixed(1)
-      }))
+        points: fc.contribution.toFixed(1),
+      })),
     })),
     createdAt: item.createdAt,
-    context: item.context
+    context: item.context,
   }
 }
 
@@ -451,14 +538,16 @@ async function confirmPatientMatch(
 ) {
   // Verify permissions for merge
   if (ctx.role === 'registrar') {
-    throw new ForbiddenError('Registrars cannot confirm matches. Escalate to HIM.')
+    throw new ForbiddenError(
+      'Registrars cannot confirm matches. Escalate to HIM.'
+    )
   }
 
   const result = await resolver.queue.merge(itemId, {
     selectedMatchId: matchId,
     notes,
     confidence: 0.95,
-    decidedBy: ctx.userId
+    decidedBy: ctx.userId,
   })
 
   await auditLog.write({
@@ -468,7 +557,7 @@ async function confirmPatientMatch(
     matchId,
     goldenRecordId: result.decision?.mergeResult?.goldenRecordId,
     notes,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return result
@@ -483,7 +572,7 @@ async function rejectPatientMatch(
   const result = await resolver.queue.reject(itemId, {
     notes,
     confidence: 0.9,
-    decidedBy: ctx.userId
+    decidedBy: ctx.userId,
   })
 
   await auditLog.write({
@@ -492,7 +581,7 @@ async function rejectPatientMatch(
     itemId,
     reason,
     notes,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return result
@@ -503,18 +592,18 @@ async function rejectPatientMatch(
 
 ### Weight Selection
 
-| Field | Weight | Rationale |
-|-------|--------|-----------|
-| mrn/ssn/nhsNumber | 35 | Definitive identifiers when valid |
-| dateOfBirth | 20 | Critical discriminator, rarely wrong |
-| lastName | 15 | Primary name component |
-| firstName | 12 | Common but important |
-| previousLastName | 12 | Handles name changes |
-| motherMaidenName | 10 | Strong verification when available |
-| gender | 8 | Must match, rules out half of population |
-| middleName | 6 | Helpful but often missing |
-| postalCode | 6 | Geographic confirmation |
-| phone/email | 5 | Change frequently, weak signal |
+| Field             | Weight | Rationale                                |
+| ----------------- | ------ | ---------------------------------------- |
+| mrn/ssn/nhsNumber | 35     | Definitive identifiers when valid        |
+| dateOfBirth       | 20     | Critical discriminator, rarely wrong     |
+| lastName          | 15     | Primary name component                   |
+| firstName         | 12     | Common but important                     |
+| previousLastName  | 12     | Handles name changes                     |
+| motherMaidenName  | 10     | Strong verification when available       |
+| gender            | 8      | Must match, rules out half of population |
+| middleName        | 6      | Helpful but often missing                |
+| postalCode        | 6      | Geographic confirmation                  |
+| phone/email       | 5      | Change frequently, weak signal           |
 
 ### Threshold Selection
 
@@ -525,12 +614,12 @@ The conservative thresholds reflect healthcare's zero-tolerance for false positi
 
 Example score scenarios:
 
-| Scenario | Score | Outcome |
-|----------|-------|---------|
-| SSN + lastName + firstName + DOB match | 35+15+12+20 = 82 | Potential |
-| SSN + lastName + firstName + DOB + gender match | 82+8 = 90 | Potential |
-| SSN + full demographics match | ~105 | Definite |
-| Only names match (no DOB, no ID) | ~27 | No match |
+| Scenario                                        | Score            | Outcome   |
+| ----------------------------------------------- | ---------------- | --------- |
+| SSN + lastName + firstName + DOB match          | 35+15+12+20 = 82 | Potential |
+| SSN + lastName + firstName + DOB + gender match | 82+8 = 90        | Potential |
+| SSN + full demographics match                   | ~105             | Definite  |
+| Only names match (no DOB, no ID)                | ~27              | No match  |
 
 ### Why Near-Total Precision
 
@@ -563,6 +652,7 @@ Hospital systems may have millions of patient records. The composite blocking st
 ```
 
 For 1 million patients:
+
 - Without blocking: 500 billion comparisons
 - With this strategy: ~5-10 million comparisons (99%+ reduction)
 
@@ -572,8 +662,8 @@ For point-of-care registration, response time matters:
 
 ```typescript
 const result = await resolver.resolve(patient, {
-  timeout: 3000,  // 3 second max
-  maxCandidates: 100  // Limit blocking results
+  timeout: 3000, // 3 second max
+  maxCandidates: 100, // Limit blocking results
 })
 ```
 
@@ -585,9 +675,9 @@ For HIE (Health Information Exchange) scenarios:
 async function crossFacilityMatch(patient: Patient, facilityIds: string[]) {
   // Match against multiple facility databases
   const results = await Promise.all(
-    facilityIds.map(facilityId =>
+    facilityIds.map((facilityId) =>
       resolver.resolve(patient, {
-        filter: { facilityId }
+        filter: { facilityId },
       })
     )
   )
@@ -611,7 +701,7 @@ function matchNewborn(newborn: Patient, mother: Patient) {
     motherMaidenName: mother.lastName,
     // Use composite key for blocking
     birthFacility: mother.facilityId,
-    birthDate: newborn.dateOfBirth
+    birthDate: newborn.dateOfBirth,
   })
 }
 ```
@@ -626,11 +716,11 @@ async function emergencyMatch(partialInfo: Partial<Patient>) {
   // but flag all matches for review
   const result = await resolver.resolve(partialInfo as Patient, {
     autoQueue: true,
-    queuePriority: 10,  // Highest priority
+    queuePriority: 10, // Highest priority
     queueContext: {
       source: 'emergency',
-      flags: ['requires_verification']
-    }
+      flags: ['requires_verification'],
+    },
   })
 
   // All matches go to review in emergency
@@ -639,7 +729,7 @@ async function emergencyMatch(partialInfo: Partial<Patient>) {
       candidateRecord: partialInfo as Patient,
       potentialMatches: result.matches,
       priority: 10,
-      tags: ['emergency', 'verification-required']
+      tags: ['emergency', 'verification-required'],
     })
   }
 
@@ -659,12 +749,12 @@ async function handleDeceasedMatch(match: MatchResult) {
       candidateRecord: match.inputRecord,
       potentialMatches: match.matches,
       priority: 10,
-      tags: ['deceased-flag', 'identity-verification']
+      tags: ['deceased-flag', 'identity-verification'],
     })
 
     return {
       action: 'flagged',
-      reason: 'Matched to deceased patient record'
+      reason: 'Matched to deceased patient record',
     }
   }
 }
@@ -675,7 +765,7 @@ async function handleDeceasedMatch(match: MatchResult) {
 Track matching effectiveness:
 
 ```typescript
-async function getMatchingMetrics(dateRange: { start: Date, end: Date }) {
+async function getMatchingMetrics(dateRange: { start: Date; end: Date }) {
   const queueStats = await resolver.queue.stats()
 
   // Calculate review outcomes
@@ -690,8 +780,9 @@ async function getMatchingMetrics(dateRange: { start: Date, end: Date }) {
     avgWaitTime: queueStats.avgWaitTime,
 
     // Quality metrics
-    confirmRate: total > 0 ? (confirmed / total * 100).toFixed(1) + '%' : 'N/A',
-    rejectRate: total > 0 ? (rejected / total * 100).toFixed(1) + '%' : 'N/A',
+    confirmRate:
+      total > 0 ? ((confirmed / total) * 100).toFixed(1) + '%' : 'N/A',
+    rejectRate: total > 0 ? ((rejected / total) * 100).toFixed(1) + '%' : 'N/A',
 
     // Throughput
     reviewsPerDay: queueStats.throughput?.last24h || 0,
@@ -699,8 +790,8 @@ async function getMatchingMetrics(dateRange: { start: Date, end: Date }) {
     // Alerts
     alerts: [
       queueStats.byStatus.pending > 500 ? 'High queue backlog' : null,
-      queueStats.avgWaitTime > 24 * 60 * 60 * 1000 ? 'Long wait times' : null
-    ].filter(Boolean)
+      queueStats.avgWaitTime > 24 * 60 * 60 * 1000 ? 'Long wait times' : null,
+    ].filter(Boolean),
   }
 }
 ```

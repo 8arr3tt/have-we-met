@@ -5,7 +5,10 @@ import {
   type SourceAwareRecord,
   type SourceAwareMergeConfig,
 } from '../../src/consolidation/source-aware-merger'
-import type { ConsolidationSource, MappedRecord } from '../../src/consolidation/types'
+import type {
+  ConsolidationSource,
+  MappedRecord,
+} from '../../src/consolidation/types'
 import type { DatabaseAdapter } from '../../src/adapters/types'
 
 // Test types
@@ -88,7 +91,11 @@ describe('SourceAwareMerger', () => {
 
       const records: MappedRecord<Customer>[] = [
         {
-          record: { email: 'test@example.com', firstName: 'John', lastName: 'Doe' },
+          record: {
+            email: 'test@example.com',
+            firstName: 'John',
+            lastName: 'Doe',
+          },
           sourceId: 'crm',
           sourceRecordId: '1',
           originalRecord: {},
@@ -656,7 +663,10 @@ describe('SourceAwareMerger', () => {
         trackProvenance: true,
       })
 
-      const sources: ConsolidationSource<CustomerWithNested, CustomerWithNested>[] = [
+      const sources: ConsolidationSource<
+        CustomerWithNested,
+        CustomerWithNested
+      >[] = [
         {
           sourceId: 'crm',
           name: 'CRM',

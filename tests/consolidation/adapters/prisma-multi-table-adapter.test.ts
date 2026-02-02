@@ -11,21 +11,23 @@ import { ConsolidationError } from '../../../src/consolidation/types'
 import type { MappedRecord } from '../../../src/consolidation/types'
 
 // Mock adapters
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   return {
     findAll: vi.fn(async () => []),
     findByIds: vi.fn(async () => []),
     findByBlockingKeys: vi.fn(async () => []),
     count: vi.fn(async () => 0),
-    insert: vi.fn(async (record) => ({ ...record, id: 'mock-id' } as T)),
-    update: vi.fn(async (id, updates) => ({ id, ...updates } as T)),
+    insert: vi.fn(async (record) => ({ ...record, id: 'mock-id' }) as T),
+    update: vi.fn(async (id, updates) => ({ id, ...updates }) as T),
     delete: vi.fn(async () => {}),
     transaction: vi.fn(async (callback) => callback({} as DatabaseAdapter<T>)),
     batchInsert: vi.fn(async (records) =>
-      records.map((r, i) => ({ ...r, id: `mock-id-${i}` } as T))
+      records.map((r, i) => ({ ...r, id: `mock-id-${i}` }) as T)
     ),
     batchUpdate: vi.fn(async (updates) =>
-      updates.map((u) => ({ id: u.id, ...u.updates } as T))
+      updates.map((u) => ({ id: u.id, ...u.updates }) as T)
     ),
   }
 }
@@ -121,13 +123,23 @@ describe('PrismaMultiTableAdapter', () => {
               record: goldenRecords[0],
               sourceId: 'crm',
               sourceRecordId: 'crm-1',
-              originalRecord: { cust_id: 'crm-1', first_name: 'John', last_name: 'Doe', email_address: 'john@example.com' },
+              originalRecord: {
+                cust_id: 'crm-1',
+                first_name: 'John',
+                last_name: 'Doe',
+                email_address: 'john@example.com',
+              },
             },
             {
               record: goldenRecords[0],
               sourceId: 'billing',
               sourceRecordId: 'billing-1',
-              originalRecord: { cust_id: 'billing-1', first_name: 'John', last_name: 'Doe', email_address: 'john@example.com' },
+              originalRecord: {
+                cust_id: 'billing-1',
+                first_name: 'John',
+                last_name: 'Doe',
+                email_address: 'john@example.com',
+              },
             },
           ],
           score: 95,
@@ -350,10 +362,20 @@ describe('PrismaMultiTableAdapter', () => {
   describe('loadFromAllSourcesInTransaction', () => {
     it('should load from all sources in Prisma transaction', async () => {
       const crmRecords = [
-        { cust_id: '1', first_name: 'John', last_name: 'Doe', email_address: 'john@crm.com' },
+        {
+          cust_id: '1',
+          first_name: 'John',
+          last_name: 'Doe',
+          email_address: 'john@crm.com',
+        },
       ]
       const billingRecords = [
-        { cust_id: '2', first_name: 'Jane', last_name: 'Smith', email_address: 'jane@billing.com' },
+        {
+          cust_id: '2',
+          first_name: 'Jane',
+          last_name: 'Smith',
+          email_address: 'jane@billing.com',
+        },
       ]
 
       vi.mocked(crmAdapter.findAll).mockResolvedValue(crmRecords)
@@ -477,9 +499,8 @@ describe('PrismaMultiTableAdapter', () => {
         },
       })
 
-      const mappings = await adapter.getSourceMappingsForGoldenRecord(
-        'golden-1'
-      )
+      const mappings =
+        await adapter.getSourceMappingsForGoldenRecord('golden-1')
 
       expect(mappings).toEqual(mockMappings)
       expect(findManySpy).toHaveBeenCalledWith({

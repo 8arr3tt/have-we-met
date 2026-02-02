@@ -13,12 +13,9 @@ export {
   balanceDataset,
   getDatasetStats,
   exportWeightsToJson,
-} from './trainer';
+} from './trainer'
 
-export type {
-  TrainerOptions,
-  TrainingProgressCallback,
-} from './trainer';
+export type { TrainerOptions, TrainingProgressCallback } from './trainer'
 
 // Feedback Collector
 export {
@@ -26,7 +23,7 @@ export {
   createFeedbackCollector,
   queueDecisionToTrainingExample,
   queueDecisionsToTrainingExamples,
-} from './feedback-collector';
+} from './feedback-collector'
 
 export type {
   FeedbackQuality,
@@ -36,4 +33,4 @@ export type {
   FeedbackStats,
   FeedbackCollectorOptions,
   ExportOptions,
-} from './feedback-collector';
+} from './feedback-collector'

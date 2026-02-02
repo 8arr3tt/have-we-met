@@ -74,10 +74,15 @@ export interface MatchingOptions {
  * ```
  */
 export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
-  private readonly sources: Array<ConsolidationSource<Record<string, unknown>, TOutput>>
+  private readonly sources: Array<
+    ConsolidationSource<Record<string, unknown>, TOutput>
+  >
   private readonly resolver: Resolver<TOutput>
   private readonly matchingScope: MatchingScope
-  private readonly mappers: Map<string, SchemaMapper<Record<string, unknown>, TOutput>>
+  private readonly mappers: Map<
+    string,
+    SchemaMapper<Record<string, unknown>, TOutput>
+  >
 
   constructor(config: CrossSourceMatcherConfig<TOutput>) {
     this.validateConfig(config)
@@ -136,16 +141,14 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
     // Exclude the candidate record from existing records if it's already in the pool
     const existingRecords = allMappedRecords.filter(
       (r) =>
-        !(r.sourceId === mappedCandidate.sourceId &&
-          r.sourceRecordId === mappedCandidate.sourceRecordId)
+        !(
+          r.sourceId === mappedCandidate.sourceId &&
+          r.sourceRecordId === mappedCandidate.sourceRecordId
+        )
     )
 
     // Perform matching
-    return this.matchMappedRecord(
-      mappedCandidate,
-      existingRecords,
-      options
-    )
+    return this.matchMappedRecord(mappedCandidate, existingRecords, options)
   }
 
   /**
@@ -191,11 +194,7 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
       (r) => r.sourceRecordId !== mappedCandidate.sourceRecordId
     )
 
-    return this.matchMappedRecord(
-      mappedCandidate,
-      existingRecords,
-      options
-    )
+    return this.matchMappedRecord(mappedCandidate, existingRecords, options)
   }
 
   /**
@@ -236,11 +235,7 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
       }
     }
 
-    return this.matchMappedRecord(
-      mappedCandidate,
-      allMappedRecords,
-      options
-    )
+    return this.matchMappedRecord(mappedCandidate, allMappedRecords, options)
   }
 
   /**
@@ -303,8 +298,10 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
       // Exclude the candidate from existing records
       const existingRecords = allMappedRecords.filter(
         (r) =>
-          !(r.sourceId === candidate.sourceId &&
-            r.sourceRecordId === candidate.sourceRecordId)
+          !(
+            r.sourceId === candidate.sourceId &&
+            r.sourceRecordId === candidate.sourceRecordId
+          )
       )
 
       const matches = this.matchMappedRecord(
@@ -335,7 +332,9 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
   /**
    * Get a source by ID.
    */
-  getSource(sourceId: string): ConsolidationSource<Record<string, unknown>, TOutput> | undefined {
+  getSource(
+    sourceId: string
+  ): ConsolidationSource<Record<string, unknown>, TOutput> | undefined {
     return this.sources.find((s) => s.sourceId === sourceId)
   }
 
@@ -399,10 +398,7 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
           mappedRecords.push(mapped)
         } catch (error) {
           // Log error but continue with other records
-          console.warn(
-            `Failed to map record from ${source.sourceId}:`,
-            error
-          )
+          console.warn(`Failed to map record from ${source.sourceId}:`, error)
         }
       }
 
@@ -460,7 +456,10 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
 
     for (const matchResult of matchResults) {
       // Apply minimum score filter if specified
-      if (options?.minScore !== undefined && matchResult.score.totalScore < options.minScore) {
+      if (
+        options?.minScore !== undefined &&
+        matchResult.score.totalScore < options.minScore
+      ) {
         continue
       }
 
@@ -513,9 +512,7 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
    *
    * @throws {ConsolidationError} If configuration is invalid
    */
-  private validateConfig(
-    config: CrossSourceMatcherConfig<TOutput>
-  ): void {
+  private validateConfig(config: CrossSourceMatcherConfig<TOutput>): void {
     if (!config.sources || config.sources.length === 0) {
       throw new ConsolidationError(
         'At least one source is required',
@@ -524,10 +521,7 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
     }
 
     if (!config.resolver) {
-      throw new ConsolidationError(
-        'Resolver is required',
-        'INVALID_CONFIG'
-      )
+      throw new ConsolidationError('Resolver is required', 'INVALID_CONFIG')
     }
 
     // Validate source IDs are unique
@@ -585,8 +579,6 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
  */
 export function createCrossSourceMatcher<
   TOutput extends Record<string, unknown>,
->(
-  config: CrossSourceMatcherConfig<TOutput>
-): CrossSourceMatcher<TOutput> {
+>(config: CrossSourceMatcherConfig<TOutput>): CrossSourceMatcher<TOutput> {
   return new CrossSourceMatcher(config)
 }

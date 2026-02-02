@@ -33,12 +33,20 @@ The foundation of identity resolution with three complementary approaches:
 
 **Deterministic Matching**
 Define exact field combinations that definitively identify matches:
+
 ```typescript
-const resolver = HaveWeMet
-  .schema({ ssn: { type: 'string' }, dob: { type: 'date' } })
-  .matching(match => match
-    .field('ssn').strategy('exact').weight(25)
-    .field('dob').strategy('exact').weight(25)
+const resolver = HaveWeMet.schema({
+  ssn: { type: 'string' },
+  dob: { type: 'date' },
+})
+  .matching((match) =>
+    match
+      .field('ssn')
+      .strategy('exact')
+      .weight(25)
+      .field('dob')
+      .strategy('exact')
+      .weight(25)
   )
   .thresholds({ noMatch: 10, definiteMatch: 45 })
   .build()
@@ -46,6 +54,7 @@ const resolver = HaveWeMet
 
 **Probabilistic Matching**
 Weighted scoring across fields with fuzzy matching algorithms (Levenshtein, Jaro-Winkler, Soundex, Metaphone):
+
 ```typescript
 .matching(match => match
   .field('email').strategy('exact').weight(20)
@@ -56,6 +65,7 @@ Weighted scoring across fields with fuzzy matching algorithms (Levenshtein, Jaro
 
 **ML-Based Matching**
 Pre-trained models learn complex patterns. Ships with a person/customer matching model achieving >85% accuracy:
+
 ```typescript
 .ml(ml => ml
   .mode('hybrid')
@@ -92,19 +102,22 @@ Clean and standardize data before matching:
 Work seamlessly with your existing database:
 
 **Adapters for Major ORMs**:
+
 - Prisma
 - Drizzle
 - TypeORM
 
 **Capabilities**:
+
 - Query optimization with blocking strategies
 - Transaction support for atomic merges
 - Index recommendations via IndexAnalyzer
 - Performance profiling via QueryProfiler
 
 ```typescript
-const resolver = HaveWeMet
-  .schema({ /* ... */ })
+const resolver = HaveWeMet.schema({
+  /* ... */
+})
   .matching(/* ... */)
   .adapter(prismaAdapter(prisma))
   .build()
@@ -117,16 +130,21 @@ const result = await resolver.resolveWithDatabase({ email: 'john@example.com' })
 Not all matches are certain. The review queue provides workflow for human judgment:
 
 **Queue Operations**:
+
 - Add matches requiring review (single or batch)
 - List pending items with filtering and sorting
 - Confirm, reject, or merge matches
 - Track metrics: throughput, wait times, reviewer stats
 
 **Auto-Queueing**:
+
 ```typescript
-const resolver = HaveWeMet
-  .schema({ /* ... */ })
-  .matching({ /* ... */ })
+const resolver = HaveWeMet.schema({
+  /* ... */
+})
+  .matching({
+    /* ... */
+  })
   .queue({ autoQueue: true })
   .build()
 
@@ -139,6 +157,7 @@ const result = await resolver.resolve(newRecord)
 Merge duplicate records with confidence:
 
 **14 Built-in Strategies**:
+
 - `preferFirst`, `preferLast`: Position-based
 - `preferNewer`, `preferOlder`: Timestamp-based
 - `preferNonNull`, `preferLonger`, `preferShorter`: Value-based
@@ -151,13 +170,20 @@ Merge duplicate records with confidence:
 **Unmerge Support**: Restore original records if a match was incorrect.
 
 ```typescript
-const resolver = HaveWeMet
-  .schema({ /* ... */ })
-  .matching({ /* ... */ })
-  .merge(merge => merge
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNonNull')
-    .field('address').strategy('preferLonger')
+const resolver = HaveWeMet.schema({
+  /* ... */
+})
+  .matching({
+    /* ... */
+  })
+  .merge((merge) =>
+    merge
+      .field('email')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNonNull')
+      .field('address')
+      .strategy('preferLonger')
   )
   .build()
 ```
@@ -167,40 +193,47 @@ const resolver = HaveWeMet
 **NEW in v0.1.0**: Match and merge records from multiple database tables with different schemas.
 
 **Use Cases**:
+
 - Consolidate customer data across product databases
 - Match patient records across hospital systems
 - Build unified entity view from disparate sources
 
 **Schema Mapping**:
 Transform records from source schemas to unified output:
+
 ```typescript
-const consolidation = Consolidation
-  .output<UnifiedCustomer>()
-  .source('crm', crm => crm
-    .adapter(prismaAdapter(prisma.crmCustomer))
-    .map(map => map
-      .field('customerId', 'id')
-      .field('fullName', 'name')
-      .field('emailAddress', 'email')
-    )
+const consolidation = Consolidation.output<UnifiedCustomer>()
+  .source('crm', (crm) =>
+    crm
+      .adapter(prismaAdapter(prisma.crmCustomer))
+      .map((map) =>
+        map
+          .field('customerId', 'id')
+          .field('fullName', 'name')
+          .field('emailAddress', 'email')
+      )
   )
-  .source('billing', billing => billing
-    .adapter(prismaAdapter(prisma.billingAccount))
-    .map(map => map
-      .field('accountId', 'id')
-      .field('accountName', 'name')
-      .field('contactEmail', 'email')
-    )
+  .source('billing', (billing) =>
+    billing
+      .adapter(prismaAdapter(prisma.billingAccount))
+      .map((map) =>
+        map
+          .field('accountId', 'id')
+          .field('accountName', 'name')
+          .field('contactEmail', 'email')
+      )
   )
   .build()
 ```
 
 **Two Matching Scopes**:
+
 - **Within-Source-First**: Deduplicate each source, then match across (faster, better provenance)
 - **Unified Pool**: Match all records together (simpler, fewer false negatives)
 
 **Source Priority**:
 Configure which source is authoritative for conflict resolution:
+
 ```typescript
 .conflictResolution(conflict => conflict
   .sourcePriority(['crm', 'billing', 'legacy'])
@@ -216,6 +249,7 @@ Configure which source is authoritative for conflict resolution:
 Integrate validation and lookup services:
 
 **Built-in Validators**:
+
 - NHS number (UK)
 - Email format
 - Phone format
@@ -223,25 +257,28 @@ Integrate validation and lookup services:
 - NINO (UK)
 
 **Built-in Lookup Services**:
+
 - Address enrichment
 - Email enrichment
 - Phone carrier lookup
 
 **Resilience Patterns**:
+
 - Configurable timeouts
 - Retry with exponential backoff
 - Circuit breaker prevents cascading failures
 - LRU caching reduces redundant calls
 
 ```typescript
-const resolver = HaveWeMet
-  .schema({ /* ... */ })
-  .matching({ /* ... */ })
-  .services(service => service
-    .validation('nhs', v => v
-      .field('nhsNumber')
-      .validator(nhsNumberValidator())
-      .timeout(2000)
+const resolver = HaveWeMet.schema({
+  /* ... */
+})
+  .matching({
+    /* ... */
+  })
+  .services((service) =>
+    service.validation('nhs', (v) =>
+      v.field('nhsNumber').validator(nhsNumberValidator()).timeout(2000)
     )
   )
   .build()
@@ -252,16 +289,19 @@ const resolver = HaveWeMet
 Zero external ML dependencies - pure TypeScript implementation:
 
 **SimpleClassifier Model**:
+
 - Logistic regression with L2 regularization
 - Pre-trained on person/customer data (>85% accuracy)
 - Predictions in <10ms
 
 **Feature Extractors** (8 built-in):
+
 - `exactMatch`, `similarity`, `lengthDifference`
 - `missingField`, `fieldPresence`, `normalizedLength`
 - `numericDifference`, `dateProximity`
 
 **Feedback Loop**:
+
 ```typescript
 const collector = new FeedbackCollector(resolver)
 
@@ -276,6 +316,7 @@ const newModel = await trainer.train(dataset)
 ```
 
 **Integration Modes**:
+
 - `hybrid`: Use ML alongside probabilistic matching
 - `mlOnly`: Use ML exclusively for match decisions
 - `fallback`: Try probabilistic, fall back to ML if uncertain
@@ -283,11 +324,13 @@ const newModel = await trainer.train(dataset)
 ### 10. Benchmarks & Documentation
 
 **Standard Datasets**:
+
 - Febrl (synthetic identity data)
 - Fodors-Zagat (restaurant matching)
 - Scalability tests (10k, 100k, 1M records)
 
 **Comprehensive Documentation**:
+
 - API Reference (complete method signatures and examples)
 - Use Case Guides (customer deduplication, patient matching, real-time lookup, batch migration)
 - Tuning Guides (threshold optimization, blocking optimization, performance)
@@ -298,14 +341,14 @@ const newModel = await trainer.train(dataset)
 
 ## Performance Highlights
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| Real-time matching | <100ms | ✅ <50ms typical |
-| Batch processing (100k) | <60s | ✅ ~40s |
-| Memory usage (100k batch) | <1GB | ✅ ~600MB |
-| ML predictions | <10ms | ✅ ~5ms |
-| Blocking (100k) | <100ms | ✅ ~50ms |
-| Multi-source (30k × 3) | <30s | ✅ ~25s |
+| Metric                    | Target | Achieved         |
+| ------------------------- | ------ | ---------------- |
+| Real-time matching        | <100ms | ✅ <50ms typical |
+| Batch processing (100k)   | <60s   | ✅ ~40s          |
+| Memory usage (100k batch) | <1GB   | ✅ ~600MB        |
+| ML predictions            | <10ms  | ✅ ~5ms          |
+| Blocking (100k)           | <100ms | ✅ ~50ms         |
+| Multi-source (30k × 3)    | <30s   | ✅ ~25s          |
 
 ---
 
@@ -322,21 +365,29 @@ npm install have-we-met
 ```typescript
 import { HaveWeMet } from 'have-we-met'
 
-const resolver = HaveWeMet
-  .schema({
-    firstName: { type: 'name', component: 'first' },
-    lastName: { type: 'name', component: 'last' },
-    email: { type: 'email' },
-    phone: { type: 'phone' }
-  })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-  )
-  .matching(match => match
-    .field('email').strategy('exact').weight(20)
-    .field('phone').strategy('exact').weight(15)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+const resolver = HaveWeMet.schema({
+  firstName: { type: 'name', component: 'first' },
+  lastName: { type: 'name', component: 'last' },
+  email: { type: 'email' },
+  phone: { type: 'phone' },
+})
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('phone')
+      .strategy('exact')
+      .weight(15)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
   .build()
@@ -346,7 +397,7 @@ const result = await resolver.resolve({
   firstName: 'John',
   lastName: 'Smith',
   email: 'john.smith@example.com',
-  phone: '+1-555-123-4567'
+  phone: '+1-555-123-4567',
 })
 
 // result.outcome: 'new' | 'match' | 'review'
@@ -356,6 +407,7 @@ const result = await resolver.resolve({
 ### Examples
 
 See the `examples/` directory for practical, runnable examples:
+
 - `quick-start.ts`: Basic matching
 - `batch-deduplication.ts`: Batch processing
 - `database-integration.ts`: Prisma adapter
@@ -381,6 +433,7 @@ These limitations are acknowledged and planned for future releases:
 This is the initial release, so no breaking changes from previous versions.
 
 Future releases will follow semantic versioning:
+
 - **Patch (0.1.x)**: Bug fixes, documentation updates
 - **Minor (0.x.0)**: New features, backward compatible
 - **Major (x.0.0)**: Breaking API changes
@@ -404,9 +457,11 @@ Not applicable for initial release.
 ## Dependencies
 
 **Runtime**:
+
 - `libphonenumber-js` (phone number parsing)
 
 **Peer Dependencies** (optional):
+
 - `@prisma/client` (if using Prisma adapter)
 - `drizzle-orm` (if using Drizzle adapter)
 - `typeorm` (if using TypeORM adapter)
@@ -427,6 +482,7 @@ Not applicable for initial release.
 ## Documentation
 
 Full documentation available at:
+
 - GitHub: https://github.com/8arr3tt/have-we-met
 - API Reference: `docs/api-reference/`
 - Guides: `docs/guides/`
@@ -446,6 +502,7 @@ Full documentation available at:
 ## Acknowledgments
 
 Built with:
+
 - TypeScript
 - Vitest (testing)
 - tsup (bundling)
@@ -453,6 +510,7 @@ Built with:
 - libphonenumber-js (phone parsing)
 
 Inspired by identity resolution research:
+
 - Fellegi-Sunter probabilistic record linkage theory
 - FEBRL (Freely Extensible Biomedical Record Linkage) dataset
 - dedupe.io and similar open-source projects
@@ -462,6 +520,7 @@ Inspired by identity resolution research:
 ## What's Next
 
 Planned for future releases:
+
 - **v0.2.0**: International address parsing, additional phonetic algorithms
 - **v0.3.0**: Advanced ML models, ensemble methods
 - **v1.0.0**: API stabilization, production hardening
@@ -479,4 +538,4 @@ We welcome community feedback, feature requests, and contributions!
 
 ---
 
-*Thank you for using have-we-met! We're excited to see what you build.*
+_Thank you for using have-we-met! We're excited to see what you build._

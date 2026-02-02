@@ -15,10 +15,7 @@ import type { DatabaseAdapter } from '../adapters/types'
 import type { MergeStrategy } from '../merge/types'
 import { MatchingScope as MS } from '../consolidation/types'
 import { SourceBuilder } from './source-builder'
-import {
-  requireNonEmptyString,
-  requireOneOf,
-} from '../utils/errors.js'
+import { requireNonEmptyString, requireOneOf } from '../utils/errors.js'
 
 /**
  * Main builder for configuring multi-source consolidation
@@ -60,7 +57,9 @@ import {
  * ```
  */
 export class ConsolidationBuilder<TOutput extends Record<string, unknown>> {
-  private sources: Array<ConsolidationSource<Record<string, unknown>, TOutput>> = []
+  private sources: Array<
+    ConsolidationSource<Record<string, unknown>, TOutput>
+  > = []
   private scope: MatchingScope = MS.WithinSourceFirst
   private conflictResolutionConfig: ConflictResolutionConfig = {}
   private outputDatabaseAdapter?: DatabaseAdapter<TOutput>
@@ -88,7 +87,9 @@ export class ConsolidationBuilder<TOutput extends Record<string, unknown>> {
    */
   source<TInput extends Record<string, unknown>>(
     sourceId: string,
-    configurator: (builder: SourceBuilder<TInput, TOutput>) => SourceBuilder<TInput, TOutput> | void
+    configurator: (
+      builder: SourceBuilder<TInput, TOutput>
+    ) => SourceBuilder<TInput, TOutput> | void
   ): this {
     requireNonEmptyString(sourceId, 'sourceId')
 
@@ -97,7 +98,9 @@ export class ConsolidationBuilder<TOutput extends Record<string, unknown>> {
     const finalBuilder = result ?? builder
     const sourceConfig = finalBuilder.build()
 
-    this.sources.push(sourceConfig as ConsolidationSource<Record<string, unknown>, TOutput>)
+    this.sources.push(
+      sourceConfig as ConsolidationSource<Record<string, unknown>, TOutput>
+    )
     return this
   }
 
@@ -115,10 +118,18 @@ export class ConsolidationBuilder<TOutput extends Record<string, unknown>> {
    * .matchingScope('within-source-first')
    * ```
    */
-  matchingScope(scope: 'within-source-first' | 'unified-pool' | MatchingScope): this {
-    if (scope === 'unified-pool' || (scope as MatchingScope) === MS.UnifiedPool) {
+  matchingScope(
+    scope: 'within-source-first' | 'unified-pool' | MatchingScope
+  ): this {
+    if (
+      scope === 'unified-pool' ||
+      (scope as MatchingScope) === MS.UnifiedPool
+    ) {
       this.scope = MS.UnifiedPool
-    } else if (scope === 'within-source-first' || (scope as MatchingScope) === MS.WithinSourceFirst) {
+    } else if (
+      scope === 'within-source-first' ||
+      (scope as MatchingScope) === MS.WithinSourceFirst
+    ) {
       this.scope = MS.WithinSourceFirst
     } else {
       throw new Error(`Invalid matching scope: ${String(scope)}`)
@@ -143,7 +154,9 @@ export class ConsolidationBuilder<TOutput extends Record<string, unknown>> {
    * ```
    */
   conflictResolution(
-    configurator: (builder: ConflictResolutionBuilder) => ConflictResolutionBuilder | void
+    configurator: (
+      builder: ConflictResolutionBuilder
+    ) => ConflictResolutionBuilder | void
   ): this {
     const builder = new ConflictResolutionBuilder()
     const result = configurator(builder)
@@ -368,6 +381,8 @@ export class ConflictResolutionBuilder {
  *   .build()
  * ```
  */
-export function createConsolidationBuilder<TOutput extends Record<string, unknown>>(): ConsolidationBuilder<TOutput> {
+export function createConsolidationBuilder<
+  TOutput extends Record<string, unknown>,
+>(): ConsolidationBuilder<TOutput> {
   return new ConsolidationBuilder<TOutput>()
 }

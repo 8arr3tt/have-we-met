@@ -100,7 +100,9 @@ export class SourceBuilder<
    * ```
    */
   mapping(
-    configurator: (builder: FieldMappingBuilder<TInput, TOutput>) => FieldMappingBuilder<TInput, TOutput> | void
+    configurator: (
+      builder: FieldMappingBuilder<TInput, TOutput>
+    ) => FieldMappingBuilder<TInput, TOutput> | void
   ): this {
     const builder = new FieldMappingBuilder<TInput, TOutput>()
     const result = configurator(builder)
@@ -239,9 +241,14 @@ export class FieldMappingBuilder<
     }
     requireNonEmptyString(sourceField, 'sourceField')
 
-    const config = this.mapping[this.currentField] as FieldMappingConfig<TInput, TOutput>
+    const config = this.mapping[this.currentField] as FieldMappingConfig<
+      TInput,
+      TOutput
+    >
     if (config.transform) {
-      throw new Error(`Cannot use both from() and transform() for field '${String(this.currentField)}'`)
+      throw new Error(
+        `Cannot use both from() and transform() for field '${String(this.currentField)}'`
+      )
     }
 
     config.sourceField = sourceField
@@ -265,9 +272,14 @@ export class FieldMappingBuilder<
     }
     requireFunction(fn, 'transform')
 
-    const config = this.mapping[this.currentField] as FieldMappingConfig<TInput, TOutput>
+    const config = this.mapping[this.currentField] as FieldMappingConfig<
+      TInput,
+      TOutput
+    >
     if (config.sourceField) {
-      throw new Error(`Cannot use both from() and transform() for field '${String(this.currentField)}'`)
+      throw new Error(
+        `Cannot use both from() and transform() for field '${String(this.currentField)}'`
+      )
     }
 
     config.transform = fn
@@ -292,7 +304,10 @@ export class FieldMappingBuilder<
     const allowedTypes = ['string', 'number', 'boolean', 'date']
     requireOneOf(type, allowedTypes, 'coerce')
 
-    const config = this.mapping[this.currentField] as FieldMappingConfig<TInput, TOutput>
+    const config = this.mapping[this.currentField] as FieldMappingConfig<
+      TInput,
+      TOutput
+    >
     config.coerce = type
     return this
   }
@@ -315,7 +330,10 @@ export class FieldMappingBuilder<
       throw new Error('Must call field() before required()')
     }
 
-    const config = this.mapping[this.currentField] as FieldMappingConfig<TInput, TOutput>
+    const config = this.mapping[this.currentField] as FieldMappingConfig<
+      TInput,
+      TOutput
+    >
     config.required = required
     return this
   }
@@ -328,11 +346,16 @@ export class FieldMappingBuilder<
    */
   build(): Partial<FieldMapping<TInput, TOutput>> {
     // Validate all fields have either sourceField or transform
-    const entries = Object.keys(this.mapping).map(key => [key, this.mapping[key as keyof TOutput]])
+    const entries = Object.keys(this.mapping).map((key) => [
+      key,
+      this.mapping[key as keyof TOutput],
+    ])
     for (const [fieldName, config] of entries) {
       const cfg = config as FieldMappingConfig<TInput, TOutput>
       if (!cfg.sourceField && !cfg.transform) {
-        throw new Error(`Field '${fieldName}' must have either from() or transform()`)
+        throw new Error(
+          `Field '${fieldName}' must have either from() or transform()`
+        )
       }
     }
 

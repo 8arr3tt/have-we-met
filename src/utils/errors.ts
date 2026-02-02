@@ -81,7 +81,11 @@ export class InvalidParameterError extends HaveWeMetError {
 export class ConfigurationError extends HaveWeMetError {
   public readonly field?: string
 
-  constructor(message: string, field?: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    field?: string,
+    context?: Record<string, unknown>
+  ) {
     super(message, 'CONFIGURATION_ERROR', { field, ...context })
     this.name = 'ConfigurationError'
     this.field = field
@@ -94,7 +98,11 @@ export class ConfigurationError extends HaveWeMetError {
 export class BuilderSequenceError extends HaveWeMetError {
   public readonly method: string
 
-  constructor(method: string, message: string, context?: Record<string, unknown>) {
+  constructor(
+    method: string,
+    message: string,
+    context?: Record<string, unknown>
+  ) {
     super(
       `Builder sequence error in ${method}: ${message}`,
       'BUILDER_SEQUENCE_ERROR',
@@ -111,7 +119,11 @@ export class BuilderSequenceError extends HaveWeMetError {
 export class NotConfiguredError extends HaveWeMetError {
   public readonly feature: string
 
-  constructor(feature: string, guidance: string, context?: Record<string, unknown>) {
+  constructor(
+    feature: string,
+    guidance: string,
+    context?: Record<string, unknown>
+  ) {
     super(
       `Feature '${feature}' is not configured. ${guidance}`,
       'NOT_CONFIGURED',
@@ -142,11 +154,7 @@ export function requireNonNull<T>(
  */
 export function requirePositive(value: number, parameterName: string): number {
   if (typeof value !== 'number' || isNaN(value)) {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must be a number'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must be a number')
   }
   if (value <= 0) {
     throw new InvalidParameterError(
@@ -161,13 +169,12 @@ export function requirePositive(value: number, parameterName: string): number {
 /**
  * Validates that a number is non-negative (>= 0)
  */
-export function requireNonNegative(value: number, parameterName: string): number {
+export function requireNonNegative(
+  value: number,
+  parameterName: string
+): number {
   if (typeof value !== 'number' || isNaN(value)) {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must be a number'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must be a number')
   }
   if (value < 0) {
     throw new InvalidParameterError(
@@ -189,11 +196,7 @@ export function requireInRange(
   parameterName: string
 ): number {
   if (typeof value !== 'number' || isNaN(value)) {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must be a number'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must be a number')
   }
   if (value < min || value > max) {
     throw new InvalidParameterError(
@@ -213,18 +216,10 @@ export function requireNonEmptyArray<T>(
   parameterName: string
 ): T[] {
   if (!Array.isArray(value)) {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must be an array'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must be an array')
   }
   if (value.length === 0) {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must not be empty'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must not be empty')
   }
   return value
 }
@@ -232,20 +227,15 @@ export function requireNonEmptyArray<T>(
 /**
  * Validates that a string is non-empty
  */
-export function requireNonEmptyString(value: string, parameterName: string): string {
+export function requireNonEmptyString(
+  value: string,
+  parameterName: string
+): string {
   if (typeof value !== 'string') {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must be a string'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must be a string')
   }
   if (value.trim().length === 0) {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must not be empty'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must not be empty')
   }
   return value
 }
@@ -275,11 +265,7 @@ export function requirePlainObject(
   value: unknown,
   parameterName: string
 ): Record<string, unknown> {
-  if (
-    typeof value !== 'object' ||
-    value === null ||
-    Array.isArray(value)
-  ) {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw new InvalidParameterError(
       parameterName,
       value,
@@ -297,11 +283,7 @@ export function requireFunction(
   parameterName: string
 ): (...args: unknown[]) => unknown {
   if (typeof value !== 'function') {
-    throw new InvalidParameterError(
-      parameterName,
-      value,
-      'must be a function'
-    )
+    throw new InvalidParameterError(parameterName, value, 'must be a function')
   }
   return value as (...args: unknown[]) => unknown
 }

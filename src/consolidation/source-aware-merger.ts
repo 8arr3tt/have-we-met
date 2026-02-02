@@ -26,8 +26,9 @@ import type { SchemaDefinition } from '../types/schema.js'
 /**
  * Extended source record with source priority information
  */
-export interface SourceAwareRecord<T extends Record<string, unknown>>
-  extends SourceRecord<T> {
+export interface SourceAwareRecord<
+  T extends Record<string, unknown>,
+> extends SourceRecord<T> {
   /**
    * Source system identifier
    */
@@ -176,11 +177,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
     }
 
     // Apply source-aware merge logic
-    return this.mergeWithPriority(
-      sourceAwareRecords,
-      mergedBy,
-      queueItemId
-    )
+    return this.mergeWithPriority(sourceAwareRecords, mergedBy, queueItemId)
   }
 
   /**
@@ -418,8 +415,9 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
 
     // Build provenance
     const provenance: FieldProvenance = {
-      sourceRecordId: fieldValues.find((fv) => fv.sourceId === sourceId)
-        ?.recordId || fieldValues[0].recordId,
+      sourceRecordId:
+        fieldValues.find((fv) => fv.sourceId === sourceId)?.recordId ||
+        fieldValues[0].recordId,
       strategyApplied: 'preferFirst',
       allValues: fieldValues.map((fv) => ({
         recordId: fv.recordId,
@@ -491,9 +489,10 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
     priorityMap: Map<string, number>
   ): SourceAwareRecord<T>[] {
     return records.map((record) => ({
-      id: typeof record.sourceRecordId === 'string'
-        ? record.sourceRecordId
-        : `${record.sourceId}-${record.sourceRecordId}`,
+      id:
+        typeof record.sourceRecordId === 'string'
+          ? record.sourceRecordId
+          : `${record.sourceId}-${record.sourceRecordId}`,
       record: record.record,
       sourceId: record.sourceId,
       sourcePriority: priorityMap.get(record.sourceId) ?? 0,
@@ -540,9 +539,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
   /**
    * Collect all field paths from records
    */
-  private collectFieldPaths(
-    records: SourceAwareRecord<T>[]
-  ): string[] {
+  private collectFieldPaths(records: SourceAwareRecord<T>[]): string[] {
     const fieldSet = new Set<string>()
 
     for (const record of records) {
@@ -564,7 +561,11 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
       const path = prefix ? `${prefix}.${key}` : key
       fieldSet.add(path)
 
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      if (
+        value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      ) {
         this.collectFieldPathsFromObject(
           value as Record<string, unknown>,
           path,
@@ -577,10 +578,7 @@ export class SourceAwareMerger<T extends Record<string, unknown>> {
   /**
    * Get nested value from object using dot notation
    */
-  private getNestedValue(
-    obj: Record<string, unknown>,
-    path: string
-  ): unknown {
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
     const parts = path.split('.')
     let current: unknown = obj
 

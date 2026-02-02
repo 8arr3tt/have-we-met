@@ -24,16 +24,16 @@ Feature Vector: [0.91, 1.0, 0.0, 1.0, 1.0, 0.0, ...]
 
 ## Built-in Feature Extractors
 
-| Extractor | Description | Best For |
-|-----------|-------------|----------|
-| `exact` | Binary match (0 or 1) | Identifiers, dates |
-| `jaroWinkler` | String similarity (0-1) | Names, short strings |
-| `levenshtein` | Edit distance (normalized 0-1) | General strings |
-| `soundex` | Phonetic match (0 or 1) | English names |
-| `metaphone` | Phonetic match (0 or 1) | English names |
-| `numericDiff` | Normalized difference (0-1) | Numbers, ages |
-| `dateDiff` | Temporal proximity (0-1) | Dates |
-| `missing` | Missing value indicator (0 or 1) | Any field |
+| Extractor     | Description                      | Best For             |
+| ------------- | -------------------------------- | -------------------- |
+| `exact`       | Binary match (0 or 1)            | Identifiers, dates   |
+| `jaroWinkler` | String similarity (0-1)          | Names, short strings |
+| `levenshtein` | Edit distance (normalized 0-1)   | General strings      |
+| `soundex`     | Phonetic match (0 or 1)          | English names        |
+| `metaphone`   | Phonetic match (0 or 1)          | English names        |
+| `numericDiff` | Normalized difference (0-1)      | Numbers, ages        |
+| `dateDiff`    | Temporal proximity (0-1)         | Dates                |
+| `missing`     | Missing value indicator (0 or 1) | Any field            |
 
 ## Using the Feature Extractor
 
@@ -48,32 +48,40 @@ const config = {
     {
       field: 'firstName',
       extractors: ['jaroWinkler', 'soundex', 'exact'],
-      weight: 1.2
+      weight: 1.2,
     },
     {
       field: 'email',
       extractors: ['levenshtein', 'exact'],
-      weight: 1.5
+      weight: 1.5,
     },
     {
       field: 'dateOfBirth',
       extractors: ['exact', 'dateDiff'],
-      weight: 1.3
-    }
+      weight: 1.3,
+    },
   ],
-  normalize: true
+  normalize: true,
 }
 
 const extractor = new FeatureExtractor(config)
 
 // Extract features from a record pair
 const features = extractor.extract({
-  record1: { firstName: 'John', email: 'john@example.com', dateOfBirth: '1985-03-15' },
-  record2: { firstName: 'Jon', email: 'john@example.com', dateOfBirth: '1985-03-15' }
+  record1: {
+    firstName: 'John',
+    email: 'john@example.com',
+    dateOfBirth: '1985-03-15',
+  },
+  record2: {
+    firstName: 'Jon',
+    email: 'john@example.com',
+    dateOfBirth: '1985-03-15',
+  },
 })
 
-console.log(features.names)   // ['firstName_jaroWinkler', 'firstName_soundex', ...]
-console.log(features.values)  // [0.91, 1.0, 0.0, ...]
+console.log(features.names) // ['firstName_jaroWinkler', 'firstName_soundex', ...]
+console.log(features.values) // [0.91, 1.0, 0.0, ...]
 ```
 
 ### Builder API
@@ -143,12 +151,12 @@ Configure features through the ML builder:
 
 ### Field Presets
 
-| Method | Extractors | Default Weight |
-|--------|------------|----------------|
-| `.forName()` | jaroWinkler, soundex, metaphone, exact | 1.0 |
-| `.forIdentifier()` | exact, levenshtein | 1.0 |
-| `.forDate()` | exact, dateDiff | 1.0 |
-| `.forNumeric()` | exact, numericDiff | 1.0 |
+| Method             | Extractors                             | Default Weight |
+| ------------------ | -------------------------------------- | -------------- |
+| `.forName()`       | jaroWinkler, soundex, metaphone, exact | 1.0            |
+| `.forIdentifier()` | exact, levenshtein                     | 1.0            |
+| `.forDate()`       | exact, dateDiff                        | 1.0            |
+| `.forNumeric()`    | exact, numericDiff                     | 1.0            |
 
 ## Custom Feature Extractors
 
@@ -182,13 +190,13 @@ const extractor = new FeatureExtractor({
     {
       field: 'productCode',
       extractors: ['custom'],
-      weight: 1.5
-    }
+      weight: 1.5,
+    },
   ],
   normalize: true,
   customExtractors: {
-    productCode: productCodeSimilarity
-  }
+    productCode: productCodeSimilarity,
+  },
 })
 
 // Or with builder
@@ -196,11 +204,14 @@ featureConfig()
   .addCustomField('productCode', productCodeSimilarity, { weight: 1.5 })
   .buildExtractor()
 
-// Or with ML builder
-.ml(ml => ml
-  .customExtractor('productCode', productCodeSimilarity)
-  .field('productCode').extractors(['custom']).weight(1.5)
-)
+  // Or with ML builder
+  .ml((ml) =>
+    ml
+      .customExtractor('productCode', productCodeSimilarity)
+      .field('productCode')
+      .extractors(['custom'])
+      .weight(1.5)
+  )
 ```
 
 ## Missing Value Handling
@@ -213,9 +224,9 @@ const config = {
     {
       field: 'email',
       extractors: ['exact'],
-      includeMissingIndicator: true  // default: true
-    }
-  ]
+      includeMissingIndicator: true, // default: true
+    },
+  ],
 }
 ```
 
@@ -236,14 +247,15 @@ Weights multiply feature values to emphasize important fields:
 ```typescript
 const config = {
   fields: [
-    { field: 'ssn', extractors: ['exact'], weight: 2.0 },    // High importance
+    { field: 'ssn', extractors: ['exact'], weight: 2.0 }, // High importance
     { field: 'firstName', extractors: ['jaroWinkler'], weight: 1.0 },
-    { field: 'nickname', extractors: ['jaroWinkler'], weight: 0.5 }  // Lower importance
-  ]
+    { field: 'nickname', extractors: ['jaroWinkler'], weight: 0.5 }, // Lower importance
+  ],
 }
 ```
 
 Weights affect:
+
 - The magnitude of feature contributions in the ML model
 - Feature importance calculations in predictions
 
@@ -256,14 +268,14 @@ const config = {
   fields: [
     { field: 'name.first', extractors: ['jaroWinkler'] },
     { field: 'name.last', extractors: ['jaroWinkler'] },
-    { field: 'address.city', extractors: ['exact'] }
-  ]
+    { field: 'address.city', extractors: ['exact'] },
+  ],
 }
 
 // Works with records like:
 const record = {
   name: { first: 'John', last: 'Smith' },
-  address: { city: 'New York', state: 'NY' }
+  address: { city: 'New York', state: 'NY' },
 }
 ```
 
@@ -275,7 +287,7 @@ const record = {
 import { getFeatureByName } from 'have-we-met/ml'
 
 const value = getFeatureByName(features, 'email_exact')
-console.log(value)  // 1.0
+console.log(value) // 1.0
 ```
 
 ### Get All Features for a Field
@@ -317,6 +329,7 @@ const extractor = FeatureExtractor.forPersonMatching()
 ```
 
 Includes optimized configuration for:
+
 - firstName, lastName (jaroWinkler, soundex, exact)
 - email, phone (levenshtein, exact)
 - dateOfBirth (exact, dateDiff)
@@ -328,7 +341,7 @@ Includes optimized configuration for:
 ```typescript
 const extractor = FeatureExtractor.fromFields(
   ['firstName', 'lastName', 'email'],
-  ['jaroWinkler', 'exact']  // extractors to use for all fields
+  ['jaroWinkler', 'exact'] // extractors to use for all fields
 )
 ```
 

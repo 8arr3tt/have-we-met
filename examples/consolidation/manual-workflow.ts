@@ -200,30 +200,48 @@ const vendorCMapping: FieldMapping<VendorCProduct, UnifiedProduct> = {
 /**
  * Step 2: Create schema mappers
  */
-const vendorAMapper = new SchemaMapper<VendorAProduct, UnifiedProduct>(vendorAMapping)
-const vendorBMapper = new SchemaMapper<VendorBProduct, UnifiedProduct>(vendorBMapping)
-const vendorCMapper = new SchemaMapper<VendorCProduct, UnifiedProduct>(vendorCMapping)
+const vendorAMapper = new SchemaMapper<VendorAProduct, UnifiedProduct>(
+  vendorAMapping
+)
+const vendorBMapper = new SchemaMapper<VendorBProduct, UnifiedProduct>(
+  vendorBMapping
+)
+const vendorCMapper = new SchemaMapper<VendorCProduct, UnifiedProduct>(
+  vendorCMapping
+)
 
 /**
  * Step 3: Map records to unified schema
  */
 const mappedVendorA = vendorAMapper.mapBatch(vendorAProducts).map((mapped) => ({
   sourceId: 'vendor_a',
-  sourceRecordId: (vendorAProducts[vendorAProducts.indexOf(mapped.record as VendorAProduct)] as any).sku,
+  sourceRecordId: (
+    vendorAProducts[
+      vendorAProducts.indexOf(mapped.record as VendorAProduct)
+    ] as any
+  ).sku,
   mappedRecord: mapped.record,
   originalRecord: mapped.record,
 })) as MappedRecord<VendorAProduct, UnifiedProduct>[]
 
 const mappedVendorB = vendorBMapper.mapBatch(vendorBProducts).map((mapped) => ({
   sourceId: 'vendor_b',
-  sourceRecordId: (vendorBProducts[vendorBProducts.indexOf(mapped.record as VendorBProduct)] as any).productId,
+  sourceRecordId: (
+    vendorBProducts[
+      vendorBProducts.indexOf(mapped.record as VendorBProduct)
+    ] as any
+  ).productId,
   mappedRecord: mapped.record,
   originalRecord: mapped.record,
 })) as MappedRecord<VendorBProduct, UnifiedProduct>[]
 
 const mappedVendorC = vendorCMapper.mapBatch(vendorCProducts).map((mapped) => ({
   sourceId: 'vendor_c',
-  sourceRecordId: (vendorCProducts[vendorCProducts.indexOf(mapped.record as VendorCProduct)] as any).item_code,
+  sourceRecordId: (
+    vendorCProducts[
+      vendorCProducts.indexOf(mapped.record as VendorCProduct)
+    ] as any
+  ).item_code,
   mappedRecord: mapped.record,
   originalRecord: mapped.record,
 })) as MappedRecord<VendorCProduct, UnifiedProduct>[]
@@ -254,7 +272,7 @@ const resolver = HaveWeMet.create<UnifiedProduct>()
       .field('category')
       .strategy('jaro-winkler')
       .weight(10)
-      .threshold(0.80)
+      .threshold(0.8)
   )
   .thresholds({
     noMatch: 20,
@@ -302,9 +320,15 @@ async function performMatching() {
 
   console.log('Step 1: Schema Mapping')
   console.log('-'.repeat(80))
-  console.log(`Vendor A: ${vendorAProducts.length} products → ${mappedVendorA.length} mapped`)
-  console.log(`Vendor B: ${vendorBProducts.length} products → ${mappedVendorB.length} mapped`)
-  console.log(`Vendor C: ${vendorCProducts.length} products → ${mappedVendorC.length} mapped`)
+  console.log(
+    `Vendor A: ${vendorAProducts.length} products → ${mappedVendorA.length} mapped`
+  )
+  console.log(
+    `Vendor B: ${vendorBProducts.length} products → ${mappedVendorB.length} mapped`
+  )
+  console.log(
+    `Vendor C: ${vendorCProducts.length} products → ${mappedVendorC.length} mapped`
+  )
   console.log()
 
   console.log('Step 2: Matching Configuration')
@@ -319,10 +343,16 @@ async function performMatching() {
   console.log('-'.repeat(80))
 
   // Combine all mapped records
-  const allMappedRecords = [...mappedVendorA, ...mappedVendorB, ...mappedVendorC]
+  const allMappedRecords = [
+    ...mappedVendorA,
+    ...mappedVendorB,
+    ...mappedVendorC,
+  ]
 
   // Match in unified pool (simplified for example)
-  console.log(`Matching ${allMappedRecords.length} products across all vendors...`)
+  console.log(
+    `Matching ${allMappedRecords.length} products across all vendors...`
+  )
   console.log()
 
   // Simulate match groups
@@ -370,7 +400,9 @@ async function performMatching() {
 
   matchGroups.forEach((group, index) => {
     console.log(`${index + 1}. ${group.products[0]}`)
-    console.log(`   Price: $${Math.min(...group.prices)} (best from ${group.vendors.length} vendor(s))`)
+    console.log(
+      `   Price: $${Math.min(...group.prices)} (best from ${group.vendors.length} vendor(s))`
+    )
     console.log(`   Available from: ${group.vendors.join(', ')}`)
     if (group.vendors.length > 1) {
       console.log(`   Price comparison:`)
@@ -457,7 +489,7 @@ async function advancedManualWorkflow() {
   console.log()
 
   console.log('Use Cases:')
-  console.log('- Custom workflows that don\'t fit database adapter pattern')
+  console.log("- Custom workflows that don't fit database adapter pattern")
   console.log('- Prototyping consolidation logic before production setup')
   console.log('- One-off data migration scripts')
   console.log('- Integration with exotic data sources')

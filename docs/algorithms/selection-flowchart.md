@@ -283,35 +283,35 @@ RESULT:
 
 ### When to Use Each Algorithm
 
-| Scenario | Algorithm | Why |
-|----------|-----------|-----|
-| SSN, NHS Number, account ID | Exact | Unique identifiers need exact match |
-| First name, last name | Jaro-Winkler | Optimized for short name strings |
-| Full street address | Levenshtein | Good for longer text with insertions/deletions |
-| Restaurant/business name | Jaro-Winkler | Handles punctuation variations |
-| Company legal name | Levenshtein | Often longer, more formal |
-| Email address | Exact | Usually canonical format |
-| Phone number | Exact | After normalization |
-| Date of birth | Exact | After parsing to standard format |
-| City/state | Exact | Geographic fields are discrete |
+| Scenario                    | Algorithm    | Why                                            |
+| --------------------------- | ------------ | ---------------------------------------------- |
+| SSN, NHS Number, account ID | Exact        | Unique identifiers need exact match            |
+| First name, last name       | Jaro-Winkler | Optimized for short name strings               |
+| Full street address         | Levenshtein  | Good for longer text with insertions/deletions |
+| Restaurant/business name    | Jaro-Winkler | Handles punctuation variations                 |
+| Company legal name          | Levenshtein  | Often longer, more formal                      |
+| Email address               | Exact        | Usually canonical format                       |
+| Phone number                | Exact        | After normalization                            |
+| Date of birth               | Exact        | After parsing to standard format               |
+| City/state                  | Exact        | Geographic fields are discrete                 |
 
 ### Threshold Quick Reference
 
-| Use Case | noMatch | definiteMatch | Field Threshold |
-|----------|---------|---------------|-----------------|
-| High-stakes (medical, financial) | 35-50 | 70-85 | 0.90-0.95 |
-| General deduplication | 25-35 | 55-70 | 0.85-0.90 |
-| Discovery/audit | 15-25 | 45-60 | 0.75-0.85 |
+| Use Case                         | noMatch | definiteMatch | Field Threshold |
+| -------------------------------- | ------- | ------------- | --------------- |
+| High-stakes (medical, financial) | 35-50   | 70-85         | 0.90-0.95       |
+| General deduplication            | 25-35   | 55-70         | 0.85-0.90       |
+| Discovery/audit                  | 15-25   | 45-60         | 0.75-0.85       |
 
 ### Blocking Strategy Quick Reference
 
-| Dataset Size | Entity Type | Recommended Blocking |
-|--------------|-------------|---------------------|
-| <5k | Any | Optional: first letter |
-| 5k-50k | People | Soundex(lastName) |
-| 5k-50k | Business | city or region |
-| >50k | People | Soundex(lastName) or composite |
-| >50k | Business | city + first_letter(name) |
+| Dataset Size | Entity Type | Recommended Blocking           |
+| ------------ | ----------- | ------------------------------ |
+| <5k          | Any         | Optional: first letter         |
+| 5k-50k       | People      | Soundex(lastName)              |
+| 5k-50k       | Business    | city or region                 |
+| >50k         | People      | Soundex(lastName) or composite |
+| >50k         | Business    | city + first_letter(name)      |
 
 ---
 

@@ -18,11 +18,7 @@ import {
   generateSyntheticFebrlData,
   type FebrlRecord,
 } from './datasets/febrl/loader'
-import {
-  exactMatch,
-  levenshtein,
-  jaroWinkler,
-} from '../src/core/comparators'
+import { exactMatch, levenshtein, jaroWinkler } from '../src/core/comparators'
 import { StandardBlockingStrategy } from '../src/core/blocking/strategies/standard-blocking'
 import { SortedNeighbourhoodStrategy } from '../src/core/blocking/strategies/sorted-neighbourhood'
 import { CompositeBlockingStrategy } from '../src/core/blocking/strategies/composite-blocking'
@@ -33,7 +29,11 @@ import { captureMemoryUsage } from './infrastructure/metrics-collector'
 const standardMatcher = createMatchingFunction<FebrlRecord>([
   { field: 'given_name', comparator: (a, b) => jaroWinkler(a, b), weight: 15 },
   { field: 'surname', comparator: (a, b) => jaroWinkler(a, b), weight: 20 },
-  { field: 'date_of_birth', comparator: (a, b) => exactMatch(a, b), weight: 15 },
+  {
+    field: 'date_of_birth',
+    comparator: (a, b) => exactMatch(a, b),
+    weight: 15,
+  },
   { field: 'soc_sec_id', comparator: (a, b) => exactMatch(a, b), weight: 25 },
   { field: 'postcode', comparator: (a, b) => exactMatch(a, b), weight: 10 },
   { field: 'address_1', comparator: (a, b) => levenshtein(a, b), weight: 10 },
@@ -58,7 +58,9 @@ function soundexBlocking(records: FebrlRecord[]): Map<string, FebrlRecord[]> {
   return strategy.generateBlocks(records)
 }
 
-function firstLetterBlocking(records: FebrlRecord[]): Map<string, FebrlRecord[]> {
+function firstLetterBlocking(
+  records: FebrlRecord[]
+): Map<string, FebrlRecord[]> {
   const strategy = new StandardBlockingStrategy<FebrlRecord>({
     field: 'surname',
     transform: firstLetter,
@@ -93,84 +95,148 @@ function compositeBlocking(records: FebrlRecord[]): Map<string, FebrlRecord[]> {
   return strategy.generateBlocks(records)
 }
 
-function sortedNeighbourhoodBlocking(records: FebrlRecord[]): Map<string, FebrlRecord[]> {
+function sortedNeighbourhoodBlocking(
+  records: FebrlRecord[]
+): Map<string, FebrlRecord[]> {
   const strategy = new SortedNeighbourhoodStrategy<FebrlRecord>({
-    sortKey: (r) => `${r.surname?.toLowerCase() ?? ''}|${r.given_name?.toLowerCase() ?? ''}`,
+    sortKey: (r) =>
+      `${r.surname?.toLowerCase() ?? ''}|${r.given_name?.toLowerCase() ?? ''}`,
     windowSize: 10,
   })
   return strategy.generateBlocks(records)
 }
 
 // Generate datasets at different scales
-const dataset1k = generateSyntheticFebrlData({ recordCount: 1000, duplicateRate: 0.5, corruptionProbability: 0.3 })
-const dataset5k = generateSyntheticFebrlData({ recordCount: 5000, duplicateRate: 0.5, corruptionProbability: 0.3 })
-const dataset10k = generateSyntheticFebrlData({ recordCount: 10000, duplicateRate: 0.5, corruptionProbability: 0.3 })
+const dataset1k = generateSyntheticFebrlData({
+  recordCount: 1000,
+  duplicateRate: 0.5,
+  corruptionProbability: 0.3,
+})
+const dataset5k = generateSyntheticFebrlData({
+  recordCount: 5000,
+  duplicateRate: 0.5,
+  corruptionProbability: 0.3,
+})
+const dataset10k = generateSyntheticFebrlData({
+  recordCount: 10000,
+  duplicateRate: 0.5,
+  corruptionProbability: 0.3,
+})
 
 // Vitest bench tests for CI
 describe('Scalability Benchmarks - Small Scale (1k-10k)', () => {
   bench('1k records with Soundex blocking', async () => {
     await runBenchmark(
       { name: '1k Soundex', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset1k, matchingFn: standardMatcher, blockingFn: soundexBlocking, threshold: 0.7 }
+      {
+        dataset: dataset1k,
+        matchingFn: standardMatcher,
+        blockingFn: soundexBlocking,
+        threshold: 0.7,
+      }
     )
   })
 
   bench('5k records with Soundex blocking', async () => {
     await runBenchmark(
       { name: '5k Soundex', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset5k, matchingFn: standardMatcher, blockingFn: soundexBlocking, threshold: 0.7 }
+      {
+        dataset: dataset5k,
+        matchingFn: standardMatcher,
+        blockingFn: soundexBlocking,
+        threshold: 0.7,
+      }
     )
   })
 
   bench('10k records with Soundex blocking', async () => {
     await runBenchmark(
       { name: '10k Soundex', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset10k, matchingFn: standardMatcher, blockingFn: soundexBlocking, threshold: 0.7 }
+      {
+        dataset: dataset10k,
+        matchingFn: standardMatcher,
+        blockingFn: soundexBlocking,
+        threshold: 0.7,
+      }
     )
   })
 })
 
 describe('Scalability Benchmarks - Blocking Comparison at 10k', () => {
-  bench('No blocking (10k)', async () => {
-    // Note: This is O(n²) and will be slow - benchmarking to show the difference
-    await runBenchmark(
-      { name: 'No Blocking', warmupRuns: 0, measurementRuns: 1, timeout: 120000 },
-      { dataset: dataset10k, matchingFn: lightweightMatcher, threshold: 0.7 }
-    )
-  }, { timeout: 120000 })
+  bench(
+    'No blocking (10k)',
+    async () => {
+      // Note: This is O(n²) and will be slow - benchmarking to show the difference
+      await runBenchmark(
+        {
+          name: 'No Blocking',
+          warmupRuns: 0,
+          measurementRuns: 1,
+          timeout: 120000,
+        },
+        { dataset: dataset10k, matchingFn: lightweightMatcher, threshold: 0.7 }
+      )
+    },
+    { timeout: 120000 }
+  )
 
   bench('Soundex blocking (10k)', async () => {
     await runBenchmark(
       { name: 'Soundex', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset10k, matchingFn: standardMatcher, blockingFn: soundexBlocking, threshold: 0.7 }
+      {
+        dataset: dataset10k,
+        matchingFn: standardMatcher,
+        blockingFn: soundexBlocking,
+        threshold: 0.7,
+      }
     )
   })
 
   bench('First letter blocking (10k)', async () => {
     await runBenchmark(
       { name: 'First Letter', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset10k, matchingFn: standardMatcher, blockingFn: firstLetterBlocking, threshold: 0.7 }
+      {
+        dataset: dataset10k,
+        matchingFn: standardMatcher,
+        blockingFn: firstLetterBlocking,
+        threshold: 0.7,
+      }
     )
   })
 
   bench('Postcode blocking (10k)', async () => {
     await runBenchmark(
       { name: 'Postcode', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset10k, matchingFn: standardMatcher, blockingFn: postcodeBlocking, threshold: 0.7 }
+      {
+        dataset: dataset10k,
+        matchingFn: standardMatcher,
+        blockingFn: postcodeBlocking,
+        threshold: 0.7,
+      }
     )
   })
 
   bench('Composite blocking (10k)', async () => {
     await runBenchmark(
       { name: 'Composite', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset10k, matchingFn: standardMatcher, blockingFn: compositeBlocking, threshold: 0.7 }
+      {
+        dataset: dataset10k,
+        matchingFn: standardMatcher,
+        blockingFn: compositeBlocking,
+        threshold: 0.7,
+      }
     )
   })
 
   bench('Sorted neighbourhood (10k)', async () => {
     await runBenchmark(
       { name: 'Sorted Neighbourhood', warmupRuns: 0, measurementRuns: 1 },
-      { dataset: dataset10k, matchingFn: standardMatcher, blockingFn: sortedNeighbourhoodBlocking, threshold: 0.7 }
+      {
+        dataset: dataset10k,
+        matchingFn: standardMatcher,
+        blockingFn: sortedNeighbourhoodBlocking,
+        threshold: 0.7,
+      }
     )
   })
 })
@@ -224,9 +290,12 @@ export function measureMemoryGrowth(sizes: number[]): Array<{
 
     const afterProcessing = captureMemoryUsage()
 
-    const generationMemoryMB = (afterGeneration.heapUsed - beforeGeneration.heapUsed) / (1024 * 1024)
-    const processingMemoryMB = (afterProcessing.heapUsed - afterGeneration.heapUsed) / (1024 * 1024)
-    const totalMemoryMB = (afterProcessing.heapUsed - beforeGeneration.heapUsed) / (1024 * 1024)
+    const generationMemoryMB =
+      (afterGeneration.heapUsed - beforeGeneration.heapUsed) / (1024 * 1024)
+    const processingMemoryMB =
+      (afterProcessing.heapUsed - afterGeneration.heapUsed) / (1024 * 1024)
+    const totalMemoryMB =
+      (afterProcessing.heapUsed - beforeGeneration.heapUsed) / (1024 * 1024)
 
     results.push({
       size,
@@ -292,7 +361,8 @@ export function measureBlockingEffectiveness(sizes: number[]): Array<{
     }
 
     const reductionRatio = 1 - pairsWithBlocking / pairsWithoutBlocking
-    const avgBlockSize = blocks.size > 0 ? totalRecordsInBlocks / blocks.size : 0
+    const avgBlockSize =
+      blocks.size > 0 ? totalRecordsInBlocks / blocks.size : 0
 
     results.push({
       size,
@@ -340,11 +410,12 @@ export async function runScalabilityBenchmarks(): Promise<{
 
   const scalabilitySizes = [1000, 5000, 10000, 25000, 50000, 100000]
   const scalabilityResults = await runScalabilityBenchmark(
-    (size) => generateSyntheticFebrlData({
-      recordCount: size,
-      duplicateRate: 0.5,
-      corruptionProbability: 0.3,
-    }),
+    (size) =>
+      generateSyntheticFebrlData({
+        recordCount: size,
+        duplicateRate: 0.5,
+        corruptionProbability: 0.3,
+      }),
     scalabilitySizes,
     standardMatcher,
     soundexBlocking,
@@ -359,19 +430,60 @@ export async function runScalabilityBenchmarks(): Promise<{
   console.log('Comparing blocking strategies at 10k records...')
 
   const blockingConfigs = [
-    { name: 'No Blocking (10k)', matchingFn: lightweightMatcher, blockingFn: undefined, threshold: 0.7 },
-    { name: 'Soundex Blocking (10k)', matchingFn: standardMatcher, blockingFn: soundexBlocking, threshold: 0.7 },
-    { name: 'First Letter Blocking (10k)', matchingFn: standardMatcher, blockingFn: firstLetterBlocking, threshold: 0.7 },
-    { name: 'Postcode Blocking (10k)', matchingFn: standardMatcher, blockingFn: postcodeBlocking, threshold: 0.7 },
-    { name: 'Composite Blocking (10k)', matchingFn: standardMatcher, blockingFn: compositeBlocking, threshold: 0.7 },
-    { name: 'Sorted Neighbourhood (10k)', matchingFn: standardMatcher, blockingFn: sortedNeighbourhoodBlocking, threshold: 0.7 },
+    {
+      name: 'No Blocking (10k)',
+      matchingFn: lightweightMatcher,
+      blockingFn: undefined,
+      threshold: 0.7,
+    },
+    {
+      name: 'Soundex Blocking (10k)',
+      matchingFn: standardMatcher,
+      blockingFn: soundexBlocking,
+      threshold: 0.7,
+    },
+    {
+      name: 'First Letter Blocking (10k)',
+      matchingFn: standardMatcher,
+      blockingFn: firstLetterBlocking,
+      threshold: 0.7,
+    },
+    {
+      name: 'Postcode Blocking (10k)',
+      matchingFn: standardMatcher,
+      blockingFn: postcodeBlocking,
+      threshold: 0.7,
+    },
+    {
+      name: 'Composite Blocking (10k)',
+      matchingFn: standardMatcher,
+      blockingFn: compositeBlocking,
+      threshold: 0.7,
+    },
+    {
+      name: 'Sorted Neighbourhood (10k)',
+      matchingFn: standardMatcher,
+      blockingFn: sortedNeighbourhoodBlocking,
+      threshold: 0.7,
+    },
   ]
 
   for (const config of blockingConfigs) {
     console.log(`  Running ${config.name}...`)
     const result = await runBenchmark(
-      { name: config.name, warmupRuns: 1, measurementRuns: 3, collectMemory: true, timeout: 300000 },
-      { dataset: dataset10k, matchingFn: config.matchingFn, blockingFn: config.blockingFn, threshold: config.threshold }
+      {
+        name: config.name,
+        warmupRuns: 1,
+        measurementRuns: 3,
+        collectMemory: true,
+        timeout: 300000,
+      },
+      {
+        dataset: dataset10k,
+        matchingFn: config.matchingFn,
+        blockingFn: config.blockingFn,
+        threshold: config.threshold,
+      }
     )
     results.push(result)
   }
@@ -388,16 +500,27 @@ export async function runScalabilityBenchmarks(): Promise<{
 
   // Simulated 1M analysis (extrapolated from trends)
   console.log('Projecting 1M record performance...')
-  const projected1M = projectMillionRecordPerformance(scalabilityResults, blockingEffectiveness)
+  const projected1M = projectMillionRecordPerformance(
+    scalabilityResults,
+    blockingEffectiveness
+  )
 
   // Generate report
-  const scalabilityReport = generateScalabilityReport('Scalability Analysis', scalabilityResults, {
-    includeTimestamp: true,
-  })
+  const scalabilityReport = generateScalabilityReport(
+    'Scalability Analysis',
+    scalabilityResults,
+    {
+      includeTimestamp: true,
+    }
+  )
 
-  const comparisonReport = generateComparisonReport('Blocking Strategy Comparison (10k)', results.slice(scalabilityResults.length), {
-    includeTimestamp: true,
-  })
+  const comparisonReport = generateComparisonReport(
+    'Blocking Strategy Comparison (10k)',
+    results.slice(scalabilityResults.length),
+    {
+      includeTimestamp: true,
+    }
+  )
 
   const fullReport = generateFullScalabilityReport(
     scalabilityResults,
@@ -440,11 +563,14 @@ function projectMillionRecordPerformance(
   const oneMillionPairsWithoutBlocking = (1000000 * 999999) / 2 // ~500 billion pairs
 
   // Extrapolate reduction ratio (tends to stabilize as dataset grows)
-  const latestReduction = blockingEffectiveness[blockingEffectiveness.length - 1]
+  const latestReduction =
+    blockingEffectiveness[blockingEffectiveness.length - 1]
   const projectedReductionRatio = latestReduction.reductionRatio * 0.98 // Slightly lower at scale
 
   // Calculate projected pairs with blocking
-  const projectedPairsWithBlocking = Math.round(oneMillionPairsWithoutBlocking * (1 - projectedReductionRatio))
+  const projectedPairsWithBlocking = Math.round(
+    oneMillionPairsWithoutBlocking * (1 - projectedReductionRatio)
+  )
 
   // Extrapolate execution time based on linear scaling of blocked pairs
   const lastResult = scalabilityResults[scalabilityResults.length - 1]
@@ -516,14 +642,20 @@ function generateFullScalabilityReport(
   lines.push('')
   lines.push('## Overview')
   lines.push('')
-  lines.push('This report presents scalability benchmarks for the have-we-met library, testing performance')
-  lines.push('at different dataset sizes (1k to 100k records) and projecting performance for 1M records.')
+  lines.push(
+    'This report presents scalability benchmarks for the have-we-met library, testing performance'
+  )
+  lines.push(
+    'at different dataset sizes (1k to 100k records) and projecting performance for 1M records.'
+  )
   lines.push('')
   lines.push('## Key Findings')
   lines.push('')
   lines.push('### Performance Summary')
   lines.push('')
-  lines.push('| Dataset Size | Pairs Compared | Execution Time | Throughput (pairs/sec) |')
+  lines.push(
+    '| Dataset Size | Pairs Compared | Execution Time | Throughput (pairs/sec) |'
+  )
   lines.push('| --- | --- | --- | --- |')
 
   for (const { size, result } of scalabilityResults) {
@@ -536,9 +668,13 @@ function generateFullScalabilityReport(
   lines.push('')
   lines.push('### Blocking Effectiveness')
   lines.push('')
-  lines.push('Blocking dramatically reduces the number of comparisons required:')
+  lines.push(
+    'Blocking dramatically reduces the number of comparisons required:'
+  )
   lines.push('')
-  lines.push('| Dataset Size | Pairs Without Blocking | Pairs With Blocking | Reduction |')
+  lines.push(
+    '| Dataset Size | Pairs Without Blocking | Pairs With Blocking | Reduction |'
+  )
   lines.push('| --- | --- | --- | --- |')
 
   for (const eff of blockingEffectiveness) {
@@ -549,7 +685,9 @@ function generateFullScalabilityReport(
   lines.push('')
   lines.push('### Memory Usage')
   lines.push('')
-  lines.push('| Dataset Size | Generation Memory | Processing Memory | Total Memory |')
+  lines.push(
+    '| Dataset Size | Generation Memory | Processing Memory | Total Memory |'
+  )
   lines.push('| --- | --- | --- | --- |')
 
   for (const mem of memoryAnalysis) {
@@ -575,51 +713,91 @@ function generateFullScalabilityReport(
   lines.push('')
   lines.push('### Blocking Strategy Recommendations')
   lines.push('')
-  lines.push('1. **Soundex Blocking**: Best balance of reduction ratio and accuracy for name-based matching')
-  lines.push('2. **Postcode Blocking**: Highest reduction but may miss matches across postcodes')
-  lines.push('3. **Composite (Union)**: Good coverage but generates more pairs than single-field blocking')
-  lines.push('4. **Sorted Neighbourhood**: Predictable pair count, good for streaming scenarios')
+  lines.push(
+    '1. **Soundex Blocking**: Best balance of reduction ratio and accuracy for name-based matching'
+  )
+  lines.push(
+    '2. **Postcode Blocking**: Highest reduction but may miss matches across postcodes'
+  )
+  lines.push(
+    '3. **Composite (Union)**: Good coverage but generates more pairs than single-field blocking'
+  )
+  lines.push(
+    '4. **Sorted Neighbourhood**: Predictable pair count, good for streaming scenarios'
+  )
   lines.push('')
   lines.push('## 1 Million Record Projection')
   lines.push('')
-  lines.push('Based on observed scaling patterns, projections for 1M record processing:')
+  lines.push(
+    'Based on observed scaling patterns, projections for 1M record processing:'
+  )
   lines.push('')
   lines.push('| Metric | Projected Value |')
   lines.push('| --- | --- |')
-  lines.push(`| Pairs Without Blocking | ${projected1M.projectedPairsWithoutBlocking.toLocaleString()} |`)
-  lines.push(`| Pairs With Soundex Blocking | ${projected1M.projectedPairsWithBlocking.toLocaleString()} |`)
-  lines.push(`| Projected Reduction Ratio | ${formatPercent(projected1M.projectedReductionRatio)} |`)
-  lines.push(`| Estimated Processing Time | ${formatDuration(projected1M.projectedTimeMs)} |`)
+  lines.push(
+    `| Pairs Without Blocking | ${projected1M.projectedPairsWithoutBlocking.toLocaleString()} |`
+  )
+  lines.push(
+    `| Pairs With Soundex Blocking | ${projected1M.projectedPairsWithBlocking.toLocaleString()} |`
+  )
+  lines.push(
+    `| Projected Reduction Ratio | ${formatPercent(projected1M.projectedReductionRatio)} |`
+  )
+  lines.push(
+    `| Estimated Processing Time | ${formatDuration(projected1M.projectedTimeMs)} |`
+  )
   lines.push(`| Projection Confidence | ${projected1M.confidence} |`)
   lines.push('')
   lines.push('**Important Notes:**')
   lines.push('')
   lines.push('- These projections assume Soundex blocking on surname field')
-  lines.push('- Actual performance depends on data distribution (block sizes vary)')
-  lines.push('- Memory requirements scale linearly with record count (~50MB per 10k records)')
-  lines.push('- For 1M+ records, consider incremental/streaming processing or database-backed matching')
+  lines.push(
+    '- Actual performance depends on data distribution (block sizes vary)'
+  )
+  lines.push(
+    '- Memory requirements scale linearly with record count (~50MB per 10k records)'
+  )
+  lines.push(
+    '- For 1M+ records, consider incremental/streaming processing or database-backed matching'
+  )
   lines.push('')
   lines.push('## Production Scaling Recommendations')
   lines.push('')
   lines.push('### For 10k-100k Records')
   lines.push('')
-  lines.push('- **Blocking**: Use Soundex or composite blocking for ~97% pair reduction')
-  lines.push('- **Memory**: Expect 25-500MB heap usage depending on record complexity')
+  lines.push(
+    '- **Blocking**: Use Soundex or composite blocking for ~97% pair reduction'
+  )
+  lines.push(
+    '- **Memory**: Expect 25-500MB heap usage depending on record complexity'
+  )
   lines.push('- **Processing Time**: 5-60 seconds with appropriate blocking')
   lines.push('')
   lines.push('### For 100k-1M Records')
   lines.push('')
   lines.push('- **Blocking**: Essential - always use blocking strategies')
-  lines.push('- **Strategy**: Consider composite blocking (Soundex + postcode) for better coverage')
+  lines.push(
+    '- **Strategy**: Consider composite blocking (Soundex + postcode) for better coverage'
+  )
   lines.push('- **Batching**: Process in batches of 50-100k records')
-  lines.push('- **Memory**: Use streaming where possible to limit memory footprint')
+  lines.push(
+    '- **Memory**: Use streaming where possible to limit memory footprint'
+  )
   lines.push('')
   lines.push('### For 1M+ Records')
   lines.push('')
-  lines.push('- **Database Integration**: Use database adapters to avoid loading all records')
-  lines.push('- **Incremental Processing**: Process new records against existing dataset')
-  lines.push('- **Distributed Processing**: Consider splitting by blocking key for parallelization')
-  lines.push('- **Monitoring**: Track throughput and memory to detect performance degradation')
+  lines.push(
+    '- **Database Integration**: Use database adapters to avoid loading all records'
+  )
+  lines.push(
+    '- **Incremental Processing**: Process new records against existing dataset'
+  )
+  lines.push(
+    '- **Distributed Processing**: Consider splitting by blocking key for parallelization'
+  )
+  lines.push(
+    '- **Monitoring**: Track throughput and memory to detect performance degradation'
+  )
   lines.push('')
   lines.push('## Complexity Analysis')
   lines.push('')
@@ -636,13 +814,17 @@ function generateFullScalabilityReport(
   lines.push('- **Typical reduction**: 96-99% fewer comparisons')
   lines.push('- **10k records**: ~200k-2M comparisons (seconds)')
   lines.push('- **100k records**: ~10-100M comparisons (minutes)')
-  lines.push('- **1M records**: ~500M-5B comparisons (tens of minutes to hours)')
+  lines.push(
+    '- **1M records**: ~500M-5B comparisons (tens of minutes to hours)'
+  )
   lines.push('')
   lines.push('## Test Environment')
   lines.push('')
   lines.push('- **Data**: Synthetic Febrl-like records with 50% duplicate rate')
   lines.push('- **Corruption**: 30% corruption probability on duplicate fields')
-  lines.push('- **Matching**: 7-field weighted comparison (Jaro-Winkler for names, exact for IDs)')
+  lines.push(
+    '- **Matching**: 7-field weighted comparison (Jaro-Winkler for names, exact for IDs)'
+  )
   lines.push('- **Threshold**: 0.7 match threshold')
 
   return lines.join('\n')

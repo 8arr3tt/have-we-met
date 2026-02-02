@@ -15,11 +15,13 @@ Multi-source consolidation allows you to:
 ## Examples Overview
 
 ### 1. Multi-Source Customer Consolidation
+
 **File**: `multi-source-customer.ts`
 
 **Scenario**: Three product databases (CRM, Billing, Support) need to be consolidated into a single customer table.
 
 **Key Features**:
+
 - Within-source-first matching strategy
 - Source priority-based conflict resolution
 - Field-level merge strategies
@@ -28,16 +30,19 @@ Multi-source consolidation allows you to:
 **Use Case**: SaaS company with separate databases per product wanting unified customer view
 
 **Run**:
+
 ```bash
 npx tsx examples/consolidation/multi-source-customer.ts
 ```
 
 ### 2. Cross-System Patient Matching
+
 **File**: `cross-system-patient.ts`
 
 **Scenario**: Hospital network creating a Master Patient Index (MPI) from three hospital systems.
 
 **Key Features**:
+
 - Unified pool matching strategy (healthcare-appropriate)
 - Conservative thresholds for high-stakes matching
 - Nickname handling (Mike vs Michael)
@@ -47,16 +52,19 @@ npx tsx examples/consolidation/multi-source-customer.ts
 **Use Case**: Healthcare network enabling coordinated care across facilities
 
 **Run**:
+
 ```bash
 npx tsx examples/consolidation/cross-system-patient.ts
 ```
 
 ### 3. ETL Pipeline Example
+
 **File**: `etl-pipeline.ts`
 
 **Scenario**: Extract contacts from CSV file (legacy), PostgreSQL database (current), and REST API (CRM), transform to unified schema, and load into new database.
 
 **Key Features**:
+
 - Three different data sources (CSV, database, API)
 - Custom adapter implementations
 - Tag enrichment from source metadata
@@ -66,16 +74,19 @@ npx tsx examples/consolidation/cross-system-patient.ts
 **Use Case**: Data migration, system consolidation, creating single source of truth
 
 **Run**:
+
 ```bash
 npx tsx examples/consolidation/etl-pipeline.ts
 ```
 
 ### 4. Manual Workflow (No Database)
+
 **File**: `manual-workflow.ts`
 
 **Scenario**: Consolidate product catalog from three vendors without database adapters, using direct API.
 
 **Key Features**:
+
 - No database setup required
 - Direct use of SchemaMapper and CrossSourceMatcher
 - Step-by-step control over consolidation process
@@ -84,6 +95,7 @@ npx tsx examples/consolidation/etl-pipeline.ts
 **Use Case**: Custom integrations, one-off scripts, testing, non-database sources
 
 **Run**:
+
 ```bash
 npx tsx examples/consolidation/manual-workflow.ts
 ```
@@ -91,16 +103,19 @@ npx tsx examples/consolidation/manual-workflow.ts
 ## Matching Strategies
 
 ### Within-Source-First
+
 ```typescript
 .matchingScope('within-source-first')
 ```
 
 **How it works**:
+
 1. Deduplicate within each source separately
 2. Match the deduplicated records across sources
 3. Merge matches using source priority
 
 **When to use**:
+
 - Sources have internal duplicates
 - Want to preserve source-specific data quality
 - Clear source priority hierarchy exists
@@ -109,16 +124,19 @@ npx tsx examples/consolidation/manual-workflow.ts
 **Examples**: Multi-source customer consolidation, ETL pipeline
 
 ### Unified Pool
+
 ```typescript
 .matchingScope('unified')
 ```
 
 **How it works**:
+
 1. Map all records from all sources to unified schema
 2. Compare all records together in one pool
 3. Merge matches using source priority
 
 **When to use**:
+
 - Sources have minimal internal duplicates
 - Need comprehensive cross-source matching
 - Data quality varies significantly
@@ -143,6 +161,7 @@ Source priority determines which values are preferred when merging conflicting d
 ```
 
 **Priority Modes**:
+
 - **priority-first**: Always use highest priority source's value
 - **priority-fallback**: Use highest priority non-null value
 - **priority-only**: Only consider highest priority source (ignore others)
@@ -150,7 +169,9 @@ Source priority determines which values are preferred when merging conflicting d
 ## Schema Mapping
 
 ### Static Field Mapping
+
 Map fields by name:
+
 ```typescript
 .mapping(map => map
   .field('email').from('email_address')
@@ -159,7 +180,9 @@ Map fields by name:
 ```
 
 ### Nested Field Access
+
 Extract nested fields:
+
 ```typescript
 .mapping(map => map
   .field('city').from('address.city')
@@ -168,7 +191,9 @@ Extract nested fields:
 ```
 
 ### Transform Functions
+
 Compute fields with custom logic:
+
 ```typescript
 .mapping(map => map
   .field('fullName').transform(input =>
@@ -183,6 +208,7 @@ Compute fields with custom logic:
 ## Conflict Resolution
 
 ### Use Source Priority
+
 ```typescript
 .conflictResolution(cr => cr
   .useSourcePriority(true)  // Prefer higher priority sources
@@ -190,6 +216,7 @@ Compute fields with custom logic:
 ```
 
 ### Default Strategy
+
 ```typescript
 .conflictResolution(cr => cr
   .defaultStrategy('preferNonNull')  // Prefer any non-null value
@@ -197,6 +224,7 @@ Compute fields with custom logic:
 ```
 
 ### Field-Specific Strategies
+
 ```typescript
 .conflictResolution(cr => cr
   .fieldStrategy('email', 'preferNewer')      // Latest email
@@ -206,6 +234,7 @@ Compute fields with custom logic:
 ```
 
 ### Custom Merge Strategy
+
 ```typescript
 .fieldStrategy('metadata', (values) => {
   // Custom logic to merge metadata objects
@@ -215,81 +244,111 @@ Compute fields with custom logic:
 
 ## Available Merge Strategies
 
-| Strategy | Description | Use Case |
-|----------|-------------|----------|
-| `preferFirst` | Use first value | Arbitrary preference |
-| `preferLast` | Use last value | Arbitrary preference |
-| `preferNewer` | Use newest by date | Time-sensitive data |
-| `preferOlder` | Use oldest by date | Historical records |
-| `preferNonNull` | Use any non-null | Fill in missing data |
-| `preferLonger` | Use longer string | More detailed text |
-| `preferShorter` | Use shorter string | Concise text |
-| `concatenate` | Join strings | Combine descriptions |
-| `union` | Unique array items | Tags, categories |
-| `mostFrequent` | Most common value | Voting/consensus |
-| `average` | Numeric average | Ratings, scores |
-| `sum` | Numeric sum | Quantities, totals |
-| `min` | Minimum value | Lowest price |
-| `max` | Maximum value | Highest capacity |
+| Strategy        | Description        | Use Case             |
+| --------------- | ------------------ | -------------------- |
+| `preferFirst`   | Use first value    | Arbitrary preference |
+| `preferLast`    | Use last value     | Arbitrary preference |
+| `preferNewer`   | Use newest by date | Time-sensitive data  |
+| `preferOlder`   | Use oldest by date | Historical records   |
+| `preferNonNull` | Use any non-null   | Fill in missing data |
+| `preferLonger`  | Use longer string  | More detailed text   |
+| `preferShorter` | Use shorter string | Concise text         |
+| `concatenate`   | Join strings       | Combine descriptions |
+| `union`         | Unique array items | Tags, categories     |
+| `mostFrequent`  | Most common value  | Voting/consensus     |
+| `average`       | Numeric average    | Ratings, scores      |
+| `sum`           | Numeric sum        | Quantities, totals   |
+| `min`           | Minimum value      | Lowest price         |
+| `max`           | Maximum value      | Highest capacity     |
 
 ## Configuration Patterns
 
 ### Enterprise SaaS (B2B)
+
 ```typescript
 const config = HaveWeMet.consolidation<Customer>()
   .matchingScope('within-source-first')
-  .matching(match => match
-    .field('email').strategy('exact').weight(30)
-    .field('companyDomain').strategy('exact').weight(20)
-    .field('companyName').strategy('jaro-winkler').weight(15)
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(30)
+      .field('companyDomain')
+      .strategy('exact')
+      .weight(20)
+      .field('companyName')
+      .strategy('jaro-winkler')
+      .weight(15)
   )
   .thresholds({ noMatch: 30, definiteMatch: 50 })
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
-    .fieldStrategy('revenue', 'max')
-    .fieldStrategy('employees', 'max')
+  .conflictResolution((cr) =>
+    cr
+      .useSourcePriority(true)
+      .defaultStrategy('preferNonNull')
+      .fieldStrategy('revenue', 'max')
+      .fieldStrategy('employees', 'max')
   )
 ```
 
 ### Healthcare (HIPAA-compliant)
+
 ```typescript
 const config = HaveWeMet.consolidation<Patient>()
   .matchingScope('unified')
-  .matching(match => match
-    .field('ssn').strategy('exact').weight(30)
-    .field('dateOfBirth').strategy('exact').weight(20)
-    .field('lastName').strategy('jaro-winkler').weight(15)
-    .field('firstName').strategy('jaro-winkler').weight(12)
+  .matching((match) =>
+    match
+      .field('ssn')
+      .strategy('exact')
+      .weight(30)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(20)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(15)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(12)
   )
-  .thresholds({ noMatch: 30, definiteMatch: 60 })  // Conservative
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .fieldStrategy('firstVisit', 'preferOlder')
-    .fieldStrategy('lastVisit', 'preferNewer')
+  .thresholds({ noMatch: 30, definiteMatch: 60 }) // Conservative
+  .conflictResolution((cr) =>
+    cr
+      .useSourcePriority(true)
+      .fieldStrategy('firstVisit', 'preferOlder')
+      .fieldStrategy('lastVisit', 'preferNewer')
   )
 ```
 
 ### E-commerce (Product Catalog)
+
 ```typescript
 const config = HaveWeMet.consolidation<Product>()
   .matchingScope('unified')
-  .matching(match => match
-    .field('sku').strategy('exact').weight(30)
-    .field('name').strategy('jaro-winkler').weight(20)
-    .field('brand').strategy('exact').weight(15)
+  .matching((match) =>
+    match
+      .field('sku')
+      .strategy('exact')
+      .weight(30)
+      .field('name')
+      .strategy('jaro-winkler')
+      .weight(20)
+      .field('brand')
+      .strategy('exact')
+      .weight(15)
   )
   .thresholds({ noMatch: 25, definiteMatch: 45 })
-  .conflictResolution(cr => cr
-    .fieldStrategy('price', 'min')  // Lowest price
-    .fieldStrategy('inStock', 'union')  // Any in stock
-    .fieldStrategy('description', 'preferLonger')
+  .conflictResolution((cr) =>
+    cr
+      .fieldStrategy('price', 'min') // Lowest price
+      .fieldStrategy('inStock', 'union') // Any in stock
+      .fieldStrategy('description', 'preferLonger')
   )
 ```
 
 ## Common Patterns
 
 ### Tracking Multiple Source IDs
+
 ```typescript
 interface UnifiedRecord {
   id?: string
@@ -311,6 +370,7 @@ interface UnifiedRecord {
 ```
 
 ### Metadata Enrichment
+
 ```typescript
 .mapping(map => map
   .field('metadata').transform(input => ({
@@ -323,6 +383,7 @@ interface UnifiedRecord {
 ```
 
 ### Conditional Field Mapping
+
 ```typescript
 .mapping(map => map
   .field('status').transform(input => {
@@ -336,12 +397,14 @@ interface UnifiedRecord {
 ## Running the Examples
 
 ### Prerequisites
+
 ```bash
 npm install
 npm run build
 ```
 
 ### Run All Examples
+
 ```bash
 npx tsx examples/consolidation/multi-source-customer.ts
 npx tsx examples/consolidation/cross-system-patient.ts
@@ -350,6 +413,7 @@ npx tsx examples/consolidation/manual-workflow.ts
 ```
 
 ### Run with TypeScript
+
 ```bash
 npm run dev  # Watch mode for development
 ```

@@ -129,7 +129,9 @@ describe('CrossSourceMatcher', () => {
       const matcher = new CrossSourceMatcher(config)
 
       expect(matcher).toBeInstanceOf(CrossSourceMatcher)
-      expect(matcher.getMatchingScope()).toBe(MatchingScopeEnum.WithinSourceFirst)
+      expect(matcher.getMatchingScope()).toBe(
+        MatchingScopeEnum.WithinSourceFirst
+      )
       expect(matcher.getSources()).toHaveLength(2)
     })
 
@@ -141,7 +143,9 @@ describe('CrossSourceMatcher', () => {
 
       const matcher = new CrossSourceMatcher(config)
 
-      expect(matcher.getMatchingScope()).toBe(MatchingScopeEnum.WithinSourceFirst)
+      expect(matcher.getMatchingScope()).toBe(
+        MatchingScopeEnum.WithinSourceFirst
+      )
     })
 
     it('should throw error if no sources provided', () => {
@@ -291,7 +295,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchRecord(
-        { customer_name: 'Unknown Person', email_address: 'unknown@example.com', phone_number: '' },
+        {
+          customer_name: 'Unknown Person',
+          email_address: 'unknown@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
@@ -302,14 +310,32 @@ describe('CrossSourceMatcher', () => {
       const mockMatches: MatchResult<UnifiedCustomer>[] = [
         {
           outcome: 'definite-match',
-          candidateRecord: { name: 'John Smith', email: 'john@example.com', phone: '555-0001' },
-          score: { totalScore: 50, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.83 },
+          candidateRecord: {
+            name: 'John Smith',
+            email: 'john@example.com',
+            phone: '555-0001',
+          },
+          score: {
+            totalScore: 50,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.83,
+          },
           explanation: 'Match 1',
         },
         {
           outcome: 'potential-match',
-          candidateRecord: { name: 'Jane Doe', email: 'jane@example.com', phone: '555-0002' },
-          score: { totalScore: 35, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.58 },
+          candidateRecord: {
+            name: 'Jane Doe',
+            email: 'jane@example.com',
+            phone: '555-0002',
+          },
+          score: {
+            totalScore: 35,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.58,
+          },
           explanation: 'Match 2',
         },
       ]
@@ -322,7 +348,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchRecord(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db',
         { maxResults: 1 }
       )
@@ -339,14 +369,32 @@ describe('CrossSourceMatcher', () => {
       const mockMatches: MatchResult<UnifiedCustomer>[] = [
         {
           outcome: 'definite-match',
-          candidateRecord: { name: 'John Smith', email: 'john@example.com', phone: '555-0001' },
-          score: { totalScore: 50, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.83 },
+          candidateRecord: {
+            name: 'John Smith',
+            email: 'john@example.com',
+            phone: '555-0001',
+          },
+          score: {
+            totalScore: 50,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.83,
+          },
           explanation: 'High score',
         },
         {
           outcome: 'potential-match',
-          candidateRecord: { name: 'Jane Doe', email: 'jane@example.com', phone: '555-0002' },
-          score: { totalScore: 15, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.25 },
+          candidateRecord: {
+            name: 'Jane Doe',
+            email: 'jane@example.com',
+            phone: '555-0002',
+          },
+          score: {
+            totalScore: 15,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.25,
+          },
           explanation: 'Low score',
         },
       ]
@@ -359,7 +407,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchRecord(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db',
         { minScore: 20 }
       )
@@ -379,7 +431,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       await matcher.matchWithinSource(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
@@ -436,7 +492,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       await matcher.matchCrossSources(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
@@ -449,8 +509,17 @@ describe('CrossSourceMatcher', () => {
       const mockMatches: MatchResult<UnifiedCustomer>[] = [
         {
           outcome: 'definite-match',
-          candidateRecord: { name: 'John Smith', email: 'john@example.com', phone: '555-0001' },
-          score: { totalScore: 50, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.83 },
+          candidateRecord: {
+            name: 'John Smith',
+            email: 'john@example.com',
+            phone: '555-0001',
+          },
+          score: {
+            totalScore: 50,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.83,
+          },
           explanation: 'Cross-source match',
         },
       ]
@@ -463,7 +532,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchCrossSources(
-        { customer_name: 'John Smith', email_address: 'john@example.com', phone_number: '555-0001' },
+        {
+          customer_name: 'John Smith',
+          email_address: 'john@example.com',
+          phone_number: '555-0001',
+        },
         'crm_db'
       )
 
@@ -480,7 +553,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchCrossSources(
-        { customer_name: 'Unique Person', email_address: 'unique@example.com', phone_number: '' },
+        {
+          customer_name: 'Unique Person',
+          email_address: 'unique@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
@@ -497,7 +574,11 @@ describe('CrossSourceMatcher', () => {
         resolver: mockResolver,
       })
 
-      const record = { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' }
+      const record = {
+        customer_name: 'Test',
+        email_address: 'test@example.com',
+        phone_number: '',
+      }
 
       const results1 = await matcher.matchRecord(record, 'crm_db')
       const results2 = await matcher.matchUnifiedPool(record, 'crm_db')
@@ -516,9 +597,21 @@ describe('CrossSourceMatcher', () => {
       })
 
       const records = [
-        { customer_name: 'Record 1', email_address: 'r1@example.com', phone_number: '' },
-        { customer_name: 'Record 2', email_address: 'r2@example.com', phone_number: '' },
-        { customer_name: 'Record 3', email_address: 'r3@example.com', phone_number: '' },
+        {
+          customer_name: 'Record 1',
+          email_address: 'r1@example.com',
+          phone_number: '',
+        },
+        {
+          customer_name: 'Record 2',
+          email_address: 'r2@example.com',
+          phone_number: '',
+        },
+        {
+          customer_name: 'Record 3',
+          email_address: 'r3@example.com',
+          phone_number: '',
+        },
       ]
 
       const results = await matcher.matchBatch(records, 'crm_db')
@@ -537,8 +630,18 @@ describe('CrossSourceMatcher', () => {
       })
 
       const records = [
-        { id: 1, customer_name: 'John Smith', email_address: 'john@example.com', phone_number: '555-0001' },
-        { id: 2, customer_name: 'Jane Doe', email_address: 'jane@example.com', phone_number: '555-0002' },
+        {
+          id: 1,
+          customer_name: 'John Smith',
+          email_address: 'john@example.com',
+          phone_number: '555-0001',
+        },
+        {
+          id: 2,
+          customer_name: 'Jane Doe',
+          email_address: 'jane@example.com',
+          phone_number: '555-0002',
+        },
       ]
 
       await matcher.matchBatch(records, 'crm_db')
@@ -621,7 +724,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       await matcher.matchRecord(
-        { customer_name: 'John Smith', email_address: 'john@example.com', phone_number: '555-0001' },
+        {
+          customer_name: 'John Smith',
+          email_address: 'john@example.com',
+          phone_number: '555-0001',
+        },
         'crm_db'
       )
 
@@ -630,7 +737,10 @@ describe('CrossSourceMatcher', () => {
 
     it('should handle mapping errors gracefully', async () => {
       // Create source with transform that throws error
-      const problematicSource: ConsolidationSource<CRMCustomer, UnifiedCustomer> = {
+      const problematicSource: ConsolidationSource<
+        CRMCustomer,
+        UnifiedCustomer
+      > = {
         ...crmSource,
         mapping: {
           name: {
@@ -650,7 +760,11 @@ describe('CrossSourceMatcher', () => {
 
       await expect(
         matcher.matchRecord(
-          { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+          {
+            customer_name: 'Test',
+            email_address: 'test@example.com',
+            phone_number: '',
+          },
           'crm_db'
         )
       ).rejects.toThrow('Failed to map record')
@@ -681,7 +795,9 @@ describe('CrossSourceMatcher', () => {
 
   describe('error handling', () => {
     it('should throw error if adapter fails to load records', async () => {
-      mockCRMAdapter.findAll = vi.fn().mockRejectedValue(new Error('Database error'))
+      mockCRMAdapter.findAll = vi
+        .fn()
+        .mockRejectedValue(new Error('Database error'))
 
       const matcher = new CrossSourceMatcher({
         sources: [crmSource],
@@ -690,7 +806,11 @@ describe('CrossSourceMatcher', () => {
 
       await expect(
         matcher.matchRecord(
-          { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+          {
+            customer_name: 'Test',
+            email_address: 'test@example.com',
+            phone_number: '',
+          },
           'crm_db'
         )
       ).rejects.toThrow('Failed to load records from source crm_db')
@@ -701,7 +821,10 @@ describe('CrossSourceMatcher', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
       // Add a source with a transform that throws for certain records
-      const problematicSource: ConsolidationSource<CRMCustomer, UnifiedCustomer> = {
+      const problematicSource: ConsolidationSource<
+        CRMCustomer,
+        UnifiedCustomer
+      > = {
         ...crmSource,
         mapping: {
           name: {
@@ -747,7 +870,11 @@ describe('CrossSourceMatcher', () => {
 
       // Should not throw, but warn about the failed record
       await matcher.matchRecord(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
@@ -802,8 +929,17 @@ describe('CrossSourceMatcher', () => {
       const mockMatches: MatchResult<UnifiedCustomer>[] = [
         {
           outcome: 'definite-match',
-          candidateRecord: { name: 'John Smith', email: 'john@example.com', phone: '555-0001' },
-          score: { totalScore: 50, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.83 },
+          candidateRecord: {
+            name: 'John Smith',
+            email: 'john@example.com',
+            phone: '555-0001',
+          },
+          score: {
+            totalScore: 50,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.83,
+          },
           explanation: 'Match',
         },
       ]
@@ -816,7 +952,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchRecord(
-        { customer_name: 'John Smith', email_address: 'john@example.com', phone_number: '555-0001' },
+        {
+          customer_name: 'John Smith',
+          email_address: 'john@example.com',
+          phone_number: '555-0001',
+        },
         'crm_db'
       )
 
@@ -828,8 +968,17 @@ describe('CrossSourceMatcher', () => {
       const mockMatches: MatchResult<UnifiedCustomer>[] = [
         {
           outcome: 'definite-match',
-          candidateRecord: { name: 'John Smith', email: 'john@example.com', phone: '555-0001' },
-          score: { totalScore: 50, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.83 },
+          candidateRecord: {
+            name: 'John Smith',
+            email: 'john@example.com',
+            phone: '555-0001',
+          },
+          score: {
+            totalScore: 50,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.83,
+          },
           explanation: 'Match',
         },
       ]
@@ -842,7 +991,11 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchRecord(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
@@ -853,8 +1006,17 @@ describe('CrossSourceMatcher', () => {
       const mockMatches: MatchResult<UnifiedCustomer>[] = [
         {
           outcome: 'definite-match',
-          candidateRecord: { name: 'John Smith', email: 'john@example.com', phone: '555-0001' },
-          score: { totalScore: 50, fieldScores: [], maxPossibleScore: 60, normalizedScore: 0.83 },
+          candidateRecord: {
+            name: 'John Smith',
+            email: 'john@example.com',
+            phone: '555-0001',
+          },
+          score: {
+            totalScore: 50,
+            fieldScores: [],
+            maxPossibleScore: 60,
+            normalizedScore: 0.83,
+          },
           explanation: 'Match',
         },
       ]
@@ -867,13 +1029,19 @@ describe('CrossSourceMatcher', () => {
       })
 
       const results = await matcher.matchRecord(
-        { customer_name: 'Test', email_address: 'test@example.com', phone_number: '' },
+        {
+          customer_name: 'Test',
+          email_address: 'test@example.com',
+          phone_number: '',
+        },
         'crm_db'
       )
 
       expect(results[0].matches[0].originalRecord).toBeDefined()
       expect(results[0].matches[0].record).toBeDefined()
-      expect(results[0].matches[0].record).not.toBe(results[0].matches[0].originalRecord)
+      expect(results[0].matches[0].record).not.toBe(
+        results[0].matches[0].originalRecord
+      )
     })
   })
 })

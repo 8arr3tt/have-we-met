@@ -34,6 +34,7 @@ node dist/examples/quick-start.js
 **Basic in-memory identity resolution**
 
 Demonstrates the core matching workflow without database integration:
+
 - Schema definition
 - Blocking configuration
 - Weighted probabilistic matching
@@ -41,11 +42,13 @@ Demonstrates the core matching workflow without database integration:
 - Match explanations
 
 **When to use this pattern:**
+
 - Small datasets (< 10k records)
 - Prototyping and testing configurations
 - One-off batch processing
 
 **Run it:**
+
 ```bash
 npx tsx examples/quick-start.ts
 ```
@@ -57,17 +60,20 @@ npx tsx examples/quick-start.ts
 **Finding all duplicates in a dataset**
 
 Shows how to deduplicate an entire dataset to identify all duplicate clusters:
+
 - Batch processing with blocking strategies
 - Identifying duplicate clusters
 - Understanding blocking performance benefits
 - Handling potential matches that need review
 
 **When to use this pattern:**
+
 - Initial data cleanup
 - Migration from legacy systems
 - Periodic deduplication jobs
 
 **Run it:**
+
 ```bash
 npx tsx examples/batch-deduplication.ts
 ```
@@ -79,22 +85,26 @@ npx tsx examples/batch-deduplication.ts
 **Working with database adapters**
 
 Demonstrates database integration using Prisma (patterns apply to Drizzle and TypeORM):
+
 - Checking for duplicates before inserting
 - Batch deduplicating database tables
 - Using blocking for efficient database queries
 - Index optimization for blocking fields
 
 **When to use this pattern:**
+
 - Production systems with persistent storage
 - Real-time duplicate detection at point of entry
 - Large-scale data deduplication (100k+ records)
 
 **Run it:**
+
 ```bash
 npx tsx examples/database-integration.ts
 ```
 
 **Note:** This example uses a mock adapter for demonstration. For production usage with real databases, see:
+
 - [Prisma Adapter Guide](../docs/adapter-guides/prisma.md)
 - [Drizzle Adapter Guide](../docs/adapter-guides/drizzle.md)
 - [TypeORM Adapter Guide](../docs/adapter-guides/typeorm.md)
@@ -106,22 +116,26 @@ npx tsx examples/database-integration.ts
 **Machine learning-based matching**
 
 Shows how to use ML models to improve matching accuracy:
+
 - Hybrid mode (ML + probabilistic)
 - ML-only mode
 - Custom feature configuration
 - Training custom models from review decisions
 
 **When to use this pattern:**
+
 - Complex matching scenarios where rules are hard to define
 - Continuous improvement from human feedback
 - Domain-specific matching patterns
 
 **Run it:**
+
 ```bash
 npx tsx examples/ml-matching.ts
 ```
 
 **Learn more:**
+
 - [ML Matching Overview](../docs/ml-matching/overview.md)
 - [Getting Started Guide](../docs/ml-matching/getting-started.md)
 - [Training Guide](../docs/ml-matching/training.md)
@@ -133,6 +147,7 @@ npx tsx examples/ml-matching.ts
 **Human-in-the-loop review workflow**
 
 Demonstrates the review queue for handling ambiguous matches:
+
 - Auto-queueing potential matches
 - Reviewing and deciding on matches
 - Confirming or rejecting matches
@@ -140,16 +155,19 @@ Demonstrates the review queue for handling ambiguous matches:
 - Queue maintenance and cleanup
 
 **When to use this pattern:**
+
 - Regulated industries (healthcare, finance)
 - High-stakes matching where errors are costly
 - Learning from human decisions to improve matching
 
 **Run it:**
+
 ```bash
 npx tsx examples/review-queue.ts
 ```
 
 **Learn more:**
+
 - [Review Queue Overview](../docs/review-queue.md)
 - [Queue Workflows](../docs/queue-workflows.md)
 - [Queue Metrics](../docs/queue-metrics.md)
@@ -161,6 +179,7 @@ npx tsx examples/review-queue.ts
 ### Blocking Strategies
 
 Examples in the `blocking/` subdirectories:
+
 - Standard blocking
 - Sorted neighbourhood
 - Composite blocking
@@ -170,6 +189,7 @@ See [Blocking Documentation](../docs/blocking/overview.md)
 ### Data Normalizers
 
 Examples in the `normalizers/` subdirectory:
+
 - Name normalization
 - Email normalization
 - Phone number formatting
@@ -181,6 +201,7 @@ See [Normalizers Documentation](../docs/normalizers/overview.md)
 ### External Services
 
 Examples in the `external-services/` subdirectory:
+
 - Validation services (NHS number, email, phone)
 - Lookup services (address standardization, enrichment)
 - Custom service plugins
@@ -190,6 +211,7 @@ See [External Services Documentation](../docs/external-services.md)
 ### Golden Record / Merge
 
 Examples in the `golden-record/` subdirectory:
+
 - Merge strategy configuration
 - Provenance tracking
 - Unmerge operations
@@ -199,6 +221,7 @@ See [Golden Record Documentation](../docs/golden-record.md)
 ### Database Adapters
 
 Examples in the `database-adapters/` subdirectory:
+
 - Prisma integration
 - Drizzle integration
 - TypeORM integration

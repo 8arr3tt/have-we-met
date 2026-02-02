@@ -20,7 +20,7 @@ interface Person {
 }
 
 const resolver = HaveWeMet.create<Person>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
@@ -28,20 +28,30 @@ const resolver = HaveWeMet.create<Person>()
       .field('phone', { type: 'phone' })
       .field('dateOfBirth', { type: 'date' })
   })
-  .blocking(block => block.onField('lastName', { transform: 'soundex' }))
-  .matching(match => {
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+  .matching((match) => {
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10)
-      .field('lastName').strategy('jaro-winkler').weight(10)
-      .field('dateOfBirth').strategy('exact').weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(10)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   })
   // Add ML matching in hybrid mode
-  .ml(ml => ml
-    .usePretrained()    // Use built-in pre-trained model
-    .mode('hybrid')     // Combine ML with probabilistic
-    .mlWeight(0.4)      // 40% ML, 60% probabilistic
+  .ml(
+    (ml) =>
+      ml
+        .usePretrained() // Use built-in pre-trained model
+        .mode('hybrid') // Combine ML with probabilistic
+        .mlWeight(0.4) // 40% ML, 60% probabilistic
   )
   .build()
 ```
@@ -61,25 +71,25 @@ const record1 = {
   firstName: 'John',
   lastName: 'Smith',
   email: 'john.smith@example.com',
-  dateOfBirth: '1985-03-15'
+  dateOfBirth: '1985-03-15',
 }
 
 const record2 = {
-  firstName: 'Jon',        // Typo
+  firstName: 'Jon', // Typo
   lastName: 'Smith',
-  email: 'john.smith@example.com',  // Same
-  dateOfBirth: '1985-03-15'
+  email: 'john.smith@example.com', // Same
+  dateOfBirth: '1985-03-15',
 }
 
 // Make a prediction
 const prediction = await classifier.predict({
   record1,
-  record2
+  record2,
 })
 
-console.log(prediction.probability)     // 0.92 (92% match probability)
-console.log(prediction.classification)  // 'match'
-console.log(prediction.confidence)      // 0.87 (87% confident)
+console.log(prediction.probability) // 0.92 (92% match probability)
+console.log(prediction.classification) // 'match'
+console.log(prediction.confidence) // 0.87 (87% confident)
 ```
 
 ### 3. Understanding Predictions
@@ -88,11 +98,11 @@ Each prediction includes:
 
 ```typescript
 interface MLPrediction {
-  probability: number        // Match probability (0-1)
+  probability: number // Match probability (0-1)
   classification: 'match' | 'nonMatch' | 'uncertain'
-  confidence: number         // Model confidence (0-1)
-  features: FeatureVector    // Extracted features
-  featureImportance: FeatureImportance[]  // What contributed to the decision
+  confidence: number // Model confidence (0-1)
+  features: FeatureVector // Extracted features
+  featureImportance: FeatureImportance[] // What contributed to the decision
 }
 ```
 
@@ -138,6 +148,7 @@ finalScore = (1 - mlWeight) × probabilisticScore + mlWeight × mlScore
 ```
 
 With `mlWeight: 0.4`:
+
 - A probabilistic score of 75 and ML probability of 0.90 (scaled to 90)
 - Final: `0.6 × 75 + 0.4 × 90 = 45 + 36 = 81`
 
@@ -154,6 +165,7 @@ Use ML only for uncertain cases:
 ```
 
 This configuration:
+
 - Uses probabilistic results for definite matches and no-matches
 - Uses ML predictions only for potential matches (uncertain cases)
 - Reduces ML computation while helping with difficult decisions
@@ -179,13 +191,15 @@ Process multiple pairs efficiently:
 const pairs = [
   { record1: recordA, record2: recordB },
   { record1: recordA, record2: recordC },
-  { record1: recordA, record2: recordD }
+  { record1: recordA, record2: recordD },
 ]
 
 const batchResults = await classifier.predictBatch(pairs)
 
 for (const result of batchResults) {
-  console.log(`${result.prediction.classification}: ${result.prediction.probability}`)
+  console.log(
+    `${result.prediction.classification}: ${result.prediction.probability}`
+  )
 }
 ```
 
@@ -222,6 +236,7 @@ ML predictions can fail (timeout, invalid data). Configure fallback behavior:
 ```
 
 With `fallbackOnError: true`, if ML prediction fails:
+
 - The result will have `mlUsed: false`
 - The `mlError` field will contain the error message
 - Probabilistic score will be used instead

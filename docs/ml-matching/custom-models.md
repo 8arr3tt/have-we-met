@@ -21,7 +21,7 @@ First, define what features to extract for your record type:
 import {
   SimpleClassifier,
   FeatureExtractor,
-  featureConfig
+  featureConfig,
 } from 'have-we-met/ml'
 
 interface Product {
@@ -53,8 +53,8 @@ const classifier = new SimpleClassifier<Product>({
   modelConfig: {
     matchThreshold: 0.7,
     nonMatchThreshold: 0.3,
-    includeFeatureImportance: true
-  }
+    includeFeatureImportance: true,
+  },
 })
 
 console.log(`Feature count: ${classifier.getFeatureCount()}`)
@@ -73,12 +73,12 @@ const trainingData = createTrainingDataset([
   {
     pair: { record1: product1, record2: product2 },
     label: 'match',
-    source: 'manual-review'
+    source: 'manual-review',
   },
   {
     pair: { record1: product1, record2: product3 },
     label: 'nonMatch',
-    source: 'manual-review'
+    source: 'manual-review',
   },
   // ... more examples
 ])
@@ -89,11 +89,12 @@ const trainer = new ModelTrainer<Product>({
   config: {
     learningRate: 0.01,
     maxIterations: 1000,
-    validationSplit: 0.2
-  }
+    validationSplit: 0.2,
+  },
 })
 
-const { classifier: trainedClassifier, result } = await trainer.trainClassifier(trainingData)
+const { classifier: trainedClassifier, result } =
+  await trainer.trainClassifier(trainingData)
 
 if (trainedClassifier) {
   console.log(`Training accuracy: ${result.finalMetrics.trainingAccuracy}`)
@@ -107,7 +108,7 @@ if (trainedClassifier) {
 // Make predictions
 const prediction = await trainedClassifier.predict({
   record1: newProduct,
-  record2: existingProduct
+  record2: existingProduct,
 })
 
 console.log(`Match probability: ${prediction.probability}`)
@@ -122,17 +123,17 @@ For quick testing or when you have expert knowledge:
 
 ```typescript
 const classifier = new SimpleClassifier<Product>({
-  featureExtractor
+  featureExtractor,
 })
 
 // Set weights directly (one weight per feature)
 const weights = [
-  0.8,   // sku_exact
-  0.3,   // sku_missing
-  0.5,   // name_jaroWinkler
-  0.4,   // name_levenshtein
-  0.2,   // name_exact
-  0.1,   // name_missing
+  0.8, // sku_exact
+  0.3, // sku_missing
+  0.5, // name_jaroWinkler
+  0.4, // name_levenshtein
+  0.2, // name_exact
+  0.1, // name_missing
   // ... one for each feature
 ]
 const bias = -0.5
@@ -153,7 +154,7 @@ const json = JSON.stringify(weightsData, null, 2)
 // Load weights
 const loadedWeights = JSON.parse(savedJson)
 const newClassifier = new SimpleClassifier<Product>({
-  featureExtractor
+  featureExtractor,
 })
 await newClassifier.loadWeights(loadedWeights)
 ```
@@ -179,7 +180,7 @@ Weights file format:
 
 ```typescript
 const resolver = HaveWeMet.create<Product>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('sku', { type: 'string' })
       .field('name', { type: 'string' })
@@ -187,19 +188,26 @@ const resolver = HaveWeMet.create<Product>()
       .field('category', { type: 'string' })
       .field('price', { type: 'number' })
   })
-  .blocking(block => block.onField('category'))
-  .matching(match => {
+  .blocking((block) => block.onField('category'))
+  .matching((match) => {
     match
-      .field('sku').strategy('exact').weight(30)
-      .field('name').strategy('jaro-winkler').weight(20)
-      .field('brand').strategy('exact').weight(15)
+      .field('sku')
+      .strategy('exact')
+      .weight(30)
+      .field('name')
+      .strategy('jaro-winkler')
+      .weight(20)
+      .field('brand')
+      .strategy('exact')
+      .weight(15)
       .thresholds({ noMatch: 25, definiteMatch: 50 })
   })
   // Use custom trained model
-  .ml(ml => ml
-    .model(trainedClassifier)   // Your trained model
-    .mode('hybrid')
-    .mlWeight(0.5)
+  .ml((ml) =>
+    ml
+      .model(trainedClassifier) // Your trained model
+      .mode('hybrid')
+      .mlWeight(0.5)
   )
   .build()
 ```
@@ -252,7 +260,9 @@ const prediction = await classifier.predict({ record1, record2 })
 console.log('\nPrediction breakdown:')
 for (const feat of prediction.featureImportance.slice(0, 5)) {
   const contrib = feat.contribution > 0 ? 'increases' : 'decreases'
-  console.log(`  ${feat.name}: ${contrib} match probability by ${Math.abs(feat.contribution).toFixed(3)}`)
+  console.log(
+    `  ${feat.name}: ${contrib} match probability by ${Math.abs(feat.contribution).toFixed(3)}`
+  )
 }
 ```
 
@@ -266,7 +276,7 @@ const clonedClassifier = classifier.clone()
 // Modify the clone without affecting the original
 clonedClassifier.setConfig({
   ...clonedClassifier.getConfig(),
-  matchThreshold: 0.8
+  matchThreshold: 0.8,
 })
 ```
 
@@ -333,10 +343,10 @@ const medicalExtractor = featureConfig()
 const trainer = new ModelTrainer<PatientRecord>({
   featureExtractor: medicalExtractor,
   config: {
-    learningRate: 0.005,      // Lower for stability
+    learningRate: 0.005, // Lower for stability
     maxIterations: 2000,
-    validationSplit: 0.25,    // More validation for medical data
-    regularization: 0.01      // Prevent overfitting
-  }
+    validationSplit: 0.25, // More validation for medical data
+    regularization: 0.01, // Prevent overfitting
+  },
 })
 ```

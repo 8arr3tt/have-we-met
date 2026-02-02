@@ -718,7 +718,7 @@ export class Resolver<
     if (!this._mlIntegrator) {
       throw new Error(
         'ML is not configured. Call configureML() first, use .ml() in the builder, ' +
-        'or call an async ML method (resolveWithML, resolveMLOnly) first to initialize.'
+          'or call an async ML method (resolveWithML, resolveMLOnly) first to initialize.'
       )
     }
 

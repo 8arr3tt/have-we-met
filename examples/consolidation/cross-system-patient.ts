@@ -225,11 +225,12 @@ function createMockAdapter<T>(data: T[]): DatabaseAdapter<T> {
   return {
     count: async () => data.length,
     findAll: async () => data,
-    findById: async (id) => data.find((record: any) => record.id === id) ?? null,
+    findById: async (id) =>
+      data.find((record: any) => record.id === id) ?? null,
     findByField: async (field, value) =>
       data.filter((record: any) => record[field] === value),
     create: async (record) => record,
-    update: async (id, updates) => ({ ...updates, id } as T),
+    update: async (id, updates) => ({ ...updates, id }) as T,
     delete: async () => undefined,
     findMany: async () => data,
   }
@@ -317,7 +318,9 @@ const consolidationConfig = HaveWeMet.consolidation<MPIRecord>()
           .field('firstName')
           .from('first_name')
           .field('middleName')
-          .transform((input) => (input.middle_initial ? input.middle_initial : undefined))
+          .transform((input) =>
+            input.middle_initial ? input.middle_initial : undefined
+          )
           .field('lastName')
           .from('last_name')
           .field('dateOfBirth')
@@ -393,7 +396,7 @@ const consolidationConfig = HaveWeMet.consolidation<MPIRecord>()
       .field('firstName')
       .strategy('jaro-winkler')
       .weight(12)
-      .threshold(0.80) // Lower threshold for nicknames
+      .threshold(0.8) // Lower threshold for nicknames
       // Phone is helpful when available
       .field('phone')
       .strategy('exact')
@@ -443,9 +446,15 @@ async function runPatientMatching() {
   console.log()
 
   console.log('Input Data:')
-  console.log(`- Hospital A (Academic Medical Center): ${hospitalAPatients.length} patients`)
-  console.log(`- Hospital B (Community Hospital): ${hospitalBPatients.length} patients`)
-  console.log(`- Hospital C (Urgent Care Network): ${hospitalCPatients.length} patients`)
+  console.log(
+    `- Hospital A (Academic Medical Center): ${hospitalAPatients.length} patients`
+  )
+  console.log(
+    `- Hospital B (Community Hospital): ${hospitalBPatients.length} patients`
+  )
+  console.log(
+    `- Hospital C (Urgent Care Network): ${hospitalCPatients.length} patients`
+  )
   console.log(
     `- Total input records: ${hospitalAPatients.length + hospitalBPatients.length + hospitalCPatients.length}`
   )
@@ -550,17 +559,24 @@ async function runPatientMatching() {
   console.log()
 
   mpiRecords.forEach((record, index) => {
-    console.log(`${index + 1}. ${record.firstName} ${record.middleName || ''} ${record.lastName}`.trim())
+    console.log(
+      `${index + 1}. ${record.firstName} ${record.middleName || ''} ${record.lastName}`.trim()
+    )
     console.log(`   MPI ID: ${record.mpiId}`)
     console.log(`   DOB: ${record.dateOfBirth} | Gender: ${record.gender}`)
     if (record.ssn) console.log(`   SSN: ${record.ssn}`)
     if (record.phone) console.log(`   Phone: ${record.phone}`)
     if (record.email) console.log(`   Email: ${record.email}`)
-    console.log(`   First Seen: ${record.firstSeen.toISOString().split('T')[0]}`)
+    console.log(
+      `   First Seen: ${record.firstSeen.toISOString().split('T')[0]}`
+    )
     console.log('   Linked Records:')
-    if (record.hospitalAMrn) console.log(`     - Hospital A MRN: ${record.hospitalAMrn}`)
-    if (record.hospitalBPatientId) console.log(`     - Hospital B ID: ${record.hospitalBPatientId}`)
-    if (record.hospitalCEncounterId) console.log(`     - Hospital C Encounter: ${record.hospitalCEncounterId}`)
+    if (record.hospitalAMrn)
+      console.log(`     - Hospital A MRN: ${record.hospitalAMrn}`)
+    if (record.hospitalBPatientId)
+      console.log(`     - Hospital B ID: ${record.hospitalBPatientId}`)
+    if (record.hospitalCEncounterId)
+      console.log(`     - Hospital C Encounter: ${record.hospitalCEncounterId}`)
     console.log()
   })
 
@@ -576,12 +592,18 @@ async function runPatientMatching() {
   )
   console.log()
   console.log('Cross-System Links:')
-  console.log(`- Patients in multiple systems: ${mpiRecords.filter((r) => [r.hospitalAMrn, r.hospitalBPatientId, r.hospitalCEncounterId].filter(Boolean).length > 1).length}`)
-  console.log(`- Patients in single system: ${mpiRecords.filter((r) => [r.hospitalAMrn, r.hospitalBPatientId, r.hospitalCEncounterId].filter(Boolean).length === 1).length}`)
+  console.log(
+    `- Patients in multiple systems: ${mpiRecords.filter((r) => [r.hospitalAMrn, r.hospitalBPatientId, r.hospitalCEncounterId].filter(Boolean).length > 1).length}`
+  )
+  console.log(
+    `- Patients in single system: ${mpiRecords.filter((r) => [r.hospitalAMrn, r.hospitalBPatientId, r.hospitalCEncounterId].filter(Boolean).length === 1).length}`
+  )
   console.log()
   console.log('Master Patient Index created successfully!')
   console.log()
-  console.log('Note: In production, records with scores in the potential match range')
+  console.log(
+    'Note: In production, records with scores in the potential match range'
+  )
   console.log('(30-55) would be queued for manual review to ensure accuracy.')
 }
 

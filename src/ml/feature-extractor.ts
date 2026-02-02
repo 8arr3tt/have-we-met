@@ -10,7 +10,7 @@ import {
   jaroWinkler,
   soundex,
   metaphone,
-} from '../core/comparators';
+} from '../core/comparators'
 import type {
   FeatureVector,
   FeatureExtractionConfig,
@@ -18,18 +18,21 @@ import type {
   FeatureExtractorType,
   CustomFeatureExtractor,
   RecordPair,
-} from './types';
-import { createFeatureVector } from './prediction';
+} from './types'
+import { createFeatureVector } from './prediction'
 
 /**
  * Individual feature extractor function signature
  */
-export type FeatureExtractorFn = (value1: unknown, value2: unknown) => number;
+export type FeatureExtractorFn = (value1: unknown, value2: unknown) => number
 
 /**
  * Built-in feature extractors
  */
-export const builtInExtractors: Record<FeatureExtractorType, FeatureExtractorFn | null> = {
+export const builtInExtractors: Record<
+  FeatureExtractorType,
+  FeatureExtractorFn | null
+> = {
   exact: (v1, v2) => exactMatch(v1, v2, { caseSensitive: false }),
   levenshtein: (v1, v2) => levenshtein(v1, v2),
   jaroWinkler: (v1, v2) => jaroWinkler(v1, v2),
@@ -39,33 +42,33 @@ export const builtInExtractors: Record<FeatureExtractorType, FeatureExtractorFn 
   dateDiff: dateDiffExtractor,
   missing: missingExtractor,
   custom: null, // Handled separately
-};
+}
 
 /**
  * Extract numeric difference feature (normalized)
  */
 function numericDiffExtractor(value1: unknown, value2: unknown): number {
   // Handle null/undefined
-  if (value1 == null && value2 == null) return 1;
-  if (value1 == null || value2 == null) return 0;
+  if (value1 == null && value2 == null) return 1
+  if (value1 == null || value2 == null) return 0
 
   // Convert to numbers
-  const num1 = typeof value1 === 'number' ? value1 : parseFloat(String(value1));
-  const num2 = typeof value2 === 'number' ? value2 : parseFloat(String(value2));
+  const num1 = typeof value1 === 'number' ? value1 : parseFloat(String(value1))
+  const num2 = typeof value2 === 'number' ? value2 : parseFloat(String(value2))
 
   // Handle invalid numbers
-  if (isNaN(num1) || isNaN(num2)) return 0;
+  if (isNaN(num1) || isNaN(num2)) return 0
 
   // Exact match
-  if (num1 === num2) return 1;
+  if (num1 === num2) return 1
 
   // Normalize by the larger absolute value
-  const maxAbs = Math.max(Math.abs(num1), Math.abs(num2));
-  if (maxAbs === 0) return 1;
+  const maxAbs = Math.max(Math.abs(num1), Math.abs(num2))
+  if (maxAbs === 0) return 1
 
-  const diff = Math.abs(num1 - num2);
+  const diff = Math.abs(num1 - num2)
   // Return similarity (1 - normalized_diff), clamped to [0, 1]
-  return Math.max(0, 1 - diff / maxAbs);
+  return Math.max(0, 1 - diff / maxAbs)
 }
 
 /**
@@ -73,26 +76,26 @@ function numericDiffExtractor(value1: unknown, value2: unknown): number {
  */
 function dateDiffExtractor(value1: unknown, value2: unknown): number {
   // Handle null/undefined
-  if (value1 == null && value2 == null) return 1;
-  if (value1 == null || value2 == null) return 0;
+  if (value1 == null && value2 == null) return 1
+  if (value1 == null || value2 == null) return 0
 
   // Convert to dates
-  const date1 = toDate(value1);
-  const date2 = toDate(value2);
+  const date1 = toDate(value1)
+  const date2 = toDate(value2)
 
   // Handle invalid dates
-  if (date1 === null || date2 === null) return 0;
+  if (date1 === null || date2 === null) return 0
 
   // Calculate difference in days
-  const MS_PER_DAY = 1000 * 60 * 60 * 24;
-  const diffDays = Math.abs(date1.getTime() - date2.getTime()) / MS_PER_DAY;
+  const MS_PER_DAY = 1000 * 60 * 60 * 24
+  const diffDays = Math.abs(date1.getTime() - date2.getTime()) / MS_PER_DAY
 
   // Exact match
-  if (diffDays === 0) return 1;
+  if (diffDays === 0) return 1
 
   // Normalize: exponential decay with 365 days as the half-life
   // This gives reasonable similarity for dates within a year
-  return Math.exp(-diffDays / 365);
+  return Math.exp(-diffDays / 365)
 }
 
 /**
@@ -100,22 +103,22 @@ function dateDiffExtractor(value1: unknown, value2: unknown): number {
  */
 function toDate(value: unknown): Date | null {
   if (value instanceof Date) {
-    return isNaN(value.getTime()) ? null : value;
+    return isNaN(value.getTime()) ? null : value
   }
   if (typeof value === 'string' || typeof value === 'number') {
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? null : date;
+    const date = new Date(value)
+    return isNaN(date.getTime()) ? null : date
   }
-  return null;
+  return null
 }
 
 /**
  * Extract missing value indicator (1 if either is missing, 0 if both present)
  */
 function missingExtractor(value1: unknown, value2: unknown): number {
-  const missing1 = value1 == null || value1 === '';
-  const missing2 = value2 == null || value2 === '';
-  return missing1 || missing2 ? 1 : 0;
+  const missing1 = value1 == null || value1 === ''
+  const missing2 = value2 == null || value2 === ''
+  return missing1 || missing2 ? 1 : 0
 }
 
 /**
@@ -123,33 +126,34 @@ function missingExtractor(value1: unknown, value2: unknown): number {
  */
 export interface FeatureExtractorOptions {
   /** Whether to normalize all features to 0-1 range (default: true) */
-  normalize?: boolean;
+  normalize?: boolean
   /** Custom feature extractors */
-  customExtractors?: Record<string, CustomFeatureExtractor>;
+  customExtractors?: Record<string, CustomFeatureExtractor>
   /** Default field weight (default: 1.0) */
-  defaultWeight?: number;
+  defaultWeight?: number
   /** Whether to include missing value indicators by default (default: true) */
-  includeMissingByDefault?: boolean;
+  includeMissingByDefault?: boolean
 }
 
 /**
  * Default options for FeatureExtractor
  */
-export const DEFAULT_FEATURE_EXTRACTOR_OPTIONS: Required<FeatureExtractorOptions> = {
-  normalize: true,
-  customExtractors: {},
-  defaultWeight: 1.0,
-  includeMissingByDefault: true,
-};
+export const DEFAULT_FEATURE_EXTRACTOR_OPTIONS: Required<FeatureExtractorOptions> =
+  {
+    normalize: true,
+    customExtractors: {},
+    defaultWeight: 1.0,
+    includeMissingByDefault: true,
+  }
 
 /**
  * Feature extraction statistics
  */
 export interface FeatureExtractionStats {
-  totalFeatures: number;
-  fieldsProcessed: number;
-  missingFieldCount: number;
-  extractionTimeMs: number;
+  totalFeatures: number
+  fieldsProcessed: number
+  missingFieldCount: number
+  extractionTimeMs: number
 }
 
 /**
@@ -158,20 +162,20 @@ export interface FeatureExtractionStats {
  * Converts record pairs into numerical feature vectors suitable for ML models.
  */
 export class FeatureExtractor<T = Record<string, unknown>> {
-  private readonly options: Required<FeatureExtractorOptions>;
-  private readonly fieldConfigs: FieldFeatureConfig[];
-  private readonly featureNames: string[];
+  private readonly options: Required<FeatureExtractorOptions>
+  private readonly fieldConfigs: FieldFeatureConfig[]
+  private readonly featureNames: string[]
 
   constructor(
     config: FeatureExtractionConfig,
     options: FeatureExtractorOptions = {}
   ) {
-    this.options = { ...DEFAULT_FEATURE_EXTRACTOR_OPTIONS, ...options };
-    this.fieldConfigs = config.fields;
-    this.featureNames = this.computeFeatureNames();
+    this.options = { ...DEFAULT_FEATURE_EXTRACTOR_OPTIONS, ...options }
+    this.fieldConfigs = config.fields
+    this.featureNames = this.computeFeatureNames()
 
     // Validate configuration
-    this.validateConfig(config);
+    this.validateConfig(config)
   }
 
   /**
@@ -180,10 +184,12 @@ export class FeatureExtractor<T = Record<string, unknown>> {
   private validateConfig(config: FeatureExtractionConfig): void {
     for (const field of config.fields) {
       if (!field.field) {
-        throw new Error('Field configuration must have a field name');
+        throw new Error('Field configuration must have a field name')
       }
       if (!field.extractors || field.extractors.length === 0) {
-        throw new Error(`Field "${field.field}" must have at least one extractor`);
+        throw new Error(
+          `Field "${field.field}" must have at least one extractor`
+        )
       }
 
       for (const extractor of field.extractors) {
@@ -191,11 +197,11 @@ export class FeatureExtractor<T = Record<string, unknown>> {
           // Custom extractors need to be provided in options or config
           const customFn =
             this.options.customExtractors[field.field] ||
-            config.customExtractors?.[field.field];
+            config.customExtractors?.[field.field]
           if (!customFn) {
             throw new Error(
               `Custom extractor specified for field "${field.field}" but no custom function provided`
-            );
+            )
           }
         }
       }
@@ -206,11 +212,11 @@ export class FeatureExtractor<T = Record<string, unknown>> {
    * Compute the feature names based on configuration
    */
   private computeFeatureNames(): string[] {
-    const names: string[] = [];
+    const names: string[] = []
 
     for (const field of this.fieldConfigs) {
       for (const extractor of field.extractors) {
-        names.push(`${field.field}_${extractor}`);
+        names.push(`${field.field}_${extractor}`)
       }
 
       // Add missing indicator if configured
@@ -220,78 +226,77 @@ export class FeatureExtractor<T = Record<string, unknown>> {
       ) {
         // Only add if not already using 'missing' extractor
         if (!field.extractors.includes('missing')) {
-          names.push(`${field.field}_missing`);
+          names.push(`${field.field}_missing`)
         }
       }
     }
 
-    return names;
+    return names
   }
 
   /**
    * Get the feature names in order
    */
   getFeatureNames(): string[] {
-    return [...this.featureNames];
+    return [...this.featureNames]
   }
 
   /**
    * Get the number of features that will be extracted
    */
   getFeatureCount(): number {
-    return this.featureNames.length;
+    return this.featureNames.length
   }
 
   /**
    * Get the field configurations
    */
   getFieldConfigs(): FieldFeatureConfig[] {
-    return this.fieldConfigs.map((f) => ({ ...f }));
+    return this.fieldConfigs.map((f) => ({ ...f }))
   }
 
   /**
    * Extract features from a record pair
    */
   extract(pair: RecordPair<T>): FeatureVector {
-    const startTime = performance.now();
-    const values: number[] = [];
-    let missingCount = 0;
+    const startTime = performance.now()
+    const values: number[] = []
+    let missingCount = 0
 
     for (const field of this.fieldConfigs) {
-      const value1 = this.getFieldValue(pair.record1, field.field);
-      const value2 = this.getFieldValue(pair.record2, field.field);
-      const weight = field.weight ?? this.options.defaultWeight;
+      const value1 = this.getFieldValue(pair.record1, field.field)
+      const value2 = this.getFieldValue(pair.record2, field.field)
+      const weight = field.weight ?? this.options.defaultWeight
 
       // Track missing fields
       if (value1 == null || value2 == null) {
-        missingCount++;
+        missingCount++
       }
 
       // Extract features using each configured extractor
       for (const extractorType of field.extractors) {
-        let featureValue: number;
+        let featureValue: number
 
         if (extractorType === 'custom') {
           // Use custom extractor
-          const customFn =
-            this.options.customExtractors[field.field];
+          const customFn = this.options.customExtractors[field.field]
           if (customFn) {
-            featureValue = customFn(value1, value2);
+            featureValue = customFn(value1, value2)
           } else {
-            featureValue = 0;
+            featureValue = 0
           }
         } else {
           // Use built-in extractor
-          const extractorFn = builtInExtractors[extractorType];
+          const extractorFn = builtInExtractors[extractorType]
           if (extractorFn) {
-            featureValue = extractorFn(value1, value2);
+            featureValue = extractorFn(value1, value2)
           } else {
-            featureValue = 0;
+            featureValue = 0
           }
         }
 
         // Apply weight
-        values.push(featureValue * weight);
+        values.push(featureValue * weight)
       }
 
       // Add missing indicator if configured
@@ -300,7 +305,7 @@ export class FeatureExtractor<T = Record<string, unknown>> {
         this.options.includeMissingByDefault
       ) {
         if (!field.extractors.includes('missing')) {
-          values.push(missingExtractor(value1, value2));
+          values.push(missingExtractor(value1, value2))
         }
       }
     }
@@ -308,41 +313,41 @@ export class FeatureExtractor<T = Record<string, unknown>> {
     // Normalize if configured
     const finalValues = this.options.normalize
       ? this.normalizeValues(values)
-      : values;
+      : values
 
-    const extractionTimeMs = performance.now() - startTime;
+    const extractionTimeMs = performance.now() - startTime
 
     return createFeatureVector(finalValues, [...this.featureNames], {
       extractionTimeMs,
       fieldsProcessed: this.fieldConfigs.length,
       missingFieldCount: missingCount,
-    });
+    })
   }
 
   /**
    * Extract features from multiple record pairs
    */
   extractBatch(pairs: RecordPair<T>[]): FeatureVector[] {
-    return pairs.map((pair) => this.extract(pair));
+    return pairs.map((pair) => this.extract(pair))
   }
 
   /**
    * Get a field value from a record, supporting nested paths
    */
   private getFieldValue(record: T, fieldPath: string): unknown {
-    if (record == null) return undefined;
+    if (record == null) return undefined
 
-    const parts = fieldPath.split('.');
-    let current: unknown = record;
+    const parts = fieldPath.split('.')
+    let current: unknown = record
 
     for (const part of parts) {
       if (current == null || typeof current !== 'object') {
-        return undefined;
+        return undefined
       }
-      current = (current as Record<string, unknown>)[part];
+      current = (current as Record<string, unknown>)[part]
     }
 
-    return current;
+    return current
   }
 
   /**
@@ -351,7 +356,7 @@ export class FeatureExtractor<T = Record<string, unknown>> {
   private normalizeValues(values: number[]): number[] {
     // Most features should already be in 0-1 range
     // This just clamps any outliers
-    return values.map((v) => Math.max(0, Math.min(1, v)));
+    return values.map((v) => Math.max(0, Math.min(1, v)))
   }
 
   /**
@@ -367,8 +372,8 @@ export class FeatureExtractor<T = Record<string, unknown>> {
         extractors: extractorTypes,
       })),
       normalize: true,
-    };
-    return new FeatureExtractor<T>(config);
+    }
+    return new FeatureExtractor<T>(config)
   }
 
   /**
@@ -414,8 +419,8 @@ export class FeatureExtractor<T = Record<string, unknown>> {
         },
       ],
       normalize: true,
-    };
-    return new FeatureExtractor<T>(config);
+    }
+    return new FeatureExtractor<T>(config)
   }
 }
 
@@ -423,9 +428,9 @@ export class FeatureExtractor<T = Record<string, unknown>> {
  * Builder for creating feature extraction configurations
  */
 export class FeatureExtractionConfigBuilder {
-  private fields: FieldFeatureConfig[] = [];
-  private customExtractors: Record<string, CustomFeatureExtractor> = {};
-  private normalizeFlag: boolean = true;
+  private fields: FieldFeatureConfig[] = []
+  private customExtractors: Record<string, CustomFeatureExtractor> = {}
+  private normalizeFlag: boolean = true
 
   /**
    * Add a field with specified extractors
@@ -440,8 +445,8 @@ export class FeatureExtractionConfigBuilder {
       extractors,
       weight: options.weight,
       includeMissingIndicator: options.includeMissingIndicator,
-    });
-    return this;
+    })
+    return this
   }
 
   /**
@@ -451,49 +456,61 @@ export class FeatureExtractionConfigBuilder {
     field: string,
     options: { weight?: number; phonetic?: boolean } = {}
   ): this {
-    const extractors: FeatureExtractorType[] = ['jaroWinkler', 'levenshtein', 'exact'];
+    const extractors: FeatureExtractorType[] = [
+      'jaroWinkler',
+      'levenshtein',
+      'exact',
+    ]
     if (options.phonetic) {
-      extractors.push('soundex', 'metaphone');
+      extractors.push('soundex', 'metaphone')
     }
-    return this.addField(field, extractors, { weight: options.weight });
+    return this.addField(field, extractors, { weight: options.weight })
   }
 
   /**
    * Add an exact match field
    */
   addExactField(field: string, options: { weight?: number } = {}): this {
-    return this.addField(field, ['exact'], { weight: options.weight });
+    return this.addField(field, ['exact'], { weight: options.weight })
   }
 
   /**
    * Add a numeric field
    */
   addNumericField(field: string, options: { weight?: number } = {}): this {
-    return this.addField(field, ['numericDiff', 'exact'], { weight: options.weight });
+    return this.addField(field, ['numericDiff', 'exact'], {
+      weight: options.weight,
+    })
   }
 
   /**
    * Add a date field
    */
   addDateField(field: string, options: { weight?: number } = {}): this {
-    return this.addField(field, ['dateDiff', 'exact'], { weight: options.weight });
+    return this.addField(field, ['dateDiff', 'exact'], {
+      weight: options.weight,
+    })
   }
 
   /**
    * Add a name field (optimized for person names)
    */
   addNameField(field: string, options: { weight?: number } = {}): this {
-    return this.addField(field, ['jaroWinkler', 'soundex', 'metaphone', 'exact'], {
-      weight: options.weight,
-    });
+    return this.addField(
+      field,
+      ['jaroWinkler', 'soundex', 'metaphone', 'exact'],
+      {
+        weight: options.weight,
+      }
+    )
   }
 
   /**
    * Add a custom extractor
    */
   addCustomExtractor(field: string, fn: CustomFeatureExtractor): this {
-    this.customExtractors[field] = fn;
-    return this;
+    this.customExtractors[field] = fn
+    return this
   }
 
   /**
@@ -504,16 +521,16 @@ export class FeatureExtractionConfigBuilder {
     fn: CustomFeatureExtractor,
     options: { weight?: number } = {}
   ): this {
-    this.customExtractors[field] = fn;
-    return this.addField(field, ['custom'], { weight: options.weight });
+    this.customExtractors[field] = fn
+    return this.addField(field, ['custom'], { weight: options.weight })
   }
 
   /**
    * Set whether to normalize features
    */
   normalize(value: boolean): this {
-    this.normalizeFlag = value;
-    return this;
+    this.normalizeFlag = value
+    return this
   }
 
   /**
@@ -524,7 +541,7 @@ export class FeatureExtractionConfigBuilder {
       fields: [...this.fields],
       normalize: this.normalizeFlag,
       customExtractors: { ...this.customExtractors },
-    };
+    }
   }
 
   /**
@@ -533,7 +550,7 @@ export class FeatureExtractionConfigBuilder {
   buildExtractor<T>(): FeatureExtractor<T> {
     return new FeatureExtractor<T>(this.build(), {
       customExtractors: this.customExtractors,
-    });
+    })
   }
 }
 
@@ -541,7 +558,7 @@ export class FeatureExtractionConfigBuilder {
  * Create a new feature extraction config builder
  */
 export function featureConfig(): FeatureExtractionConfigBuilder {
-  return new FeatureExtractionConfigBuilder();
+  return new FeatureExtractionConfigBuilder()
 }
 
 /**
@@ -555,8 +572,8 @@ export function getFeatureByName(
   vector: FeatureVector,
   name: string
 ): number | undefined {
-  const index = vector.names.indexOf(name);
-  return index >= 0 ? vector.values[index] : undefined;
+  const index = vector.names.indexOf(name)
+  return index >= 0 ? vector.values[index] : undefined
 }
 
 /**
@@ -566,13 +583,13 @@ export function getFieldFeatures(
   vector: FeatureVector,
   fieldName: string
 ): Record<string, number> {
-  const result: Record<string, number> = {};
+  const result: Record<string, number> = {}
   for (let i = 0; i < vector.names.length; i++) {
     if (vector.names[i].startsWith(`${fieldName}_`)) {
-      result[vector.names[i]] = vector.values[i];
+      result[vector.names[i]] = vector.values[i]
     }
   }
-  return result;
+  return result
 }
 
 /**
@@ -582,27 +599,30 @@ export function compareFeatureVectors(
   vector1: FeatureVector,
   vector2: FeatureVector
 ): Record<string, { value1: number; value2: number; diff: number }> {
-  const result: Record<string, { value1: number; value2: number; diff: number }> = {};
+  const result: Record<
+    string,
+    { value1: number; value2: number; diff: number }
+  > = {}
 
   // Build lookup for vector2
-  const vector2Map = new Map<string, number>();
+  const vector2Map = new Map<string, number>()
   for (let i = 0; i < vector2.names.length; i++) {
-    vector2Map.set(vector2.names[i], vector2.values[i]);
+    vector2Map.set(vector2.names[i], vector2.values[i])
   }
 
   // Compare
   for (let i = 0; i < vector1.names.length; i++) {
-    const name = vector1.names[i];
-    const v1 = vector1.values[i];
-    const v2 = vector2Map.get(name) ?? 0;
+    const name = vector1.names[i]
+    const v1 = vector1.values[i]
+    const v2 = vector2Map.get(name) ?? 0
     result[name] = {
       value1: v1,
       value2: v2,
       diff: v1 - v2,
-    };
+    }
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -612,24 +632,24 @@ export function calculateFeatureStats(
   vectors: FeatureVector[],
   featureName: string
 ): { min: number; max: number; mean: number; stdDev: number } | null {
-  if (vectors.length === 0) return null;
+  if (vectors.length === 0) return null
 
-  const values: number[] = [];
+  const values: number[] = []
   for (const vector of vectors) {
-    const value = getFeatureByName(vector, featureName);
+    const value = getFeatureByName(vector, featureName)
     if (value !== undefined) {
-      values.push(value);
+      values.push(value)
     }
   }
 
-  if (values.length === 0) return null;
+  if (values.length === 0) return null
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const mean = values.reduce((a, b) => a + b, 0) / values.length
   const variance =
-    values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
-  const stdDev = Math.sqrt(variance);
+    values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length
+  const stdDev = Math.sqrt(variance)
 
-  return { min, max, mean, stdDev };
+  return { min, max, mean, stdDev }
 }

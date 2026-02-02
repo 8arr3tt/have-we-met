@@ -243,9 +243,7 @@ export function parsePairsFile(
 ): LabeledPair[] {
   const { delimiter = ',', hasHeader = true } = options
 
-  const lines = content
-    .split(/\r?\n/)
-    .filter((line) => line.trim().length > 0)
+  const lines = content.split(/\r?\n/).filter((line) => line.trim().length > 0)
 
   const dataLines = hasHeader ? lines.slice(1) : lines
   const pairs: LabeledPair[] = []
@@ -256,7 +254,10 @@ export function parsePairsFile(
       pairs.push({
         id1: values[0],
         id2: values[1],
-        isMatch: values.length > 2 ? values[2].toLowerCase() === 'true' || values[2] === '1' : true,
+        isMatch:
+          values.length > 2
+            ? values[2].toLowerCase() === 'true' || values[2] === '1'
+            : true,
       })
     }
   }

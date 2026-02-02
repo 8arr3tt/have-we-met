@@ -7,17 +7,17 @@ The Blocking Builder configures strategies to reduce the comparison space from O
 Access the blocking builder through the resolver builder chain:
 
 ```typescript
-import { HaveWeMet } from 'have-we-met';
+import { HaveWeMet } from 'have-we-met'
 
-const resolver = HaveWeMet
-  .create<Person>()
+const resolver = HaveWeMet.create<Person>()
   .schema(/* ... */)
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-    .onField('dateOfBirth', { transform: 'year' })
+  .blocking((block) =>
+    block
+      .onField('lastName', { transform: 'soundex' })
+      .onField('dateOfBirth', { transform: 'year' })
   )
   .matching(/* ... */)
-  .build();
+  .build()
 ```
 
 ## BlockingBuilder<T>
@@ -31,6 +31,7 @@ Main builder class for configuring blocking strategies.
 Configure standard blocking on a single field.
 
 **Parameters:**
+
 - `field: K` - Field name to block on (type-safe from your record type)
 - `options?: object`
   - `transform?: BlockTransform` - Transform to apply to field value
@@ -41,11 +42,13 @@ Configure standard blocking on a single field.
 **Returns:** `BlockingBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-block => block
-  .onField('lastName', { transform: 'soundex' })
-  .onField('email')  // No transform = exact value blocking
-  .onField('firstName', { transform: 'firstN', transformOptions: { n: 2 } })
+;(block) =>
+  block
+    .onField('lastName', { transform: 'soundex' })
+    .onField('email') // No transform = exact value blocking
+    .onField('firstName', { transform: 'firstN', transformOptions: { n: 2 } })
 ```
 
 #### `onFields(fields: Array<keyof T & string>, options?): this`
@@ -53,6 +56,7 @@ block => block
 Configure standard blocking on multiple fields (composite key).
 
 **Parameters:**
+
 - `fields: Array<keyof T & string>` - Array of field names
 - `options?: object`
   - `transforms?: BlockTransform[]` - Transform for each field (parallel array)
@@ -63,10 +67,11 @@ Configure standard blocking on multiple fields (composite key).
 **Returns:** `BlockingBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-block => block
-  .onFields(['lastName', 'dateOfBirth'], {
-    transforms: ['soundex', 'year']
+;(block) =>
+  block.onFields(['lastName', 'dateOfBirth'], {
+    transforms: ['soundex', 'year'],
   })
 ```
 
@@ -75,6 +80,7 @@ block => block
 Configure sorted neighbourhood blocking with a sliding window.
 
 **Parameters:**
+
 - `field: K | K[] | SortField | SortField[]` - Field(s) to sort by
 - `options: object` (required)
   - `windowSize: number` - Size of the sliding window (required)
@@ -86,19 +92,20 @@ Configure sorted neighbourhood blocking with a sliding window.
 **Returns:** `BlockingBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-block => block
-  .sortedNeighbourhood('lastName', {
+;(block) =>
+  block.sortedNeighbourhood('lastName', {
     windowSize: 10,
-    transform: 'soundex'
+    transform: 'soundex',
   })
 
 // Multiple sort fields
-block => block
-  .sortedNeighbourhood(
+;(block) =>
+  block.sortedNeighbourhood(
     [
       { field: 'lastName', order: 'asc' },
-      { field: 'firstName', order: 'asc' }
+      { field: 'firstName', order: 'asc' },
     ],
     { windowSize: 15 }
   )
@@ -109,6 +116,7 @@ block => block
 Configure multiple blocking strategies to run together.
 
 **Parameters:**
+
 - `mode: 'union' | 'intersection'` - How to combine strategy results
   - `'union'`: Include pairs matched by ANY strategy (more comparisons, higher recall)
   - `'intersection'`: Include pairs matched by ALL strategies (fewer comparisons, higher precision)
@@ -117,12 +125,14 @@ Configure multiple blocking strategies to run together.
 **Returns:** `BlockingBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-block => block
-  .composite('union', comp => comp
-    .onField('lastName', { transform: 'soundex' })
-    .onField('email')
-    .sortedNeighbourhood('dateOfBirth', { windowSize: 5 })
+;(block) =>
+  block.composite('union', (comp) =>
+    comp
+      .onField('lastName', { transform: 'soundex' })
+      .onField('email')
+      .sortedNeighbourhood('dateOfBirth', { windowSize: 5 })
   )
 ```
 
@@ -131,15 +141,18 @@ block => block
 Set the default null handling strategy for all blocking operations.
 
 **Parameters:**
+
 - `strategy: NullStrategy` - One of: `'skip'`, `'separate-block'`, `'match-all'`
 
 **Returns:** `BlockingBuilder<T>` for chaining
 
 **Example:**
+
 ```typescript
-block => block
-  .nullStrategy('skip')  // Records with null values won't be blocked
-  .onField('lastName', { transform: 'soundex' })
+;(block) =>
+  block
+    .nullStrategy('skip') // Records with null values won't be blocked
+    .onField('lastName', { transform: 'soundex' })
 ```
 
 #### `build(): BlockingConfig<T>`
@@ -192,25 +205,26 @@ Get the array of configured strategies.
 
 Transforms convert field values before grouping into blocks.
 
-| Transform | Description | Example |
-|-----------|-------------|---------|
-| `'identity'` | No transformation (exact value) | `"Smith"` → `"Smith"` |
-| `'firstLetter'` | First character | `"Smith"` → `"S"` |
-| `'firstN'` | First N characters | `"Smith"` (n=3) → `"Smi"` |
-| `'soundex'` | Soundex phonetic encoding | `"Smith"` → `"S530"` |
-| `'metaphone'` | Metaphone phonetic encoding | `"Smith"` → `"SM0"` |
-| `'year'` | Extract year from date | `"1990-05-15"` → `"1990"` |
-| Custom function | `(value: unknown) => string` | Any custom logic |
+| Transform       | Description                     | Example                   |
+| --------------- | ------------------------------- | ------------------------- |
+| `'identity'`    | No transformation (exact value) | `"Smith"` → `"Smith"`     |
+| `'firstLetter'` | First character                 | `"Smith"` → `"S"`         |
+| `'firstN'`      | First N characters              | `"Smith"` (n=3) → `"Smi"` |
+| `'soundex'`     | Soundex phonetic encoding       | `"Smith"` → `"S530"`      |
+| `'metaphone'`   | Metaphone phonetic encoding     | `"Smith"` → `"SM0"`       |
+| `'year'`        | Extract year from date          | `"1990-05-15"` → `"1990"` |
+| Custom function | `(value: unknown) => string`    | Any custom logic          |
 
 **Example with custom transform:**
+
 ```typescript
-block => block
-  .onField('phone', {
+;(block) =>
+  block.onField('phone', {
     transform: (value) => {
-      if (typeof value !== 'string') return '';
+      if (typeof value !== 'string') return ''
       // Block by area code
-      return value.replace(/\D/g, '').substring(0, 3);
-    }
+      return value.replace(/\D/g, '').substring(0, 3)
+    },
   })
 ```
 
@@ -218,11 +232,11 @@ block => block
 
 ## Null Strategies
 
-| Strategy | Behavior |
-|----------|----------|
-| `'skip'` | Records with null values are excluded from blocking |
-| `'separate-block'` | All records with null values go into a single block together |
-| `'match-all'` | Records with null values are compared against all other records |
+| Strategy           | Behavior                                                        |
+| ------------------ | --------------------------------------------------------------- |
+| `'skip'`           | Records with null values are excluded from blocking             |
+| `'separate-block'` | All records with null values go into a single block together    |
+| `'match-all'`      | Records with null values are compared against all other records |
 
 ---
 
@@ -230,19 +244,19 @@ block => block
 
 ```typescript
 interface BlockingConfig<T> {
-  strategies: BlockingStrategy<T>[];
-  compositeMode?: 'union' | 'intersection';
-  defaultNullStrategy?: NullStrategy;
+  strategies: BlockingStrategy<T>[]
+  compositeMode?: 'union' | 'intersection'
+  defaultNullStrategy?: NullStrategy
 }
 
 interface BlockingStrategy<T> {
-  type: 'standard' | 'sorted-neighbourhood' | 'composite';
-  fields: Array<keyof T & string>;
-  transforms?: BlockTransform[];
-  transformOptions?: FirstNOptions[];
-  windowSize?: number;  // For sorted neighbourhood
-  sortOrder?: SortOrder;
-  nullStrategy?: NullStrategy;
+  type: 'standard' | 'sorted-neighbourhood' | 'composite'
+  fields: Array<keyof T & string>
+  transforms?: BlockTransform[]
+  transformOptions?: FirstNOptions[]
+  windowSize?: number // For sorted neighbourhood
+  sortOrder?: SortOrder
+  nullStrategy?: NullStrategy
 }
 ```
 
@@ -250,25 +264,26 @@ interface BlockingStrategy<T> {
 
 ## Strategy Selection Guide
 
-| Strategy | Use Case | Pros | Cons |
-|----------|----------|------|------|
-| Standard (single field) | Simple blocking on one attribute | Fast, simple | May miss matches if field differs |
-| Standard (multi-field) | Composite blocking keys | Better precision | Requires all fields to match |
-| Sorted Neighbourhood | Gradual variation in sort key | Good for typos | Requires sorting overhead |
-| Composite Union | Maximize recall | Catches more matches | More comparisons |
-| Composite Intersection | Maximize precision | Fewer comparisons | May miss matches |
+| Strategy                | Use Case                         | Pros                 | Cons                              |
+| ----------------------- | -------------------------------- | -------------------- | --------------------------------- |
+| Standard (single field) | Simple blocking on one attribute | Fast, simple         | May miss matches if field differs |
+| Standard (multi-field)  | Composite blocking keys          | Better precision     | Requires all fields to match      |
+| Sorted Neighbourhood    | Gradual variation in sort key    | Good for typos       | Requires sorting overhead         |
+| Composite Union         | Maximize recall                  | Catches more matches | More comparisons                  |
+| Composite Intersection  | Maximize precision               | Fewer comparisons    | May miss matches                  |
 
 ---
 
 ## Performance Characteristics
 
-| Dataset Size | Recommended Approach |
-|--------------|---------------------|
-| < 10,000 | Single field blocking sufficient |
-| 10,000 - 100,000 | Composite blocking recommended |
-| > 100,000 | Composite union with multiple strategies |
+| Dataset Size     | Recommended Approach                     |
+| ---------------- | ---------------------------------------- |
+| < 10,000         | Single field blocking sufficient         |
+| 10,000 - 100,000 | Composite blocking recommended           |
+| > 100,000        | Composite union with multiple strategies |
 
 **Blocking Effectiveness:**
+
 - Good blocking reduces comparisons by 95-99%
 - Target: 100-1000 comparisons per record instead of n comparisons
 
@@ -277,50 +292,51 @@ interface BlockingStrategy<T> {
 ## Complete Example
 
 ```typescript
-import { HaveWeMet } from 'have-we-met';
+import { HaveWeMet } from 'have-we-met'
 
 interface Customer {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  zipCode: string;
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  dateOfBirth: string
+  zipCode: string
 }
 
-const resolver = HaveWeMet
-  .create<Customer>()
+const resolver = HaveWeMet.create<Customer>()
   .schema(/* ... */)
-  .blocking(block => block
-    // Use composite blocking for comprehensive coverage
-    .composite('union', comp => comp
-      // Block by phonetic last name (catches spelling variations)
-      .onField('lastName', { transform: 'soundex' })
+  .blocking((block) =>
+    block
+      // Use composite blocking for comprehensive coverage
+      .composite('union', (comp) =>
+        comp
+          // Block by phonetic last name (catches spelling variations)
+          .onField('lastName', { transform: 'soundex' })
 
-      // Block by exact email (high-precision matches)
-      .onField('email')
+          // Block by exact email (high-precision matches)
+          .onField('email')
 
-      // Block by phone (high-precision matches)
-      .onField('phone')
+          // Block by phone (high-precision matches)
+          .onField('phone')
 
-      // Block by zip + first letter of last name
-      .onFields(['zipCode', 'lastName'], {
-        transforms: ['identity', 'firstLetter']
-      })
+          // Block by zip + first letter of last name
+          .onFields(['zipCode', 'lastName'], {
+            transforms: ['identity', 'firstLetter'],
+          })
 
-      // Sorted neighbourhood for date variations
-      .sortedNeighbourhood('dateOfBirth', {
-        windowSize: 7,
-        transform: 'identity'
-      })
-    )
+          // Sorted neighbourhood for date variations
+          .sortedNeighbourhood('dateOfBirth', {
+            windowSize: 7,
+            transform: 'identity',
+          })
+      )
 
-    // Skip records with null blocking values
-    .nullStrategy('skip')
+      // Skip records with null blocking values
+      .nullStrategy('skip')
   )
   .matching(/* ... */)
-  .build();
+  .build()
 ```
 
 ---
@@ -330,9 +346,9 @@ const resolver = HaveWeMet
 The resolver provides blocking statistics after batch operations:
 
 ```typescript
-const result = resolver.deduplicateBatch(records);
+const result = resolver.deduplicateBatch(records)
 
-console.log(result.stats);
+console.log(result.stats)
 // {
 //   totalRecords: 100000,
 //   totalBlocks: 8500,

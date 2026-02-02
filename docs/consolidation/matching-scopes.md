@@ -86,6 +86,7 @@ Source A (CRM)           Source B (Billing)      Source C (Support)
 ### Process Details
 
 **Phase 1: Within-Source Deduplication**
+
 ```typescript
 // For each source independently:
 // 1. Load all records from source
@@ -96,6 +97,7 @@ Source A (CRM)           Source B (Billing)      Source C (Support)
 ```
 
 **Phase 2: Cross-Source Matching**
+
 ```typescript
 // 1. Take deduplicated records from all sources
 // 2. Compare records across sources
@@ -108,49 +110,72 @@ Source A (CRM)           Source B (Billing)      Source C (Support)
 
 ```typescript
 const result = await HaveWeMet.consolidation<Customer>()
-  .source('crm', source => source
-    .adapter(crmAdapter)
-    .mapping(map => map
-      .field('email').from('email_address')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-    )
-    .priority(3)
+  .source('crm', (source) =>
+    source
+      .adapter(crmAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email_address')
+          .field('firstName')
+          .from('first_name')
+          .field('lastName')
+          .from('last_name')
+      )
+      .priority(3)
   )
 
-  .source('billing', source => source
-    .adapter(billingAdapter)
-    .mapping(map => map
-      .field('email').from('email')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-    )
-    .priority(2)
+  .source('billing', (source) =>
+    source
+      .adapter(billingAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email')
+          .field('firstName')
+          .from('fname')
+          .field('lastName')
+          .from('lname')
+      )
+      .priority(2)
   )
 
-  .source('support', source => source
-    .adapter(supportAdapter)
-    .mapping(map => map
-      .field('email').from('contact_email')
-      .field('firstName').from('given_name')
-      .field('lastName').from('family_name')
-    )
-    .priority(1)
+  .source('support', (source) =>
+    source
+      .adapter(supportAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('contact_email')
+          .field('firstName')
+          .from('given_name')
+          .field('lastName')
+          .from('family_name')
+      )
+      .priority(1)
   )
 
   // Use within-source-first strategy
   .matchingScope('within-source-first')
 
-  .matching(match => match
-    .field('email').strategy('exact').weight(30)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(30)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
 
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
+  .conflictResolution((cr) =>
+    cr.useSourcePriority(true).defaultStrategy('preferNonNull')
   )
 
   .build()
@@ -160,16 +185,19 @@ const result = await HaveWeMet.consolidation<Customer>()
 ### Advantages
 
 **Performance**: Faster for large datasets
+
 - Processes smaller batches
 - Reduces total comparisons
 - More memory efficient
 
 **Source Isolation**: Maintains source integrity
+
 - Deduplicates using source-specific rules
 - Preserves source data quality
 - Easier to debug issues
 
 **Incremental Processing**: Can process sources separately
+
 - Add new sources without reprocessing old ones
 - Update one source without touching others
 - Suitable for streaming/incremental updates
@@ -177,6 +205,7 @@ const result = await HaveWeMet.consolidation<Customer>()
 ### Disadvantages
 
 **Potential Missed Matches**: May miss some duplicates
+
 - If duplicate exists in both A and B, but each appears unique within its source
 - Example: CRM has "John Smith" and "J. Smith", Billing has "John Smith"
   - Within-source: CRM creates 2 records, Billing creates 1 record
@@ -184,6 +213,7 @@ const result = await HaveWeMet.consolidation<Customer>()
   - Result: "J. Smith" from CRM might not match
 
 **Two-Phase Complexity**: More complex logic
+
 - Different matching rules for within-source vs cross-source
 - Harder to reason about results
 - Debugging requires checking both phases
@@ -199,6 +229,7 @@ Use within-source-first when:
 ✅ Incremental processing needed
 
 **Example Scenarios**:
+
 - SaaS multi-product consolidation (each product has its own dupes)
 - Post-merger integration (both companies have internal dupes)
 - ETL pipelines (process each source separately)
@@ -240,6 +271,7 @@ Source A (CRM)           Source B (Billing)      Source C (Support)
 ### Process Details
 
 **Single Phase: Unified Matching**
+
 ```typescript
 // 1. Load records from all sources
 // 2. Map each record to unified schema
@@ -253,60 +285,89 @@ Source A (CRM)           Source B (Billing)      Source C (Support)
 
 ```typescript
 const result = await HaveWeMet.consolidation<Patient>()
-  .source('hospital_a', source => source
-    .adapter(hospitalAAdapter)
-    .mapping(map => map
-      .field('ssn').from('social_security_number')
-      .field('dateOfBirth').from('dob')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-    )
-    .priority(3)
+  .source('hospital_a', (source) =>
+    source
+      .adapter(hospitalAAdapter)
+      .mapping((map) =>
+        map
+          .field('ssn')
+          .from('social_security_number')
+          .field('dateOfBirth')
+          .from('dob')
+          .field('firstName')
+          .from('first_name')
+          .field('lastName')
+          .from('last_name')
+      )
+      .priority(3)
   )
 
-  .source('hospital_b', source => source
-    .adapter(hospitalBAdapter)
-    .mapping(map => map
-      .field('ssn').from('ssn')
-      .field('dateOfBirth').from('date_of_birth')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-    )
-    .priority(2)
+  .source('hospital_b', (source) =>
+    source
+      .adapter(hospitalBAdapter)
+      .mapping((map) =>
+        map
+          .field('ssn')
+          .from('ssn')
+          .field('dateOfBirth')
+          .from('date_of_birth')
+          .field('firstName')
+          .from('fname')
+          .field('lastName')
+          .from('lname')
+      )
+      .priority(2)
   )
 
-  .source('hospital_c', source => source
-    .adapter(hospitalCAdapter)
-    .mapping(map => map
-      .field('ssn').from('patient_ssn')
-      .field('dateOfBirth').from('birth_date')
-      .field('firstName').from('given_name')
-      .field('lastName').from('family_name')
-    )
-    .priority(1)
+  .source('hospital_c', (source) =>
+    source
+      .adapter(hospitalCAdapter)
+      .mapping((map) =>
+        map
+          .field('ssn')
+          .from('patient_ssn')
+          .field('dateOfBirth')
+          .from('birth_date')
+          .field('firstName')
+          .from('given_name')
+          .field('lastName')
+          .from('family_name')
+      )
+      .priority(1)
   )
 
   // Use unified pool strategy
   .matchingScope('unified-pool')
 
-  .schema(schema => schema
-    .field('ssn', { type: 'string', optional: true })
-    .field('dateOfBirth', { type: 'date' })
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((schema) =>
+    schema
+      .field('ssn', { type: 'string', optional: true })
+      .field('dateOfBirth', { type: 'date' })
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
 
-  .matching(match => match
-    .field('ssn').strategy('exact').weight(30)
-    .field('dateOfBirth').strategy('exact').weight(20)
-    .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.9)
-    .field('firstName').strategy('jaro-winkler').weight(12).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('ssn')
+      .strategy('exact')
+      .weight(30)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(20)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(15)
+      .threshold(0.9)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.85)
   )
-  .thresholds({ noMatch: 30, definiteMatch: 60 })  // Conservative for healthcare
+  .thresholds({ noMatch: 30, definiteMatch: 60 }) // Conservative for healthcare
 
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
+  .conflictResolution((cr) =>
+    cr.useSourcePriority(true).defaultStrategy('preferNonNull')
   )
 
   .build()
@@ -316,31 +377,37 @@ const result = await HaveWeMet.consolidation<Patient>()
 ### Advantages
 
 **Comprehensive Matching**: Finds all duplicates
+
 - No distinction between within-source and cross-source
 - Same matching rules applied uniformly
 - Catches duplicates that within-source-first might miss
 
 **Simpler Logic**: Single matching phase
+
 - Same rules for all comparisons
 - Easier to understand and debug
 - More predictable results
 
 **Better for Clean Data**: Optimal when sources have few internal duplicates
+
 - No wasted effort on within-source deduplication
 - Directly finds cross-source matches
 
 ### Disadvantages
 
 **Performance**: Slower for large datasets
+
 - More total comparisons
 - Larger memory footprint
 - Single large batch instead of smaller batches
 
 **Source Data Quality**: Treats all sources equally during matching
+
 - Can't isolate high-quality source deduplication
 - Lower-quality source data affects all matching
 
 **No Incremental Processing**: Must process all sources together
+
 - Can't add sources incrementally
 - Updating one source requires reprocessing all
 
@@ -355,6 +422,7 @@ Use unified pool when:
 ✅ Accuracy more important than performance
 
 **Example Scenarios**:
+
 - Healthcare Master Patient Index (must catch all duplicates)
 - Fraud detection (comprehensive matching required)
 - Compliance/regulatory (can't miss duplicates)
@@ -366,15 +434,15 @@ Use unified pool when:
 
 ### Side-by-Side Comparison
 
-| Aspect | Within-Source-First | Unified Pool |
-|--------|---------------------|--------------|
-| **Speed** | ⚡⚡⚡ Faster | ⚡⚡ Slower |
-| **Memory** | 💾💾 Efficient | 💾💾💾 More memory |
-| **Completeness** | 🎯🎯 May miss some | 🎯🎯🎯 Finds all |
-| **Complexity** | 🔧🔧🔧 Two-phase | 🔧🔧 Single-phase |
-| **Incremental** | ✅ Supported | ❌ Not supported |
-| **Source Isolation** | ✅ Maintained | ❌ Mixed |
-| **Debugging** | 🔍🔍🔍 Complex | 🔍🔍 Simpler |
+| Aspect               | Within-Source-First | Unified Pool       |
+| -------------------- | ------------------- | ------------------ |
+| **Speed**            | ⚡⚡⚡ Faster       | ⚡⚡ Slower        |
+| **Memory**           | 💾💾 Efficient      | 💾💾💾 More memory |
+| **Completeness**     | 🎯🎯 May miss some  | 🎯🎯🎯 Finds all   |
+| **Complexity**       | 🔧🔧🔧 Two-phase    | 🔧🔧 Single-phase  |
+| **Incremental**      | ✅ Supported        | ❌ Not supported   |
+| **Source Isolation** | ✅ Maintained       | ❌ Mixed           |
+| **Debugging**        | 🔍🔍🔍 Complex      | 🔍🔍 Simpler       |
 
 ### Performance Comparison
 
@@ -502,6 +570,7 @@ Blocking strategies dramatically improve performance for both scopes:
 ### Memory Usage
 
 **Within-Source-First**:
+
 ```typescript
 // Peak memory usage occurs during cross-source matching
 // Memory ≈ (deduplicated_records_A + deduplicated_records_B + deduplicated_records_C) × record_size
@@ -512,6 +581,7 @@ Blocking strategies dramatically improve performance for both scopes:
 ```
 
 **Unified Pool**:
+
 ```typescript
 // Peak memory usage is all records at once
 // Memory ≈ total_records × record_size
@@ -635,8 +705,8 @@ Combine both strategies for optimal results:
 ```typescript
 // Step 1: Use within-source-first for initial consolidation
 const phase1 = await HaveWeMet.consolidation<Customer>()
-  .source('crm', /* ... */)
-  .source('billing', /* ... */)
+  .source('crm' /* ... */)
+  .source('billing' /* ... */)
   .matchingScope('within-source-first')
   .build()
   .consolidate()
@@ -644,7 +714,7 @@ const phase1 = await HaveWeMet.consolidation<Customer>()
 // Step 2: Use unified pool on results for comprehensive matching
 const phase2 = await HaveWeMet.resolve<Customer>()
   .records(phase1.goldenRecords)
-  .matchingScope('unified')  // Standard resolver uses unified by default
+  .matchingScope('unified') // Standard resolver uses unified by default
   .build()
   .resolve()
 ```
@@ -711,9 +781,10 @@ const metrics = {
   scope: 'within-source-first',
 
   // Phase 1 metrics
-  withinSourceDuplicates: result.stats.sources['crm'].duplicatesWithinSource +
-                           result.stats.sources['billing'].duplicatesWithinSource +
-                           result.stats.sources['support'].duplicatesWithinSource,
+  withinSourceDuplicates:
+    result.stats.sources['crm'].duplicatesWithinSource +
+    result.stats.sources['billing'].duplicatesWithinSource +
+    result.stats.sources['support'].duplicatesWithinSource,
 
   // Phase 2 metrics
   crossSourceMatches: result.stats.crossSourceMatches,
@@ -721,8 +792,12 @@ const metrics = {
   // Overall efficiency
   totalRecords: result.stats.totalRecords,
   goldenRecords: result.stats.goldenRecords,
-  deduplicationRate: ((result.stats.totalRecords - result.stats.goldenRecords) /
-                      result.stats.totalRecords * 100).toFixed(1) + '%'
+  deduplicationRate:
+    (
+      ((result.stats.totalRecords - result.stats.goldenRecords) /
+        result.stats.totalRecords) *
+      100
+    ).toFixed(1) + '%',
 }
 
 console.log(metrics)
@@ -747,7 +822,10 @@ Compare results to find best fit for your data:
 
 ```typescript
 // Test within-source-first
-const result1 = await config.matchingScope('within-source-first').build().consolidate()
+const result1 = await config
+  .matchingScope('within-source-first')
+  .build()
+  .consolidate()
 
 // Test unified pool
 const result2 = await config.matchingScope('unified-pool').build().consolidate()
@@ -755,7 +833,10 @@ const result2 = await config.matchingScope('unified-pool').build().consolidate()
 // Compare
 console.log('Within-Source-First:', result1.stats.goldenRecords, 'records')
 console.log('Unified Pool:', result2.stats.goldenRecords, 'records')
-console.log('Difference:', Math.abs(result1.stats.goldenRecords - result2.stats.goldenRecords))
+console.log(
+  'Difference:',
+  Math.abs(result1.stats.goldenRecords - result2.stats.goldenRecords)
+)
 ```
 
 ### 3. Use Blocking Strategies
@@ -779,7 +860,9 @@ const result = await consolidation.consolidate()
 const duration = Date.now() - startTime
 
 console.log(`Execution time: ${duration}ms`)
-console.log(`Records/second: ${(result.stats.totalRecords / (duration / 1000)).toFixed(0)}`)
+console.log(
+  `Records/second: ${(result.stats.totalRecords / (duration / 1000)).toFixed(0)}`
+)
 ```
 
 ### 5. Document Strategy Choice

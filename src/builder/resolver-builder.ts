@@ -342,9 +342,7 @@ export class ResolverBuilder<
    * )
    * ```
    */
-  ml(
-    configurator: (builder: MLBuilder<T>) => MLBuilderResult<T>
-  ): this {
+  ml(configurator: (builder: MLBuilder<T>) => MLBuilderResult<T>): this {
     const builder = new MLBuilder<T>()
     const result = configurator(builder)
 

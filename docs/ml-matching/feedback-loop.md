@@ -90,7 +90,12 @@ Load existing labeled pairs:
 // Import from your labeled dataset
 const labeledPairs = [
   { record1: rec1, record2: rec2, label: 'match' as const, confidence: 0.9 },
-  { record1: rec1, record2: rec3, label: 'nonMatch' as const, confidence: 0.95 },
+  {
+    record1: rec1,
+    record2: rec3,
+    label: 'nonMatch' as const,
+    confidence: 0.95,
+  },
   // ...
 ]
 
@@ -104,10 +109,10 @@ Not all feedback is equal. The collector tracks quality metrics:
 
 ```typescript
 interface FeedbackQuality {
-  confidence: number       // Reviewer's confidence (0-1)
-  matchScore: number       // Original match score from resolution
-  decisionTimeMs?: number  // Time spent on the decision
-  isExpert?: boolean       // Whether reviewer is a domain expert
+  confidence: number // Reviewer's confidence (0-1)
+  matchScore: number // Original match score from resolution
+  decisionTimeMs?: number // Time spent on the decision
+  isExpert?: boolean // Whether reviewer is a domain expert
   reviewIteration?: number // Number of times this pair was reviewed
 }
 ```
@@ -118,25 +123,25 @@ Filter out low-quality feedback before training:
 
 ```typescript
 const highQualityFeedback = collector.getFeedback({
-  minConfidence: 0.8,           // High confidence decisions only
-  minDecisionTimeMs: 5000,      // Spent at least 5 seconds
-  expertOnly: true,             // Expert reviewers only
-  sources: ['queue-confirm', 'queue-reject']  // Queue decisions only
+  minConfidence: 0.8, // High confidence decisions only
+  minDecisionTimeMs: 5000, // Spent at least 5 seconds
+  expertOnly: true, // Expert reviewers only
+  sources: ['queue-confirm', 'queue-reject'], // Queue decisions only
 })
 ```
 
 ### Available Filters
 
-| Filter | Description |
-|--------|-------------|
-| `minConfidence` | Minimum confidence score |
-| `minMatchScore` / `maxMatchScore` | Original match score range |
-| `sources` | Specific feedback sources |
-| `label` | Only matches or non-matches |
-| `expertOnly` | Only expert decisions |
-| `minDecisionTimeMs` | Filter quick (possibly careless) decisions |
-| `since` / `until` | Date range |
-| `limit` | Maximum items to return |
+| Filter                            | Description                                |
+| --------------------------------- | ------------------------------------------ |
+| `minConfidence`                   | Minimum confidence score                   |
+| `minMatchScore` / `maxMatchScore` | Original match score range                 |
+| `sources`                         | Specific feedback sources                  |
+| `label`                           | Only matches or non-matches                |
+| `expertOnly`                      | Only expert decisions                      |
+| `minDecisionTimeMs`               | Filter quick (possibly careless) decisions |
+| `since` / `until`                 | Date range                                 |
+| `limit`                           | Maximum items to return                    |
 
 ## Exporting Training Data
 
@@ -149,10 +154,10 @@ import { TrainingDataset } from 'have-we-met/ml'
 const trainingDataset = collector.exportAsTrainingDataset({
   filter: {
     minConfidence: 0.75,
-    minDecisionTimeMs: 3000
+    minDecisionTimeMs: 3000,
   },
-  balance: true,   // Balance match/non-match ratio
-  seed: 42         // Reproducible balancing
+  balance: true, // Balance match/non-match ratio
+  seed: 42, // Reproducible balancing
 })
 
 console.log(`Training examples: ${trainingDataset.examples.length}`)
@@ -166,7 +171,7 @@ Get raw examples without dataset wrapper:
 
 ```typescript
 const examples = collector.exportAsTrainingExamples({
-  filter: { minConfidence: 0.8 }
+  filter: { minConfidence: 0.8 },
 })
 ```
 
@@ -204,7 +209,7 @@ import {
   FeedbackCollector,
   ModelTrainer,
   FeatureExtractor,
-  SimpleClassifier
+  SimpleClassifier,
 } from 'have-we-met/ml'
 
 // 1. Collect feedback over time
@@ -213,7 +218,7 @@ const collector = new FeedbackCollector<Person>()
 // Process queue decisions as they come in
 const decidedItems = await queue.list({
   status: ['confirmed', 'rejected'],
-  since: lastTrainingDate
+  since: lastTrainingDate,
 })
 collector.collectFromQueueItems(decidedItems)
 
@@ -231,10 +236,10 @@ if (!stats.isBalanced) {
 // 3. Export as training data
 const dataset = collector.exportAsTrainingDataset({
   filter: {
-    minConfidence: 0.75
+    minConfidence: 0.75,
   },
   balance: true,
-  seed: Date.now()
+  seed: Date.now(),
 })
 
 // 4. Train new model
@@ -243,19 +248,22 @@ const trainer = new ModelTrainer<Person>({
   featureExtractor,
   config: {
     validationSplit: 0.2,
-    earlyStoppingPatience: 15
-  }
+    earlyStoppingPatience: 15,
+  },
 })
 
 const { classifier, result } = await trainer.trainClassifier(dataset)
 
 // 5. Evaluate improvement
 if (result.success) {
-  const accuracy = result.finalMetrics.validationAccuracy ?? result.finalMetrics.trainingAccuracy
+  const accuracy =
+    result.finalMetrics.validationAccuracy ??
+    result.finalMetrics.trainingAccuracy
   console.log(`New model accuracy: ${(accuracy * 100).toFixed(1)}%`)
 
   // Compare with existing model
-  if (accuracy > currentModelAccuracy + 0.02) {  // At least 2% improvement
+  if (accuracy > currentModelAccuracy + 0.02) {
+    // At least 2% improvement
     console.log('New model is better, deploying...')
     await deployModel(classifier)
   } else {
@@ -276,7 +284,7 @@ const existingDataset = loadTrainingDataset('training-data-v1.json')
 
 // Get new feedback
 const newFeedback = collector.exportAsTrainingDataset({
-  filter: { since: lastUpdateDate }
+  filter: { since: lastUpdateDate },
 })
 
 // Merge datasets
@@ -290,22 +298,22 @@ const { classifier } = await trainer.trainClassifier(combinedDataset)
 
 The collector tracks where feedback came from:
 
-| Source | Description |
-|--------|-------------|
-| `queue-confirm` | Match confirmed in review queue |
-| `queue-reject` | Match rejected in review queue |
-| `queue-merge` | Records merged from review queue |
-| `manual` | Directly added via `addFeedback()` |
-| `synthetic` | Programmatically generated |
-| `import` | Imported from external data |
+| Source          | Description                        |
+| --------------- | ---------------------------------- |
+| `queue-confirm` | Match confirmed in review queue    |
+| `queue-reject`  | Match rejected in review queue     |
+| `queue-merge`   | Records merged from review queue   |
+| `manual`        | Directly added via `addFeedback()` |
+| `synthetic`     | Programmatically generated         |
+| `import`        | Imported from external data        |
 
 Use sources to weight training data:
 
 ```typescript
 // Trust queue decisions more than synthetic data
-const qualityWeightedExamples = collector.getFeedback().map(f => ({
+const qualityWeightedExamples = collector.getFeedback().map((f) => ({
   ...f,
-  weight: f.source.startsWith('queue-') ? 1.0 : 0.5
+  weight: f.source.startsWith('queue-') ? 1.0 : 0.5,
 }))
 ```
 
@@ -316,7 +324,7 @@ Utility functions for quick conversions:
 ```typescript
 import {
   queueDecisionToTrainingExample,
-  queueDecisionsToTrainingExamples
+  queueDecisionsToTrainingExamples,
 } from 'have-we-met/ml'
 
 // Single conversion
@@ -336,7 +344,7 @@ Don't wait to start collecting:
 // Set up automatic collection after queue decisions
 queue.onDecision((queueItem) => {
   collector.collectFromQueueItem(queueItem)
-  persistCollector(collector)  // Save to database
+  persistCollector(collector) // Save to database
 })
 ```
 
@@ -347,9 +355,9 @@ Fast decisions may be mistakes:
 ```typescript
 const goodFeedback = collector.exportAsTrainingDataset({
   filter: {
-    minDecisionTimeMs: 5000,  // At least 5 seconds
-    minConfidence: 0.7
-  }
+    minDecisionTimeMs: 5000, // At least 5 seconds
+    minConfidence: 0.7,
+  },
 })
 ```
 
@@ -375,7 +383,7 @@ const modelVersion = {
   feedbackCount: stats.total,
   oldestFeedback: stats.oldestFeedback,
   newestFeedback: stats.newestFeedback,
-  accuracy: result.finalMetrics.validationAccuracy
+  accuracy: result.finalMetrics.validationAccuracy,
 }
 ```
 
@@ -386,8 +394,8 @@ The collector tracks edge case decisions:
 ```typescript
 // Get uncertain cases that were decided
 const edgeCases = collector.getFeedback({
-  minMatchScore: 0.4,  // Original score was uncertain
-  maxMatchScore: 0.6
+  minMatchScore: 0.4, // Original score was uncertain
+  maxMatchScore: 0.6,
 })
 
 // These are valuable training examples!
@@ -401,7 +409,7 @@ Set up a retraining schedule:
 ```typescript
 async function weeklyRetrain() {
   const stats = collector.getStats({
-    since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)  // Last week
+    since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last week
   })
 
   if (stats.total >= 100) {

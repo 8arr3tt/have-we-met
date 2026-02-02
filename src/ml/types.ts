@@ -7,18 +7,18 @@
 /**
  * Classification outcome from ML model
  */
-export type MLMatchOutcome = 'match' | 'nonMatch' | 'uncertain';
+export type MLMatchOutcome = 'match' | 'nonMatch' | 'uncertain'
 
 /**
  * A pair of records to be compared by the ML model
  */
 export interface RecordPair<T> {
   /** First record in the pair */
-  record1: T;
+  record1: T
   /** Second record in the pair */
-  record2: T;
+  record2: T
   /** Optional label for training data */
-  label?: MLMatchOutcome;
+  label?: MLMatchOutcome
 }
 
 /**
@@ -26,11 +26,11 @@ export interface RecordPair<T> {
  */
 export interface FeatureVector {
   /** Feature values as a numeric array */
-  values: number[];
+  values: number[]
   /** Feature names corresponding to values */
-  names: string[];
+  names: string[]
   /** Optional metadata about the extraction */
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown>
 }
 
 /**
@@ -38,13 +38,13 @@ export interface FeatureVector {
  */
 export interface FeatureImportance {
   /** Feature name */
-  name: string;
+  name: string
   /** Feature value that was used */
-  value: number;
+  value: number
   /** Contribution to the prediction (can be positive or negative) */
-  contribution: number;
+  contribution: number
   /** Absolute importance (magnitude of contribution) */
-  importance: number;
+  importance: number
 }
 
 /**
@@ -52,15 +52,15 @@ export interface FeatureImportance {
  */
 export interface MLPrediction {
   /** Probability of match (0-1) */
-  probability: number;
+  probability: number
   /** Classification based on thresholds */
-  classification: MLMatchOutcome;
+  classification: MLMatchOutcome
   /** Confidence in the prediction (0-1) */
-  confidence: number;
+  confidence: number
   /** Features used for prediction */
-  features: FeatureVector;
+  features: FeatureVector
   /** Feature importance/contribution breakdown */
-  featureImportance: FeatureImportance[];
+  featureImportance: FeatureImportance[]
 }
 
 /**
@@ -68,9 +68,9 @@ export interface MLPrediction {
  */
 export interface BatchMLPrediction<T> {
   /** The record pair that was evaluated */
-  pair: RecordPair<T>;
+  pair: RecordPair<T>
   /** The prediction result */
-  prediction: MLPrediction;
+  prediction: MLPrediction
 }
 
 /**
@@ -78,19 +78,19 @@ export interface BatchMLPrediction<T> {
  */
 export interface ModelMetadata {
   /** Model name/identifier */
-  name: string;
+  name: string
   /** Model version */
-  version: string;
+  version: string
   /** When the model was trained */
-  trainedAt?: Date;
+  trainedAt?: Date
   /** Training accuracy */
-  accuracy?: number;
+  accuracy?: number
   /** Number of training examples used */
-  trainingExamples?: number;
+  trainingExamples?: number
   /** Feature names the model expects */
-  featureNames: string[];
+  featureNames: string[]
   /** Additional metadata */
-  extra?: Record<string, unknown>;
+  extra?: Record<string, unknown>
 }
 
 /**
@@ -98,13 +98,13 @@ export interface ModelMetadata {
  */
 export interface MLModelConfig {
   /** Threshold above which to classify as match (default: 0.7) */
-  matchThreshold: number;
+  matchThreshold: number
   /** Threshold below which to classify as non-match (default: 0.3) */
-  nonMatchThreshold: number;
+  nonMatchThreshold: number
   /** Whether to include feature importance in predictions (default: true) */
-  includeFeatureImportance: boolean;
+  includeFeatureImportance: boolean
   /** Batch size for batch predictions (default: 100) */
-  batchSize: number;
+  batchSize: number
 }
 
 /**
@@ -115,20 +115,20 @@ export const DEFAULT_ML_MODEL_CONFIG: MLModelConfig = {
   nonMatchThreshold: 0.3,
   includeFeatureImportance: true,
   batchSize: 100,
-};
+}
 
 /**
  * Training data point
  */
 export interface TrainingExample<T> {
   /** Record pair */
-  pair: RecordPair<T>;
+  pair: RecordPair<T>
   /** Known label */
-  label: 'match' | 'nonMatch';
+  label: 'match' | 'nonMatch'
   /** Optional source information */
-  source?: string;
+  source?: string
   /** Optional timestamp */
-  timestamp?: Date;
+  timestamp?: Date
 }
 
 /**
@@ -136,15 +136,15 @@ export interface TrainingExample<T> {
  */
 export interface TrainingDataset<T> {
   /** Training examples */
-  examples: TrainingExample<T>[];
+  examples: TrainingExample<T>[]
   /** Dataset metadata */
   metadata?: {
-    name?: string;
-    description?: string;
-    createdAt?: Date;
-    matchCount?: number;
-    nonMatchCount?: number;
-  };
+    name?: string
+    description?: string
+    createdAt?: Date
+    matchCount?: number
+    nonMatchCount?: number
+  }
 }
 
 /**
@@ -152,19 +152,19 @@ export interface TrainingDataset<T> {
  */
 export interface TrainingConfig {
   /** Learning rate (default: 0.01) */
-  learningRate: number;
+  learningRate: number
   /** Maximum iterations (default: 1000) */
-  maxIterations: number;
+  maxIterations: number
   /** L2 regularization strength (default: 0.001) */
-  regularization: number;
+  regularization: number
   /** Validation split ratio (default: 0.2) */
-  validationSplit: number;
+  validationSplit: number
   /** Early stopping patience (default: 10) */
-  earlyStoppingPatience: number;
+  earlyStoppingPatience: number
   /** Minimum improvement to reset patience (default: 0.001) */
-  minImprovement: number;
+  minImprovement: number
   /** Random seed for reproducibility */
-  seed?: number;
+  seed?: number
 }
 
 /**
@@ -177,22 +177,22 @@ export const DEFAULT_TRAINING_CONFIG: TrainingConfig = {
   validationSplit: 0.2,
   earlyStoppingPatience: 10,
   minImprovement: 0.001,
-};
+}
 
 /**
  * Training metrics for a single iteration
  */
 export interface TrainingMetrics {
   /** Iteration number */
-  iteration: number;
+  iteration: number
   /** Training loss */
-  trainingLoss: number;
+  trainingLoss: number
   /** Training accuracy */
-  trainingAccuracy: number;
+  trainingAccuracy: number
   /** Validation loss (if validation split used) */
-  validationLoss?: number;
+  validationLoss?: number
   /** Validation accuracy (if validation split used) */
-  validationAccuracy?: number;
+  validationAccuracy?: number
 }
 
 /**
@@ -200,21 +200,21 @@ export interface TrainingMetrics {
  */
 export interface TrainingResult {
   /** Whether training succeeded */
-  success: boolean;
+  success: boolean
   /** Trained weights (if successful) */
-  weights?: number[];
+  weights?: number[]
   /** Bias term (if successful) */
-  bias?: number;
+  bias?: number
   /** Final metrics */
-  finalMetrics: TrainingMetrics;
+  finalMetrics: TrainingMetrics
   /** History of all iterations */
-  history: TrainingMetrics[];
+  history: TrainingMetrics[]
   /** Total training time in milliseconds */
-  trainingTimeMs: number;
+  trainingTimeMs: number
   /** Whether early stopping was triggered */
-  earlyStopped: boolean;
+  earlyStopped: boolean
   /** Error message if training failed */
-  error?: string;
+  error?: string
 }
 
 /**
@@ -222,13 +222,13 @@ export interface TrainingResult {
  */
 export interface FieldFeatureConfig {
   /** Field name in the record */
-  field: string;
+  field: string
   /** Feature extractors to use */
-  extractors: FeatureExtractorType[];
+  extractors: FeatureExtractorType[]
   /** Optional weight multiplier for this field's features */
-  weight?: number;
+  weight?: number
   /** Whether to include missing value indicator */
-  includeMissingIndicator?: boolean;
+  includeMissingIndicator?: boolean
 }
 
 /**
@@ -243,51 +243,55 @@ export type FeatureExtractorType =
   | 'numericDiff'
   | 'dateDiff'
   | 'missing'
-  | 'custom';
+  | 'custom'
 
 /**
  * Configuration for feature extraction
  */
 export interface FeatureExtractionConfig {
   /** Field configurations */
-  fields: FieldFeatureConfig[];
+  fields: FieldFeatureConfig[]
   /** Whether to normalize all features to 0-1 (default: true) */
-  normalize: boolean;
+  normalize: boolean
   /** Custom feature extractor functions */
-  customExtractors?: Record<string, CustomFeatureExtractor>;
+  customExtractors?: Record<string, CustomFeatureExtractor>
 }
 
 /**
  * Custom feature extractor function
  */
-export type CustomFeatureExtractor = (value1: unknown, value2: unknown) => number;
+export type CustomFeatureExtractor = (
+  value1: unknown,
+  value2: unknown
+) => number
 
 /**
  * Default feature extraction configuration
  */
-export const DEFAULT_FEATURE_EXTRACTION_CONFIG: Partial<FeatureExtractionConfig> = {
-  normalize: true,
-};
+export const DEFAULT_FEATURE_EXTRACTION_CONFIG: Partial<FeatureExtractionConfig> =
+  {
+    normalize: true,
+  }
 
 /**
  * ML integration mode
  */
-export type MLIntegrationMode = 'mlOnly' | 'hybrid' | 'fallback';
+export type MLIntegrationMode = 'mlOnly' | 'hybrid' | 'fallback'
 
 /**
  * ML integration configuration for resolver
  */
 export interface MLIntegrationConfig {
   /** Integration mode */
-  mode: MLIntegrationMode;
+  mode: MLIntegrationMode
   /** Weight of ML score in hybrid mode (0-1, default: 0.5) */
-  mlWeight: number;
+  mlWeight: number
   /** Whether to use ML for all comparisons or only uncertain cases */
-  applyTo: 'all' | 'uncertainOnly';
+  applyTo: 'all' | 'uncertainOnly'
   /** Timeout for ML predictions in milliseconds (default: 5000) */
-  timeoutMs: number;
+  timeoutMs: number
   /** Whether to fallback to probabilistic on ML failure */
-  fallbackOnError: boolean;
+  fallbackOnError: boolean
 }
 
 /**
@@ -299,4 +303,4 @@ export const DEFAULT_ML_INTEGRATION_CONFIG: MLIntegrationConfig = {
   applyTo: 'all',
   timeoutMs: 5000,
   fallbackOnError: true,
-};
+}

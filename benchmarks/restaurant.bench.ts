@@ -20,18 +20,26 @@ import {
   analyzeRestaurantDataset,
   type RestaurantRecord,
 } from './datasets/restaurant/loader'
-import {
-  exactMatch,
-  levenshtein,
-  jaroWinkler,
-} from '../src/core/comparators'
+import { exactMatch, levenshtein, jaroWinkler } from '../src/core/comparators'
 import { StandardBlockingStrategy } from '../src/core/blocking/strategies/standard-blocking'
 import { firstLetter } from '../src/core/blocking/transforms'
 
 // Generate datasets of various sizes
-const smallDataset = generateSyntheticRestaurantData({ recordCount: 300, duplicateRate: 0.3, corruptionProbability: 0.25 })
-const mediumDataset = generateSyntheticRestaurantData({ recordCount: 600, duplicateRate: 0.3, corruptionProbability: 0.25 })
-const largeDataset = generateSyntheticRestaurantData({ recordCount: 1000, duplicateRate: 0.3, corruptionProbability: 0.25 })
+const smallDataset = generateSyntheticRestaurantData({
+  recordCount: 300,
+  duplicateRate: 0.3,
+  corruptionProbability: 0.25,
+})
+const mediumDataset = generateSyntheticRestaurantData({
+  recordCount: 600,
+  duplicateRate: 0.3,
+  corruptionProbability: 0.25,
+})
+const largeDataset = generateSyntheticRestaurantData({
+  recordCount: 1000,
+  duplicateRate: 0.3,
+  corruptionProbability: 0.25,
+})
 
 // Phone normalizing exact match comparator
 const phoneExact = (a: unknown, b: unknown): number => {
@@ -53,7 +61,11 @@ const addressLevenshtein = (a: unknown, b: unknown): number => {
 const jaroWinklerMatcher = createMatchingFunction<RestaurantRecord>([
   { field: 'name', comparator: (a, b) => jaroWinkler(a, b), weight: 30 },
   { field: 'addr', comparator: addressLevenshtein, weight: 25 },
-  { field: 'city', comparator: (a, b) => exactMatch(a, b, { caseSensitive: false }), weight: 15 },
+  {
+    field: 'city',
+    comparator: (a, b) => exactMatch(a, b, { caseSensitive: false }),
+    weight: 15,
+  },
   { field: 'phone', comparator: phoneExact, weight: 20 },
   { field: 'type', comparator: (a, b) => levenshtein(a, b), weight: 10 },
 ])
@@ -62,7 +74,11 @@ const jaroWinklerMatcher = createMatchingFunction<RestaurantRecord>([
 const levenshteinMatcher = createMatchingFunction<RestaurantRecord>([
   { field: 'name', comparator: (a, b) => levenshtein(a, b), weight: 30 },
   { field: 'addr', comparator: addressLevenshtein, weight: 25 },
-  { field: 'city', comparator: (a, b) => exactMatch(a, b, { caseSensitive: false }), weight: 15 },
+  {
+    field: 'city',
+    comparator: (a, b) => exactMatch(a, b, { caseSensitive: false }),
+    weight: 15,
+  },
   { field: 'phone', comparator: phoneExact, weight: 20 },
   { field: 'type', comparator: (a, b) => levenshtein(a, b), weight: 10 },
 ])
@@ -71,12 +87,18 @@ const levenshteinMatcher = createMatchingFunction<RestaurantRecord>([
 const strictCityMatcher = createMatchingFunction<RestaurantRecord>([
   { field: 'name', comparator: (a, b) => jaroWinkler(a, b), weight: 35 },
   { field: 'addr', comparator: addressLevenshtein, weight: 30 },
-  { field: 'city', comparator: (a, b) => exactMatch(a, b, { caseSensitive: false }), weight: 20 },
+  {
+    field: 'city',
+    comparator: (a, b) => exactMatch(a, b, { caseSensitive: false }),
+    weight: 20,
+  },
   { field: 'phone', comparator: phoneExact, weight: 15 },
 ])
 
 // Blocking function using city
-function cityBlocking(records: RestaurantRecord[]): Map<string, RestaurantRecord[]> {
+function cityBlocking(
+  records: RestaurantRecord[]
+): Map<string, RestaurantRecord[]> {
   const strategy = new StandardBlockingStrategy<RestaurantRecord>({
     field: 'city',
     nullStrategy: 'skip',
@@ -86,7 +108,9 @@ function cityBlocking(records: RestaurantRecord[]): Map<string, RestaurantRecord
 }
 
 // Blocking function using first letter of name
-function nameFirstLetterBlocking(records: RestaurantRecord[]): Map<string, RestaurantRecord[]> {
+function nameFirstLetterBlocking(
+  records: RestaurantRecord[]
+): Map<string, RestaurantRecord[]> {
   const strategy = new StandardBlockingStrategy<RestaurantRecord>({
     field: 'name',
     transform: firstLetter,
@@ -96,7 +120,9 @@ function nameFirstLetterBlocking(records: RestaurantRecord[]): Map<string, Resta
 }
 
 // Combined blocking: city + first letter of name
-function combinedBlocking(records: RestaurantRecord[]): Map<string, RestaurantRecord[]> {
+function combinedBlocking(
+  records: RestaurantRecord[]
+): Map<string, RestaurantRecord[]> {
   const strategy = new StandardBlockingStrategy<RestaurantRecord>({
     fields: ['city', 'name'],
     transforms: [undefined, firstLetter],
@@ -210,9 +236,15 @@ export async function runRestaurantBenchmarks(): Promise<{
 
   // Analyze the datasets
   console.log('Dataset Analysis:')
-  console.log(`Small dataset: ${smallDataset.records.length} records, ${smallDataset.truePairs?.length} true pairs`)
-  console.log(`Medium dataset: ${mediumDataset.records.length} records, ${mediumDataset.truePairs?.length} true pairs`)
-  console.log(`Large dataset: ${largeDataset.records.length} records, ${largeDataset.truePairs?.length} true pairs`)
+  console.log(
+    `Small dataset: ${smallDataset.records.length} records, ${smallDataset.truePairs?.length} true pairs`
+  )
+  console.log(
+    `Medium dataset: ${mediumDataset.records.length} records, ${mediumDataset.truePairs?.length} true pairs`
+  )
+  console.log(
+    `Large dataset: ${largeDataset.records.length} records, ${largeDataset.truePairs?.length} true pairs`
+  )
   console.log('')
 
   const analysis = analyzeRestaurantDataset(smallDataset)
@@ -323,9 +355,13 @@ export async function runRestaurantBenchmarks(): Promise<{
   }
 
   // Generate report
-  const report = generateComparisonReport('Restaurant Benchmark Results', results, {
-    includeTimestamp: true,
-  })
+  const report = generateComparisonReport(
+    'Restaurant Benchmark Results',
+    results,
+    {
+      includeTimestamp: true,
+    }
+  )
 
   console.log('\nBenchmarks complete!')
 

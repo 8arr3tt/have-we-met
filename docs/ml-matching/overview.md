@@ -143,7 +143,7 @@ Record pairs are converted to numerical feature vectors for ML processing:
 ```typescript
 const features = extractor.extract({
   record1: { firstName: 'John', email: 'john@example.com' },
-  record2: { firstName: 'Jon', email: 'john@example.com' }
+  record2: { firstName: 'Jon', email: 'john@example.com' },
 })
 
 // features.values: [0.91, 1.0, 0.95, 1.0, ...]
@@ -151,6 +151,7 @@ const features = extractor.extract({
 ```
 
 Built-in extractors include:
+
 - **String similarity:** jaroWinkler, levenshtein, soundex, metaphone, exact
 - **Numeric:** numericDiff
 - **Temporal:** dateDiff
@@ -159,6 +160,7 @@ Built-in extractors include:
 ### Predictions
 
 The classifier outputs:
+
 - **probability:** Match probability (0-1)
 - **classification:** match, nonMatch, or uncertain
 - **confidence:** How certain the model is (0-1)
@@ -167,18 +169,19 @@ The classifier outputs:
 ### Training
 
 The ModelTrainer uses gradient descent to learn weights:
+
 - L2 regularization prevents overfitting
 - Early stopping avoids overtraining
 - Validation split monitors generalization
 
 ## Performance
 
-| Operation | Typical Latency |
-|-----------|-----------------|
-| Single prediction | < 1ms |
-| Batch prediction (100 pairs) | < 10ms |
-| Feature extraction | < 0.5ms |
-| Training (1000 examples) | < 2s |
+| Operation                    | Typical Latency |
+| ---------------------------- | --------------- |
+| Single prediction            | < 1ms           |
+| Batch prediction (100 pairs) | < 10ms          |
+| Feature extraction           | < 0.5ms         |
+| Training (1000 examples)     | < 2s            |
 
 ## Next Steps
 

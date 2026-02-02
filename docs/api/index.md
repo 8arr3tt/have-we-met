@@ -4,13 +4,13 @@ This section provides comprehensive reference documentation for all public APIs 
 
 ## Quick Links
 
-| API | Description |
-|-----|-------------|
-| [Schema Builder](./schema-builder.md) | Define your record schema and field types |
-| [Matching Builder](./matching-builder.md) | Configure field comparisons and weights |
-| [Blocking Builder](./blocking-builder.md) | Set up blocking strategies for scale |
-| [Resolver](./resolver.md) | Core matching and resolution operations |
-| [Adapters](./adapters.md) | Database integration with Prisma, Drizzle, TypeORM |
+| API                                       | Description                                        |
+| ----------------------------------------- | -------------------------------------------------- |
+| [Schema Builder](./schema-builder.md)     | Define your record schema and field types          |
+| [Matching Builder](./matching-builder.md) | Configure field comparisons and weights            |
+| [Blocking Builder](./blocking-builder.md) | Set up blocking strategies for scale               |
+| [Resolver](./resolver.md)                 | Core matching and resolution operations            |
+| [Adapters](./adapters.md)                 | Database integration with Prisma, Drizzle, TypeORM |
 
 ## API Overview
 
@@ -19,25 +19,27 @@ This section provides comprehensive reference documentation for all public APIs 
 The library exposes a single entry point: `HaveWeMet`
 
 ```typescript
-import { HaveWeMet } from 'have-we-met';
+import { HaveWeMet } from 'have-we-met'
 
 // Create a resolver using the fluent builder API
-const resolver = HaveWeMet
-  .create<MyRecord>()
-  .schema(schema => schema
-    .field('email').type('email')
-    .field('firstName').type('name').component('first')
+const resolver = HaveWeMet.create<MyRecord>()
+  .schema(
+    (schema) =>
+      schema
+        .field('email')
+        .type('email')
+        .field('firstName')
+        .type('name')
+        .component('first')
     // ...
   )
-  .blocking(block => block
-    .onField('email')
-  )
-  .matching(match => match
-    .field('email').strategy('exact').weight(20)
+  .blocking((block) => block.onField('email'))
+  .matching(
+    (match) => match.field('email').strategy('exact').weight(20)
     // ...
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
-  .build();
+  .build()
 ```
 
 ### Builder Pattern
@@ -62,6 +64,7 @@ Configure how fields are compared and weighted to produce match scores.
 
 **Thresholds**
 Set score boundaries for three-tier classification:
+
 - Below `noMatch`: Records are distinct
 - Above `definiteMatch`: Records match with high confidence
 - Between: Potential match requiring human review
@@ -116,7 +119,7 @@ import type {
   MLModel,
   FeatureVector,
   MLMatchResult,
-} from 'have-we-met';
+} from 'have-we-met'
 ```
 
 ## Related Documentation

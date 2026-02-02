@@ -28,6 +28,7 @@ This guide walks you through creating your first multi-source consolidation work
 ### What You'll Build
 
 A consolidation workflow that:
+
 - Loads customers from a CRM database and a Billing system
 - Maps both to a unified schema
 - Identifies duplicate customers across systems
@@ -53,6 +54,7 @@ A consolidation workflow that:
 ### Database Requirements
 
 This guide uses Prisma with PostgreSQL, but you can use:
+
 - Any Prisma-supported database (PostgreSQL, MySQL, SQLite, MongoDB)
 - Drizzle ORM
 - TypeORM
@@ -71,17 +73,20 @@ npm install have-we-met
 ### Install Database Adapter
 
 For Prisma:
+
 ```bash
 npm install @prisma/client
 npm install -D prisma
 ```
 
 For Drizzle:
+
 ```bash
 npm install drizzle-orm
 ```
 
 For TypeORM:
+
 ```bash
 npm install typeorm
 ```
@@ -147,7 +152,9 @@ const prisma = new PrismaClient()
 
 // Create adapters
 const crmAdapter = new PrismaAdapter<CRMCustomer>(prisma.crmCustomer)
-const billingAdapter = new PrismaAdapter<BillingCustomer>(prisma.billingCustomer)
+const billingAdapter = new PrismaAdapter<BillingCustomer>(
+  prisma.billingCustomer
+)
 const outputAdapter = new PrismaAdapter<UnifiedCustomer>(prisma.unifiedCustomer)
 ```
 
@@ -158,43 +165,71 @@ Build your consolidation configuration:
 ```typescript
 const consolidation = HaveWeMet.consolidation<UnifiedCustomer>()
   // Configure CRM source
-  .source('crm', source => source
-    .name('CRM Database')
-    .adapter(crmAdapter)
-    .mapping(map => map
-      .field('email').from('email_address')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-      .field('phone').from('phone')
-      .field('createdAt').from('created_at')
-    )
-    .priority(2) // Higher priority (more trusted)
+  .source(
+    'crm',
+    (source) =>
+      source
+        .name('CRM Database')
+        .adapter(crmAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+            .field('phone')
+            .from('phone')
+            .field('createdAt')
+            .from('created_at')
+        )
+        .priority(2) // Higher priority (more trusted)
   )
 
   // Configure Billing source
-  .source('billing', source => source
-    .name('Billing System')
-    .adapter(billingAdapter)
-    .mapping(map => map
-      .field('email').from('email')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-      .field('phone').from('contact_phone')
-      .field('createdAt').from('signup_date')
-    )
-    .priority(1) // Lower priority
+  .source(
+    'billing',
+    (source) =>
+      source
+        .name('Billing System')
+        .adapter(billingAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('fname')
+            .field('lastName')
+            .from('lname')
+            .field('phone')
+            .from('contact_phone')
+            .field('createdAt')
+            .from('signup_date')
+        )
+        .priority(1) // Lower priority
   )
 
   // Configure matching
-  .schema(schema => schema
-    .field('email', { type: 'email' })
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((schema) =>
+    schema
+      .field('email', { type: 'email' })
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
-  .matching(match => match
-    .field('email').strategy('exact').weight(30)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(30)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
 
@@ -202,10 +237,11 @@ const consolidation = HaveWeMet.consolidation<UnifiedCustomer>()
   .matchingScope('within-source-first')
 
   // Configure conflict resolution
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
-    .fieldStrategy('createdAt', 'preferOlder')
+  .conflictResolution((cr) =>
+    cr
+      .useSourcePriority(true)
+      .defaultStrategy('preferNonNull')
+      .fieldStrategy('createdAt', 'preferOlder')
   )
 
   // Set output adapter
@@ -238,14 +274,14 @@ main().catch(console.error)
 
 ```typescript
 // Access golden records
-result.goldenRecords.forEach(customer => {
+result.goldenRecords.forEach((customer) => {
   console.log(`${customer.firstName} ${customer.lastName} <${customer.email}>`)
 })
 
 // Review match groups
-result.matchGroups.forEach(group => {
+result.matchGroups.forEach((group) => {
   console.log(`Match group (score: ${group.score}):`)
-  group.matches.forEach(match => {
+  group.matches.forEach((match) => {
     console.log(`  - Source: ${match.sourceId}, ID: ${match.sourceRecordId}`)
   })
 })
@@ -253,7 +289,7 @@ result.matchGroups.forEach(group => {
 // Check for errors
 if (result.errors.length > 0) {
   console.log('Errors encountered:')
-  result.errors.forEach(err => {
+  result.errors.forEach((err) => {
     console.log(`  ${err.sourceId}:${err.recordId} - ${err.error}`)
   })
 }
@@ -303,6 +339,7 @@ Map fields by name:
 ```
 
 This maps:
+
 - `email_address` → `email`
 - `first_name` → `firstName`
 - `last_name` → `lastName`
@@ -379,6 +416,7 @@ Define field types for normalization:
 ```
 
 Field types enable automatic normalization:
+
 - **email**: Lowercased, trimmed
 - **phone**: Normalized format
 - **name**: Trimmed, titlecased, nickname handling
@@ -411,6 +449,7 @@ Configure field-by-field matching:
 ```
 
 **Strategies**:
+
 - `exact`: Must match exactly
 - `levenshtein`: Edit distance
 - `jaro-winkler`: Transposition-tolerant similarity
@@ -454,17 +493,20 @@ Choose how records are compared across sources.
 ```
 
 **Process**:
+
 1. Deduplicate within CRM
 2. Deduplicate within Billing
 3. Match CRM records vs Billing records
 4. Merge matches
 
 **Advantages**:
+
 - Faster (processes smaller batches)
 - Preserves source-specific data quality
 - Better for sources with internal duplicates
 
 **Use when**:
+
 - Sources have internal duplicates
 - Clear source priority hierarchy
 - Performance is important
@@ -476,16 +518,19 @@ Choose how records are compared across sources.
 ```
 
 **Process**:
+
 1. Map all records to unified schema
 2. Match all records together (within + across sources)
 3. Merge matches
 
 **Advantages**:
+
 - More comprehensive matching
 - May find matches within-source-first misses
 - Better for high-quality sources
 
 **Use when**:
+
 - Sources have minimal internal duplicates
 - Need to catch all possible duplicates
 - Data quality varies significantly
@@ -521,6 +566,7 @@ Higher priority sources are preferred when values conflict.
 Applied to all fields unless overridden by field-specific strategy.
 
 **Available strategies**:
+
 - `preferFirst`: Use first value encountered
 - `preferLast`: Use last value encountered
 - `preferNewer`: Use value with newest timestamp
@@ -603,6 +649,7 @@ const result = await consolidation.consolidate()
 ```
 
 This:
+
 1. Loads records from all source adapters
 2. Maps records to unified schema
 3. Matches records (within and/or across sources)
@@ -618,34 +665,52 @@ This:
 
 ```typescript
 const result = await HaveWeMet.consolidation<Customer>()
-  .source('crm', source => source
-    .adapter(crmAdapter)
-    .mapping(map => map
-      .field('email').from('email_address')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-    )
-    .priority(2)
+  .source('crm', (source) =>
+    source
+      .adapter(crmAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email_address')
+          .field('firstName')
+          .from('first_name')
+          .field('lastName')
+          .from('last_name')
+      )
+      .priority(2)
   )
-  .source('billing', source => source
-    .adapter(billingAdapter)
-    .mapping(map => map
-      .field('email').from('email')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-    )
-    .priority(1)
+  .source('billing', (source) =>
+    source
+      .adapter(billingAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email')
+          .field('firstName')
+          .from('fname')
+          .field('lastName')
+          .from('lname')
+      )
+      .priority(1)
   )
   .matchingScope('within-source-first')
-  .matching(match => match
-    .field('email').strategy('exact').weight(30)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(30)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
+  .conflictResolution((cr) =>
+    cr.useSourcePriority(true).defaultStrategy('preferNonNull')
   )
   .outputAdapter(outputAdapter)
   .writeOutput(true)
@@ -657,17 +722,17 @@ const result = await HaveWeMet.consolidation<Customer>()
 
 ```typescript
 const result = await HaveWeMet.consolidation<UnifiedRecord>()
-  .source('source_a', source => source
-    .adapter(sourceAAdapter)
-    .mapping(map => map
-      .field('fullName').transform(input =>
-        `${input.fname} ${input.lname}`
-      )
-      .field('metadata').transform(input => ({
-        source: 'source_a',
-        originalId: input.id,
-        importedAt: new Date()
-      }))
+  .source('source_a', (source) =>
+    source.adapter(sourceAAdapter).mapping((map) =>
+      map
+        .field('fullName')
+        .transform((input) => `${input.fname} ${input.lname}`)
+        .field('metadata')
+        .transform((input) => ({
+          source: 'source_a',
+          originalId: input.id,
+          importedAt: new Date(),
+        }))
     )
   )
   .build()
@@ -688,26 +753,30 @@ interface UnifiedCustomer {
 }
 
 const result = await HaveWeMet.consolidation<UnifiedCustomer>()
-  .source('crm', source => source
-    .adapter(crmAdapter)
-    .mapping(map => map
-      .field('email').from('email')
-      .field('sourceIds').transform(input => ({
-        crm: input.id
-      }))
+  .source('crm', (source) =>
+    source.adapter(crmAdapter).mapping((map) =>
+      map
+        .field('email')
+        .from('email')
+        .field('sourceIds')
+        .transform((input) => ({
+          crm: input.id,
+        }))
     )
   )
-  .source('billing', source => source
-    .adapter(billingAdapter)
-    .mapping(map => map
-      .field('email').from('email')
-      .field('sourceIds').transform(input => ({
-        billing: input.customer_id
-      }))
+  .source('billing', (source) =>
+    source.adapter(billingAdapter).mapping((map) =>
+      map
+        .field('email')
+        .from('email')
+        .field('sourceIds')
+        .transform((input) => ({
+          billing: input.customer_id,
+        }))
     )
   )
-  .conflictResolution(cr => cr
-    .fieldStrategy('sourceIds', (values) => {
+  .conflictResolution((cr) =>
+    cr.fieldStrategy('sourceIds', (values) => {
       // Merge all source IDs
       return values.reduce((acc, val) => ({ ...acc, ...val }), {})
     })
@@ -743,13 +812,13 @@ const result = await HaveWeMet.consolidation<Customer>()
   .matching(/* ... */)
   .conflictResolution(/* ... */)
   .outputAdapter(outputAdapter)
-  .writeOutput(false)  // Don't write to database
+  .writeOutput(false) // Don't write to database
   .build()
   .consolidate()
 
 // Review results without persisting
 console.log(`Would create ${result.stats.goldenRecords} records`)
-result.goldenRecords.forEach(record => {
+result.goldenRecords.forEach((record) => {
   console.log(record)
 })
 ```
@@ -763,6 +832,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: No sources configured.
 
 **Solution**: Add at least one source:
+
 ```typescript
 .source('source_id', source => source
   .name('Source Name')
@@ -776,6 +846,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Enabled writing without providing output adapter.
 
 **Solution**: Either provide adapter or disable writing:
+
 ```typescript
 .outputAdapter(outputAdapter)
 .writeOutput(true)
@@ -789,6 +860,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Source configured without name.
 
 **Solution**: Add name to source:
+
 ```typescript
 .source('my_source', source => source
   .name('My Source Database')  // Add this
@@ -802,6 +874,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Source configured without adapter.
 
 **Solution**: Add adapter to source:
+
 ```typescript
 .source('my_source', source => source
   .name('My Source')
@@ -815,6 +888,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Source configured without field mapping.
 
 **Solution**: Add mapping to source:
+
 ```typescript
 .source('my_source', source => source
   .name('My Source')
@@ -831,6 +905,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Called `.from()` without calling `.field()` first.
 
 **Solution**: Chain properly:
+
 ```typescript
 // Wrong
 .from('email_address')
@@ -844,6 +919,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Tried to use both static mapping and transform function on same field.
 
 **Solution**: Use one or the other:
+
 ```typescript
 // Either static mapping
 .field('email').from('email_address')
@@ -859,6 +935,7 @@ result.goldenRecords.forEach(record => {
 **Cause**: Field configured but no mapping specified.
 
 **Solution**: Add mapping:
+
 ```typescript
 .field('email').from('email_address')
 // Or
@@ -870,6 +947,7 @@ result.goldenRecords.forEach(record => {
 **Symptoms**: Few cross-source matches found.
 
 **Debugging**:
+
 ```typescript
 // Check field normalization
 .schema(schema => schema
@@ -894,6 +972,7 @@ const result = await consolidation.consolidate({ debug: true })
 **Symptoms**: Unrelated records being matched.
 
 **Solutions**:
+
 ```typescript
 // Increase match threshold
 .thresholds({ noMatch: 25, definiteMatch: 55 })  // More strict
@@ -920,6 +999,7 @@ const result = await consolidation.consolidate({ debug: true })
 **Symptoms**: Consolidation takes too long.
 
 **Solutions**:
+
 ```typescript
 // Use within-source-first (faster)
 .matchingScope('within-source-first')

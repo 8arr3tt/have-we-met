@@ -112,21 +112,17 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
     })
 
     // Initialize merger
-    this.merger = new SourceAwareMerger(
-      {
-        defaultStrategy: config.conflictResolution?.defaultStrategy || 'preferFirst',
-        fieldStrategies:
-          config.conflictResolution?.fieldStrategies
-            ? Object.entries(config.conflictResolution.fieldStrategies).map(
-                ([field, strategy]) => ({ field, strategy })
-              )
-            : [],
-        useSourcePriority:
-          config.conflictResolution?.useSourcePriority ?? true,
-        trackProvenance:
-          config.conflictResolution?.trackProvenance ?? true,
-      }
-    )
+    this.merger = new SourceAwareMerger({
+      defaultStrategy:
+        config.conflictResolution?.defaultStrategy || 'preferFirst',
+      fieldStrategies: config.conflictResolution?.fieldStrategies
+        ? Object.entries(config.conflictResolution.fieldStrategies).map(
+            ([field, strategy]) => ({ field, strategy })
+          )
+        : [],
+      useSourcePriority: config.conflictResolution?.useSourcePriority ?? true,
+      trackProvenance: config.conflictResolution?.trackProvenance ?? true,
+    })
   }
 
   /**
@@ -242,7 +238,8 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
         )
 
         // Count duplicates
-        sourceStats.duplicatesWithinSource = records.length - withinSourceGroups.length
+        sourceStats.duplicatesWithinSource =
+          records.length - withinSourceGroups.length
 
         // Store deduplicated records
         deduplicatedRecords.set(source.sourceId, withinSourceGroups)
@@ -263,8 +260,12 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
     }
 
     // Phase 2: Match across sources
-    const allDeduplicatedRecords = Array.from(deduplicatedRecords.values()).flat()
-    const crossSourceGroups = await this.matchCrossSources(allDeduplicatedRecords)
+    const allDeduplicatedRecords = Array.from(
+      deduplicatedRecords.values()
+    ).flat()
+    const crossSourceGroups = await this.matchCrossSources(
+      allDeduplicatedRecords
+    )
 
     // Phase 3: Merge match groups into golden records
     const goldenRecords: TOutput[] = []
@@ -461,10 +462,7 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
           })
         } catch (error) {
           // Log but continue
-          console.warn(
-            `Failed to map record from ${sourceId}:`,
-            error
-          )
+          console.warn(`Failed to map record from ${sourceId}:`, error)
         }
       }
 
@@ -637,9 +635,7 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
   /**
    * Write golden records to output adapter
    */
-  private async writeGoldenRecords(
-    goldenRecords: TOutput[]
-  ): Promise<void> {
+  private async writeGoldenRecords(goldenRecords: TOutput[]): Promise<void> {
     if (!this.config.outputAdapter) {
       throw new ConsolidationError(
         'No output adapter configured',
@@ -684,17 +680,13 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
    */
   private validateConfig(config: ConsolidationConfig<TOutput>): void {
     if (!config.sources || config.sources.length === 0) {
-      throw new ConsolidationConfigError(
-        'At least one source is required'
-      )
+      throw new ConsolidationConfigError('At least one source is required')
     }
 
     // Validate each source
     for (const source of config.sources) {
       if (!source.sourceId) {
-        throw new ConsolidationConfigError(
-          'Source must have a sourceId'
-        )
+        throw new ConsolidationConfigError('Source must have a sourceId')
       }
       if (!source.adapter) {
         throw new ConsolidationConfigError(

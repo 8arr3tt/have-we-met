@@ -25,7 +25,7 @@ export type {
   CustomFeatureExtractor,
   MLIntegrationMode,
   MLIntegrationConfig,
-} from './types';
+} from './types'
 
 // Default configurations
 export {
@@ -33,11 +33,11 @@ export {
   DEFAULT_TRAINING_CONFIG,
   DEFAULT_FEATURE_EXTRACTION_CONFIG,
   DEFAULT_ML_INTEGRATION_CONFIG,
-} from './types';
+} from './types'
 
 // Model interface
-export type { MLModel, MLModelWeights, MLModelFactory } from './model-interface';
-export { BaseMLModel } from './model-interface';
+export type { MLModel, MLModelWeights, MLModelFactory } from './model-interface'
+export { BaseMLModel } from './model-interface'
 
 // Prediction utilities
 export {
@@ -58,9 +58,9 @@ export {
   normalizeFeatureVector,
   isValidPrediction,
   isValidFeatureVector,
-} from './prediction';
+} from './prediction'
 
-export type { PredictionStats } from './prediction';
+export type { PredictionStats } from './prediction'
 
 // Validation functions
 export {
@@ -78,9 +78,9 @@ export {
   mergeWithDefaultTrainingConfig,
   validateMLModelConfig,
   validateTrainingConfig,
-} from './validation';
+} from './validation'
 
-export type { ValidationError, ValidationResult } from './validation';
+export type { ValidationError, ValidationResult } from './validation'
 
 // Feature extraction
 export {
@@ -93,13 +93,13 @@ export {
   compareFeatureVectors,
   calculateFeatureStats,
   DEFAULT_FEATURE_EXTRACTOR_OPTIONS,
-} from './feature-extractor';
+} from './feature-extractor'
 
 export type {
   FeatureExtractorFn,
   FeatureExtractorOptions,
   FeatureExtractionStats,
-} from './feature-extractor';
+} from './feature-extractor'
 
 // Built-in models
 export {
@@ -120,9 +120,9 @@ export {
   getFeatureConfig,
   calculateFeatureCount,
   generateFeatureNames,
-} from './builtin';
+} from './builtin'
 
-export type { SimpleClassifierConfig } from './builtin';
+export type { SimpleClassifierConfig } from './builtin'
 
 // Training
 export {
@@ -138,7 +138,7 @@ export {
   createFeedbackCollector,
   queueDecisionToTrainingExample,
   queueDecisionsToTrainingExamples,
-} from './training';
+} from './training'
 
 export type {
   TrainerOptions,
@@ -150,7 +150,7 @@ export type {
   FeedbackStats,
   FeedbackCollectorOptions,
   ExportOptions,
-} from './training';
+} from './training'
 
 // Integration
 export {
@@ -163,7 +163,7 @@ export {
   mlBuilder,
   createModelFromConfig,
   validateMLBuilderConfig,
-} from './integration';
+} from './integration'
 
 export type {
   MLMatchResult,
@@ -172,4 +172,4 @@ export type {
   // Builder types
   MLBuilderConfig,
   MLBuilderResult,
-} from './integration';
+} from './integration'

@@ -49,15 +49,21 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy Database')
-          .adapter(adapter)
-          .mapping(map => map
-            .field('email').from('email_address')
-            .field('firstName').from('first_name')
-            .field('lastName').from('last_name')
-            .field('phone').from('phone_number')
-          )
+        .source('legacy', (source) =>
+          source
+            .name('Legacy Database')
+            .adapter(adapter)
+            .mapping((map) =>
+              map
+                .field('email')
+                .from('email_address')
+                .field('firstName')
+                .from('first_name')
+                .field('lastName')
+                .from('last_name')
+                .field('phone')
+                .from('phone_number')
+            )
         )
         .build()
 
@@ -72,25 +78,37 @@ describe('ConsolidationBuilder', () => {
       const modernAdapter = createMockAdapter<ModernCustomer>('modern')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy Database')
-          .adapter(legacyAdapter)
-          .mapping(map => map
-            .field('email').from('email_address')
-            .field('firstName').from('first_name')
-            .field('lastName').from('last_name')
-            .field('phone').from('phone_number')
-          )
+        .source('legacy', (source) =>
+          source
+            .name('Legacy Database')
+            .adapter(legacyAdapter)
+            .mapping((map) =>
+              map
+                .field('email')
+                .from('email_address')
+                .field('firstName')
+                .from('first_name')
+                .field('lastName')
+                .from('last_name')
+                .field('phone')
+                .from('phone_number')
+            )
         )
-        .source('modern', source => source
-          .name('Modern Database')
-          .adapter(modernAdapter)
-          .mapping(map => map
-            .field('email').from('email')
-            .field('firstName').from('fname')
-            .field('lastName').from('lname')
-            .field('phone').from('phone')
-          )
+        .source('modern', (source) =>
+          source
+            .name('Modern Database')
+            .adapter(modernAdapter)
+            .mapping((map) =>
+              map
+                .field('email')
+                .from('email')
+                .field('firstName')
+                .from('fname')
+                .field('lastName')
+                .from('lname')
+                .field('phone')
+                .from('phone')
+            )
         )
         .build()
 
@@ -101,12 +119,12 @@ describe('ConsolidationBuilder', () => {
 
     it('should throw if sourceId is empty', () => {
       expect(() => {
-        new ConsolidationBuilder<Customer>()
-          .source('', source => source
+        new ConsolidationBuilder<Customer>().source('', (source) =>
+          source
             .name('Test')
             .adapter(createMockAdapter('test'))
-            .mapping(map => map.field('email').from('email'))
-          )
+            .mapping((map) => map.field('email').from('email'))
+        )
       }).toThrow('sourceId')
     })
 
@@ -122,10 +140,11 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .build()
 
@@ -136,10 +155,11 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .matchingScope('within-source-first')
         .build()
@@ -151,10 +171,11 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .matchingScope('unified-pool')
         .build()
@@ -166,10 +187,11 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .matchingScope(MatchingScope.UnifiedPool)
         .build()
@@ -182,10 +204,11 @@ describe('ConsolidationBuilder', () => {
 
       expect(() => {
         new ConsolidationBuilder<Customer>()
-          .source('legacy', source => source
-            .name('Legacy')
-            .adapter(adapter)
-            .mapping(map => map.field('email').from('email_address'))
+          .source('legacy', (source) =>
+            source
+              .name('Legacy')
+              .adapter(adapter)
+              .mapping((map) => map.field('email').from('email_address'))
           )
           // @ts-expect-error Testing invalid input
           .matchingScope('invalid-scope')
@@ -199,34 +222,39 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
-        .conflictResolution(cr => cr
-          .defaultStrategy('preferNonNull')
-          .useSourcePriority(true)
-          .fieldStrategy('email', 'preferNewer')
+        .conflictResolution((cr) =>
+          cr
+            .defaultStrategy('preferNonNull')
+            .useSourcePriority(true)
+            .fieldStrategy('email', 'preferNewer')
         )
         .build()
 
       expect(config.conflictResolution).toBeDefined()
       expect(config.conflictResolution?.defaultStrategy).toBe('preferNonNull')
       expect(config.conflictResolution?.useSourcePriority).toBe(true)
-      expect(config.conflictResolution?.fieldStrategies?.email).toBe('preferNewer')
+      expect(config.conflictResolution?.fieldStrategies?.email).toBe(
+        'preferNewer'
+      )
     })
 
     it('should handle conflict resolution builder returned', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
-        .conflictResolution(cr => {
+        .conflictResolution((cr) => {
           cr.defaultStrategy('preferFirst')
           return cr
         })
@@ -242,10 +270,11 @@ describe('ConsolidationBuilder', () => {
       const outputAdapter = createMockAdapter<Customer>('output')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(inputAdapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(inputAdapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .outputAdapter(outputAdapter)
         .build()
@@ -258,10 +287,11 @@ describe('ConsolidationBuilder', () => {
       const outputAdapter = createMockAdapter<Customer>('output')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(inputAdapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(inputAdapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .outputAdapter(outputAdapter)
         .writeOutput(true)
@@ -275,10 +305,11 @@ describe('ConsolidationBuilder', () => {
 
       expect(() => {
         new ConsolidationBuilder<Customer>()
-          .source('legacy', source => source
-            .name('Legacy')
-            .adapter(inputAdapter)
-            .mapping(map => map.field('email').from('email_address'))
+          .source('legacy', (source) =>
+            source
+              .name('Legacy')
+              .adapter(inputAdapter)
+              .mapping((map) => map.field('email').from('email_address'))
           )
           .writeOutput(true)
           .build()
@@ -293,35 +324,48 @@ describe('ConsolidationBuilder', () => {
       const outputAdapter = createMockAdapter<Customer>('output')
 
       const config = new ConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy Database')
-          .adapter(legacyAdapter)
-          .mapping(map => map
-            .field('email').from('email_address')
-            .field('firstName').from('first_name')
-            .field('lastName').from('last_name')
-            .field('phone').from('phone_number')
-          )
-          .priority(1)
+        .source('legacy', (source) =>
+          source
+            .name('Legacy Database')
+            .adapter(legacyAdapter)
+            .mapping((map) =>
+              map
+                .field('email')
+                .from('email_address')
+                .field('firstName')
+                .from('first_name')
+                .field('lastName')
+                .from('last_name')
+                .field('phone')
+                .from('phone_number')
+            )
+            .priority(1)
         )
-        .source('modern', source => source
-          .name('Modern Database')
-          .adapter(modernAdapter)
-          .mapping(map => map
-            .field('email').from('email')
-            .field('firstName').from('fname')
-            .field('lastName').from('lname')
-            .field('phone').from('phone')
-          )
-          .priority(2)
+        .source('modern', (source) =>
+          source
+            .name('Modern Database')
+            .adapter(modernAdapter)
+            .mapping((map) =>
+              map
+                .field('email')
+                .from('email')
+                .field('firstName')
+                .from('fname')
+                .field('lastName')
+                .from('lname')
+                .field('phone')
+                .from('phone')
+            )
+            .priority(2)
         )
         .matchingScope('within-source-first')
-        .conflictResolution(cr => cr
-          .defaultStrategy('preferNonNull')
-          .useSourcePriority(true)
-          .trackProvenance(true)
-          .fieldStrategy('email', 'preferNewer')
-          .fieldStrategy('phone', 'preferNonNull')
+        .conflictResolution((cr) =>
+          cr
+            .defaultStrategy('preferNonNull')
+            .useSourcePriority(true)
+            .trackProvenance(true)
+            .fieldStrategy('email', 'preferNewer')
+            .fieldStrategy('phone', 'preferNonNull')
         )
         .outputAdapter(outputAdapter)
         .writeOutput(true)
@@ -346,10 +390,11 @@ describe('ConsolidationBuilder', () => {
       const adapter = createMockAdapter<LegacyCustomer>('legacy')
 
       const config = createConsolidationBuilder<Customer>()
-        .source('legacy', source => source
-          .name('Legacy')
-          .adapter(adapter)
-          .mapping(map => map.field('email').from('email_address'))
+        .source('legacy', (source) =>
+          source
+            .name('Legacy')
+            .adapter(adapter)
+            .mapping((map) => map.field('email').from('email_address'))
         )
         .build()
 
@@ -370,10 +415,20 @@ describe('ConflictResolutionBuilder', () => {
 
     it('should accept all valid merge strategies', () => {
       const strategies = [
-        'preferFirst', 'preferLast', 'preferNewer', 'preferOlder',
-        'preferNonNull', 'preferLonger', 'preferShorter',
-        'concatenate', 'union', 'mostFrequent',
-        'average', 'sum', 'min', 'max'
+        'preferFirst',
+        'preferLast',
+        'preferNewer',
+        'preferOlder',
+        'preferNonNull',
+        'preferLonger',
+        'preferShorter',
+        'concatenate',
+        'union',
+        'mostFrequent',
+        'average',
+        'sum',
+        'min',
+        'max',
       ] as const
 
       for (const strategy of strategies) {
@@ -408,8 +463,7 @@ describe('ConflictResolutionBuilder', () => {
 
     it('should throw if field name is empty', () => {
       expect(() => {
-        new ConflictResolutionBuilder()
-          .fieldStrategy('', 'preferNonNull')
+        new ConflictResolutionBuilder().fieldStrategy('', 'preferNonNull')
       }).toThrow('fieldName')
     })
 

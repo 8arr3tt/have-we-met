@@ -53,16 +53,24 @@ const resolver = HaveWeMet.create<Person>()
       .field('dateOfBirth', { type: 'date' })
   )
   // Blocking reduces comparisons by 95-99%
-  .blocking((block) =>
-    block.onField('lastName', { transform: 'soundex' })
-  )
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
   // Weighted probabilistic matching
   .matching((match) =>
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('dateOfBirth').strategy('exact').weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(10)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   )
   .build()
@@ -75,10 +83,10 @@ const results = resolver.resolve(newRecord, existingRecords)
 // - potential-match: Needs human review (score 20-45)
 // - no-match: New record (score < 20)
 
-results.forEach(result => {
-  console.log(result.outcome)         // 'definite-match' | 'potential-match' | 'no-match'
+results.forEach((result) => {
+  console.log(result.outcome) // 'definite-match' | 'potential-match' | 'no-match'
   console.log(result.score.totalScore) // Numeric score
-  console.log(result.explanation)      // Field-by-field breakdown
+  console.log(result.explanation) // Field-by-field breakdown
 })
 ```
 
@@ -127,7 +135,7 @@ console.log(`${result.stats.potentialMatchesFound} need human review`)
 // Batch deduplicate from database
 const dbResult = await resolver.deduplicateBatchFromDatabase({
   batchSize: 1000,
-  persistResults: true
+  persistResults: true,
 })
 ```
 
@@ -141,7 +149,7 @@ Queue ambiguous matches for human review:
 // Auto-queue potential matches
 const results = await resolver.resolve(newRecord, {
   autoQueue: true,
-  queueContext: { source: 'import', userId: 'admin' }
+  queueContext: { source: 'import', userId: 'admin' },
 })
 
 // Review queue items
@@ -151,7 +159,7 @@ const pending = await resolver.queue.list({ status: 'pending', limit: 10 })
 await resolver.queue.confirm(itemId, {
   selectedMatchId: matchId,
   notes: 'Verified by phone number',
-  decidedBy: 'reviewer@example.com'
+  decidedBy: 'reviewer@example.com',
 })
 
 // Monitor queue health
@@ -194,38 +202,56 @@ Match and merge records from multiple databases with different schemas:
 ```typescript
 // Consolidate customers from 3 product databases
 const result = await HaveWeMet.consolidation<UnifiedCustomer>()
-  .source('crm', source => source
-    .adapter(crmAdapter)
-    .mapping(map => map
-      .field('email').from('email_address')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-    )
-    .priority(2) // CRM is most trusted
+  .source(
+    'crm',
+    (source) =>
+      source
+        .adapter(crmAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+        )
+        .priority(2) // CRM is most trusted
   )
-  .source('billing', source => source
-    .adapter(billingAdapter)
-    .mapping(map => map
-      .field('email').from('contact_email')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-    )
-    .priority(1)
+  .source('billing', (source) =>
+    source
+      .adapter(billingAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('contact_email')
+          .field('firstName')
+          .from('fname')
+          .field('lastName')
+          .from('lname')
+      )
+      .priority(1)
   )
-  .source('support', source => source
-    .adapter(supportAdapter)
-    .mapping(map => map
-      .field('email').from('email')
-      .field('firstName').from('first')
-      .field('lastName').from('last')
-    )
-    .priority(1)
+  .source('support', (source) =>
+    source
+      .adapter(supportAdapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email')
+          .field('firstName')
+          .from('first')
+          .field('lastName')
+          .from('last')
+      )
+      .priority(1)
   )
   .matchingScope('within-source-first')
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
-    .fieldStrategy('email', 'preferNewer')
+  .conflictResolution((cr) =>
+    cr
+      .useSourcePriority(true)
+      .defaultStrategy('preferNonNull')
+      .fieldStrategy('email', 'preferNewer')
   )
   .outputAdapter(unifiedAdapter)
   .build()
@@ -242,12 +268,14 @@ console.log(`Found ${result.stats.crossSourceMatches} cross-source matches`)
 ### The Problem
 
 Every organization accumulates duplicate records over time:
+
 - Multiple customer accounts for the same person
 - Patient records split across systems
 - Vendor duplicates with slight variations in names
 - Legacy data imports with inconsistent formats
 
 Manual deduplication doesn't scale. Simple exact-match queries miss fuzzy duplicates. You need intelligent matching that handles:
+
 - Typos and spelling variations
 - Different email addresses
 - Formatting differences
@@ -376,23 +404,27 @@ const resolver = HaveWeMet.create<Customer>()
 ## Documentation
 
 ### Getting Started
+
 - [Quick Start Guide](examples/quick-start.ts)
 - [Installation & Setup](docs/installation.md)
 - [Core Concepts](docs/concepts.md)
 
 ### Matching
+
 - [Probabilistic Matching](docs/probabilistic-matching.md)
 - [Tuning Guide](docs/tuning-guide.md) - Configure weights and thresholds
 - [String Similarity Algorithms](docs/algorithms/string-similarity.md)
 - [Examples and Recipes](docs/examples.md)
 
 ### Blocking
+
 - [Blocking Overview](docs/blocking/overview.md)
 - [Blocking Strategies](docs/blocking/strategies.md)
 - [Selection Guide](docs/blocking/selection-guide.md)
 - [Tuning Guide](docs/blocking/tuning.md)
 
 ### Data Preparation
+
 - [Normalizers Overview](docs/normalizers/overview.md)
 - [Name Normalizer](docs/normalizers/name.md)
 - [Email Normalizer](docs/normalizers/email.md)
@@ -402,6 +434,7 @@ const resolver = HaveWeMet.create<Customer>()
 - [Custom Normalizers](docs/normalizers/custom.md)
 
 ### Database Integration
+
 - [Database Adapters](docs/database-adapters.md)
 - [Prisma Adapter](docs/adapter-guides/prisma.md)
 - [Drizzle Adapter](docs/adapter-guides/drizzle.md)
@@ -410,18 +443,21 @@ const resolver = HaveWeMet.create<Customer>()
 - [Migration Guide](docs/migration-guide.md)
 
 ### Human Review
+
 - [Review Queue Overview](docs/review-queue.md)
 - [Queue Workflows](docs/queue-workflows.md)
 - [Queue Metrics](docs/queue-metrics.md)
 - [Queue UI Guide](docs/queue-ui-guide.md)
 
 ### Golden Record
+
 - [Golden Record Overview](docs/golden-record.md)
 - [Merge Strategies](docs/merge-strategies.md)
 - [Provenance Tracking](docs/provenance.md)
 - [Unmerge Operations](docs/unmerge.md)
 
 ### ML Matching
+
 - [ML Matching Overview](docs/ml-matching/overview.md)
 - [Getting Started](docs/ml-matching/getting-started.md)
 - [Feature Extraction](docs/ml-matching/feature-extraction.md)
@@ -430,12 +466,14 @@ const resolver = HaveWeMet.create<Customer>()
 - [Feedback Loop](docs/ml-matching/feedback-loop.md)
 
 ### External Services
+
 - [External Services Overview](docs/external-services.md)
 - [Service Plugins Guide](docs/service-plugins.md)
 - [Built-in Services](docs/built-in-services.md)
 - [Service Resilience](docs/service-resilience.md)
 
 ### API Reference
+
 - [API Documentation](docs/README.md)
 - [Schema Builder](docs/api-reference/schema-builder.md)
 - [Matching Builder](docs/api-reference/matching-builder.md)
@@ -447,10 +485,10 @@ const resolver = HaveWeMet.create<Customer>()
 **have-we-met** is designed for production scale:
 
 | Dataset Size | Batch Deduplication Time | Memory Usage | Comparison Reduction |
-|-------------|--------------------------|--------------|---------------------|
-| 10k records | ~1 second | < 100MB | 97% |
-| 100k records | ~15 seconds | < 500MB | 98% |
-| 1M records | ~3 minutes | < 2GB | 99%+ |
+| ------------ | ------------------------ | ------------ | -------------------- |
+| 10k records  | ~1 second                | < 100MB      | 97%                  |
+| 100k records | ~15 seconds              | < 500MB      | 98%                  |
+| 1M records   | ~3 minutes               | < 2GB        | 99%+                 |
 
 - **Real-time matching**: < 100ms per query
 - **ML predictions**: < 10ms per comparison
@@ -488,6 +526,7 @@ See [PLAN.md](PLAN.md) for the full development roadmap.
 **Current Version**: 0.1.0 (Initial Release)
 
 **Completed Features**:
+
 - ✅ Core matching engine (deterministic, probabilistic, ML)
 - ✅ String similarity algorithms (Levenshtein, Jaro-Winkler, Soundex, Metaphone)
 - ✅ Data normalizers (name, email, phone, address, date)
@@ -500,6 +539,7 @@ See [PLAN.md](PLAN.md) for the full development roadmap.
 - ✅ Comprehensive documentation and examples
 
 **Future Plans**:
+
 - Multi-language name handling
 - Additional phonetic algorithms for non-English names
 - UI components for review queue
@@ -509,6 +549,7 @@ See [PLAN.md](PLAN.md) for the full development roadmap.
 ## Acknowledgments
 
 Built with inspiration from:
+
 - Fellegi-Sunter record linkage theory
 - Duke (Java deduplication engine)
 - Python Record Linkage Toolkit

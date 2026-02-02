@@ -19,10 +19,10 @@ This guide provides benchmark-backed recommendations for optimizing CPU usage, m
 
 Identity resolution has different complexity profiles depending on configuration:
 
-| Approach | Complexity | 10k Records | 100k Records |
-|----------|------------|-------------|--------------|
-| No blocking | O(n²) | ~50M pairs | ~5B pairs |
-| With blocking | O(n × b) | ~400k pairs | ~4M pairs |
+| Approach      | Complexity | 10k Records | 100k Records |
+| ------------- | ---------- | ----------- | ------------ |
+| No blocking   | O(n²)      | ~50M pairs  | ~5B pairs    |
+| With blocking | O(n × b)   | ~400k pairs | ~4M pairs    |
 
 Where `b` = average block size (typically 5-50 depending on strategy).
 
@@ -30,21 +30,21 @@ Where `b` = average block size (typically 5-50 depending on strategy).
 
 From scalability benchmarks on AMD Ryzen 7 7800X3D with 32GB RAM:
 
-| Records | Soundex Blocking | Time | Throughput |
-|---------|------------------|------|------------|
-| 1,000 | ~35,000 pairs | 48ms | ~730,000 pairs/sec |
-| 5,000 | ~175,000 pairs | 1.1s | ~159,000 pairs/sec |
-| 10,000 | ~400,000 pairs | 4.4s | ~91,000 pairs/sec |
+| Records | Soundex Blocking | Time | Throughput         |
+| ------- | ---------------- | ---- | ------------------ |
+| 1,000   | ~35,000 pairs    | 48ms | ~730,000 pairs/sec |
+| 5,000   | ~175,000 pairs   | 1.1s | ~159,000 pairs/sec |
+| 10,000  | ~400,000 pairs   | 4.4s | ~91,000 pairs/sec  |
 
 ### Scaling Behavior
 
 With Soundex blocking, time scales approximately as O(n^1.68):
 
 | Scale Factor | Records | Time Increase |
-|--------------|---------|---------------|
-| 1x | 1,000 | baseline |
-| 5x | 5,000 | 24x slower |
-| 10x | 10,000 | 92x slower |
+| ------------ | ------- | ------------- |
+| 1x           | 1,000   | baseline      |
+| 5x           | 5,000   | 24x slower    |
+| 10x          | 10,000  | 92x slower    |
 
 This sub-quadratic scaling is due to effective blocking.
 
@@ -56,12 +56,12 @@ This sub-quadratic scaling is due to effective blocking.
 
 From benchmark measurements:
 
-| Records | Heap Before | Heap After | Delta |
-|---------|-------------|------------|-------|
-| 500 | 45 MB | 52 MB | +7 MB |
-| 1,000 | 52 MB | 68 MB | +16 MB |
-| 2,000 | 68 MB | 112 MB | +44 MB |
-| 10,000 | ~100 MB | ~350 MB | ~250 MB |
+| Records | Heap Before | Heap After | Delta   |
+| ------- | ----------- | ---------- | ------- |
+| 500     | 45 MB       | 52 MB      | +7 MB   |
+| 1,000   | 52 MB       | 68 MB      | +16 MB  |
+| 2,000   | 68 MB       | 112 MB     | +44 MB  |
+| 10,000  | ~100 MB     | ~350 MB    | ~250 MB |
 
 **Rule of thumb:** ~3-5 MB per 1,000 records (varies by record complexity).
 
@@ -75,7 +75,7 @@ For datasets exceeding available memory, use database adapters with streaming:
 // Instead of loading all records into memory
 const resolver = HaveWeMet.create()
   .schema(/* ... */)
-  .adapter(prismaAdapter(prisma))  // Streams from database
+  .adapter(prismaAdapter(prisma)) // Streams from database
   .build()
 
 // Process in batches
@@ -102,9 +102,9 @@ const records = await db.users.findMany({
     firstName: true,
     lastName: true,
     email: true,
-    dateOfBirth: true
+    dateOfBirth: true,
     // Exclude: address_history, preferences, etc.
-  }
+  },
 })
 ```
 
@@ -119,13 +119,13 @@ Don't accumulate results in memory:
 const allResults = []
 for (const batch of batches) {
   const results = resolver.deduplicateBatch(batch)
-  allResults.push(results)  // Memory keeps growing
+  allResults.push(results) // Memory keeps growing
 }
 
 // Good: Process and discard
 for (const batch of batches) {
   const results = resolver.deduplicateBatch(batch)
-  await persistResults(results)  // Write to database
+  await persistResults(results) // Write to database
   // Results garbage collected after this iteration
 }
 ```
@@ -150,12 +150,12 @@ Large blocks consume more memory. Add secondary blocking keys:
 
 ### Memory Targets by Dataset Size
 
-| Records | Target Peak Memory | Recommended Approach |
-|---------|-------------------|---------------------|
-| <10,000 | 500 MB | In-memory processing |
-| 10,000-50,000 | 1-2 GB | In-memory with optimization |
-| 50,000-100,000 | 2-4 GB | Consider batching |
-| >100,000 | N/A | Database adapter required |
+| Records        | Target Peak Memory | Recommended Approach        |
+| -------------- | ------------------ | --------------------------- |
+| <10,000        | 500 MB             | In-memory processing        |
+| 10,000-50,000  | 1-2 GB             | In-memory with optimization |
+| 50,000-100,000 | 2-4 GB             | Consider batching           |
+| >100,000       | N/A                | Database adapter required   |
 
 ---
 
@@ -165,13 +165,13 @@ Large blocks consume more memory. Add secondary blocking keys:
 
 String similarity algorithm performance from Febrl benchmarks:
 
-| Algorithm | Pairs/sec | Relative Speed |
-|-----------|-----------|----------------|
-| Exact match | ~800,000 | Fastest |
-| Jaro-Winkler | ~406,000 | Fast |
-| Soundex+JW | ~362,000 | Fast |
-| Levenshtein | ~344,000 | Moderate |
-| Metaphone | ~300,000 | Slower |
+| Algorithm    | Pairs/sec | Relative Speed |
+| ------------ | --------- | -------------- |
+| Exact match  | ~800,000  | Fastest        |
+| Jaro-Winkler | ~406,000  | Fast           |
+| Soundex+JW   | ~362,000  | Fast           |
+| Levenshtein  | ~344,000  | Moderate       |
+| Metaphone    | ~300,000  | Slower         |
 
 **Recommendation:** Use Jaro-Winkler for name fields (best speed/accuracy balance).
 
@@ -235,12 +235,12 @@ Field thresholds prevent unnecessary score calculations:
 
 Blocking transform choice affects CPU:
 
-| Transform | Speed (per 10k records) |
-|-----------|-------------------------|
-| firstLetter | ~17ms |
-| soundex | ~38ms |
-| metaphone | ~44ms |
-| Custom function | Varies |
+| Transform       | Speed (per 10k records) |
+| --------------- | ----------------------- |
+| firstLetter     | ~17ms                   |
+| soundex         | ~38ms                   |
+| metaphone       | ~44ms                   |
+| Custom function | Varies                  |
 
 ```typescript
 // Fastest
@@ -259,18 +259,18 @@ If normalizing repeatedly, cache results:
 
 ```typescript
 // Bad: Normalizing same values repeatedly
-const normalizedRecords = records.map(r => ({
+const normalizedRecords = records.map((r) => ({
   ...r,
-  normalizedName: normalizeName(r.name),  // Called every time
-  normalizedPhone: normalizePhone(r.phone)
+  normalizedName: normalizeName(r.name), // Called every time
+  normalizedPhone: normalizePhone(r.phone),
 }))
 
 // Good: Normalize once during ingest
 await db.records.update({
   data: {
     normalizedName: normalizeName(record.name),
-    normalizedPhone: normalizePhone(record.phone)
-  }
+    normalizedPhone: normalizePhone(record.phone),
+  },
 })
 // Then match against normalized fields
 ```
@@ -283,11 +283,11 @@ await db.records.update({
 
 From benchmark data (Soundex blocking, Jaro-Winkler matching):
 
-| Dataset Size | Throughput |
-|--------------|------------|
-| 1k records | ~21 runs/second |
-| 5k records | ~0.9 runs/second |
-| 10k records | ~0.23 runs/second |
+| Dataset Size | Throughput        |
+| ------------ | ----------------- |
+| 1k records   | ~21 runs/second   |
+| 5k records   | ~0.9 runs/second  |
+| 10k records  | ~0.23 runs/second |
 
 ### Throughput Optimization Techniques
 
@@ -297,7 +297,7 @@ Process records in optimal batch sizes:
 
 ```typescript
 // Optimal batch size depends on memory and dataset
-const OPTIMAL_BATCH_SIZE = 5000  // Tune based on your environment
+const OPTIMAL_BATCH_SIZE = 5000 // Tune based on your environment
 
 async function processLargeDataset(records: Record[]) {
   const results = []
@@ -315,11 +315,11 @@ async function processLargeDataset(records: Record[]) {
 **Batch size guidelines:**
 
 | Available Memory | Recommended Batch Size |
-|------------------|----------------------|
-| 2 GB | 2,000-3,000 |
-| 4 GB | 5,000-7,000 |
-| 8 GB | 10,000-15,000 |
-| 16+ GB | 20,000+ |
+| ---------------- | ---------------------- |
+| 2 GB             | 2,000-3,000            |
+| 4 GB             | 5,000-7,000            |
+| 8 GB             | 10,000-15,000          |
+| 16+ GB           | 20,000+                |
 
 #### Technique 2: Parallel Processing by Block
 
@@ -334,14 +334,19 @@ const { Worker } = require('worker_threads')
 
 const workers = []
 for (const [blockKey, blockRecords] of blocks) {
-  if (blockRecords.length > 100) {  // Only parallelize large blocks
-    workers.push(new Worker('./match-worker.js', {
-      workerData: { blockKey, records: blockRecords }
-    }))
+  if (blockRecords.length > 100) {
+    // Only parallelize large blocks
+    workers.push(
+      new Worker('./match-worker.js', {
+        workerData: { blockKey, records: blockRecords },
+      })
+    )
   }
 }
 
-await Promise.all(workers.map(w => new Promise(resolve => w.on('exit', resolve))))
+await Promise.all(
+  workers.map((w) => new Promise((resolve) => w.on('exit', resolve)))
+)
 ```
 
 #### Technique 3: Index-Based Lookup for Real-Time
@@ -367,7 +372,7 @@ const matches = resolver.resolve(newRecord, allExistingRecords)
 // Good: Compare against recent records only (if domain allows)
 const recentRecords = await db.records.findMany({
   where: { createdAt: { gt: oneWeekAgo } },
-  take: 10000
+  take: 10000,
 })
 const matches = resolver.resolve(newRecord, recentRecords)
 ```
@@ -386,7 +391,7 @@ Compare only new records against existing corpus:
 async function processNewRecords(newRecords: Record[]) {
   // Get existing records (or use database adapter)
   const existingRecords = await db.records.findMany({
-    where: { processed: true }
+    where: { processed: true },
   })
 
   for (const newRecord of newRecords) {
@@ -400,7 +405,7 @@ async function processNewRecords(newRecords: Record[]) {
     // Mark as processed
     await db.records.update({
       where: { id: newRecord.id },
-      data: { processed: true }
+      data: { processed: true },
     })
   }
 }
@@ -415,15 +420,15 @@ For time-series data, only match within a time window:
 
 ```typescript
 async function processWithSlidingWindow(newRecord: Record) {
-  const windowDays = 90  // Match against records from last 90 days
+  const windowDays = 90 // Match against records from last 90 days
 
   const windowStart = new Date()
   windowStart.setDate(windowStart.getDate() - windowDays)
 
   const windowRecords = await db.records.findMany({
     where: {
-      createdAt: { gt: windowStart }
-    }
+      createdAt: { gt: windowStart },
+    },
   })
 
   return resolver.resolve(newRecord, windowRecords)
@@ -431,6 +436,7 @@ async function processWithSlidingWindow(newRecord: Record) {
 ```
 
 **When to use:**
+
 - Data has temporal relevance (e.g., customer interactions)
 - Duplicates unlikely to span long time periods
 - Performance is critical
@@ -447,8 +453,8 @@ async function processBlockBased(newRecord: Record) {
   // Load only records in the same block
   const blockRecords = await db.records.findMany({
     where: {
-      lastNameSoundex: blockKey  // Pre-computed during ingest
-    }
+      lastNameSoundex: blockKey, // Pre-computed during ingest
+    },
   })
 
   return resolver.resolve(newRecord, blockRecords)
@@ -456,6 +462,7 @@ async function processBlockBased(newRecord: Record) {
 ```
 
 **Prerequisites:**
+
 - Store blocking keys during ingest
 - Index on blocking key columns
 
@@ -467,13 +474,13 @@ async function processBlockBased(newRecord: Record) {
 
 Track these metrics in production:
 
-| Metric | What to Monitor | Alert Threshold |
-|--------|-----------------|-----------------|
-| Matching time | P50, P95, P99 latency | P95 > 5s |
-| Throughput | Records processed per minute | < 50% of baseline |
-| Memory usage | Peak heap size | > 80% of available |
-| Block size | Max block size | > 10,000 records |
-| Queue depth | Pending match jobs | Growing continuously |
+| Metric        | What to Monitor              | Alert Threshold      |
+| ------------- | ---------------------------- | -------------------- |
+| Matching time | P50, P95, P99 latency        | P95 > 5s             |
+| Throughput    | Records processed per minute | < 50% of baseline    |
+| Memory usage  | Peak heap size               | > 80% of available   |
+| Block size    | Max block size               | > 10,000 records     |
+| Queue depth   | Pending match jobs           | Growing continuously |
 
 ### Monitoring Implementation
 
@@ -502,7 +509,7 @@ async function matchWithMetrics(records: Record[]): Promise<MatchingMetrics> {
     pairCount: calculatePairsCompared(results),
     duration: endTime - startTime,
     peakMemory: Math.max(startMemory, endMemory),
-    maxBlockSize: getMaxBlockSize(results)
+    maxBlockSize: getMaxBlockSize(results),
   }
 }
 
@@ -532,12 +539,12 @@ Track these trends over time:
 
 Based on benchmark data, estimate capacity:
 
-| Daily Records | Required Processing Time | Recommended Spec |
-|---------------|--------------------------|------------------|
-| 1,000 | < 1 minute | Any modern CPU |
-| 10,000 | ~5 minutes | 4+ cores, 8GB RAM |
-| 100,000 | ~1 hour | 8+ cores, 16GB RAM |
-| 1,000,000 | ~10 hours | Distributed processing |
+| Daily Records | Required Processing Time | Recommended Spec       |
+| ------------- | ------------------------ | ---------------------- |
+| 1,000         | < 1 minute               | Any modern CPU         |
+| 10,000        | ~5 minutes               | 4+ cores, 8GB RAM      |
+| 100,000       | ~1 hour                  | 8+ cores, 16GB RAM     |
+| 1,000,000     | ~10 hours                | Distributed processing |
 
 ---
 
@@ -555,21 +562,21 @@ Based on benchmark data, estimate capacity:
 
 ### Quick Wins
 
-| Optimization | Expected Impact |
-|--------------|-----------------|
-| Enable Soundex blocking | 8-10x speedup |
+| Optimization                    | Expected Impact      |
+| ------------------------------- | -------------------- |
+| Enable Soundex blocking         | 8-10x speedup        |
 | Use exact match for identifiers | 2x faster than fuzzy |
-| Add field thresholds | 10-20% CPU reduction |
-| Batch processing | Memory stability |
-| Incremental matching | O(m×n) vs O(n²) |
+| Add field thresholds            | 10-20% CPU reduction |
+| Batch processing                | Memory stability     |
+| Incremental matching            | O(m×n) vs O(n²)      |
 
 ### Performance Targets by Use Case
 
-| Use Case | Latency Target | Throughput Target |
-|----------|----------------|-------------------|
-| Real-time lookup | < 100ms | 100+ queries/sec |
-| Batch deduplication | < 10 min | 10k+ records/min |
-| Large migration | < 24 hours | 1M+ records/day |
+| Use Case            | Latency Target | Throughput Target |
+| ------------------- | -------------- | ----------------- |
+| Real-time lookup    | < 100ms        | 100+ queries/sec  |
+| Batch deduplication | < 10 min       | 10k+ records/min  |
+| Large migration     | < 24 hours     | 1M+ records/day   |
 
 ### Next Steps
 

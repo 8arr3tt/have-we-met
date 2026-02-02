@@ -29,6 +29,7 @@ Modern organizations often have:
 - **Vendor systems**: External systems with their own data models
 
 Each system has:
+
 - Different field names (e.g., `email_address` vs `email` vs `contact_email`)
 - Different data types (e.g., dates as strings vs timestamps)
 - Different levels of completeness (some missing optional fields)
@@ -51,22 +52,26 @@ have-we-met's consolidation feature provides:
 ### 1. SaaS Multi-Product Consolidation
 
 **Scenario**: SaaS company has 3 products (CRM, Analytics, Support), each with its own customer database. Need unified customer view for:
+
 - Cross-selling campaigns
 - Unified billing
 - Customer 360 dashboards
 
 **Sources**:
+
 - Product A database (PostgreSQL)
 - Product B database (PostgreSQL)
 - Product C database (MongoDB)
 
 **Challenges**:
+
 - Field naming differs (e.g., `email_address`, `email`, `contact_email`)
 - Some fields only in certain products (e.g., `support_tier` only in Support DB)
 - Different data completeness (CRM has most complete profiles)
 - Need to preserve all source IDs for linking back
 
 **Solution**:
+
 ```typescript
 const result = await HaveWeMet.consolidation<UnifiedCustomer>()
   .source('crm', source => source
@@ -92,16 +97,19 @@ const result = await HaveWeMet.consolidation<UnifiedCustomer>()
 ### 2. Healthcare Master Patient Index (MPI)
 
 **Scenario**: Hospital network with 3 facilities, each using different EHR systems. Need Master Patient Index for:
+
 - Coordinated care across facilities
 - Preventing duplicate medical records
 - HIPAA-compliant patient matching
 
 **Sources**:
+
 - Hospital A (Epic)
 - Hospital B (Cerner)
 - Hospital C (Meditech)
 
 **Challenges**:
+
 - Conservative matching required (false positives are dangerous)
 - Optional SSN (some patients don't provide it)
 - Nickname variations (Mike vs Michael)
@@ -109,6 +117,7 @@ const result = await HaveWeMet.consolidation<UnifiedCustomer>()
 - Must match across all facilities comprehensively
 
 **Solution**:
+
 ```typescript
 const result = await HaveWeMet.consolidation<MasterPatient>()
   .source('hospital_a', source => /* ... */)
@@ -135,16 +144,19 @@ const result = await HaveWeMet.consolidation<MasterPatient>()
 ### 3. E-commerce Product Catalog Consolidation
 
 **Scenario**: E-commerce aggregator pulling products from 50+ vendor APIs. Need unified catalog for:
+
 - Price comparison
 - Unified search
 - Duplicate detection (same product from multiple vendors)
 
 **Sources**:
+
 - Vendor A API (REST)
 - Vendor B CSV feed
 - Vendor C database
 
 **Challenges**:
+
 - Each vendor uses different SKU format
 - Product names vary (e.g., "Apple iPhone 15 Pro" vs "iPhone 15 Pro 128GB")
 - Prices in different currencies
@@ -152,6 +164,7 @@ const result = await HaveWeMet.consolidation<MasterPatient>()
 - Need lowest price for each product
 
 **Solution**:
+
 ```typescript
 const result = await HaveWeMet.consolidation<UnifiedProduct>()
   .source('vendor_a', source => source
@@ -182,21 +195,25 @@ const result = await HaveWeMet.consolidation<UnifiedProduct>()
 ### 4. Post-Merger Integration
 
 **Scenario**: Company A acquires Company B. Both have customer databases. Need consolidated view for:
+
 - Identifying overlapping customers
 - Migrating to unified system
 - Preventing duplicate communications
 
 **Sources**:
+
 - Company A database (current system)
 - Company B database (legacy system being retired)
 
 **Challenges**:
+
 - Company A data is authoritative (more recent, more complete)
 - Company B has customers not in Company A
 - Need to preserve Company B IDs for migration tracking
 - Some customers exist in both (shared clients)
 
 **Solution**:
+
 ```typescript
 const result = await HaveWeMet.consolidation<Customer>()
   .source('company_a', source => source
@@ -221,11 +238,13 @@ const result = await HaveWeMet.consolidation<Customer>()
 ### 5. ETL Pipeline / Data Migration
 
 **Scenario**: Migrating from multiple legacy systems to new unified system. Sources include:
+
 - CSV files (historical data)
 - Legacy PostgreSQL database
 - REST API (current system)
 
 **Challenges**:
+
 - One-time batch operation (not ongoing)
 - Need comprehensive error reporting
 - Must track which records came from which source
@@ -352,6 +371,7 @@ const result = await HaveWeMet.consolidation<Customer>()
 **Solution**: Define mappings from each source's schema to a unified output schema.
 
 **Example**:
+
 ```typescript
 // Source A schema
 interface SourceA {
@@ -402,21 +422,25 @@ interface Output {
 **Two Strategies**:
 
 #### Within-Source-First
+
 1. Deduplicate within each source independently
 2. Match the deduplicated records across sources
 3. Merge matches
 
 **When to use**:
+
 - Sources have internal duplicates
 - Clear source priority hierarchy
 - Want to preserve source-specific data quality
 
 #### Unified Pool
+
 1. Map all records to unified schema
 2. Match all records together (within and across sources)
 3. Merge matches
 
 **When to use**:
+
 - Sources have minimal internal duplicates
 - Need comprehensive cross-source matching
 - Must catch all potential duplicates
@@ -430,6 +454,7 @@ interface Output {
 **Solution**: Assign priority to each source. Higher priority sources are preferred when resolving conflicts.
 
 **Example**:
+
 ```typescript
 .source('crm', source => source.priority(3))       // Most trusted
 .source('billing', source => source.priority(2))   // Medium trust
@@ -437,6 +462,7 @@ interface Output {
 ```
 
 **Priority Modes**:
+
 - **priority-first**: Always use highest priority source's value
 - **priority-fallback**: Use highest priority non-null value
 - **priority-only**: Only consider highest priority source (ignore others)
@@ -450,6 +476,7 @@ interface Output {
 **Solution**: Configure merge strategies per field.
 
 **Example**:
+
 ```typescript
 .conflictResolution(cr => cr
   .defaultStrategy('preferNonNull')           // Default: any non-null value
@@ -470,11 +497,13 @@ interface Output {
 **Solution**: Consolidation automatically tracks provenance.
 
 **What's Tracked**:
+
 - Which source records were merged into each golden record
 - Which source each field value came from
 - Original source IDs for linking back to source systems
 
 **Example Provenance**:
+
 ```typescript
 {
   goldenRecord: {
@@ -498,38 +527,46 @@ interface Output {
 ### Use Consolidation When:
 
 ✅ **Multiple tables/databases with different schemas**
+
 - Product A customer table, Product B customer table
 - Legacy system + new system
 - Department silos (sales DB, support DB, billing DB)
 
 ✅ **Need unified view across systems**
+
 - Customer 360
 - Master Patient Index (MPI)
 - Product catalog from multiple vendors
 
 ✅ **Data quality varies by source**
+
 - Some sources more trusted than others
 - Need source priority for conflict resolution
 
 ✅ **Cross-system matching required**
+
 - Same person in multiple systems
 - Same product from multiple vendors
 
 ✅ **ETL / Data Migration**
+
 - One-time consolidation from multiple sources
 - Ongoing synchronization pipelines
 
 ### Use Standard Resolution When:
 
 ✅ **Single table/database**
+
 - Deduplicating within one table
 - All records have same schema
 
 ✅ **Simple matching requirements**
+
 - Just finding duplicates
 - No cross-schema concerns
 
 ✅ **Real-time matching at point of entry**
+
 - New record vs existing records
 - Single source of truth
 
@@ -565,7 +602,7 @@ interface Output {
 ### Scalability
 
 | Dataset Size | Sources | Records/Source | Within-Source-First | Unified Pool | Memory Usage |
-|--------------|---------|----------------|---------------------|--------------|--------------|
+| ------------ | ------- | -------------- | ------------------- | ------------ | ------------ |
 | Small        | 2-3     | 1k-10k         | <1s                 | <2s          | <100 MB      |
 | Medium       | 3-5     | 10k-50k        | <10s                | <20s         | <500 MB      |
 | Large        | 3-5     | 50k-100k       | <30s                | <60s         | <1 GB        |
@@ -574,19 +611,23 @@ interface Output {
 ### Performance Factors
 
 **Blocking Strategies**: Reduce comparison count from O(n²) to O(n·k) where k << n
+
 - Standard blocking: 96-99% reduction in comparisons
 - Sorted neighbourhood: 95-98% reduction
 
 **Matching Scope**:
+
 - Within-source-first: 40-60% faster (processes smaller batches)
 - Unified pool: More comprehensive (may find additional matches)
 
 **Schema Mapping Overhead**:
+
 - ~5-10% overhead for field mapping
 - ~10-20% overhead for transform functions
 - Negligible overhead for static field mapping
 
 **Database Adapter Performance**:
+
 - Batch loading: Essential for 10k+ records
 - Indexed blocking fields: 10x-100x faster blocking queries
 - Transaction support: Ensures consistency, slight performance cost
@@ -624,44 +665,73 @@ interface UnifiedCustomer {
 // Configure consolidation
 const result = await HaveWeMet.consolidation<UnifiedCustomer>()
   // Source 1: CRM Database
-  .source('crm', source => source
-    .name('CRM Database')
-    .adapter(new PrismaAdapter(prisma.crmCustomer))
-    .mapping(map => map
-      .field('email').from('email_address')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-      .field('phone').from('phone_number')
-      .field('createdAt').from('created_at')
-    )
-    .priority(2) // CRM is more trusted
+  .source(
+    'crm',
+    (source) =>
+      source
+        .name('CRM Database')
+        .adapter(new PrismaAdapter(prisma.crmCustomer))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+            .field('phone')
+            .from('phone_number')
+            .field('createdAt')
+            .from('created_at')
+        )
+        .priority(2) // CRM is more trusted
   )
 
   // Source 2: Billing Database
-  .source('billing', source => source
-    .name('Billing System')
-    .adapter(new PrismaAdapter(prisma.billingCustomer))
-    .mapping(map => map
-      .field('email').from('email')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-      .field('phone').from('contact_phone')
-    )
-    .priority(1) // Billing is less trusted
+  .source(
+    'billing',
+    (source) =>
+      source
+        .name('Billing System')
+        .adapter(new PrismaAdapter(prisma.billingCustomer))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('fname')
+            .field('lastName')
+            .from('lname')
+            .field('phone')
+            .from('contact_phone')
+        )
+        .priority(1) // Billing is less trusted
   )
 
   // Configure matching
-  .schema(schema => schema
-    .field('email', { type: 'email' })
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
-    .field('phone', { type: 'phone' })
+  .schema((schema) =>
+    schema
+      .field('email', { type: 'email' })
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
+      .field('phone', { type: 'phone' })
   )
-  .matching(match => match
-    .field('email').strategy('exact').weight(30)
-    .field('phone').strategy('exact').weight(20)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(30)
+      .field('phone')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
   )
   .thresholds({ noMatch: 25, definiteMatch: 50 })
 
@@ -669,11 +739,13 @@ const result = await HaveWeMet.consolidation<UnifiedCustomer>()
   .matchingScope('within-source-first')
 
   // Conflict resolution
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)        // Use source priority
-    .defaultStrategy('preferNonNull') // Default: any non-null
-    .fieldStrategy('email', 'preferNewer')    // Latest email
-    .fieldStrategy('createdAt', 'preferOlder') // Earliest date
+  .conflictResolution(
+    (cr) =>
+      cr
+        .useSourcePriority(true) // Use source priority
+        .defaultStrategy('preferNonNull') // Default: any non-null
+        .fieldStrategy('email', 'preferNewer') // Latest email
+        .fieldStrategy('createdAt', 'preferOlder') // Earliest date
   )
 
   // Output configuration
@@ -691,12 +763,13 @@ console.log(`Unique records: ${result.stats.uniqueRecords}`)
 console.log(`Execution time: ${result.stats.executionTimeMs}ms`)
 
 // Access golden records
-result.goldenRecords.forEach(record => {
+result.goldenRecords.forEach((record) => {
   console.log(`${record.firstName} ${record.lastName} <${record.email}>`)
 })
 ```
 
 **Output**:
+
 ```
 Golden records: 8,234
 Cross-source matches: 1,542

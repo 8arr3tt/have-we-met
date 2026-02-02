@@ -7,6 +7,7 @@ This guide demonstrates how to use have-we-met for customer data deduplication i
 ### The Challenge
 
 Customer databases accumulate duplicates from multiple sources:
+
 - Website registrations with different emails
 - Point-of-sale captures with typos
 - CRM imports from acquired companies
@@ -14,6 +15,7 @@ Customer databases accumulate duplicates from multiple sources:
 - Support ticket creation
 
 Duplicates lead to:
+
 - Repeated marketing to the same customer
 - Fragmented purchase history
 - Inconsistent customer experience
@@ -60,81 +62,131 @@ interface Customer {
 const prisma = new PrismaClient()
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(schema => schema
-    .field('email').type('email')
-    .field('phone').type('phone')
-    .field('firstName').type('name').component('first')
-    .field('lastName').type('name').component('last')
-    .field('billingAddress').type('address')
-    .field('billingCity').type('string')
-    .field('billingState').type('string')
-    .field('billingZip').type('string')
-    .field('shippingAddress').type('address')
-    .field('shippingCity').type('string')
-    .field('shippingZip').type('string')
-    .field('createdAt').type('date')
-    .field('updatedAt').type('date')
-    .field('loyaltyId').type('string')
+  .schema((schema) =>
+    schema
+      .field('email')
+      .type('email')
+      .field('phone')
+      .type('phone')
+      .field('firstName')
+      .type('name')
+      .component('first')
+      .field('lastName')
+      .type('name')
+      .component('last')
+      .field('billingAddress')
+      .type('address')
+      .field('billingCity')
+      .type('string')
+      .field('billingState')
+      .type('string')
+      .field('billingZip')
+      .type('string')
+      .field('shippingAddress')
+      .type('address')
+      .field('shippingCity')
+      .type('string')
+      .field('shippingZip')
+      .type('string')
+      .field('createdAt')
+      .type('date')
+      .field('updatedAt')
+      .type('date')
+      .field('loyaltyId')
+      .type('string')
   )
-  .blocking(block => block
-    // Primary: Block by email domain to group corporate customers
-    .onField('email', { transform: 'domain' })
-    // Also block by last name soundex for customers with different emails
-    .composite('union', comp => comp
+  .blocking((block) =>
+    block
+      // Primary: Block by email domain to group corporate customers
       .onField('email', { transform: 'domain' })
-      .onField('lastName', { transform: 'soundex' })
-    )
+      // Also block by last name soundex for customers with different emails
+      .composite('union', (comp) =>
+        comp
+          .onField('email', { transform: 'domain' })
+          .onField('lastName', { transform: 'soundex' })
+      )
   )
-  .matching(match => match
-    // Email is the most reliable identifier
-    .field('email').strategy('exact').weight(25)
+  .matching((match) =>
+    match
+      // Email is the most reliable identifier
+      .field('email')
+      .strategy('exact')
+      .weight(25)
 
-    // Loyalty ID is definitive when present
-    .field('loyaltyId').strategy('exact').weight(30)
+      // Loyalty ID is definitive when present
+      .field('loyaltyId')
+      .strategy('exact')
+      .weight(30)
 
-    // Phone helps but changes frequently
-    .field('phone').strategy('exact').weight(12)
+      // Phone helps but changes frequently
+      .field('phone')
+      .strategy('exact')
+      .weight(12)
 
-    // Names require fuzzy matching with high threshold
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.88)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.90)
+      // Names require fuzzy matching with high threshold
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.88)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.9)
 
-    // Address matching for supporting evidence
-    .field('billingZip').strategy('exact').weight(8)
-    .field('billingCity').strategy('jaro-winkler').weight(5).threshold(0.85)
+      // Address matching for supporting evidence
+      .field('billingZip')
+      .strategy('exact')
+      .weight(8)
+      .field('billingCity')
+      .strategy('jaro-winkler')
+      .weight(5)
+      .threshold(0.85)
 
-    // Conservative thresholds for high precision
-    // Max possible: 100 (if all fields match)
-    // noMatch: 20 (~20% - clear non-matches)
-    // definiteMatch: 55 (~55% - strong evidence required)
-    .thresholds({ noMatch: 20, definiteMatch: 55 })
+      // Conservative thresholds for high precision
+      // Max possible: 100 (if all fields match)
+      // noMatch: 20 (~20% - clear non-matches)
+      // definiteMatch: 55 (~55% - strong evidence required)
+      .thresholds({ noMatch: 20, definiteMatch: 55 })
   )
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
 
-    // Names: prefer longer (more complete)
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
+      // Names: prefer longer (more complete)
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('lastName')
+      .strategy('preferLonger')
 
-    // Contact info: prefer newer
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNewer')
+      // Contact info: prefer newer
+      .field('email')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNewer')
 
-    // Address: prefer newer (most current)
-    .field('billingAddress').strategy('preferNewer')
-    .field('billingCity').strategy('preferNewer')
-    .field('billingState').strategy('preferNewer')
-    .field('billingZip').strategy('preferNewer')
-    .field('shippingAddress').strategy('preferNewer')
-    .field('shippingCity').strategy('preferNewer')
-    .field('shippingZip').strategy('preferNewer')
+      // Address: prefer newer (most current)
+      .field('billingAddress')
+      .strategy('preferNewer')
+      .field('billingCity')
+      .strategy('preferNewer')
+      .field('billingState')
+      .strategy('preferNewer')
+      .field('billingZip')
+      .strategy('preferNewer')
+      .field('shippingAddress')
+      .strategy('preferNewer')
+      .field('shippingCity')
+      .strategy('preferNewer')
+      .field('shippingZip')
+      .strategy('preferNewer')
 
-    // Loyalty ID: prefer non-null (keep the ID if we have one)
-    .field('loyaltyId').strategy('preferNonNull')
+      // Loyalty ID: prefer non-null (keep the ID if we have one)
+      .field('loyaltyId')
+      .strategy('preferNonNull')
 
-    // Track which record won each field
-    .trackProvenance(true)
+      // Track which record won each field
+      .trackProvenance(true)
   )
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
@@ -151,11 +203,11 @@ async function deduplicateCustomers() {
 
   // Run batch deduplication
   const results = await resolver.deduplicateBatch(customers, {
-    autoQueue: true,  // Auto-queue potential matches for review
+    autoQueue: true, // Auto-queue potential matches for review
     queueContext: {
       source: 'scheduled-dedup',
-      metadata: { runDate: new Date().toISOString() }
-    }
+      metadata: { runDate: new Date().toISOString() },
+    },
   })
 
   console.log('Deduplication complete:')
@@ -172,22 +224,30 @@ async function deduplicateCustomers() {
 
 ```typescript
 async function processDefiniteMatches(results) {
-  for (const match of results.matches.filter(m => m.outcome === 'definite-match')) {
+  for (const match of results.matches.filter(
+    (m) => m.outcome === 'definite-match'
+  )) {
     // Review the match explanation before merging
     console.log('Match found:')
-    console.log(`  Record A: ${match.recordA.email} - ${match.recordA.firstName} ${match.recordA.lastName}`)
-    console.log(`  Record B: ${match.recordB.email} - ${match.recordB.firstName} ${match.recordB.lastName}`)
+    console.log(
+      `  Record A: ${match.recordA.email} - ${match.recordA.firstName} ${match.recordA.lastName}`
+    )
+    console.log(
+      `  Record B: ${match.recordB.email} - ${match.recordB.firstName} ${match.recordB.lastName}`
+    )
     console.log(`  Score: ${match.score}/${match.maxScore}`)
     console.log(`  Explanation:`)
 
     for (const field of match.explanation.fieldComparisons) {
       const icon = field.contributed ? '✓' : '✗'
-      console.log(`    ${icon} ${field.field}: ${field.similarity.toFixed(2)} × ${field.weight} = ${field.contribution.toFixed(1)}`)
+      console.log(
+        `    ${icon} ${field.field}: ${field.similarity.toFixed(2)} × ${field.weight} = ${field.contribution.toFixed(1)}`
+      )
     }
 
     // Execute the merge
     const mergeResult = await resolver.merge([match.recordA, match.recordB], {
-      mergedBy: 'automated-dedup'
+      mergedBy: 'automated-dedup',
     })
 
     console.log(`  Created golden record: ${mergeResult.goldenRecordId}`)
@@ -204,7 +264,7 @@ async function reviewPendingMatches() {
     status: 'pending',
     orderBy: 'priority',
     orderDirection: 'desc',
-    limit: 50
+    limit: 50,
   })
 
   console.log(`${pending.total} items pending review`)
@@ -226,12 +286,16 @@ async function reviewPendingMatches() {
 }
 
 // Confirm a match (typically called from UI)
-async function confirmMatch(itemId: string, matchId: string, reviewerId: string) {
+async function confirmMatch(
+  itemId: string,
+  matchId: string,
+  reviewerId: string
+) {
   await resolver.queue.merge(itemId, {
     selectedMatchId: matchId,
     notes: 'Verified same customer by support ticket history',
     confidence: 0.95,
-    decidedBy: reviewerId
+    decidedBy: reviewerId,
   })
 }
 
@@ -240,7 +304,7 @@ async function rejectMatch(itemId: string, reviewerId: string) {
   await resolver.queue.reject(itemId, {
     notes: 'Different customers with similar names',
     confidence: 0.9,
-    decidedBy: reviewerId
+    decidedBy: reviewerId,
   })
 }
 ```
@@ -249,15 +313,15 @@ async function rejectMatch(itemId: string, reviewerId: string) {
 
 ### Weight Selection
 
-| Field | Weight | Rationale |
-|-------|--------|-----------|
-| loyaltyId | 30 | Definitive identifier when present |
-| email | 25 | Highly unique, primary identifier |
-| phone | 12 | Useful but changes frequently |
-| firstName | 10 | Common but helps confirm identity |
-| lastName | 10 | More discriminating than first name |
-| billingZip | 8 | Geographic confirmation |
-| billingCity | 5 | Weak signal, supporting evidence |
+| Field       | Weight | Rationale                           |
+| ----------- | ------ | ----------------------------------- |
+| loyaltyId   | 30     | Definitive identifier when present  |
+| email       | 25     | Highly unique, primary identifier   |
+| phone       | 12     | Useful but changes frequently       |
+| firstName   | 10     | Common but helps confirm identity   |
+| lastName    | 10     | More discriminating than first name |
+| billingZip  | 8      | Geographic confirmation             |
+| billingCity | 5      | Weak signal, supporting evidence    |
 
 ### Threshold Selection
 
@@ -299,12 +363,12 @@ For 100,000 customers, this typically reduces comparisons by 95%+ compared to ex
 
 ### Scaling Recommendations
 
-| Customer Count | Strategy |
-|---------------|----------|
-| < 10,000 | Standard blocking sufficient |
-| 10,000 - 100,000 | Composite blocking recommended |
-| 100,000+ | Consider sorted neighborhood with smaller window |
-| 1,000,000+ | Partition by region/source before deduplication |
+| Customer Count   | Strategy                                         |
+| ---------------- | ------------------------------------------------ |
+| < 10,000         | Standard blocking sufficient                     |
+| 10,000 - 100,000 | Composite blocking recommended                   |
+| 100,000+         | Consider sorted neighborhood with smaller window |
+| 1,000,000+       | Partition by region/source before deduplication  |
 
 ### Memory Management
 
@@ -318,14 +382,16 @@ async function batchDeduplication(batchSize = 10000) {
     const batch = await prisma.customer.findMany({
       skip: offset,
       take: batchSize,
-      orderBy: { createdAt: 'asc' }
+      orderBy: { createdAt: 'asc' },
     })
 
     await resolver.deduplicateBatch(batch, {
-      autoQueue: true
+      autoQueue: true,
     })
 
-    console.log(`Processed ${Math.min(offset + batchSize, totalCustomers)}/${totalCustomers}`)
+    console.log(
+      `Processed ${Math.min(offset + batchSize, totalCustomers)}/${totalCustomers}`
+    )
   }
 }
 ```
@@ -354,11 +420,11 @@ Track who accessed and modified data:
 
 ```typescript
 const mergeResult = await resolver.merge(records, {
-  mergedBy: req.user.email,  // Track the person
+  mergedBy: req.user.email, // Track the person
   context: {
     ip: req.ip,
-    sessionId: req.session.id
-  }
+    sessionId: req.session.id,
+  },
 })
 
 // Provenance tracks field-level attribution
@@ -372,7 +438,7 @@ Integrate with your authorization system:
 ```typescript
 async function reviewQueueWithAuth(userId: string) {
   // Verify user has review permissions
-  if (!await hasPermission(userId, 'customer:review')) {
+  if (!(await hasPermission(userId, 'customer:review'))) {
     throw new UnauthorizedError('Cannot access review queue')
   }
 
@@ -398,11 +464,12 @@ async function getDeduplicationMetrics() {
     decisionsLast7d: queueStats.throughput?.last7d,
 
     // Quality indicators
-    confirmRate: queueStats.byStatus.confirmed /
+    confirmRate:
+      queueStats.byStatus.confirmed /
       (queueStats.byStatus.confirmed + queueStats.byStatus.rejected),
 
     // Alert if queue is growing
-    alert: queueStats.byStatus.pending > 1000 ? 'Queue backlog growing' : null
+    alert: queueStats.byStatus.pending > 1000 ? 'Queue backlog growing' : null,
   }
 }
 ```

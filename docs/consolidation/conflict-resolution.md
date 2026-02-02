@@ -45,6 +45,7 @@ Consider a customer that exists in both CRM and Billing systems:
 ```
 
 have-we-met provides flexible conflict resolution through:
+
 1. **Source Priority**: Trust some sources more than others
 2. **Merge Strategies**: Field-specific logic for resolving conflicts
 3. **Provenance Tracking**: Record which source contributed each value
@@ -76,6 +77,7 @@ Source priority assigns a trustworthiness level to each data source. Higher prio
 ```
 
 **Priority Scale**:
+
 - Higher numbers = higher priority
 - Default = 0
 - Can use any integer (positive, negative, or zero)
@@ -131,6 +133,7 @@ Source priority and merge strategies work together:
 ### Determining Priority Levels
 
 **Factors to Consider**:
+
 - **Data Completeness**: Sources with more complete data get higher priority
 - **Data Freshness**: Systems with more recent data get higher priority
 - **Data Accuracy**: Systems with better data quality get higher priority
@@ -460,10 +463,10 @@ interface ProvenanceInfo {
   // Field-level provenance
   fieldProvenance: {
     [fieldName: string]: {
-      sourceId: string          // Which source this value came from
-      sourceRecordId: string    // Source record ID
-      selectedAt: Date          // When this value was selected
-      reason: string            // Why this value was selected
+      sourceId: string // Which source this value came from
+      sourceRecordId: string // Source record ID
+      selectedAt: Date // When this value was selected
+      reason: string // Why this value was selected
     }
   }
 
@@ -834,9 +837,9 @@ function testConflictResolution() {
       field: 'phone',
       values: [
         { sourceId: 'crm', priority: 3, value: '+1-555-0100' },
-        { sourceId: 'billing', priority: 2, value: '+1-555-0200' }
-      ]
-    }
+        { sourceId: 'billing', priority: 2, value: '+1-555-0200' },
+      ],
+    },
   ]
 
   // Expected: '+1-555-0100' (CRM has higher priority)
@@ -852,8 +855,9 @@ const result = await consolidation.consolidate()
 
 const conflictStats = {
   totalRecords: result.stats.goldenRecords,
-  recordsWithConflicts: result.goldenRecords.filter(r => r._hasConflicts).length,
-  conflictRate: 0
+  recordsWithConflicts: result.goldenRecords.filter((r) => r._hasConflicts)
+    .length,
+  conflictRate: 0,
 }
 
 conflictStats.conflictRate =
@@ -911,6 +915,7 @@ Start simple, add complexity as needed:
 **Symptom**: Golden records contain unexpected values.
 
 **Debugging**:
+
 ```typescript
 // Enable provenance to see source selection
 .conflictResolution(cr => cr
@@ -935,6 +940,7 @@ result.goldenRecords.forEach((record, index) => {
 **Cause**: Strategy is preferring null values.
 
 **Solution**: Use `preferNonNull` strategy:
+
 ```typescript
 .conflictResolution(cr => cr
   .defaultStrategy('preferNonNull')
@@ -946,6 +952,7 @@ result.goldenRecords.forEach((record, index) => {
 **Symptom**: Lower priority source value used instead of higher priority.
 
 **Debugging**:
+
 ```typescript
 // Verify source priorities
 .source('crm', source => source.priority(3))       // Check priority values
@@ -962,6 +969,7 @@ result.goldenRecords.forEach((record, index) => {
 **Symptom**: Array fields (tags, categories) only show values from one source.
 
 **Solution**: Use `union` strategy:
+
 ```typescript
 .conflictResolution(cr => cr
   .fieldStrategy('tags', 'union')
@@ -974,6 +982,7 @@ result.goldenRecords.forEach((record, index) => {
 **Symptom**: Numeric totals wrong (showing single source value).
 
 **Solution**: Use `sum` strategy:
+
 ```typescript
 .conflictResolution(cr => cr
   .fieldStrategy('totalRevenue', 'sum')
@@ -986,6 +995,7 @@ result.goldenRecords.forEach((record, index) => {
 **Symptom**: Custom merge function not being called.
 
 **Debugging**:
+
 ```typescript
 .fieldStrategy('myField', (values) => {
   console.log('Custom strategy called with:', values)
@@ -996,6 +1006,7 @@ result.goldenRecords.forEach((record, index) => {
 ```
 
 **Solution**: Verify field name matches output schema:
+
 ```typescript
 interface OutputSchema {
   myField: string  // Must match exactly

@@ -46,7 +46,10 @@ export interface BenchmarkResult {
 
 export interface ThresholdAnalysis {
   thresholds: number[]
-  metricsAtThresholds: Array<{ threshold: number; metrics: ClassificationMetrics }>
+  metricsAtThresholds: Array<{
+    threshold: number
+    metrics: ClassificationMetrics
+  }>
   optimalThreshold: number
   optimalMetrics: ClassificationMetrics
 }
@@ -180,7 +183,10 @@ export async function runBenchmark<T extends DatasetRecord>(
 
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`Benchmark timed out after ${timeout}ms`)), timeout)
+      setTimeout(
+        () => reject(new Error(`Benchmark timed out after ${timeout}ms`)),
+        timeout
+      )
     })
 
     const benchmarkPromise = (async () => {
@@ -213,7 +219,11 @@ export async function runBenchmark<T extends DatasetRecord>(
         )
         collector.addThroughputRun(throughputMetrics)
 
-        if (collectMemory && iterResult.memoryBefore && iterResult.memoryAfter) {
+        if (
+          collectMemory &&
+          iterResult.memoryBefore &&
+          iterResult.memoryAfter
+        ) {
           const memoryMetrics = calculateMemoryMetrics(
             iterResult.memoryBefore,
             iterResult.memoryAfter
@@ -241,25 +251,37 @@ export async function runBenchmark<T extends DatasetRecord>(
         )
       }
 
-      if (options.analyzeThresholds && allPredictedPairs.length > 0 && truePairs.length > 0) {
+      if (
+        options.analyzeThresholds &&
+        allPredictedPairs.length > 0 &&
+        truePairs.length > 0
+      ) {
         const { min = 0, max = 1, step = 0.05 } = options.thresholdRange ?? {}
         const thresholds: number[] = []
         for (let t = min; t <= max; t += step) {
           thresholds.push(Math.round(t * 100) / 100)
         }
 
-        const metricsAtThresholds: Array<{ threshold: number; metrics: ClassificationMetrics }> = []
+        const metricsAtThresholds: Array<{
+          threshold: number
+          metrics: ClassificationMetrics
+        }> = []
         let optimalThreshold = min
         let optimalF1 = -1
         let optimalMetrics: ClassificationMetrics | null = null
 
         for (const threshold of thresholds) {
-          const classifiedPairs: PredictedPair[] = allPredictedPairs.map((p) => ({
-            ...p,
-            predicted: p.score >= threshold,
-          }))
+          const classifiedPairs: PredictedPair[] = allPredictedPairs.map(
+            (p) => ({
+              ...p,
+              predicted: p.score >= threshold,
+            })
+          )
 
-          const metrics = calculateClassificationMetrics(classifiedPairs, truePairs)
+          const metrics = calculateClassificationMetrics(
+            classifiedPairs,
+            truePairs
+          )
           metricsAtThresholds.push({ threshold, metrics })
 
           if (metrics.f1Score > optimalF1) {

@@ -60,9 +60,7 @@ export {
 } from './source-aware-merger'
 
 // Consolidation Executor
-export type {
-  ExecuteOptions,
-} from './consolidation-executor'
+export type { ExecuteOptions } from './consolidation-executor'
 
 export {
   ConsolidationExecutor,

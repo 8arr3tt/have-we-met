@@ -132,7 +132,7 @@ const resolver = HaveWeMet.create<Customer>()
       .field('firstName')
       .strategy('jaro-winkler')
       .weight(8)
-      .threshold(0.80) // Allow some variation
+      .threshold(0.8) // Allow some variation
       .field('lastName')
       .strategy('jaro-winkler')
       .weight(12)
@@ -156,9 +156,11 @@ console.log('=== Deduplication Results ===')
 console.log(`Total records processed: ${batchResult.stats.totalRecords}`)
 console.log(`Total comparisons made: ${batchResult.stats.totalComparisons}`)
 console.log(`Definite matches found: ${batchResult.stats.definiteMatchesFound}`)
-console.log(`Potential matches found: ${batchResult.stats.potentialMatchesFound}`)
 console.log(
-  `Comparison reduction: ${((1 - batchResult.stats.totalComparisons / (customers.length * (customers.length - 1) / 2)) * 100).toFixed(1)}%`
+  `Potential matches found: ${batchResult.stats.potentialMatchesFound}`
+)
+console.log(
+  `Comparison reduction: ${((1 - batchResult.stats.totalComparisons / ((customers.length * (customers.length - 1)) / 2)) * 100).toFixed(1)}%`
 )
 console.log()
 
@@ -167,7 +169,10 @@ console.log('=== Duplicate Clusters ===\n')
 
 const clusters = new Map<string, Customer[]>()
 batchResult.results.forEach((result) => {
-  if (result.outcome === 'definite-match' || result.outcome === 'potential-match') {
+  if (
+    result.outcome === 'definite-match' ||
+    result.outcome === 'potential-match'
+  ) {
     const sourceId = result.sourceRecord.id!
     const matchId = result.record.id!
 
@@ -190,7 +195,9 @@ let clusterNum = 1
 clusters.forEach((cluster, key) => {
   console.log(`Cluster ${clusterNum++}:`)
   cluster.forEach((record) => {
-    console.log(`  - [${record.id}] ${record.firstName} ${record.lastName} | ${record.email}`)
+    console.log(
+      `  - [${record.id}] ${record.firstName} ${record.lastName} | ${record.email}`
+    )
   })
 
   // Show match score for the cluster
@@ -200,20 +207,28 @@ clusters.forEach((cluster, key) => {
       (r.record.id === cluster[0].id && r.sourceRecord.id === cluster[1].id)
   )
   if (matchResult) {
-    console.log(`  Score: ${matchResult.score.totalScore} (${matchResult.outcome})`)
+    console.log(
+      `  Score: ${matchResult.score.totalScore} (${matchResult.outcome})`
+    )
   }
   console.log()
 })
 
 // Show records with potential matches (need review)
-const potentialMatches = batchResult.results.filter((r) => r.outcome === 'potential-match')
+const potentialMatches = batchResult.results.filter(
+  (r) => r.outcome === 'potential-match'
+)
 if (potentialMatches.length > 0) {
   console.log('=== Potential Matches Requiring Review ===\n')
   potentialMatches.forEach((match) => {
     console.log(`${match.sourceRecord.id} vs ${match.record.id}:`)
     console.log(`  Score: ${match.score.totalScore}`)
-    console.log(`  ${match.sourceRecord.firstName} ${match.sourceRecord.lastName} | ${match.sourceRecord.email}`)
-    console.log(`  ${match.record.firstName} ${match.record.lastName} | ${match.record.email}`)
+    console.log(
+      `  ${match.sourceRecord.firstName} ${match.sourceRecord.lastName} | ${match.sourceRecord.email}`
+    )
+    console.log(
+      `  ${match.record.firstName} ${match.record.lastName} | ${match.record.email}`
+    )
     console.log('  Field breakdown:')
     match.explanation.fieldScores.forEach((field) => {
       if (field.contributedScore > 0) {
@@ -225,7 +240,9 @@ if (potentialMatches.length > 0) {
 }
 
 console.log('=== Next Steps ===')
-console.log('1. Review potential matches manually or queue them for human review')
+console.log(
+  '1. Review potential matches manually or queue them for human review'
+)
 console.log('2. Merge definite match clusters into golden records')
 console.log('3. Update your database with the consolidated records')
 console.log('\nSee database-integration.ts for database adapter usage')

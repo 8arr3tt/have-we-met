@@ -12,42 +12,45 @@ import type {
   FeatureExtractorType,
   CustomFeatureExtractor,
   MLModelConfig,
-} from '../types';
-import { DEFAULT_ML_INTEGRATION_CONFIG, DEFAULT_ML_MODEL_CONFIG } from '../types';
-import type { MLModel } from '../model-interface';
-import { FeatureExtractor } from '../feature-extractor';
-import { SimpleClassifier } from '../builtin/simple-classifier';
-import { createPretrainedClassifier } from '../builtin/index';
+} from '../types'
+import {
+  DEFAULT_ML_INTEGRATION_CONFIG,
+  DEFAULT_ML_MODEL_CONFIG,
+} from '../types'
+import type { MLModel } from '../model-interface'
+import { FeatureExtractor } from '../feature-extractor'
+import { SimpleClassifier } from '../builtin/simple-classifier'
+import { createPretrainedClassifier } from '../builtin/index'
 
 /**
  * Configuration object produced by the ML builder
  */
 export interface MLBuilderConfig<T = Record<string, unknown>> {
   /** The ML model to use */
-  model?: MLModel<T>;
+  model?: MLModel<T>
   /** Whether to use the built-in pre-trained model */
-  usePretrained?: boolean;
+  usePretrained?: boolean
   /** ML integration configuration */
-  integrationConfig: MLIntegrationConfig;
+  integrationConfig: MLIntegrationConfig
   /** Feature extraction configuration (for custom models) */
-  featureConfig?: FeatureExtractionConfig;
+  featureConfig?: FeatureExtractionConfig
   /** Model configuration */
-  modelConfig?: Partial<MLModelConfig>;
+  modelConfig?: Partial<MLModelConfig>
 }
 
 /**
  * Field feature builder for configuring feature extraction per field
  */
 export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
-  private _fieldName: string;
-  private _extractors: FeatureExtractorType[] = ['jaroWinkler', 'exact'];
-  private _weight: number = 1.0;
-  private _includeMissingIndicator: boolean = true;
-  private _parent: P;
+  private _fieldName: string
+  private _extractors: FeatureExtractorType[] = ['jaroWinkler', 'exact']
+  private _weight: number = 1.0
+  private _includeMissingIndicator: boolean = true
+  private _parent: P
 
   constructor(parent: P, fieldName: string) {
-    this._parent = parent;
-    this._fieldName = fieldName;
+    this._parent = parent
+    this._fieldName = fieldName
   }
 
   /**
@@ -63,8 +66,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * ```
    */
   extractors(types: FeatureExtractorType[]): this {
-    this._extractors = types;
-    return this;
+    this._extractors = types
+    return this
   }
 
   /**
@@ -73,8 +76,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns This builder for chaining
    */
   forName(): this {
-    this._extractors = ['jaroWinkler', 'soundex', 'metaphone', 'exact'];
-    return this;
+    this._extractors = ['jaroWinkler', 'soundex', 'metaphone', 'exact']
+    return this
   }
 
   /**
@@ -83,8 +86,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns This builder for chaining
    */
   forIdentifier(): this {
-    this._extractors = ['exact', 'levenshtein'];
-    return this;
+    this._extractors = ['exact', 'levenshtein']
+    return this
   }
 
   /**
@@ -93,8 +96,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns This builder for chaining
    */
   forDate(): this {
-    this._extractors = ['exact', 'dateDiff'];
-    return this;
+    this._extractors = ['exact', 'dateDiff']
+    return this
   }
 
   /**
@@ -103,8 +106,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns This builder for chaining
    */
   forNumeric(): this {
-    this._extractors = ['exact', 'numericDiff'];
-    return this;
+    this._extractors = ['exact', 'numericDiff']
+    return this
   }
 
   /**
@@ -114,8 +117,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns This builder for chaining
    */
   weight(value: number): this {
-    this._weight = value;
-    return this;
+    this._weight = value
+    return this
   }
 
   /**
@@ -125,8 +128,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns This builder for chaining
    */
   includeMissing(include: boolean): this {
-    this._includeMissingIndicator = include;
-    return this;
+    this._includeMissingIndicator = include
+    return this
   }
 
   /**
@@ -136,8 +139,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns A new FieldFeatureBuilder for the specified field
    */
   field<K extends keyof T & string>(name: K): FieldFeatureBuilder<T, P> {
-    this.finalize();
-    return this._parent.field(name);
+    this.finalize()
+    return this._parent.field(name)
   }
 
   /**
@@ -146,8 +149,8 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns The parent MLBuilder
    */
   done(): P {
-    this.finalize();
-    return this._parent;
+    this.finalize()
+    return this._parent
   }
 
   /**
@@ -159,7 +162,7 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
       extractors: this._extractors,
       weight: this._weight,
       includeMissingIndicator: this._includeMissingIndicator,
-    });
+    })
   }
 
   /**
@@ -168,15 +171,15 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
    * @returns The ML builder configuration
    */
   build(): MLBuilderConfig<T> {
-    this.finalize();
-    return this._parent.build();
+    this.finalize()
+    return this._parent.build()
   }
 
   /**
    * Get the parent builder (for internal use).
    */
   get parent(): P {
-    return this._parent;
+    return this._parent
   }
 }
 
@@ -209,13 +212,15 @@ export class FieldFeatureBuilder<T, P extends MLBuilder<T>> {
  * ```
  */
 export class MLBuilder<T = Record<string, unknown>> {
-  private _model?: MLModel<T>;
-  private _usePretrained: boolean = false;
-  private _integrationConfig: MLIntegrationConfig = { ...DEFAULT_ML_INTEGRATION_CONFIG };
-  private _fieldConfigs: FieldFeatureConfig[] = [];
-  private _customExtractors: Record<string, CustomFeatureExtractor> = {};
-  private _modelConfig: Partial<MLModelConfig> = {};
-  private _normalizeFeatures: boolean = true;
+  private _model?: MLModel<T>
+  private _usePretrained: boolean = false
+  private _integrationConfig: MLIntegrationConfig = {
+    ...DEFAULT_ML_INTEGRATION_CONFIG,
+  }
+  private _fieldConfigs: FieldFeatureConfig[] = []
+  private _customExtractors: Record<string, CustomFeatureExtractor> = {}
+  private _modelConfig: Partial<MLModelConfig> = {}
+  private _normalizeFeatures: boolean = true
 
   /**
    * Use a custom ML model.
@@ -231,9 +236,9 @@ export class MLBuilder<T = Record<string, unknown>> {
    * ```
    */
   model(model: MLModel<T>): this {
-    this._model = model;
-    this._usePretrained = false;
-    return this;
+    this._model = model
+    this._usePretrained = false
+    return this
   }
 
   /**
@@ -250,9 +255,9 @@ export class MLBuilder<T = Record<string, unknown>> {
    * ```
    */
   usePretrained(): this {
-    this._usePretrained = true;
-    this._model = undefined;
-    return this;
+    this._usePretrained = true
+    this._model = undefined
+    return this
   }
 
   /**
@@ -271,8 +276,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * ```
    */
   mode(mode: MLIntegrationMode): this {
-    this._integrationConfig.mode = mode;
-    return this;
+    this._integrationConfig.mode = mode
+    return this
   }
 
   /**
@@ -290,10 +295,10 @@ export class MLBuilder<T = Record<string, unknown>> {
    */
   mlWeight(weight: number): this {
     if (weight < 0 || weight > 1) {
-      throw new Error('ML weight must be between 0 and 1');
+      throw new Error('ML weight must be between 0 and 1')
     }
-    this._integrationConfig.mlWeight = weight;
-    return this;
+    this._integrationConfig.mlWeight = weight
+    return this
   }
 
   /**
@@ -311,8 +316,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * ```
    */
   applyTo(target: 'all' | 'uncertainOnly'): this {
-    this._integrationConfig.applyTo = target;
-    return this;
+    this._integrationConfig.applyTo = target
+    return this
   }
 
   /**
@@ -322,8 +327,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * @returns This builder for chaining
    */
   timeout(ms: number): this {
-    this._integrationConfig.timeoutMs = ms;
-    return this;
+    this._integrationConfig.timeoutMs = ms
+    return this
   }
 
   /**
@@ -333,8 +338,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * @returns This builder for chaining
    */
   fallbackOnError(fallback: boolean): this {
-    this._integrationConfig.fallbackOnError = fallback;
-    return this;
+    this._integrationConfig.fallbackOnError = fallback
+    return this
   }
 
   /**
@@ -346,8 +351,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * @returns This builder for chaining
    */
   matchThreshold(threshold: number): this {
-    this._modelConfig.matchThreshold = threshold;
-    return this;
+    this._modelConfig.matchThreshold = threshold
+    return this
   }
 
   /**
@@ -359,8 +364,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * @returns This builder for chaining
    */
   nonMatchThreshold(threshold: number): this {
-    this._modelConfig.nonMatchThreshold = threshold;
-    return this;
+    this._modelConfig.nonMatchThreshold = threshold
+    return this
   }
 
   /**
@@ -379,7 +384,7 @@ export class MLBuilder<T = Record<string, unknown>> {
    * ```
    */
   field<K extends keyof T & string>(name: K): FieldFeatureBuilder<T, this> {
-    return new FieldFeatureBuilder<T, this>(this, name);
+    return new FieldFeatureBuilder<T, this>(this, name)
   }
 
   /**
@@ -400,8 +405,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * ```
    */
   customExtractor(fieldName: string, extractor: CustomFeatureExtractor): this {
-    this._customExtractors[fieldName] = extractor;
-    return this;
+    this._customExtractors[fieldName] = extractor
+    return this
   }
 
   /**
@@ -411,8 +416,8 @@ export class MLBuilder<T = Record<string, unknown>> {
    * @returns This builder for chaining
    */
   normalizeFeatures(normalize: boolean): this {
-    this._normalizeFeatures = normalize;
-    return this;
+    this._normalizeFeatures = normalize
+    return this
   }
 
   /**
@@ -432,9 +437,9 @@ export class MLBuilder<T = Record<string, unknown>> {
         field,
         extractors: ['jaroWinkler', 'levenshtein', 'exact'],
         weight: 1.0,
-      });
+      })
     }
-    return this;
+    return this
   }
 
   /**
@@ -454,9 +459,9 @@ export class MLBuilder<T = Record<string, unknown>> {
         field,
         extractors: ['jaroWinkler', 'soundex', 'metaphone', 'exact'],
         weight: 1.2,
-      });
+      })
     }
-    return this;
+    return this
   }
 
   /**
@@ -476,9 +481,9 @@ export class MLBuilder<T = Record<string, unknown>> {
         field,
         extractors: ['exact', 'levenshtein'],
         weight: 1.5,
-      });
+      })
     }
-    return this;
+    return this
   }
 
   /**
@@ -498,9 +503,9 @@ export class MLBuilder<T = Record<string, unknown>> {
         field,
         extractors: ['exact', 'dateDiff'],
         weight: 1.3,
-      });
+      })
     }
-    return this;
+    return this
   }
 
   /**
@@ -510,11 +515,11 @@ export class MLBuilder<T = Record<string, unknown>> {
     // Replace if field already exists
     const existingIndex = this._fieldConfigs.findIndex(
       (f) => f.field === config.field
-    );
+    )
     if (existingIndex >= 0) {
-      this._fieldConfigs[existingIndex] = config;
+      this._fieldConfigs[existingIndex] = config
     } else {
-      this._fieldConfigs.push(config);
+      this._fieldConfigs.push(config)
     }
   }
 
@@ -528,11 +533,14 @@ export class MLBuilder<T = Record<string, unknown>> {
       model: this._model,
       usePretrained: this._usePretrained,
       integrationConfig: { ...this._integrationConfig },
-      modelConfig: Object.keys(this._modelConfig).length > 0 ? this._modelConfig : undefined,
-    };
+      modelConfig:
+        Object.keys(this._modelConfig).length > 0
+          ? this._modelConfig
+          : undefined,
+    }
 
     // Build feature config if custom fields or extractors were configured
-    const hasCustomExtractors = Object.keys(this._customExtractors).length > 0;
+    const hasCustomExtractors = Object.keys(this._customExtractors).length > 0
     if (this._fieldConfigs.length > 0 || hasCustomExtractors) {
       config.featureConfig = {
         fields: [...this._fieldConfigs],
@@ -540,10 +548,10 @@ export class MLBuilder<T = Record<string, unknown>> {
         customExtractors: hasCustomExtractors
           ? { ...this._customExtractors }
           : undefined,
-      };
+      }
     }
 
-    return config;
+    return config
   }
 }
 
@@ -562,7 +570,7 @@ export class MLBuilder<T = Record<string, unknown>> {
  * ```
  */
 export function mlBuilder<T = Record<string, unknown>>(): MLBuilder<T> {
-  return new MLBuilder<T>();
+  return new MLBuilder<T>()
 }
 
 /**
@@ -571,7 +579,7 @@ export function mlBuilder<T = Record<string, unknown>>(): MLBuilder<T> {
 export type MLBuilderResult<T> =
   | MLBuilder<T>
   | FieldFeatureBuilder<T, MLBuilder<T>>
-  | void;
+  | void
 
 /**
  * Create an ML model from builder configuration.
@@ -592,38 +600,40 @@ export async function createModelFromConfig<T>(
       config.model.setConfig({
         ...DEFAULT_ML_MODEL_CONFIG,
         ...config.modelConfig,
-      });
+      })
     }
-    return config.model;
+    return config.model
   }
 
   // If using pre-trained, load the pre-trained classifier
   if (config.usePretrained) {
-    const classifier = await createPretrainedClassifier<T>();
+    const classifier = await createPretrainedClassifier<T>()
     if (config.modelConfig) {
       classifier.setConfig({
         ...classifier.getConfig(),
         ...config.modelConfig,
-      });
+      })
     }
-    return classifier;
+    return classifier
   }
 
   // Create a new classifier with custom feature extraction
   if (config.featureConfig) {
-    const featureExtractor = new FeatureExtractor<T>(config.featureConfig);
+    const featureExtractor = new FeatureExtractor<T>(config.featureConfig)
     const classifier = new SimpleClassifier<T>({
       featureExtractor,
-      modelConfig: config.modelConfig ? {
-        ...DEFAULT_ML_MODEL_CONFIG,
-        ...config.modelConfig,
-      } : undefined,
-    });
-    return classifier;
+      modelConfig: config.modelConfig
+        ? {
+            ...DEFAULT_ML_MODEL_CONFIG,
+            ...config.modelConfig,
+          }
+        : undefined,
+    })
+    return classifier
   }
 
   // Fall back to pre-trained if nothing else specified
-  return createPretrainedClassifier<T>();
+  return createPretrainedClassifier<T>()
 }
 
 /**
@@ -635,31 +645,36 @@ export async function createModelFromConfig<T>(
 export function validateMLBuilderConfig<T>(
   config: MLBuilderConfig<T>
 ): string[] {
-  const errors: string[] = [];
+  const errors: string[] = []
 
   // Validate integration config
-  if (config.integrationConfig.mlWeight < 0 || config.integrationConfig.mlWeight > 1) {
-    errors.push('ML weight must be between 0 and 1');
+  if (
+    config.integrationConfig.mlWeight < 0 ||
+    config.integrationConfig.mlWeight > 1
+  ) {
+    errors.push('ML weight must be between 0 and 1')
   }
 
   if (config.integrationConfig.timeoutMs <= 0) {
-    errors.push('Timeout must be positive');
+    errors.push('Timeout must be positive')
   }
 
   // Validate model config
   if (config.modelConfig) {
     if (
       config.modelConfig.matchThreshold !== undefined &&
-      (config.modelConfig.matchThreshold < 0 || config.modelConfig.matchThreshold > 1)
+      (config.modelConfig.matchThreshold < 0 ||
+        config.modelConfig.matchThreshold > 1)
     ) {
-      errors.push('Match threshold must be between 0 and 1');
+      errors.push('Match threshold must be between 0 and 1')
     }
 
     if (
       config.modelConfig.nonMatchThreshold !== undefined &&
-      (config.modelConfig.nonMatchThreshold < 0 || config.modelConfig.nonMatchThreshold > 1)
+      (config.modelConfig.nonMatchThreshold < 0 ||
+        config.modelConfig.nonMatchThreshold > 1)
     ) {
-      errors.push('Non-match threshold must be between 0 and 1');
+      errors.push('Non-match threshold must be between 0 and 1')
     }
 
     if (
@@ -667,7 +682,7 @@ export function validateMLBuilderConfig<T>(
       config.modelConfig.nonMatchThreshold !== undefined &&
       config.modelConfig.nonMatchThreshold >= config.modelConfig.matchThreshold
     ) {
-      errors.push('Non-match threshold must be less than match threshold');
+      errors.push('Non-match threshold must be less than match threshold')
     }
   }
 
@@ -675,13 +690,13 @@ export function validateMLBuilderConfig<T>(
   if (config.featureConfig) {
     for (const field of config.featureConfig.fields) {
       if (!field.field) {
-        errors.push('Field configuration must have a field name');
+        errors.push('Field configuration must have a field name')
       }
       if (!field.extractors || field.extractors.length === 0) {
-        errors.push(`Field "${field.field}" must have at least one extractor`);
+        errors.push(`Field "${field.field}" must have at least one extractor`)
       }
     }
   }
 
-  return errors;
+  return errors
 }

@@ -61,38 +61,54 @@ async function runETL() {
   // Extract, Transform, Load
   const result = await HaveWeMet.consolidation<UnifiedCustomer>()
     // Extract from sources
-    .source('source_a', source => source
-      .name('Source A Database')
-      .adapter(new PrismaAdapter(prisma.sourceA))
-      .mapping(map => map
-        .field('email').from('email_address')
-        .field('firstName').from('first_name')
-        .field('lastName').from('last_name')
-      )
-      .priority(2)
+    .source('source_a', (source) =>
+      source
+        .name('Source A Database')
+        .adapter(new PrismaAdapter(prisma.sourceA))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+        )
+        .priority(2)
     )
 
-    .source('source_b', source => source
-      .name('Source B Database')
-      .adapter(new PrismaAdapter(prisma.sourceB))
-      .mapping(map => map
-        .field('email').from('email')
-        .field('firstName').from('fname')
-        .field('lastName').from('lname')
-      )
-      .priority(1)
+    .source('source_b', (source) =>
+      source
+        .name('Source B Database')
+        .adapter(new PrismaAdapter(prisma.sourceB))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('fname')
+            .field('lastName')
+            .from('lname')
+        )
+        .priority(1)
     )
 
     // Transform: matching and conflict resolution
-    .matching(match => match
-      .field('email').strategy('exact').weight(30)
-      .field('firstName').strategy('jaro-winkler').weight(10)
-      .field('lastName').strategy('jaro-winkler').weight(10)
+    .matching((match) =>
+      match
+        .field('email')
+        .strategy('exact')
+        .weight(30)
+        .field('firstName')
+        .strategy('jaro-winkler')
+        .weight(10)
+        .field('lastName')
+        .strategy('jaro-winkler')
+        .weight(10)
     )
     .thresholds({ noMatch: 20, definiteMatch: 45 })
-    .conflictResolution(cr => cr
-      .useSourcePriority(true)
-      .defaultStrategy('preferNonNull')
+    .conflictResolution((cr) =>
+      cr.useSourcePriority(true).defaultStrategy('preferNonNull')
     )
 
     // Load to target
@@ -426,8 +442,8 @@ async function transactionalETL() {
 async function twoPhaseETL() {
   // Phase 1: Consolidate to staging table
   const result = await HaveWeMet.consolidation<Customer>()
-    .source('source_a', /* ... */)
-    .source('source_b', /* ... */)
+    .source('source_a' /* ... */)
+    .source('source_b' /* ... */)
     .outputAdapter(new PrismaAdapter(prisma.staging))
     .writeOutput(true)
     .build()
@@ -467,7 +483,7 @@ async function rollbackETL() {
   try {
     // Run ETL
     const result = await HaveWeMet.consolidation<Customer>()
-      .source('source', /* ... */)
+      .source('source' /* ... */)
       .outputAdapter(new PrismaAdapter(prisma.unified))
       .writeOutput(true)
       .build()
@@ -475,7 +491,6 @@ async function rollbackETL() {
 
     console.log('ETL successful')
     return result
-
   } catch (error) {
     console.error('ETL failed, rolling back...')
 
@@ -719,16 +734,16 @@ CREATE INDEX idx_updated_at ON customers(updated_at);
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL
-    }
+      url: process.env.DATABASE_URL,
+    },
   },
   log: ['error', 'warn'],
   // Connection pool settings
   __internal: {
     engine: {
-      connection_limit: 10
-    }
-  }
+      connection_limit: 10,
+    },
+  },
 })
 ```
 
@@ -870,7 +885,7 @@ async function progressTrackingETL() {
   const progress = {
     current: 0,
     total: sources.length,
-    phases: [] as string[]
+    phases: [] as string[],
   }
 
   for (const sourceId of sources) {
@@ -996,7 +1011,7 @@ let healthStatus: HealthCheck = {
   lastRun: null,
   lastSuccess: null,
   consecutiveFailures: 0,
-  details: 'Never run'
+  details: 'Never run',
 }
 
 async function monitoredETL() {
@@ -1011,7 +1026,6 @@ async function monitoredETL() {
     healthStatus.details = `Success: ${result.stats.goldenRecords} records`
 
     return result
-
   } catch (error) {
     healthStatus.consecutiveFailures++
 
@@ -1021,7 +1035,8 @@ async function monitoredETL() {
       healthStatus.status = 'degraded'
     }
 
-    healthStatus.details = error instanceof Error ? error.message : String(error)
+    healthStatus.details =
+      error instanceof Error ? error.message : String(error)
 
     throw error
   }
@@ -1049,11 +1064,10 @@ async function notifyingETL() {
         Records processed: ${result.stats.totalRecords}
         Golden records: ${result.stats.goldenRecords}
         Duration: ${result.stats.executionTimeMs}ms
-      `
+      `,
     })
 
     return result
-
   } catch (error) {
     // Send error notification
     await sendEmail({
@@ -1062,7 +1076,7 @@ async function notifyingETL() {
       body: `
         ETL failed with error:
         ${error instanceof Error ? error.message : String(error)}
-      `
+      `,
     })
 
     // Also send to Slack/PagerDuty/etc.
@@ -1093,15 +1107,21 @@ async function csvToDatabase() {
 
   // Run ETL
   const result = await HaveWeMet.consolidation<Customer>()
-    .source('csv', source => source
-      .name('CSV Import')
-      .adapter(csvAdapter)
-      .mapping(map => map
-        .field('email').from('Email')
-        .field('firstName').from('First Name')
-        .field('lastName').from('Last Name')
-        .field('phone').from('Phone')
-      )
+    .source('csv', (source) =>
+      source
+        .name('CSV Import')
+        .adapter(csvAdapter)
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('Email')
+            .field('firstName')
+            .from('First Name')
+            .field('lastName')
+            .from('Last Name')
+            .field('phone')
+            .from('Phone')
+        )
     )
     .outputAdapter(new PrismaAdapter(prisma.customers))
     .writeOutput(true)
@@ -1119,36 +1139,51 @@ async function csvToDatabase() {
 async function multiDatabaseMigration() {
   const result = await HaveWeMet.consolidation<Customer>()
     // Source 1: MySQL
-    .source('mysql', source => source
-      .adapter(new PrismaAdapter(prisma.mysqlCustomers))
-      .mapping(map => map
-        .field('email').from('email_address')
-        .field('firstName').from('first_name')
-        .field('lastName').from('last_name')
-      )
-      .priority(3)
+    .source('mysql', (source) =>
+      source
+        .adapter(new PrismaAdapter(prisma.mysqlCustomers))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email_address')
+            .field('firstName')
+            .from('first_name')
+            .field('lastName')
+            .from('last_name')
+        )
+        .priority(3)
     )
 
     // Source 2: PostgreSQL
-    .source('postgres', source => source
-      .adapter(new PrismaAdapter(prisma.pgCustomers))
-      .mapping(map => map
-        .field('email').from('email')
-        .field('firstName').from('fname')
-        .field('lastName').from('lname')
-      )
-      .priority(2)
+    .source('postgres', (source) =>
+      source
+        .adapter(new PrismaAdapter(prisma.pgCustomers))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('fname')
+            .field('lastName')
+            .from('lname')
+        )
+        .priority(2)
     )
 
     // Source 3: MongoDB
-    .source('mongo', source => source
-      .adapter(new PrismaAdapter(prisma.mongoCustomers))
-      .mapping(map => map
-        .field('email').from('contact.email')
-        .field('firstName').from('contact.firstName')
-        .field('lastName').from('contact.lastName')
-      )
-      .priority(1)
+    .source('mongo', (source) =>
+      source
+        .adapter(new PrismaAdapter(prisma.mongoCustomers))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('contact.email')
+            .field('firstName')
+            .from('contact.firstName')
+            .field('lastName')
+            .from('contact.lastName')
+        )
+        .priority(1)
     )
 
     // Target: New unified PostgreSQL
@@ -1156,16 +1191,22 @@ async function multiDatabaseMigration() {
     .writeOutput(true)
 
     .matchingScope('within-source-first')
-    .matching(match => match
-      .field('email').strategy('exact').weight(30)
-      .field('firstName').strategy('jaro-winkler').weight(10)
-      .field('lastName').strategy('jaro-winkler').weight(10)
+    .matching((match) =>
+      match
+        .field('email')
+        .strategy('exact')
+        .weight(30)
+        .field('firstName')
+        .strategy('jaro-winkler')
+        .weight(10)
+        .field('lastName')
+        .strategy('jaro-winkler')
+        .weight(10)
     )
     .thresholds({ noMatch: 20, definiteMatch: 45 })
 
-    .conflictResolution(cr => cr
-      .useSourcePriority(true)
-      .defaultStrategy('preferNonNull')
+    .conflictResolution((cr) =>
+      cr.useSourcePriority(true).defaultStrategy('preferNonNull')
     )
 
     .build()
@@ -1181,29 +1222,41 @@ async function multiDatabaseMigration() {
 async function apiSync() {
   const result = await HaveWeMet.consolidation<Customer>()
     // Source 1: Existing database
-    .source('database', source => source
-      .adapter(new PrismaAdapter(prisma.customers))
-      .mapping(map => map
-        .field('email').from('email')
-        .field('firstName').from('firstName')
-        .field('lastName').from('lastName')
-      )
-      .priority(2)
+    .source('database', (source) =>
+      source
+        .adapter(new PrismaAdapter(prisma.customers))
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('email')
+            .field('firstName')
+            .from('firstName')
+            .field('lastName')
+            .from('lastName')
+        )
+        .priority(2)
     )
 
     // Source 2: External API
-    .source('api', source => source
-      .adapter(createAPIAdapter(
-        'https://api.example.com',
-        '/customers',
-        process.env.API_KEY!
-      ))
-      .mapping(map => map
-        .field('email').from('emailAddress')
-        .field('firstName').from('givenName')
-        .field('lastName').from('familyName')
-      )
-      .priority(1)
+    .source('api', (source) =>
+      source
+        .adapter(
+          createAPIAdapter(
+            'https://api.example.com',
+            '/customers',
+            process.env.API_KEY!
+          )
+        )
+        .mapping((map) =>
+          map
+            .field('email')
+            .from('emailAddress')
+            .field('firstName')
+            .from('givenName')
+            .field('lastName')
+            .from('familyName')
+        )
+        .priority(1)
     )
 
     // Write back to database
@@ -1211,14 +1264,11 @@ async function apiSync() {
     .writeOutput(true)
 
     .matchingScope('within-source-first')
-    .matching(match => match
-      .field('email').strategy('exact').weight(30)
-    )
+    .matching((match) => match.field('email').strategy('exact').weight(30))
     .thresholds({ noMatch: 20, definiteMatch: 45 })
 
-    .conflictResolution(cr => cr
-      .useSourcePriority(true)
-      .fieldStrategy('updatedAt', 'preferNewer')
+    .conflictResolution((cr) =>
+      cr.useSourcePriority(true).fieldStrategy('updatedAt', 'preferNewer')
     )
 
     .build()

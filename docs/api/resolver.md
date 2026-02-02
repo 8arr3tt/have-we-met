@@ -7,15 +7,14 @@ The Resolver is the core class that orchestrates matching, scoring, and outcome 
 Build a resolver using the fluent builder API:
 
 ```typescript
-import { HaveWeMet } from 'have-we-met';
+import { HaveWeMet } from 'have-we-met'
 
-const resolver = HaveWeMet
-  .create<Person>()
+const resolver = HaveWeMet.create<Person>()
   .schema(/* ... */)
   .blocking(/* ... */)
   .matching(/* ... */)
   .thresholds({ noMatch: 20, definiteMatch: 45 })
-  .build();
+  .build()
 ```
 
 ---
@@ -27,6 +26,7 @@ const resolver = HaveWeMet
 Find matches for a single record against a set of existing records. This is a synchronous method that does not invoke external services.
 
 **Parameters:**
+
 - `candidateRecord: Record<string, unknown>` - The record to match
 - `existingRecords: Record<string, unknown>[]` - Records to compare against
 - `options?: ResolverOptions`
@@ -36,17 +36,18 @@ Find matches for a single record against a set of existing records. This is a sy
 **Returns:** `MatchResult[]` - Array of matches sorted by score (descending)
 
 **Example:**
+
 ```typescript
 const newCustomer = {
   email: 'john.doe@example.com',
   firstName: 'John',
-  lastName: 'Doe'
-};
+  lastName: 'Doe',
+}
 
-const matches = resolver.resolve(newCustomer, existingCustomers);
+const matches = resolver.resolve(newCustomer, existingCustomers)
 
 if (matches.length > 0 && matches[0].outcome === 'definite-match') {
-  console.log('Found existing customer:', matches[0].record);
+  console.log('Found existing customer:', matches[0].record)
 }
 ```
 
@@ -55,6 +56,7 @@ if (matches.length > 0 && matches[0].outcome === 'definite-match') {
 Find all matches above a minimum score threshold.
 
 **Parameters:**
+
 - `record: Record<string, unknown>` - The record to match
 - `existingRecords: Record<string, unknown>[]` - Records to compare against
 - `minScore?: number` - Minimum score threshold (default: 0)
@@ -62,8 +64,9 @@ Find all matches above a minimum score threshold.
 **Returns:** `MatchResult[]` - Array of matches above the threshold
 
 **Example:**
+
 ```typescript
-const allMatches = resolver.findMatches(record, records, 15);
+const allMatches = resolver.findMatches(record, records, 15)
 ```
 
 ### `resolveWithServices(candidateRecord, existingRecords, options?): Promise<ResolutionResult<T>>`
@@ -71,6 +74,7 @@ const allMatches = resolver.findMatches(record, records, 15);
 Find matches with full external service integration (validation, lookup, enrichment).
 
 **Parameters:**
+
 - `candidateRecord: Record<string, unknown>` - The record to match
 - `existingRecords: Record<string, unknown>[]` - Records to compare against
 - `options?: ResolverOptions` - Same as `resolve()`
@@ -78,12 +82,13 @@ Find matches with full external service integration (validation, lookup, enrichm
 **Returns:** `Promise<ResolutionResult<T>>`
 
 **Example:**
-```typescript
-const result = await resolver.resolveWithServices(newRecord, existingRecords);
 
-console.log(result.matches);           // Match results
-console.log(result.validationResults); // Service validation outcomes
-console.log(result.enrichedRecord);    // Record after enrichment services
+```typescript
+const result = await resolver.resolveWithServices(newRecord, existingRecords)
+
+console.log(result.matches) // Match results
+console.log(result.validationResults) // Service validation outcomes
+console.log(result.enrichedRecord) // Record after enrichment services
 ```
 
 ---
@@ -95,6 +100,7 @@ console.log(result.enrichedRecord);    // Record after enrichment services
 Find all duplicates within a dataset using blocking strategies.
 
 **Parameters:**
+
 - `records: Record<string, unknown>[]` - Array of records to deduplicate
 - `options?: DeduplicationBatchOptions`
   - `includeStats?: boolean` - Include blocking statistics
@@ -104,15 +110,18 @@ Find all duplicates within a dataset using blocking strategies.
 **Returns:** `DeduplicationBatchResult`
 
 **Example:**
+
 ```typescript
 const result = resolver.deduplicateBatch(allRecords, {
   includeStats: true,
   minScore: 20,
-  progressCallback: (p) => console.log(`${p.processed}/${p.total}`)
-});
+  progressCallback: (p) => console.log(`${p.processed}/${p.total}`),
+})
 
-console.log(`Found ${result.duplicatePairs.length} duplicate pairs`);
-console.log(`Blocking reduced comparisons by ${result.stats.reductionRatio * 100}%`);
+console.log(`Found ${result.duplicatePairs.length} duplicate pairs`)
+console.log(
+  `Blocking reduced comparisons by ${result.stats.reductionRatio * 100}%`
+)
 ```
 
 ---
@@ -126,6 +135,7 @@ These methods require a database adapter to be configured.
 Resolve a record using the database adapter for efficient blocking queries.
 
 **Parameters:**
+
 - `candidateRecord: T` - The record to match
 - `options?: DatabaseResolveOptions`
   - `minScore?: number` - Minimum score threshold
@@ -135,16 +145,16 @@ Resolve a record using the database adapter for efficient blocking queries.
 **Returns:** `Promise<MatchResult[]>`
 
 **Example:**
+
 ```typescript
-const resolver = HaveWeMet
-  .create<Customer>()
+const resolver = HaveWeMet.create<Customer>()
   .schema(/* ... */)
   .blocking(/* ... */)
   .matching(/* ... */)
   .adapter(prismaAdapter(prisma))
-  .build();
+  .build()
 
-const matches = await resolver.resolveWithDatabase(newCustomer);
+const matches = await resolver.resolveWithDatabase(newCustomer)
 ```
 
 ### `resolveWithDatabaseAndServices(candidateRecord, options?): Promise<ResolutionResult<T>>`
@@ -152,6 +162,7 @@ const matches = await resolver.resolveWithDatabase(newCustomer);
 Resolve with database and external services.
 
 **Parameters:**
+
 - `candidateRecord: T` - The record to match
 - `options?: DatabaseResolveOptions & { skipServices?: boolean }`
 
@@ -162,6 +173,7 @@ Resolve with database and external services.
 Batch deduplicate records directly from the database.
 
 **Parameters:**
+
 - `options?: DatabaseDeduplicationOptions`
   - `batchSize?: number` - Records to process per batch (default: 1000)
   - `filter?: FilterCriteria` - Filter records to process
@@ -170,11 +182,12 @@ Batch deduplicate records directly from the database.
 **Returns:** `Promise<DeduplicationBatchResult>`
 
 **Example:**
+
 ```typescript
 const result = await resolver.deduplicateBatchFromDatabase({
   batchSize: 5000,
-  filter: { createdAt: { gt: new Date('2024-01-01') } }
-});
+  filter: { createdAt: { gt: new Date('2024-01-01') } },
+})
 ```
 
 ### `findAndMergeDuplicates(options?): Promise<MergeResult[]>`
@@ -182,6 +195,7 @@ const result = await resolver.deduplicateBatchFromDatabase({
 Find and automatically merge duplicates with persistence.
 
 **Parameters:**
+
 - `options?: MergeOptions`
   - `dryRun?: boolean` - Preview without making changes
   - `minScore?: number` - Minimum score for automatic merge
@@ -199,6 +213,7 @@ These methods require ML to be configured via `.ml()` builder method.
 Configure ML matching on an existing resolver.
 
 **Parameters:**
+
 - `model: MLModel<T>` - The ML model to use
 - `config?: Partial<MLIntegrationConfig>`
   - `mode?: 'hybrid' | 'mlOnly' | 'fallback'`
@@ -210,6 +225,7 @@ Configure ML matching on an existing resolver.
 Find matches with ML enhancement.
 
 **Parameters:**
+
 - `candidateRecord: T` - Record to match
 - `existingRecords: T[]` - Records to compare against
 - `options?: MLResolverOptions`
@@ -217,22 +233,18 @@ Find matches with ML enhancement.
 **Returns:** `Promise<MLMatchResult<T>[]>`
 
 **Example:**
+
 ```typescript
-const resolver = HaveWeMet
-  .create<Person>()
+const resolver = HaveWeMet.create<Person>()
   .schema(/* ... */)
   .matching(/* ... */)
-  .ml(ml => ml
-    .usePretrained()
-    .mode('hybrid')
-    .mlWeight(0.3)
-  )
-  .build();
+  .ml((ml) => ml.usePretrained().mode('hybrid').mlWeight(0.3))
+  .build()
 
-const matches = await resolver.resolveWithML(newPerson, existingPeople);
+const matches = await resolver.resolveWithML(newPerson, existingPeople)
 
 for (const match of matches) {
-  console.log(`Score: ${match.score}, ML Score: ${match.mlScore}`);
+  console.log(`Score: ${match.score}, ML Score: ${match.mlScore}`)
 }
 ```
 
@@ -257,6 +269,7 @@ Find matches with batched ML predictions for better performance.
 Extract ML features from a record pair for inspection.
 
 **Parameters:**
+
 - `candidateRecord: T` - First record
 - `existingRecord: T` - Second record
 
@@ -277,9 +290,10 @@ Get health status for all configured external services.
 **Returns:** `Promise<Record<string, HealthCheckResult>>`
 
 **Example:**
+
 ```typescript
-const health = await resolver.getServiceHealthStatus();
-console.log(health);
+const health = await resolver.getServiceHealthStatus()
+console.log(health)
 // { 'email-validator': { status: 'healthy', latency: 45 }, ... }
 ```
 
@@ -304,20 +318,21 @@ Access the review queue for human-in-the-loop matching.
 **Returns:** `IReviewQueue<T>`
 
 **Example:**
+
 ```typescript
 // Add potential match to review queue
 await resolver.queue.add({
   candidateRecord: newRecord,
   matchedRecord: existingRecord,
   score: 35,
-  reason: 'Score between thresholds'
-});
+  reason: 'Score between thresholds',
+})
 
 // List pending reviews
-const pending = await resolver.queue.list({ status: 'pending' });
+const pending = await resolver.queue.list({ status: 'pending' })
 
 // Process a review decision
-await resolver.queue.confirm(itemId, { reviewer: 'admin' });
+await resolver.queue.confirm(itemId, { reviewer: 'admin' })
 ```
 
 ---
@@ -357,16 +372,16 @@ Get the configured ML model.
 ```typescript
 interface MatchResult {
   /** The matching record */
-  record: Record<string, unknown>;
+  record: Record<string, unknown>
 
   /** Overall match score */
-  score: number;
+  score: number
 
   /** Match classification */
-  outcome: 'no-match' | 'potential-match' | 'definite-match';
+  outcome: 'no-match' | 'potential-match' | 'definite-match'
 
   /** Detailed field-by-field breakdown */
-  explanation: MatchExplanation;
+  explanation: MatchExplanation
 }
 ```
 
@@ -375,21 +390,21 @@ interface MatchResult {
 ```typescript
 interface MatchExplanation {
   /** Individual field scores */
-  fieldScores: Map<string, FieldScore>;
+  fieldScores: Map<string, FieldScore>
 
   /** Factors that increased the score */
-  positiveFactors: string[];
+  positiveFactors: string[]
 
   /** Factors that decreased the score */
-  negativeFactors: string[];
+  negativeFactors: string[]
 }
 
 interface FieldScore {
-  field: string;
-  similarity: number;      // 0-1 similarity score
-  weight: number;          // Configured weight
-  contribution: number;    // Weighted contribution to total
-  strategy: string;        // Algorithm used
+  field: string
+  similarity: number // 0-1 similarity score
+  weight: number // Configured weight
+  contribution: number // Weighted contribution to total
+  strategy: string // Algorithm used
 }
 ```
 
@@ -398,13 +413,13 @@ interface FieldScore {
 ```typescript
 interface MLMatchResult<T> extends MatchResult {
   /** ML prediction score (0-1) */
-  mlScore: number;
+  mlScore: number
 
   /** ML confidence level */
-  mlConfidence: number;
+  mlConfidence: number
 
   /** Combined score in hybrid mode */
-  combinedScore?: number;
+  combinedScore?: number
 }
 ```
 
@@ -413,19 +428,19 @@ interface MLMatchResult<T> extends MatchResult {
 ```typescript
 interface ResolutionResult<T> {
   /** Match results */
-  matches: MatchResult[];
+  matches: MatchResult[]
 
   /** Validation service results */
-  validationResults?: Record<string, ValidationResult>;
+  validationResults?: Record<string, ValidationResult>
 
   /** Lookup service results */
-  lookupResults?: Record<string, LookupResult>;
+  lookupResults?: Record<string, LookupResult>
 
   /** Record after enrichment */
-  enrichedRecord?: T;
+  enrichedRecord?: T
 
   /** Service execution timings */
-  timing?: Record<string, number>;
+  timing?: Record<string, number>
 }
 ```
 
@@ -435,22 +450,22 @@ interface ResolutionResult<T> {
 interface DeduplicationBatchResult {
   /** Pairs of duplicate records */
   duplicatePairs: Array<{
-    record1: Record<string, unknown>;
-    record2: Record<string, unknown>;
-    score: number;
-    outcome: MatchOutcome;
-  }>;
+    record1: Record<string, unknown>
+    record2: Record<string, unknown>
+    score: number
+    outcome: MatchOutcome
+  }>
 
   /** Blocking statistics (if includeStats: true) */
   stats?: {
-    totalRecords: number;
-    totalBlocks: number;
-    averageBlockSize: number;
-    maxBlockSize: number;
-    pairsGenerated: number;
-    pairsReduced: number;
-    reductionRatio: number;
-  };
+    totalRecords: number
+    totalBlocks: number
+    averageBlockSize: number
+    maxBlockSize: number
+    pairsGenerated: number
+    pairsReduced: number
+    reductionRatio: number
+  }
 }
 ```
 
@@ -459,65 +474,98 @@ interface DeduplicationBatchResult {
 ## Complete Example
 
 ```typescript
-import { HaveWeMet, prismaAdapter } from 'have-we-met';
-import { PrismaClient } from '@prisma/client';
+import { HaveWeMet, prismaAdapter } from 'have-we-met'
+import { PrismaClient } from '@prisma/client'
 
 interface Patient {
-  id: string;
-  mrn: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  ssn?: string;
-  email?: string;
-  phone?: string;
+  id: string
+  mrn: string
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  ssn?: string
+  email?: string
+  phone?: string
 }
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-const resolver = HaveWeMet
-  .create<Patient>()
-  .schema(schema => schema
-    .field('mrn').type('string').required()
-    .field('firstName').type('name').component('first').normalizer('name')
-    .field('lastName').type('name').component('last').normalizer('name')
-    .field('dateOfBirth').type('date').normalizer('date')
-    .field('ssn').type('string').required(false)
-    .field('email').type('email').normalizer('email')
-    .field('phone').type('phone').normalizer('phone')
+const resolver = HaveWeMet.create<Patient>()
+  .schema((schema) =>
+    schema
+      .field('mrn')
+      .type('string')
+      .required()
+      .field('firstName')
+      .type('name')
+      .component('first')
+      .normalizer('name')
+      .field('lastName')
+      .type('name')
+      .component('last')
+      .normalizer('name')
+      .field('dateOfBirth')
+      .type('date')
+      .normalizer('date')
+      .field('ssn')
+      .type('string')
+      .required(false)
+      .field('email')
+      .type('email')
+      .normalizer('email')
+      .field('phone')
+      .type('phone')
+      .normalizer('phone')
   )
-  .blocking(block => block
-    .composite('union', comp => comp
-      .onField('ssn')
-      .onField('mrn')
-      .onField('lastName', { transform: 'soundex' })
-      .onFields(['dateOfBirth', 'lastName'], { transforms: ['year', 'firstLetter'] })
+  .blocking((block) =>
+    block.composite('union', (comp) =>
+      comp
+        .onField('ssn')
+        .onField('mrn')
+        .onField('lastName', { transform: 'soundex' })
+        .onFields(['dateOfBirth', 'lastName'], {
+          transforms: ['year', 'firstLetter'],
+        })
     )
   )
-  .matching(match => match
-    .field('ssn').strategy('exact').weight(30)
-    .field('mrn').strategy('exact').weight(25)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(12).threshold(0.85)
-    .field('dateOfBirth').strategy('exact').weight(15)
-    .field('email').strategy('exact').weight(10)
-    .field('phone').strategy('exact').weight(8)
-    .thresholds({ noMatch: 25, definiteMatch: 55 })
+  .matching((match) =>
+    match
+      .field('ssn')
+      .strategy('exact')
+      .weight(30)
+      .field('mrn')
+      .strategy('exact')
+      .weight(25)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.85)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(15)
+      .field('email')
+      .strategy('exact')
+      .weight(10)
+      .field('phone')
+      .strategy('exact')
+      .weight(8)
+      .thresholds({ noMatch: 25, definiteMatch: 55 })
   )
   .adapter(prismaAdapter(prisma))
-  .ml(ml => ml
-    .usePretrained()
-    .mode('fallback')
-  )
-  .build();
+  .ml((ml) => ml.usePretrained().mode('fallback'))
+  .build()
 
 // Resolve a new patient
 async function checkForDuplicates(newPatient: Patient) {
-  const matches = await resolver.resolveWithDatabase(newPatient);
+  const matches = await resolver.resolveWithDatabase(newPatient)
 
   for (const match of matches) {
     if (match.outcome === 'definite-match') {
-      return { isDuplicate: true, existingPatient: match.record };
+      return { isDuplicate: true, existingPatient: match.record }
     }
 
     if (match.outcome === 'potential-match') {
@@ -526,12 +574,12 @@ async function checkForDuplicates(newPatient: Patient) {
         candidateRecord: newPatient,
         matchedRecord: match.record,
         score: match.score,
-        explanation: match.explanation
-      });
+        explanation: match.explanation,
+      })
     }
   }
 
-  return { isDuplicate: false };
+  return { isDuplicate: false }
 }
 ```
 

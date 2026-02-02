@@ -72,6 +72,7 @@ The most common mapping: rename a field from source to output.
 ```
 
 This maps:
+
 - Source `email_address` → Output `email`
 - Source `first_name` → Output `firstName`
 - Source `last_name` → Output `lastName`
@@ -157,6 +158,7 @@ Compute a field from one or more source fields:
 ```
 
 The `transform` function receives:
+
 - `input`: The full source record
 - `fieldName`: The output field name being computed
 
@@ -315,6 +317,7 @@ Convert any value to string:
 ```
 
 **Examples**:
+
 - `123` → `"123"`
 - `true` → `"true"`
 - `null` → `null` (preserved)
@@ -331,6 +334,7 @@ Convert strings or booleans to numbers:
 ```
 
 **Examples**:
+
 - `"42"` → `42`
 - `"3.14"` → `3.14`
 - `"invalid"` → `NaN`
@@ -350,6 +354,7 @@ Convert strings or numbers to booleans:
 ```
 
 **Examples**:
+
 - `"true"` → `true`
 - `"false"` → `false`
 - `1` → `true`
@@ -370,6 +375,7 @@ Convert strings or numbers to Date objects:
 ```
 
 **Examples**:
+
 - `"2024-01-15"` → `Date(2024-01-15)`
 - `"2024-01-15T10:30:00Z"` → `Date(...)`
 - `1705315800000` → `Date(...)` (Unix timestamp)
@@ -967,13 +973,13 @@ function testMapping() {
   const sampleInput = {
     email_address: 'USER@EXAMPLE.COM  ',
     first_name: 'John',
-    last_name: 'Smith'
+    last_name: 'Smith',
   }
 
   const mapping = {
     email: normalizeEmail(sampleInput.email_address),
     firstName: sampleInput.first_name,
-    lastName: sampleInput.last_name
+    lastName: sampleInput.last_name,
   }
 
   console.log(mapping)
@@ -1005,6 +1011,7 @@ Catch and handle errors in transform functions:
 **Cause**: Called `.from()` without calling `.field()` first.
 
 **Solution**:
+
 ```typescript
 // Wrong
 .from('email_address')
@@ -1018,6 +1025,7 @@ Catch and handle errors in transform functions:
 **Cause**: Tried to use both static mapping and transform function on same field.
 
 **Solution**: Use one or the other:
+
 ```typescript
 // Either
 .field('email').from('email_address')
@@ -1033,6 +1041,7 @@ Catch and handle errors in transform functions:
 **Cause**: Called `.field()` but didn't specify mapping.
 
 **Solution**: Add mapping:
+
 ```typescript
 .field('email').from('email_address')
 // Or
@@ -1044,6 +1053,7 @@ Catch and handle errors in transform functions:
 **Cause**: Nested field doesn't exist in source record.
 
 **Solution**: Use null-safe access:
+
 ```typescript
 // Instead of
 .field('city').from('address.city')
@@ -1059,6 +1069,7 @@ Catch and handle errors in transform functions:
 **Cause**: Source field is missing or has unexpected type.
 
 **Solution**: Add null checking:
+
 ```typescript
 // Before
 .field('fullName').transform(input =>
@@ -1079,6 +1090,7 @@ Catch and handle errors in transform functions:
 **Cause**: Source value cannot be coerced to target type.
 
 **Solution**: Validate before coercing:
+
 ```typescript
 // Before
 .field('age').from('age_string').coerce('number')
@@ -1098,6 +1110,7 @@ Catch and handle errors in transform functions:
 **Cause**: Required field is null/undefined in source.
 
 **Solution**: Either make field optional or provide default:
+
 ```typescript
 // Option 1: Make optional
 .field('phone').from('phone_number')  // Remove .required()
@@ -1113,6 +1126,7 @@ Catch and handle errors in transform functions:
 **Cause**: TypeScript can't infer types correctly.
 
 **Solution**: Add explicit type annotations:
+
 ```typescript
 interface SourceRecord {
   first_name: string

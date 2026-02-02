@@ -50,9 +50,11 @@ new ConsolidationBuilder<TOutput extends Record<string, unknown>>()
 ```
 
 **Type Parameters**:
+
 - `TOutput`: Unified output record type
 
 **Example**:
+
 ```typescript
 interface UnifiedCustomer {
   id?: string
@@ -78,16 +80,19 @@ source<TInput extends Record<string, unknown>>(
 ```
 
 **Parameters**:
+
 - `sourceId` (string): Unique identifier for this source
 - `configurator` (function): Callback that receives and configures a SourceBuilder
 
 **Returns**: `this` (for chaining)
 
 **Throws**:
+
 - Error if `sourceId` is empty or not a string
 - Error from SourceBuilder if source configuration is invalid
 
 **Example**:
+
 ```typescript
 .source('crm', source => source
   .name('CRM Database')
@@ -112,6 +117,7 @@ matchingScope(
 ```
 
 **Parameters**:
+
 - `scope`: Matching scope strategy
   - `'within-source-first'`: Deduplicate within sources first, then match across
   - `'unified-pool'`: Match all records together in unified pool
@@ -121,9 +127,11 @@ matchingScope(
 **Default**: `'within-source-first'`
 
 **Throws**:
+
 - Error if scope is not one of the allowed values
 
 **Example**:
+
 ```typescript
 .matchingScope('within-source-first')
 // Or
@@ -141,11 +149,13 @@ schema(
 ```
 
 **Parameters**:
+
 - `configurator` (function): Callback that receives and configures a SchemaBuilder
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .schema(schema => schema
   .field('email', { type: 'email' })
@@ -168,11 +178,13 @@ matching(
 ```
 
 **Parameters**:
+
 - `configurator` (function): Callback that receives and configures a MatchingBuilder
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .matching(match => match
   .field('email').strategy('exact').weight(30)
@@ -196,6 +208,7 @@ thresholds(thresholds: {
 ```
 
 **Parameters**:
+
 - `thresholds.noMatch` (number): Score below this = no match
 - `thresholds.definiteMatch` (number): Score above this = definite match
 - Between these values = potential match (needs review)
@@ -203,6 +216,7 @@ thresholds(thresholds: {
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .thresholds({
   noMatch: 20,        // Below 20 = different entities
@@ -222,11 +236,13 @@ blocking(
 ```
 
 **Parameters**:
+
 - `configurator` (function): Callback that receives and configures a BlockingBuilder
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .blocking(block => block
   .standard('email')                    // Exact email groups
@@ -247,11 +263,13 @@ conflictResolution(
 ```
 
 **Parameters**:
+
 - `configurator` (function): Callback that receives and configures a ConflictResolutionBuilder
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .conflictResolution(cr => cr
   .useSourcePriority(true)
@@ -271,11 +289,13 @@ outputAdapter(adapter: DatabaseAdapter<TOutput>): this
 ```
 
 **Parameters**:
+
 - `adapter` (DatabaseAdapter): Database adapter for output table
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 import { PrismaAdapter } from 'have-we-met/adapters'
 
@@ -291,6 +311,7 @@ writeOutput(write: boolean): this
 ```
 
 **Parameters**:
+
 - `write` (boolean): Whether to write output
 
 **Returns**: `this` (for chaining)
@@ -298,6 +319,7 @@ writeOutput(write: boolean): this
 **Default**: `false`
 
 **Example**:
+
 ```typescript
 .writeOutput(true)   // Write to database
 .writeOutput(false)  // Dry run (no write)
@@ -314,11 +336,13 @@ build(): ConsolidationConfig<TOutput>
 **Returns**: `ConsolidationConfig<TOutput>` - Complete consolidation configuration
 
 **Throws**:
+
 - Error if no sources are configured
 - Error if `writeOutput(true)` but no `outputAdapter` provided
 - Error from individual builders if their configuration is invalid
 
 **Example**:
+
 ```typescript
 const config = builder.build()
 ```
@@ -338,13 +362,16 @@ new SourceBuilder<TInput extends Record<string, unknown>, TOutput extends Record
 ```
 
 **Type Parameters**:
+
 - `TInput`: Input record type for this source
 - `TOutput`: Unified output record type
 
 **Parameters**:
+
 - `sourceId` (string): Unique identifier for this source
 
 **Throws**:
+
 - Error if `sourceId` is empty or not a string
 
 ### Methods
@@ -358,6 +385,7 @@ name(name: string): this
 ```
 
 **Parameters**:
+
 - `name` (string): Source name
 
 **Returns**: `this` (for chaining)
@@ -365,6 +393,7 @@ name(name: string): this
 **Required**: Yes
 
 **Example**:
+
 ```typescript
 .name('CRM Database')
 ```
@@ -378,6 +407,7 @@ adapter(adapter: DatabaseAdapter<TInput>): this
 ```
 
 **Parameters**:
+
 - `adapter` (DatabaseAdapter): Database adapter instance
 
 **Returns**: `this` (for chaining)
@@ -385,6 +415,7 @@ adapter(adapter: DatabaseAdapter<TInput>): this
 **Required**: Yes
 
 **Example**:
+
 ```typescript
 import { PrismaAdapter } from 'have-we-met/adapters'
 
@@ -402,6 +433,7 @@ mapping(
 ```
 
 **Parameters**:
+
 - `configurator` (function): Callback that receives and configures a FieldMappingBuilder
 
 **Returns**: `this` (for chaining)
@@ -409,6 +441,7 @@ mapping(
 **Required**: Yes
 
 **Example**:
+
 ```typescript
 .mapping(map => map
   .field('email').from('email_address')
@@ -429,6 +462,7 @@ priority(priority: number): this
 ```
 
 **Parameters**:
+
 - `priority` (number): Source priority (higher = more trusted)
 
 **Returns**: `this` (for chaining)
@@ -436,6 +470,7 @@ priority(priority: number): this
 **Default**: `0`
 
 **Example**:
+
 ```typescript
 .priority(3)  // Highest priority
 .priority(2)  // Medium priority
@@ -451,11 +486,13 @@ metadata(metadata: Record<string, unknown>): this
 ```
 
 **Parameters**:
+
 - `metadata` (object): Source metadata
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .metadata({
   region: 'US',
@@ -475,6 +512,7 @@ build(): ConsolidationSource<TInput, TOutput>
 **Returns**: `ConsolidationSource<TInput, TOutput>` - Complete source configuration
 
 **Throws**:
+
 - Error if `name` is not set
 - Error if `adapter` is not set
 - Error if `mapping` is not set or empty
@@ -492,6 +530,7 @@ new FieldMappingBuilder<TInput extends Record<string, unknown>, TOutput extends 
 ```
 
 **Type Parameters**:
+
 - `TInput`: Input record type
 - `TOutput`: Output record type
 
@@ -506,11 +545,13 @@ field(fieldName: keyof TOutput & string): this
 ```
 
 **Parameters**:
+
 - `fieldName` (string): Output field name
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .field('email')
 ```
@@ -524,6 +565,7 @@ from(sourceField: string): this
 ```
 
 **Parameters**:
+
 - `sourceField` (string): Source field path (supports dot notation for nested fields)
 
 **Returns**: `this` (for chaining)
@@ -533,6 +575,7 @@ from(sourceField: string): this
 **Mutually exclusive with**: `transform()`
 
 **Example**:
+
 ```typescript
 .field('email').from('email_address')
 .field('city').from('address.city')  // Nested field
@@ -547,6 +590,7 @@ transform(fn: TransformFunction<TInput, TOutput>): this
 ```
 
 **Parameters**:
+
 - `fn` (function): Transformation function
   - Signature: `(input: TInput, fieldName: keyof TOutput) => TOutput[keyof TOutput]`
   - `input`: Full source record
@@ -560,6 +604,7 @@ transform(fn: TransformFunction<TInput, TOutput>): this
 **Mutually exclusive with**: `from()`
 
 **Example**:
+
 ```typescript
 .field('fullName').transform(input =>
   `${input.first_name} ${input.last_name}`
@@ -579,6 +624,7 @@ coerce(type: 'string' | 'number' | 'boolean' | 'date'): this
 ```
 
 **Parameters**:
+
 - `type`: Target type for coercion
   - `'string'`: Convert to string
   - `'number'`: Convert to number
@@ -590,6 +636,7 @@ coerce(type: 'string' | 'number' | 'boolean' | 'date'): this
 **Must be preceded by**: `field()` and (`from()` or `transform()`)
 
 **Example**:
+
 ```typescript
 .field('age').from('age_string').coerce('number')
 .field('createdAt').from('created_date').coerce('date')
@@ -599,11 +646,13 @@ coerce(type: 'string' | 'number' | 'boolean' | 'date'): this
 **Coercion Rules**:
 
 **To string**:
+
 - `123` → `"123"`
 - `true` → `"true"`
 - `null` → `null` (preserved)
 
 **To number**:
+
 - `"42"` → `42`
 - `"3.14"` → `3.14`
 - `"invalid"` → `NaN`
@@ -611,11 +660,13 @@ coerce(type: 'string' | 'number' | 'boolean' | 'date'): this
 - `null` → `null` (preserved)
 
 **To boolean**:
+
 - `"true"`, `"yes"`, `1` → `true`
 - `"false"`, `"no"`, `0` → `false`
 - `null` → `null` (preserved)
 
 **To date**:
+
 - `"2024-01-15"` → `Date` object
 - `1705315800000` → `Date` object (Unix timestamp)
 - `"invalid"` → `Invalid Date`
@@ -630,6 +681,7 @@ required(required: boolean = true): this
 ```
 
 **Parameters**:
+
 - `required` (boolean): Whether field is required
 
 **Returns**: `this` (for chaining)
@@ -639,6 +691,7 @@ required(required: boolean = true): this
 **Must be preceded by**: `field()` and (`from()` or `transform()`)
 
 **Example**:
+
 ```typescript
 .field('email').from('email_address').required()
 .field('firstName').from('first_name').required()
@@ -658,6 +711,7 @@ build(): Partial<FieldMapping<TInput, TOutput>>
 **Returns**: `Partial<FieldMapping<TInput, TOutput>>` - Complete field mapping
 
 **Throws**:
+
 - Error if any field doesn't have either `from()` or `transform()`
 
 ---
@@ -683,6 +737,7 @@ defaultStrategy(strategy: MergeStrategy): this
 ```
 
 **Parameters**:
+
 - `strategy` (MergeStrategy): Default merge strategy
 
 **Returns**: `this` (for chaining)
@@ -690,6 +745,7 @@ defaultStrategy(strategy: MergeStrategy): this
 **Default**: `'preferFirst'`
 
 **Available Strategies**:
+
 - `'preferFirst'`: Use first value
 - `'preferLast'`: Use last value
 - `'preferNewer'`: Use newest value (by timestamp)
@@ -706,6 +762,7 @@ defaultStrategy(strategy: MergeStrategy): this
 - `'max'`: Maximum value
 
 **Example**:
+
 ```typescript
 .defaultStrategy('preferNonNull')
 ```
@@ -719,12 +776,14 @@ fieldStrategy(fieldName: string, strategy: MergeStrategy): this
 ```
 
 **Parameters**:
+
 - `fieldName` (string): Field name
 - `strategy` (MergeStrategy): Merge strategy for this field
 
 **Returns**: `this` (for chaining)
 
 **Example**:
+
 ```typescript
 .fieldStrategy('email', 'preferNewer')
 .fieldStrategy('createdAt', 'preferOlder')
@@ -733,6 +792,7 @@ fieldStrategy(fieldName: string, strategy: MergeStrategy): this
 ```
 
 **Custom Merge Function**:
+
 ```typescript
 .fieldStrategy('metadata', (values) => {
   // Custom logic: merge all metadata objects
@@ -749,6 +809,7 @@ useSourcePriority(use: boolean): this
 ```
 
 **Parameters**:
+
 - `use` (boolean): Whether to use source priority
 
 **Returns**: `this` (for chaining)
@@ -756,12 +817,14 @@ useSourcePriority(use: boolean): this
 **Default**: `true`
 
 **Example**:
+
 ```typescript
 .useSourcePriority(true)   // Higher priority sources preferred
 .useSourcePriority(false)  // Only merge strategies used
 ```
 
 **Behavior**:
+
 - `true`: Higher priority source values preferred, then merge strategy applied
 - `false`: Source priority ignored, only merge strategy used
 
@@ -774,6 +837,7 @@ trackProvenance(track: boolean): this
 ```
 
 **Parameters**:
+
 - `track` (boolean): Whether to track provenance
 
 **Returns**: `this` (for chaining)
@@ -781,6 +845,7 @@ trackProvenance(track: boolean): this
 **Default**: `true`
 
 **Example**:
+
 ```typescript
 .trackProvenance(true)   // Track field sources
 .trackProvenance(false)  // Don't track (slight performance gain)
@@ -805,7 +870,10 @@ build(): ConflictResolutionConfig
 Configuration for a single data source.
 
 ```typescript
-interface ConsolidationSource<TInput extends Record<string, unknown>, TOutput extends Record<string, unknown>> {
+interface ConsolidationSource<
+  TInput extends Record<string, unknown>,
+  TOutput extends Record<string, unknown>,
+> {
   sourceId: string
   name: string
   adapter: DatabaseAdapter<TInput>
@@ -816,6 +884,7 @@ interface ConsolidationSource<TInput extends Record<string, unknown>, TOutput ex
 ```
 
 **Properties**:
+
 - `sourceId`: Unique identifier for this source
 - `name`: Human-readable name
 - `adapter`: Database adapter for loading records
@@ -847,12 +916,14 @@ interface FieldMappingConfig<TInput, TOutput> {
 ```
 
 **Properties**:
+
 - `sourceField`: Source field path (mutually exclusive with `transform`)
 - `transform`: Transformation function (mutually exclusive with `sourceField`)
 - `coerce`: Type coercion
 - `required`: Whether field is required
 
 **Rules**:
+
 - Must have either `sourceField` or `transform`
 - Cannot have both `sourceField` and `transform`
 
@@ -868,6 +939,7 @@ type TransformFunction<TInput, TOutput> = (
 ```
 
 **Parameters**:
+
 - `input`: Full source record
 - `fieldName`: Output field name being computed
 
@@ -880,7 +952,7 @@ Enum for matching scope strategies.
 ```typescript
 enum MatchingScope {
   WithinSourceFirst = 'within-source-first',
-  UnifiedPool = 'unified-pool'
+  UnifiedPool = 'unified-pool',
 }
 ```
 
@@ -898,6 +970,7 @@ interface ConflictResolutionConfig {
 ```
 
 **Properties**:
+
 - `defaultStrategy`: Default merge strategy, default `'preferFirst'`
 - `fieldStrategies`: Per-field merge strategies
 - `useSourcePriority`: Use source priority, default `true`
@@ -940,6 +1013,7 @@ interface ConsolidationConfig<TOutput extends Record<string, unknown>> {
 ```
 
 **Properties**:
+
 - `sources`: List of data sources
 - `matchingScope`: Matching scope strategy, default `'within-source-first'`
 - `conflictResolution`: Conflict resolution configuration
@@ -964,6 +1038,7 @@ interface ConsolidationResult<TOutput> {
 ```
 
 **Properties**:
+
 - `goldenRecords`: Golden records created from consolidation
 - `matchGroups`: Match groups (which source records were merged)
 - `stats`: Statistics from consolidation
@@ -991,6 +1066,7 @@ interface ConsolidationStats {
 ```
 
 **Properties**:
+
 - `sources`: Per-source statistics
 - `totalRecords`: Total records loaded across all sources
 - `goldenRecords`: Total golden records created
@@ -1012,6 +1088,7 @@ interface MappedRecord<TOutput> {
 ```
 
 **Properties**:
+
 - `record`: Record mapped to output schema
 - `sourceId`: Source ID this record came from
 - `originalRecord`: Original record before mapping
@@ -1026,15 +1103,19 @@ interface MappedRecord<TOutput> {
 Factory function to create a consolidation builder.
 
 ```typescript
-function createConsolidationBuilder<TOutput extends Record<string, unknown>>(): ConsolidationBuilder<TOutput>
+function createConsolidationBuilder<
+  TOutput extends Record<string, unknown>,
+>(): ConsolidationBuilder<TOutput>
 ```
 
 **Type Parameters**:
+
 - `TOutput`: Unified output record type
 
 **Returns**: `ConsolidationBuilder<TOutput>`
 
 **Example**:
+
 ```typescript
 import { createConsolidationBuilder } from 'have-we-met'
 
@@ -1046,21 +1127,25 @@ const builder = createConsolidationBuilder<Customer>()
 Factory function to create a source builder.
 
 ```typescript
-function createSourceBuilder<TInput extends Record<string, unknown>, TOutput extends Record<string, unknown>>(
-  sourceId: string
-): SourceBuilder<TInput, TOutput>
+function createSourceBuilder<
+  TInput extends Record<string, unknown>,
+  TOutput extends Record<string, unknown>,
+>(sourceId: string): SourceBuilder<TInput, TOutput>
 ```
 
 **Type Parameters**:
+
 - `TInput`: Input record type
 - `TOutput`: Output record type
 
 **Parameters**:
+
 - `sourceId` (string): Unique identifier for this source
 
 **Returns**: `SourceBuilder<TInput, TOutput>`
 
 **Example**:
+
 ```typescript
 import { createSourceBuilder } from 'have-we-met'
 
@@ -1102,47 +1187,66 @@ interface UnifiedCustomer {
 }
 
 const result = await HaveWeMet.consolidation<UnifiedCustomer>()
-  .source<CRMCustomer>('crm', source => source
-    .name('CRM Database')
-    .adapter(new PrismaAdapter(prisma.crmCustomer))
-    .mapping(map => map
-      .field('email').from('email_address')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-    )
-    .priority(2)
+  .source<CRMCustomer>('crm', (source) =>
+    source
+      .name('CRM Database')
+      .adapter(new PrismaAdapter(prisma.crmCustomer))
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email_address')
+          .field('firstName')
+          .from('first_name')
+          .field('lastName')
+          .from('last_name')
+      )
+      .priority(2)
   )
 
-  .source<BillingCustomer>('billing', source => source
-    .name('Billing System')
-    .adapter(new PrismaAdapter(prisma.billingCustomer))
-    .mapping(map => map
-      .field('email').from('email')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-    )
-    .priority(1)
+  .source<BillingCustomer>('billing', (source) =>
+    source
+      .name('Billing System')
+      .adapter(new PrismaAdapter(prisma.billingCustomer))
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email')
+          .field('firstName')
+          .from('fname')
+          .field('lastName')
+          .from('lname')
+      )
+      .priority(1)
   )
 
-  .schema(schema => schema
-    .field('email', { type: 'email' })
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((schema) =>
+    schema
+      .field('email', { type: 'email' })
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
 
-  .matching(match => match
-    .field('email').strategy('exact').weight(30)
-    .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-    .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(30)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
   )
 
   .thresholds({ noMatch: 20, definiteMatch: 45 })
 
   .matchingScope('within-source-first')
 
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .defaultStrategy('preferNonNull')
+  .conflictResolution((cr) =>
+    cr.useSourcePriority(true).defaultStrategy('preferNonNull')
   )
 
   .outputAdapter(new PrismaAdapter(prisma.unifiedCustomer))
@@ -1175,30 +1279,35 @@ interface OutputRecord {
 }
 
 const result = await HaveWeMet.consolidation<OutputRecord>()
-  .source<SourceRecord>('source', source => source
-    .name('Source Database')
-    .adapter(adapter)
-    .mapping(map => map
-      .field('email').from('email')
+  .source<SourceRecord>('source', (source) =>
+    source
+      .name('Source Database')
+      .adapter(adapter)
+      .mapping((map) =>
+        map
+          .field('email')
+          .from('email')
 
-      // Computed field
-      .field('fullName').transform(input =>
-        `${input.fname} ${input.lname}`
+          // Computed field
+          .field('fullName')
+          .transform((input) => `${input.fname} ${input.lname}`)
+
+          // Parse CSV to array
+          .field('tags')
+          .transform((input) => input.tags_csv.split(',').map((t) => t.trim()))
+
+          // Coerce string to date
+          .field('createdAt')
+          .from('created_date')
+          .coerce('date')
       )
-
-      // Parse CSV to array
-      .field('tags').transform(input =>
-        input.tags_csv.split(',').map(t => t.trim())
-      )
-
-      // Coerce string to date
-      .field('createdAt').from('created_date').coerce('date')
-    )
   )
 
-  .conflictResolution(cr => cr
-    .fieldStrategy('tags', 'union')  // Combine all tags
-    .fieldStrategy('createdAt', 'preferOlder')  // Earliest date
+  .conflictResolution(
+    (cr) =>
+      cr
+        .fieldStrategy('tags', 'union') // Combine all tags
+        .fieldStrategy('createdAt', 'preferOlder') // Earliest date
   )
 
   .outputAdapter(outputAdapter)
@@ -1220,50 +1329,73 @@ interface Patient {
 }
 
 const result = await HaveWeMet.consolidation<Patient>()
-  .source('hospital_a', source => source
-    .adapter(hospitalAAdapter)
-    .mapping(map => map
-      .field('ssn').from('social_security_number')
-      .field('dateOfBirth').from('dob').coerce('date')
-      .field('firstName').from('first_name')
-      .field('lastName').from('last_name')
-    )
-    .priority(3)
+  .source('hospital_a', (source) =>
+    source
+      .adapter(hospitalAAdapter)
+      .mapping((map) =>
+        map
+          .field('ssn')
+          .from('social_security_number')
+          .field('dateOfBirth')
+          .from('dob')
+          .coerce('date')
+          .field('firstName')
+          .from('first_name')
+          .field('lastName')
+          .from('last_name')
+      )
+      .priority(3)
   )
 
-  .source('hospital_b', source => source
-    .adapter(hospitalBAdapter)
-    .mapping(map => map
-      .field('ssn').from('patient_ssn')
-      .field('dateOfBirth').from('birth_date').coerce('date')
-      .field('firstName').from('fname')
-      .field('lastName').from('lname')
-    )
-    .priority(2)
+  .source('hospital_b', (source) =>
+    source
+      .adapter(hospitalBAdapter)
+      .mapping((map) =>
+        map
+          .field('ssn')
+          .from('patient_ssn')
+          .field('dateOfBirth')
+          .from('birth_date')
+          .coerce('date')
+          .field('firstName')
+          .from('fname')
+          .field('lastName')
+          .from('lname')
+      )
+      .priority(2)
   )
 
-  .schema(schema => schema
-    .field('ssn', { type: 'string', optional: true })
-    .field('dateOfBirth', { type: 'date' })
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((schema) =>
+    schema
+      .field('ssn', { type: 'string', optional: true })
+      .field('dateOfBirth', { type: 'date' })
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
 
-  .matching(match => match
-    .field('ssn').strategy('exact').weight(30)
-    .field('dateOfBirth').strategy('exact').weight(20)
-    .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.9)
-    .field('firstName').strategy('jaro-winkler').weight(12).threshold(0.85)
+  .matching((match) =>
+    match
+      .field('ssn')
+      .strategy('exact')
+      .weight(30)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(20)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(15)
+      .threshold(0.9)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.85)
   )
 
-  .thresholds({ noMatch: 30, definiteMatch: 60 })  // Conservative
+  .thresholds({ noMatch: 30, definiteMatch: 60 }) // Conservative
 
-  .matchingScope('unified-pool')  // Comprehensive matching
+  .matchingScope('unified-pool') // Comprehensive matching
 
-  .conflictResolution(cr => cr
-    .useSourcePriority(true)
-    .trackProvenance(true)
-  )
+  .conflictResolution((cr) => cr.useSourcePriority(true).trackProvenance(true))
 
   .outputAdapter(outputAdapter)
   .writeOutput(true)

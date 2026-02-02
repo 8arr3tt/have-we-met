@@ -8,21 +8,23 @@ import type { DatabaseAdapter } from '../../../src/adapters/types'
 import { ConsolidationError } from '../../../src/consolidation/types'
 
 // Mock adapters
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   return {
     findAll: vi.fn(async () => []),
     findByIds: vi.fn(async () => []),
     findByBlockingKeys: vi.fn(async () => []),
     count: vi.fn(async () => 0),
-    insert: vi.fn(async (record) => ({ ...record, id: 'mock-id' } as T)),
-    update: vi.fn(async (id, updates) => ({ id, ...updates } as T)),
+    insert: vi.fn(async (record) => ({ ...record, id: 'mock-id' }) as T),
+    update: vi.fn(async (id, updates) => ({ id, ...updates }) as T),
     delete: vi.fn(async () => {}),
     transaction: vi.fn(async (callback) => callback({} as DatabaseAdapter<T>)),
     batchInsert: vi.fn(async (records) =>
-      records.map((r, i) => ({ ...r, id: `mock-id-${i}` } as T))
+      records.map((r, i) => ({ ...r, id: `mock-id-${i}` }) as T)
     ),
     batchUpdate: vi.fn(async (updates) =>
-      updates.map((u) => ({ id: u.id, ...u.updates } as T))
+      updates.map((u) => ({ id: u.id, ...u.updates }) as T)
     ),
   }
 }
@@ -315,8 +317,22 @@ describe('MultiTableAdapter', () => {
 
   describe('loadFromAllSources', () => {
     it('should load records from all sources', async () => {
-      const crmRecords = [{ cust_id: '1', first_name: 'John', last_name: 'Doe', email_address: 'john@crm.com' }]
-      const billingRecords = [{ cust_id: '2', first_name: 'Jane', last_name: 'Smith', email_address: 'jane@billing.com' }]
+      const crmRecords = [
+        {
+          cust_id: '1',
+          first_name: 'John',
+          last_name: 'Doe',
+          email_address: 'john@crm.com',
+        },
+      ]
+      const billingRecords = [
+        {
+          cust_id: '2',
+          first_name: 'Jane',
+          last_name: 'Smith',
+          email_address: 'jane@billing.com',
+        },
+      ]
 
       vi.mocked(crmAdapter.findAll).mockResolvedValue(crmRecords)
       vi.mocked(billingAdapter.findAll).mockResolvedValue(billingRecords)
@@ -346,7 +362,14 @@ describe('MultiTableAdapter', () => {
     })
 
     it('should load only from specified source IDs', async () => {
-      const crmRecords = [{ cust_id: '1', first_name: 'John', last_name: 'Doe', email_address: 'john@crm.com' }]
+      const crmRecords = [
+        {
+          cust_id: '1',
+          first_name: 'John',
+          last_name: 'Doe',
+          email_address: 'john@crm.com',
+        },
+      ]
 
       vi.mocked(crmAdapter.findAll).mockResolvedValue(crmRecords)
       vi.mocked(billingAdapter.findAll).mockResolvedValue([])
@@ -445,9 +468,7 @@ describe('MultiTableAdapter', () => {
     })
 
     it('should wrap adapter errors', async () => {
-      vi.mocked(crmAdapter.count).mockRejectedValue(
-        new Error('Database error')
-      )
+      vi.mocked(crmAdapter.count).mockRejectedValue(new Error('Database error'))
 
       const adapter = new MultiTableAdapter({
         sources: [
@@ -508,9 +529,11 @@ describe('MultiTableAdapter', () => {
         async (callback) => {
           const mockAdapter = {
             ...outputAdapter,
-            batchInsert: vi.fn().mockResolvedValue(
-              goldenRecords.map((r, i) => ({ ...r, id: `golden-${i}` }))
-            ),
+            batchInsert: vi
+              .fn()
+              .mockResolvedValue(
+                goldenRecords.map((r, i) => ({ ...r, id: `golden-${i}` }))
+              ),
           }
           return callback(mockAdapter)
         }
@@ -676,9 +699,8 @@ describe('MultiTableAdapter', () => {
         priority: 1,
       }
 
-      const config = MultiTableAdapter.fromConsolidationSource(
-        consolidationSource
-      )
+      const config =
+        MultiTableAdapter.fromConsolidationSource(consolidationSource)
 
       expect(config.sourceId).toBe('crm')
       expect(config.name).toBe('CRM Database')

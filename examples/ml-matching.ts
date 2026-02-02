@@ -95,11 +95,12 @@ const hybridResolver = HaveWeMet.create<Person>()
       .thresholds({ noMatch: 25, definiteMatch: 50 })
   )
   // Add ML in hybrid mode - combines both approaches
-  .ml((ml) =>
-    ml
-      .usePretrained() // Use built-in pre-trained model
-      .mode('hybrid') // Combine ML with probabilistic scoring
-      .mlWeight(0.4) // 40% ML prediction, 60% probabilistic score
+  .ml(
+    (ml) =>
+      ml
+        .usePretrained() // Use built-in pre-trained model
+        .mode('hybrid') // Combine ML with probabilistic scoring
+        .mlWeight(0.4) // 40% ML prediction, 60% probabilistic score
   )
   .build()
 
@@ -119,11 +120,15 @@ console.log('Test Record: Jenny Smith, jenny.smith@example.com')
 console.log('\nMatch Results:')
 hybridResults.forEach((result, index) => {
   if (result.outcome !== 'no-match') {
-    console.log(`\nCandidate ${index + 1}: ${result.record.firstName} ${result.record.lastName}`)
+    console.log(
+      `\nCandidate ${index + 1}: ${result.record.firstName} ${result.record.lastName}`
+    )
     console.log(`  Outcome: ${result.outcome}`)
     console.log(`  Final Score: ${result.score.totalScore}`)
     console.log(`  Probabilistic Score: ${result.score.probabilisticScore}`)
-    console.log(`  ML Prediction: ${result.mlPrediction?.probability.toFixed(3)} (${result.mlPrediction?.classification})`)
+    console.log(
+      `  ML Prediction: ${result.mlPrediction?.probability.toFixed(3)} (${result.mlPrediction?.classification})`
+    )
     console.log(`  ML Confidence: ${result.mlPrediction?.confidence}`)
     console.log('  Top Contributing Features:')
     result.mlPrediction?.featureImportance.slice(0, 3).forEach((feature) => {
@@ -168,9 +173,13 @@ console.log('Test Record: Jenny Smith (same as Example 1)')
 console.log('\nML-Only Match Results:')
 mlOnlyResults.forEach((result, index) => {
   if (result.outcome !== 'no-match') {
-    console.log(`\nCandidate ${index + 1}: ${result.record.firstName} ${result.record.lastName}`)
+    console.log(
+      `\nCandidate ${index + 1}: ${result.record.firstName} ${result.record.lastName}`
+    )
     console.log(`  Outcome: ${result.outcome}`)
-    console.log(`  ML Probability: ${result.mlPrediction?.probability.toFixed(3)}`)
+    console.log(
+      `  ML Probability: ${result.mlPrediction?.probability.toFixed(3)}`
+    )
     console.log(`  ML Classification: ${result.mlPrediction?.classification}`)
   }
 })
@@ -194,7 +203,13 @@ const customFeaturesResolver = HaveWeMet.create<Person>()
       .field('dateOfBirth', { type: 'date' })
   )
   .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
-  .matching((match) => match.field('email').strategy('exact').weight(20).thresholds({ noMatch: 0, definiteMatch: 100 }))
+  .matching((match) =>
+    match
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .thresholds({ noMatch: 0, definiteMatch: 100 })
+  )
   .ml((ml) =>
     ml
       .usePretrained()
@@ -239,7 +254,7 @@ console.log('const collector = new FeedbackCollector<Person>()')
 console.log()
 console.log('// Get decided queue items from your resolver')
 console.log('const decidedItems = await resolver.queue.list({')
-console.log('  status: \'confirmed\', // or \'rejected\'')
+console.log("  status: 'confirmed', // or 'rejected'")
 console.log('  limit: 1000,')
 console.log('})')
 console.log()
@@ -254,7 +269,9 @@ console.log('  regularization: 0.01,')
 console.log('  maxIterations: 1000,')
 console.log('})')
 console.log()
-console.log('const { classifier: customModel } = await trainer.trainClassifier(')
+console.log(
+  'const { classifier: customModel } = await trainer.trainClassifier('
+)
 console.log('  collector.exportAsTrainingDataset()')
 console.log(')')
 console.log()
@@ -262,7 +279,7 @@ console.log('// 3. Use custom model')
 console.log('const resolver = HaveWeMet.create<Person>()')
 console.log('  .schema((schema) => /* ... */)')
 console.log('  .matching((match) => /* ... */)')
-console.log('  .ml((ml) => ml.useModel(customModel).mode(\'hybrid\'))')
+console.log("  .ml((ml) => ml.useModel(customModel).mode('hybrid'))")
 console.log('  .build()')
 console.log('```')
 
@@ -292,13 +309,19 @@ console.log('Fallback Mode:')
 console.log('  ✓ Use probabilistic rules first, ML only for ambiguous cases')
 console.log('  ✓ Faster (ML only runs when needed)')
 console.log('  ✓ Good for production with strict latency requirements')
-console.log('  Use when: Performance is critical and most matches are clear-cut')
+console.log(
+  '  Use when: Performance is critical and most matches are clear-cut'
+)
 console.log()
 
 console.log('Pre-trained vs Custom Models:')
 console.log('  • Pre-trained: Works out-of-box for person/customer data')
-console.log('  • Custom: Train on your domain-specific data for better accuracy')
-console.log('  • Recommendation: Start with pre-trained, train custom after collecting')
+console.log(
+  '  • Custom: Train on your domain-specific data for better accuracy'
+)
+console.log(
+  '  • Recommendation: Start with pre-trained, train custom after collecting'
+)
 console.log('    100+ human decisions from your review queue')
 console.log()
 

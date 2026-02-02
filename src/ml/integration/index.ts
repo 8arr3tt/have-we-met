@@ -8,13 +8,13 @@ export {
   MLMatchIntegrator,
   createMLIntegrator,
   isMLMatchResult,
-} from './resolver-integration';
+} from './resolver-integration'
 
 export type {
   MLMatchResult,
   MLMatchOptions,
   MLMatchStats,
-} from './resolver-integration';
+} from './resolver-integration'
 
 // Builder integration
 export {
@@ -23,9 +23,6 @@ export {
   mlBuilder,
   createModelFromConfig,
   validateMLBuilderConfig,
-} from './builder-integration';
+} from './builder-integration'
 
-export type {
-  MLBuilderConfig,
-  MLBuilderResult,
-} from './builder-integration';
+export type { MLBuilderConfig, MLBuilderResult } from './builder-integration'

@@ -186,7 +186,10 @@ describe('SchemaMapper', () => {
 
       const mapper = new SchemaMapper<Input, Output>({
         mappings: [
-          { source: 'user.profile.contact.email', target: 'contact.info.email' },
+          {
+            source: 'user.profile.contact.email',
+            target: 'contact.info.email',
+          },
         ],
       })
 
@@ -257,7 +260,8 @@ describe('SchemaMapper', () => {
           {
             source: 'firstName',
             target: 'fullName',
-            transform: (v, record) => `${record?.firstName} ${record?.lastName}`,
+            transform: (v, record) =>
+              `${record?.firstName} ${record?.lastName}`,
           },
         ],
       })

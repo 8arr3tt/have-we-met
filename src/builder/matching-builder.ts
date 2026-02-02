@@ -100,10 +100,18 @@ export class FieldMatchBuilder {
   jaroWinklerOptions(options: JaroWinklerOptions): this {
     requirePlainObject(options, 'jaroWinklerOptions')
     if (options.prefixScale !== undefined) {
-      requireInRange(options.prefixScale, 0, 1, 'jaroWinklerOptions.prefixScale')
+      requireInRange(
+        options.prefixScale,
+        0,
+        1,
+        'jaroWinklerOptions.prefixScale'
+      )
     }
     if (options.maxPrefixLength !== undefined) {
-      requirePositive(options.maxPrefixLength, 'jaroWinklerOptions.maxPrefixLength')
+      requirePositive(
+        options.maxPrefixLength,
+        'jaroWinklerOptions.maxPrefixLength'
+      )
     }
     this.config.jaroWinklerOptions = options
     return this
@@ -202,8 +210,14 @@ export class MatchingBuilder {
 
     // Validate that noMatch < definiteMatch
     const noMatch = config.noMatch ?? this.thresholdConfig.noMatch
-    const definiteMatch = config.definiteMatch ?? this.thresholdConfig.definiteMatch
-    requireLessThan(noMatch, definiteMatch, 'thresholds.noMatch', 'thresholds.definiteMatch')
+    const definiteMatch =
+      config.definiteMatch ?? this.thresholdConfig.definiteMatch
+    requireLessThan(
+      noMatch,
+      definiteMatch,
+      'thresholds.noMatch',
+      'thresholds.definiteMatch'
+    )
 
     this.thresholdConfig = config
     return this

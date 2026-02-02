@@ -26,9 +26,7 @@ import {
  * PrismaClient type.
  */
 export type PrismaClient = {
-  $transaction: <R>(
-    fn: (prisma: PrismaClient) => Promise<R>,
-  ) => Promise<R>
+  $transaction: <R>(fn: (prisma: PrismaClient) => Promise<R>) => Promise<R>
   [key: string]: unknown
 }
 
@@ -163,12 +161,12 @@ export class PrismaMultiTableAdapter<
   async writeGoldenRecordsWithMappings(
     goldenRecords: TOutput[],
     matchGroups: MatchGroup<TOutput>[],
-    options?: WriteGoldenRecordsOptions,
+    options?: WriteGoldenRecordsOptions
   ): Promise<WriteGoldenRecordsResult> {
     if (!this.outputAdapter) {
       throw new ConsolidationError(
         'No output adapter configured',
-        'NO_OUTPUT_ADAPTER',
+        'NO_OUTPUT_ADAPTER'
       )
     }
 
@@ -184,7 +182,7 @@ export class PrismaMultiTableAdapter<
           throw new ConsolidationError(
             'Golden record missing ID after insert',
             'MISSING_GOLDEN_RECORD_ID',
-            { record: r },
+            { record: r }
           )
         }
         return id
@@ -197,7 +195,7 @@ export class PrismaMultiTableAdapter<
         const mappings = this.createSourceMappings(
           goldenRecordIds,
           matchGroups,
-          options?.createdBy,
+          options?.createdBy
         )
 
         // Write mappings using Prisma
@@ -237,7 +235,7 @@ export class PrismaMultiTableAdapter<
   private createSourceMappings(
     goldenRecordIds: string[],
     matchGroups: MatchGroup<TOutput>[],
-    createdBy?: string,
+    createdBy?: string
   ): SourceMappingRecord[] {
     const mappings: SourceMappingRecord[] = []
 
@@ -299,12 +297,12 @@ export class PrismaMultiTableAdapter<
    * @returns Array of source mappings
    */
   async getSourceMappingsForGoldenRecord(
-    goldenRecordId: string,
+    goldenRecordId: string
   ): Promise<SourceMappingRecord[]> {
     if (!this.sourceMappingModelName) {
       throw new ConsolidationError(
         'No source mapping model name configured',
-        'NO_SOURCE_MAPPING_MODEL',
+        'NO_SOURCE_MAPPING_MODEL'
       )
     }
 
@@ -315,7 +313,7 @@ export class PrismaMultiTableAdapter<
       throw new ConsolidationError(
         `Prisma model '${this.sourceMappingModelName}' not found`,
         'PRISMA_MODEL_NOT_FOUND',
-        { modelName: this.sourceMappingModelName },
+        { modelName: this.sourceMappingModelName }
       )
     }
 
@@ -339,12 +337,12 @@ export class PrismaMultiTableAdapter<
    */
   async getGoldenRecordIdForSourceRecord(
     sourceId: string,
-    sourceRecordId: string,
+    sourceRecordId: string
   ): Promise<string | null> {
     if (!this.sourceMappingModelName) {
       throw new ConsolidationError(
         'No source mapping model name configured',
-        'NO_SOURCE_MAPPING_MODEL',
+        'NO_SOURCE_MAPPING_MODEL'
       )
     }
 
@@ -355,7 +353,7 @@ export class PrismaMultiTableAdapter<
       throw new ConsolidationError(
         `Prisma model '${this.sourceMappingModelName}' not found`,
         'PRISMA_MODEL_NOT_FOUND',
-        { modelName: this.sourceMappingModelName },
+        { modelName: this.sourceMappingModelName }
       )
     }
 
@@ -386,7 +384,7 @@ export class PrismaMultiTableAdapter<
 export function createPrismaMultiTableAdapter<
   TOutput extends Record<string, unknown>,
 >(
-  config: PrismaMultiTableAdapterConfig<TOutput>,
+  config: PrismaMultiTableAdapterConfig<TOutput>
 ): PrismaMultiTableAdapter<TOutput> {
   return new PrismaMultiTableAdapter(config)
 }
@@ -406,7 +404,7 @@ export function prismaMultiTableAdapterFromSources<
   prisma: PrismaClient,
   sources: Array<ConsolidationSource<Record<string, unknown>, TOutput>>,
   outputAdapter?: DatabaseAdapter<TOutput>,
-  sourceMappingConfig?: PrismaMultiTableAdapterConfig<TOutput>['sourceMappingConfig'],
+  sourceMappingConfig?: PrismaMultiTableAdapterConfig<TOutput>['sourceMappingConfig']
 ): PrismaMultiTableAdapter<TOutput> {
   return new PrismaMultiTableAdapter({
     prisma,

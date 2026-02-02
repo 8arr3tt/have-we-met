@@ -21,7 +21,12 @@ import {
   createModelFromConfig,
 } from '../../src/ml'
 import type { MLMatchResult, MLMatchOptions } from '../../src/ml'
-import type { MatchResult, MatchScore, MatchOutcome, FieldScore } from '../../src/core/scoring/types'
+import type {
+  MatchResult,
+  MatchScore,
+  MatchOutcome,
+  FieldScore,
+} from '../../src/core/scoring/types'
 
 interface Person {
   firstName: string
@@ -126,9 +131,13 @@ async function hybridMatchingExample() {
   })
 
   console.log('Integrators configured:')
-  console.log(`  Hybrid: mode=${hybridIntegrator.getConfig().mode}, mlWeight=${hybridIntegrator.getConfig().mlWeight}`)
+  console.log(
+    `  Hybrid: mode=${hybridIntegrator.getConfig().mode}, mlWeight=${hybridIntegrator.getConfig().mlWeight}`
+  )
   console.log(`  ML-Only: mode=${mlOnlyIntegrator.getConfig().mode}`)
-  console.log(`  Fallback: mode=${fallbackIntegrator.getConfig().mode}, applyTo=${fallbackIntegrator.getConfig().applyTo}`)
+  console.log(
+    `  Fallback: mode=${fallbackIntegrator.getConfig().mode}, applyTo=${fallbackIntegrator.getConfig().applyTo}`
+  )
   console.log()
 
   // Step 2: Compare modes on a high-confidence match
@@ -137,7 +146,9 @@ async function hybridMatchingExample() {
 
   // Simulate a probabilistic result with high score
   const probResult1 = createMockProbabilisticResult(record2Similar, 75, 100)
-  console.log(`Probabilistic score: ${probResult1.score.totalScore}/${probResult1.score.maxPossibleScore}`)
+  console.log(
+    `Probabilistic score: ${probResult1.score.totalScore}/${probResult1.score.maxPossibleScore}`
+  )
   console.log(`Probabilistic outcome: ${probResult1.outcome}`)
   console.log()
 
@@ -152,11 +163,17 @@ async function hybridMatchingExample() {
   console.log(`  Outcome: ${hybridResult1.outcome}`)
   console.log(`  ML used: ${hybridResult1.mlUsed}`)
   if (hybridResult1.mlPrediction) {
-    console.log(`  ML probability: ${(hybridResult1.mlPrediction.probability * 100).toFixed(1)}%`)
+    console.log(
+      `  ML probability: ${(hybridResult1.mlPrediction.probability * 100).toFixed(1)}%`
+    )
   }
   if (hybridResult1.mlScoreContribution !== undefined) {
-    console.log(`  ML contribution: ${hybridResult1.mlScoreContribution.toFixed(2)}`)
-    console.log(`  Probabilistic contribution: ${hybridResult1.probabilisticScoreContribution?.toFixed(2)}`)
+    console.log(
+      `  ML contribution: ${hybridResult1.mlScoreContribution.toFixed(2)}`
+    )
+    console.log(
+      `  Probabilistic contribution: ${hybridResult1.probabilisticScoreContribution?.toFixed(2)}`
+    )
   }
   console.log()
 
@@ -169,7 +186,9 @@ async function hybridMatchingExample() {
   console.log('ML-only mode result:')
   console.log(`  Score: ${mlOnlyResult1.score.totalScore.toFixed(2)}`)
   console.log(`  Outcome: ${mlOnlyResult1.outcome}`)
-  console.log(`  ML probability: ${(mlOnlyResult1.mlPrediction?.probability ?? 0 * 100).toFixed(1)}%`)
+  console.log(
+    `  ML probability: ${(mlOnlyResult1.mlPrediction?.probability ?? 0 * 100).toFixed(1)}%`
+  )
   console.log()
 
   // Fallback mode (won't use ML for definite matches)
@@ -181,7 +200,9 @@ async function hybridMatchingExample() {
   console.log('Fallback mode result:')
   console.log(`  Score: ${fallbackResult1.score.totalScore.toFixed(2)}`)
   console.log(`  Outcome: ${fallbackResult1.outcome}`)
-  console.log(`  ML used: ${fallbackResult1.mlUsed} (expected false - high confidence)`)
+  console.log(
+    `  ML used: ${fallbackResult1.mlUsed} (expected false - high confidence)`
+  )
   console.log()
 
   // Step 3: Compare modes on an UNCERTAIN case
@@ -190,7 +211,9 @@ async function hybridMatchingExample() {
 
   // Simulate a probabilistic result in the uncertain zone
   const probResult2 = createMockProbabilisticResult(record3Uncertain, 45, 100)
-  console.log(`Probabilistic score: ${probResult2.score.totalScore}/${probResult2.score.maxPossibleScore}`)
+  console.log(
+    `Probabilistic score: ${probResult2.score.totalScore}/${probResult2.score.maxPossibleScore}`
+  )
   console.log(`Probabilistic outcome: ${probResult2.outcome}`)
   console.log()
 
@@ -204,7 +227,9 @@ async function hybridMatchingExample() {
   console.log(`  Combined score: ${hybridResult2.score.totalScore.toFixed(2)}`)
   console.log(`  Outcome: ${hybridResult2.outcome}`)
   if (hybridResult2.mlPrediction) {
-    console.log(`  ML probability: ${(hybridResult2.mlPrediction.probability * 100).toFixed(1)}%`)
+    console.log(
+      `  ML probability: ${(hybridResult2.mlPrediction.probability * 100).toFixed(1)}%`
+    )
   }
   console.log()
 
@@ -217,9 +242,13 @@ async function hybridMatchingExample() {
   console.log('Fallback mode result:')
   console.log(`  Score: ${fallbackResult2.score.totalScore.toFixed(2)}`)
   console.log(`  Outcome: ${fallbackResult2.outcome}`)
-  console.log(`  ML used: ${fallbackResult2.mlUsed} (expected true - uncertain case)`)
+  console.log(
+    `  ML used: ${fallbackResult2.mlUsed} (expected true - uncertain case)`
+  )
   if (fallbackResult2.mlPrediction) {
-    console.log(`  ML classification: ${fallbackResult2.mlPrediction.classification}`)
+    console.log(
+      `  ML classification: ${fallbackResult2.mlPrediction.classification}`
+    )
   }
   console.log()
 
@@ -268,7 +297,9 @@ async function hybridMatchingExample() {
   console.log(`  ML Weight: ${hybridConfig.integrationConfig.mlWeight}`)
   console.log(`  Apply to: ${hybridConfig.integrationConfig.applyTo}`)
   console.log(`  Timeout: ${hybridConfig.integrationConfig.timeoutMs}ms`)
-  console.log(`  Fallback on error: ${hybridConfig.integrationConfig.fallbackOnError}`)
+  console.log(
+    `  Fallback on error: ${hybridConfig.integrationConfig.fallbackOnError}`
+  )
   console.log()
 
   // Step 6: Batch processing in hybrid mode
@@ -286,7 +317,9 @@ async function hybridMatchingExample() {
   console.log('Batch results:')
   for (let i = 0; i < results.length; i++) {
     const r = results[i]
-    console.log(`  Record ${i + 1}: score=${r.score.totalScore.toFixed(2)}, outcome=${r.outcome}, mlUsed=${r.mlUsed}`)
+    console.log(
+      `  Record ${i + 1}: score=${r.score.totalScore.toFixed(2)}, outcome=${r.outcome}, mlUsed=${r.mlUsed}`
+    )
   }
   console.log()
 
@@ -294,7 +327,9 @@ async function hybridMatchingExample() {
   console.log(`  Total matches: ${stats.totalMatches}`)
   console.log(`  ML used count: ${stats.mlUsedCount}`)
   console.log(`  ML failed count: ${stats.mlFailedCount}`)
-  console.log(`  Avg ML prediction time: ${stats.avgMLPredictionTimeMs.toFixed(2)}ms`)
+  console.log(
+    `  Avg ML prediction time: ${stats.avgMLPredictionTimeMs.toFixed(2)}ms`
+  )
   console.log()
 
   // Step 7: ML-only matching without probabilistic scores
@@ -309,7 +344,9 @@ async function hybridMatchingExample() {
   console.log('ML-only standalone result:')
   console.log(`  Score: ${mlOnlyStandalone.score.totalScore.toFixed(2)}`)
   console.log(`  Outcome: ${mlOnlyStandalone.outcome}`)
-  console.log(`  ML prediction time: ${mlOnlyStandalone.mlPredictionTimeMs?.toFixed(2)}ms`)
+  console.log(
+    `  ML prediction time: ${mlOnlyStandalone.mlPredictionTimeMs?.toFixed(2)}ms`
+  )
   console.log(`  Explanation: ${mlOnlyStandalone.explanation}`)
   console.log()
 
@@ -334,8 +371,12 @@ async function hybridMatchingExample() {
 
   console.log('=== Example Complete ===')
   console.log('\nKey takeaways:')
-  console.log('- Hybrid mode combines ML and probabilistic scores with configurable weights')
-  console.log('- Fallback mode uses ML only for uncertain probabilistic results')
+  console.log(
+    '- Hybrid mode combines ML and probabilistic scores with configurable weights'
+  )
+  console.log(
+    '- Fallback mode uses ML only for uncertain probabilistic results'
+  )
   console.log('- ML weight can be tuned based on your data characteristics')
   console.log('- Batch processing provides statistics about ML usage')
   console.log('- Options can be overridden per-call for flexibility')
