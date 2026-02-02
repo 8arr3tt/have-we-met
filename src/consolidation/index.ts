@@ -46,3 +46,15 @@ export {
   CrossSourceMatcher,
   createCrossSourceMatcher,
 } from './cross-source-matcher'
+
+// Source-Aware Merger
+export type {
+  SourceAwareRecord,
+  SourceAwareMergeConfig,
+  SourceAwareProvenance,
+} from './source-aware-merger'
+
+export {
+  SourceAwareMerger,
+  createSourceAwareMerger,
+} from './source-aware-merger'
