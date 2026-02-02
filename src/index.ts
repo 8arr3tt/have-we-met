@@ -340,3 +340,16 @@ export type {
   PrismaMultiTableAdapterConfig,
   MatchGroup,
 } from './consolidation/adapters'
+
+// Consolidation - Builder API
+export {
+  ConsolidationBuilder,
+  ConflictResolutionBuilder,
+  createConsolidationBuilder,
+} from './builder/consolidation-builder'
+
+export {
+  SourceBuilder,
+  FieldMappingBuilder,
+  createSourceBuilder,
+} from './builder/source-builder'
