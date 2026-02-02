@@ -301,3 +301,42 @@ export type {
   CrossSourceMatcherConfig,
   MatchingOptions,
 } from './consolidation/cross-source-matcher'
+
+export {
+  SourceAwareMerger,
+  createSourceAwareMerger,
+} from './consolidation/source-aware-merger'
+
+export type {
+  SourceAwareRecord,
+  SourceAwareMergeConfig,
+  SourceAwareProvenance,
+} from './consolidation/source-aware-merger'
+
+export {
+  ConsolidationExecutor,
+  createConsolidationExecutor,
+} from './consolidation/consolidation-executor'
+
+export type { ExecuteOptions } from './consolidation/consolidation-executor'
+
+// Consolidation - Multi-Table Adapters
+export {
+  MultiTableAdapter,
+  createMultiTableAdapter,
+  PrismaMultiTableAdapter,
+  createPrismaMultiTableAdapter,
+  prismaMultiTableAdapterFromSources,
+} from './consolidation/adapters'
+
+export type {
+  SourceTableConfig,
+  SourceMappingConfig,
+  SourceMappingRecord,
+  LoadOptions,
+  WriteGoldenRecordsOptions,
+  WriteGoldenRecordsResult,
+  PrismaClient,
+  PrismaMultiTableAdapterConfig,
+  MatchGroup,
+} from './consolidation/adapters'

@@ -88,7 +88,7 @@ export interface ExecuteOptions {
  */
 export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
   private readonly config: ConsolidationConfig<TOutput>
-  private readonly resolver: Resolver<TOutput>
+  private readonly _resolver: Resolver<TOutput>
   private readonly matcher: CrossSourceMatcher<TOutput>
   private readonly merger: SourceAwareMerger<TOutput>
 
@@ -104,7 +104,7 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
   ) {
     this.validateConfig(config)
     this.config = config
-    this.resolver = resolver
+    this._resolver = resolver
 
     // Initialize matcher
     this.matcher = new CrossSourceMatcher({
@@ -650,7 +650,7 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
     }
 
     try {
-      await this.config.outputAdapter.createBatch(goldenRecords)
+      await this.config.outputAdapter.batchInsert(goldenRecords)
     } catch (error) {
       throw new ConsolidationError(
         `Failed to write golden records: ${

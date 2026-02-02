@@ -68,3 +68,24 @@ export {
   ConsolidationExecutor,
   createConsolidationExecutor,
 } from './consolidation-executor'
+
+// Multi-Table Adapters
+export type {
+  SourceTableConfig,
+  SourceMappingConfig,
+  SourceMappingRecord,
+  LoadOptions,
+  WriteGoldenRecordsOptions,
+  WriteGoldenRecordsResult,
+  PrismaClient,
+  PrismaMultiTableAdapterConfig,
+  MatchGroup,
+} from './adapters'
+
+export {
+  MultiTableAdapter,
+  createMultiTableAdapter,
+  PrismaMultiTableAdapter,
+  createPrismaMultiTableAdapter,
+  prismaMultiTableAdapterFromSources,
+} from './adapters'
