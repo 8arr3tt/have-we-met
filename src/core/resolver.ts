@@ -504,10 +504,10 @@ export class Resolver<
 
       const candidatesSet = new Set<T>()
       for (const block of blocks.values()) {
-        if (block.includes(candidateRecord as Record<string, unknown>)) {
+        if (block.includes(candidateRecord)) {
           for (const record of block) {
             if (record !== candidateRecord) {
-              candidatesSet.add(record as T)
+              candidatesSet.add(record)
             }
           }
         }
@@ -584,10 +584,10 @@ export class Resolver<
 
       const candidatesSet = new Set<T>()
       for (const block of blocks.values()) {
-        if (block.includes(candidateRecord as Record<string, unknown>)) {
+        if (block.includes(candidateRecord)) {
           for (const record of block) {
             if (record !== candidateRecord) {
-              candidatesSet.add(record as T)
+              candidatesSet.add(record)
             }
           }
         }
@@ -656,10 +656,10 @@ export class Resolver<
 
       const candidatesSet = new Set<T>()
       for (const block of blocks.values()) {
-        if (block.includes(candidateRecord as Record<string, unknown>)) {
+        if (block.includes(candidateRecord)) {
           for (const record of block) {
             if (record !== candidateRecord) {
-              candidatesSet.add(record as T)
+              candidatesSet.add(record)
             }
           }
         }

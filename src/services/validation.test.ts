@@ -107,19 +107,19 @@ describe('validateServicePlugin', () => {
   })
 
   it('rejects service without execute function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pluginWithoutExecute = {
       ...createMockPlugin(),
       execute: undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
     expect(() => validateServicePlugin(pluginWithoutExecute)).toThrow(
       ServicePluginError
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pluginWithStringExecute = {
       ...createMockPlugin(),
       execute: 'not a function',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
     expect(() => validateServicePlugin(pluginWithStringExecute)).toThrow(
       ServicePluginError
@@ -127,10 +127,10 @@ describe('validateServicePlugin', () => {
   })
 
   it('validates optional healthCheck is function', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pluginWithStringHealthCheck = {
       ...createMockPlugin(),
       healthCheck: 'not a function',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
     expect(() => validateServicePlugin(pluginWithStringHealthCheck)).toThrow(
       ServicePluginError

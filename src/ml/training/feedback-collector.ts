@@ -12,7 +12,6 @@ import type {
 } from '../types';
 import type {
   QueueItem,
-  QueueDecision,
 } from '../../queue/types';
 import { createTrainingDataset, createTrainingExample } from './trainer';
 
@@ -149,7 +148,7 @@ export interface ExportOptions {
  *
  * Collects and manages feedback from human review decisions for ML model training.
  */
-export class FeedbackCollector<T = Record<string, unknown>> {
+export class FeedbackCollector<T extends Record<string, unknown> = Record<string, unknown>> {
   private feedback: Map<string, FeedbackItem<T>> = new Map();
   private readonly options: Required<FeedbackCollectorOptions>;
   private idCounter: number = 0;
@@ -170,7 +169,7 @@ export class FeedbackCollector<T = Record<string, unknown>> {
     queueItem: QueueItem<T>,
     candidateRecord?: T
   ): FeedbackItem<T> | null {
-    const { decision, status, candidateRecord: queueCandidate, potentialMatches } = queueItem;
+    const { decision, candidateRecord: queueCandidate, potentialMatches } = queueItem;
 
     // Must have a decision
     if (!decision) {
@@ -663,7 +662,7 @@ export class FeedbackCollector<T = Record<string, unknown>> {
 /**
  * Create a feedback collector with default options
  */
-export function createFeedbackCollector<T = Record<string, unknown>>(
+export function createFeedbackCollector<T extends Record<string, unknown> = Record<string, unknown>>(
   options?: FeedbackCollectorOptions
 ): FeedbackCollector<T> {
   return new FeedbackCollector<T>(options);
@@ -673,7 +672,7 @@ export function createFeedbackCollector<T = Record<string, unknown>>(
  * Convert a single queue decision to a training example
  * Utility function for simple one-off conversions
  */
-export function queueDecisionToTrainingExample<T>(
+export function queueDecisionToTrainingExample<T extends Record<string, unknown>>(
   queueItem: QueueItem<T>
 ): TrainingExample<T> | null {
   const collector = new FeedbackCollector<T>();
@@ -690,7 +689,7 @@ export function queueDecisionToTrainingExample<T>(
  * Convert multiple queue decisions to training examples
  * Utility function for batch conversions
  */
-export function queueDecisionsToTrainingExamples<T>(
+export function queueDecisionsToTrainingExamples<T extends Record<string, unknown>>(
   queueItems: QueueItem<T>[]
 ): TrainingExample<T>[] {
   const collector = new FeedbackCollector<T>();

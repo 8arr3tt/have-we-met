@@ -11,7 +11,6 @@ import type {
   TrainingDataset,
   TrainingMetrics,
   TrainingResult,
-  FeatureVector,
   RecordPair,
 } from '../types';
 import { DEFAULT_TRAINING_CONFIG } from '../types';

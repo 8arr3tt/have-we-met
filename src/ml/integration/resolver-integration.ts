@@ -645,7 +645,7 @@ export class MLMatchIntegrator<T = Record<string, unknown>> {
       if (!match) continue;
 
       const fieldName = match[1];
-      const extractorType = match[2];
+      // extractorType available at match[2] if needed for field-specific handling
 
       if (!fieldMap.has(fieldName)) {
         fieldMap.set(fieldName, {
