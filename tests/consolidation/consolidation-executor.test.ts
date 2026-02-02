@@ -642,7 +642,7 @@ describe('ConsolidationExecutor', () => {
       const result = await executor.execute()
 
       // Now try to write manually without adapter - this should fail
-      expect(async () => {
+      await expect(async () => {
         // Access private method (for testing purposes)
         await (executor as any).writeGoldenRecords(result.goldenRecords)
       }).rejects.toThrow('No output adapter configured')
