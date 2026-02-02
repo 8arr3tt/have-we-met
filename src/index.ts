@@ -291,3 +291,13 @@ export {
   ConsolidationConfigError,
   MappingError,
 } from './consolidation/types'
+
+export {
+  CrossSourceMatcher,
+  createCrossSourceMatcher,
+} from './consolidation/cross-source-matcher'
+
+export type {
+  CrossSourceMatcherConfig,
+  MatchingOptions,
+} from './consolidation/cross-source-matcher'
