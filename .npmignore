@@ -6,12 +6,7 @@ benchmarks/
 
 # Documentation source (keep README.md in package)
 docs/
-PLAN.md
-CLAUDE.md
-progress-tracker.md
-phase-*.md
 API-CHANGES.md
-RELEASE.md
 RELEASE-NOTES.md
 
 # Build and test configs

@@ -153,4 +153,3 @@ Performance benchmarks and results:
 ## Support
 
 - [GitHub Issues](https://github.com/8arr3tt/have-we-met/issues) - Report bugs and request features
-- [CLAUDE.md](../CLAUDE.md) - Project conventions and guidelines

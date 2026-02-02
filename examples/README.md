@@ -285,7 +285,7 @@ See the adapter guides in `docs/adapter-guides/` for detailed setup instructions
 
 After exploring the examples:
 
-1. **Read the documentation**: Start with [PLAN.md](../PLAN.md) for project overview
+1. **Read the documentation**: Start with the [Documentation](../docs/README.md) for a full overview
 2. **Configure for your use case**: See [Tuning Guide](../docs/tuning-guide.md)
 3. **Set up database integration**: See [Database Adapters](../docs/database-adapters.md)
 4. **Implement review workflow**: See [Review Queue Guide](../docs/review-queue.md)

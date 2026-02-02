@@ -521,8 +521,6 @@ MIT © Matt Barrett
 
 ## Roadmap
 
-See [PLAN.md](PLAN.md) for the full development roadmap.
-
 **Current Version**: 0.1.0 (Initial Release)
 
 **Completed Features**:
