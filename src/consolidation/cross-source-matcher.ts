@@ -77,7 +77,7 @@ export class CrossSourceMatcher<TOutput extends Record<string, unknown>> {
   private readonly sources: Array<ConsolidationSource<Record<string, unknown>, TOutput>>
   private readonly resolver: Resolver<TOutput>
   private readonly matchingScope: MatchingScope
-  private readonly mappers: Map<string, SchemaMapper<any, TOutput>>
+  private readonly mappers: Map<string, SchemaMapper<Record<string, unknown>, TOutput>>
 
   constructor(config: CrossSourceMatcherConfig<TOutput>) {
     this.validateConfig(config)
