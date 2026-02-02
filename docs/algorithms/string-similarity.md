@@ -722,10 +722,9 @@ All algorithms are suitable for real-time matching. See [Performance Report](../
 ## Additional Resources
 
 - [API Reference](../api/index.md) - Full API documentation
-- [Phase 2 Plan](../../phase-2-plan.md) - Implementation details
-- [Performance Report](../../benchmarks/PERFORMANCE-REPORT.md) - Benchmark results
-- [Integration Tests](../../tests/integration/string-similarity.test.ts) - Usage examples
+- [Benchmark Results](../../benchmarks/BENCHMARK-RESULTS.md) - Performance benchmarks
+- [Algorithm Comparison](./comparison.md) - Side-by-side comparisons
 
 ---
 
-**Questions or feedback?** Open an issue on [GitHub](https://github.com/anthropics/have-we-met/issues).
+**Questions or feedback?** Open an issue on [GitHub](https://github.com/8arr3tt/have-we-met/issues).

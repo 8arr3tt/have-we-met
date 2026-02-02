@@ -97,4 +97,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the initial release, so no breaking changes from previous versions.
 
-[0.1.0]: https://github.com/yourusername/have-we-met/releases/tag/v0.1.0
+[0.1.0]: https://github.com/8arr3tt/have-we-met/releases/tag/v0.1.0

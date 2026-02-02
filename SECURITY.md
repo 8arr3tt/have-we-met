@@ -21,7 +21,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 Instead, please email security reports to:
 
-**[REPLACE WITH YOUR EMAIL]**
+**matthewbarrett95@gmail.com**
 
 ### What to Include
 
@@ -147,4 +147,4 @@ Thank you for helping keep **have-we-met** secure!
 
 ## Questions?
 
-If you have questions about this policy, please open a GitHub Discussion or contact us at [REPLACE WITH YOUR EMAIL].
+If you have questions about this policy, please open a GitHub Discussion or contact us at matthewbarrett95@gmail.com.

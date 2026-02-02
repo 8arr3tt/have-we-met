@@ -54,16 +54,16 @@
     "customer-data",
     "patient-matching"
   ],
-  "author": "Matt",
+  "author": "Matt Barrett",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/have-we-met.git"
+    "url": "git+https://github.com/8arr3tt/have-we-met.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/have-we-met/issues"
+    "url": "https://github.com/8arr3tt/have-we-met/issues"
   },
-  "homepage": "https://github.com/yourusername/have-we-met#readme",
+  "homepage": "https://github.com/8arr3tt/have-we-met#readme",
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@prisma/client": "^7.3.0",

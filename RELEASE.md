@@ -46,7 +46,7 @@ This document outlines the steps to release a new version of have-we-met to npm.
 ### 1. Verify CI Passes
 ```bash
 # Ensure all CI checks pass on GitHub
-# Visit: https://github.com/yourusername/have-we-met/actions
+# Visit: https://github.com/8arr3tt/have-we-met/actions
 ```
 
 ### 2. Update Version
@@ -122,7 +122,7 @@ rm -rf ../test-install
 ### 6. Trigger GitHub Actions Publish Workflow
 ```bash
 # Go to GitHub Actions
-# Navigate to: https://github.com/yourusername/have-we-met/actions/workflows/publish.yml
+# Navigate to: https://github.com/8arr3tt/have-we-met/actions/workflows/publish.yml
 # Click "Run workflow"
 # Enter version: 0.1.0
 # Select tag: latest (or beta/alpha for pre-releases)
@@ -161,7 +161,7 @@ rm -rf ../test-npm-install
 ```
 
 #### GitHub Release
-- [ ] Visit: https://github.com/yourusername/have-we-met/releases
+- [ ] Visit: https://github.com/8arr3tt/have-we-met/releases
 - [ ] Verify release created with correct tag
 - [ ] Verify release notes present
 - [ ] Verify tarball attached to release

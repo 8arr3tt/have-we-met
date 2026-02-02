@@ -3,8 +3,8 @@
 > Identity resolution library for Node.js - Match, deduplicate, and merge records with confidence
 
 [![npm version](https://img.shields.io/npm/v/have-we-met.svg)](https://www.npmjs.com/package/have-we-met)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/yourusername/have-we-met/ci.yml?branch=master)](https://github.com/yourusername/have-we-met/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/yourusername/have-we-met)](https://codecov.io/gh/yourusername/have-we-met)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/8arr3tt/have-we-met/ci.yml?branch=master)](https://github.com/8arr3tt/have-we-met/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/8arr3tt/have-we-met)](https://codecov.io/gh/8arr3tt/have-we-met)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 
@@ -473,13 +473,13 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 
 ## License
 
-MIT © [Your Name]
+MIT © Matt Barrett
 
 ## Support
 
 - 📖 [Documentation](docs/README.md)
-- 💬 [GitHub Discussions](https://github.com/yourusername/have-we-met/discussions)
-- 🐛 [Issue Tracker](https://github.com/yourusername/have-we-met/issues)
+- 💬 [GitHub Discussions](https://github.com/8arr3tt/have-we-met/discussions)
+- 🐛 [Issue Tracker](https://github.com/8arr3tt/have-we-met/issues)
 
 ## Roadmap
 

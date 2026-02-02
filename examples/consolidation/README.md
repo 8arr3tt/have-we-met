@@ -375,7 +375,7 @@ npm run dev  # Watch mode for development
 
 ## Support
 
-- GitHub Issues: https://github.com/yourusername/have-we-met/issues
+- GitHub Issues: https://github.com/8arr3tt/have-we-met/issues
 - Documentation: `docs/consolidation/`
 - Examples: This directory
 
