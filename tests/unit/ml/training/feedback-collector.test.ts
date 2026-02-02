@@ -830,7 +830,7 @@ describe('queueDecisionsToTrainingExamples', () => {
 
     expect(examples.length).toBe(2)
     // Check labels are present (order may vary)
-    const labels = examples.map(ex => ex.label)
+    const labels = examples.map((ex) => ex.label)
     expect(labels).toContain('match')
     expect(labels).toContain('nonMatch')
   })

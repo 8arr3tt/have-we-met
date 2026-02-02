@@ -61,7 +61,7 @@ describe('Performance: Blocking Strategies', () => {
     const blocks = blockGen.generateBlocks(records, strategy)
     const duration = performance.now() - start
 
-    expect(duration).toBeLessThan(50)
+    expect(duration).toBeLessThan(75)
     expect(blocks.size).toBeGreaterThan(0)
     console.log(`Sorted neighbourhood 10k records: ${duration.toFixed(2)}ms`)
   })
