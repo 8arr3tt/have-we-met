@@ -33,9 +33,12 @@ export class PrismaProvenanceAdapter implements ProvenanceAdapter {
   private getModel() {
     const model = (this.prisma as Record<string, unknown>)[this.tableName]
     if (!model || typeof model !== 'object') {
-      throw new QueryError(`Model '${this.tableName}' not found in Prisma client`, {
-        modelName: this.tableName,
-      })
+      throw new QueryError(
+        `Model '${this.tableName}' not found in Prisma client`,
+        {
+          modelName: this.tableName,
+        }
+      )
     }
     return model as Record<string, CallableFunction>
   }
@@ -110,7 +113,9 @@ export class PrismaProvenanceAdapter implements ProvenanceAdapter {
         },
       })
 
-      return (results as Record<string, unknown>[]).map((r) => this.mapToProvenance(r))
+      return (results as Record<string, unknown>[]).map((r) =>
+        this.mapToProvenance(r)
+      )
     } catch (error) {
       throw new QueryError('Failed to get provenance by source ID', {
         sourceId,
@@ -133,9 +138,12 @@ export class PrismaProvenanceAdapter implements ProvenanceAdapter {
       })
 
       if (!result) {
-        throw new NotFoundError(`Provenance not found for golden record: ${goldenRecordId}`, {
-          goldenRecordId,
-        })
+        throw new NotFoundError(
+          `Provenance not found for golden record: ${goldenRecordId}`,
+          {
+            goldenRecordId,
+          }
+        )
       }
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -213,7 +221,9 @@ export class PrismaProvenanceAdapter implements ProvenanceAdapter {
           ? JSON.parse(record.strategyUsed)
           : record.strategyUsed,
       unmerged: record.unmerged as boolean | undefined,
-      unmergedAt: record.unmergedAt ? new Date(record.unmergedAt as string | Date) : undefined,
+      unmergedAt: record.unmergedAt
+        ? new Date(record.unmergedAt as string | Date)
+        : undefined,
       unmergedBy: record.unmergedBy as string | undefined,
       unmergeReason: record.unmergeReason as string | undefined,
     }
@@ -223,9 +233,9 @@ export class PrismaProvenanceAdapter implements ProvenanceAdapter {
 /**
  * Prisma implementation of the merge adapter for archive/restore operations
  */
-export class PrismaMergeAdapter<T extends Record<string, unknown>>
-  implements MergeAdapter<T>
-{
+export class PrismaMergeAdapter<
+  T extends Record<string, unknown>,
+> implements MergeAdapter<T> {
   private readonly prisma: PrismaClient
   private readonly tableName: string
   private readonly primaryKey: string
@@ -242,15 +252,21 @@ export class PrismaMergeAdapter<T extends Record<string, unknown>>
     this.tableName = tableName
     this.primaryKey = primaryKey
     this.config = { ...DEFAULT_MERGE_ADAPTER_CONFIG, ...config }
-    this.provenance = new PrismaProvenanceAdapter(prisma, this.config.provenanceTable)
+    this.provenance = new PrismaProvenanceAdapter(
+      prisma,
+      this.config.provenanceTable
+    )
   }
 
   private getModel() {
     const model = (this.prisma as Record<string, unknown>)[this.tableName]
     if (!model || typeof model !== 'object') {
-      throw new QueryError(`Model '${this.tableName}' not found in Prisma client`, {
-        modelName: this.tableName,
-      })
+      throw new QueryError(
+        `Model '${this.tableName}' not found in Prisma client`,
+        {
+          modelName: this.tableName,
+        }
+      )
     }
     return model as Record<string, CallableFunction>
   }
@@ -329,7 +345,9 @@ export class PrismaMergeAdapter<T extends Record<string, unknown>>
         },
       })
 
-      return (results as Record<string, unknown>[]).map((r) => this.mapToArchivedRecord(r))
+      return (results as Record<string, unknown>[]).map((r) =>
+        this.mapToArchivedRecord(r)
+      )
     } catch (error) {
       throw new QueryError('Failed to get archived records', {
         ids,
@@ -354,7 +372,9 @@ export class PrismaMergeAdapter<T extends Record<string, unknown>>
       })
 
       const archivedIds = new Set(
-        (archived as Record<string, unknown>[]).map((r) => r[this.primaryKey] as string)
+        (archived as Record<string, unknown>[]).map(
+          (r) => r[this.primaryKey] as string
+        )
       )
 
       for (const id of ids) {
@@ -370,7 +390,9 @@ export class PrismaMergeAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async getArchivedByGoldenRecord(goldenRecordId: string): Promise<ArchivedRecord<T>[]> {
+  async getArchivedByGoldenRecord(
+    goldenRecordId: string
+  ): Promise<ArchivedRecord<T>[]> {
     try {
       const model = this.getModel()
 
@@ -381,7 +403,9 @@ export class PrismaMergeAdapter<T extends Record<string, unknown>>
         },
       })
 
-      return (results as Record<string, unknown>[]).map((r) => this.mapToArchivedRecord(r))
+      return (results as Record<string, unknown>[]).map((r) =>
+        this.mapToArchivedRecord(r)
+      )
     } catch (error) {
       throw new QueryError('Failed to get archived records by golden record', {
         goldenRecordId,
@@ -431,8 +455,17 @@ export class PrismaMergeAdapter<T extends Record<string, unknown>>
     }
   }
 
-  private mapToArchivedRecord(record: Record<string, unknown>): ArchivedRecord<T> {
-    const { [this.config.archivedAtField]: archivedAt, [this.config.archivedReasonField]: archivedReason, [this.config.mergedIntoIdField]: mergedIntoId, createdAt, updatedAt, ...rest } = record
+  private mapToArchivedRecord(
+    record: Record<string, unknown>
+  ): ArchivedRecord<T> {
+    const {
+      [this.config.archivedAtField]: archivedAt,
+      [this.config.archivedReasonField]: archivedReason,
+      [this.config.mergedIntoIdField]: mergedIntoId,
+      createdAt,
+      updatedAt,
+      ...rest
+    } = record
 
     return {
       id: record[this.primaryKey] as string,

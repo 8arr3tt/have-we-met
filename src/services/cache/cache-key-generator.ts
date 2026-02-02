@@ -61,7 +61,10 @@ export function fnv1aHash(input: string): string {
  * - Date objects (converted to ISO string)
  * - Map/Set (converted to arrays)
  */
-export function stableStringify(value: unknown, seen: WeakSet<object> = new WeakSet()): string {
+export function stableStringify(
+  value: unknown,
+  seen: WeakSet<object> = new WeakSet()
+): string {
   if (value === null) {
     return 'null'
   }
@@ -130,8 +133,12 @@ export function stableStringify(value: unknown, seen: WeakSet<object> = new Weak
       const obj = value as Record<string, unknown>
       const keys = Object.keys(obj).sort()
       const pairs = keys
-        .filter((key) => obj[key] !== undefined && typeof obj[key] !== 'function')
-        .map((key) => `${JSON.stringify(key)}:${stableStringify(obj[key], seen)}`)
+        .filter(
+          (key) => obj[key] !== undefined && typeof obj[key] !== 'function'
+        )
+        .map(
+          (key) => `${JSON.stringify(key)}:${stableStringify(obj[key], seen)}`
+        )
 
       return `{${pairs.join(',')}}`
     } finally {
@@ -145,7 +152,10 @@ export function stableStringify(value: unknown, seen: WeakSet<object> = new Weak
 /**
  * Generate a stable hash from any input value
  */
-export function stableHash(value: unknown, hashFn: (input: string) => string = fnv1aHash): string {
+export function stableHash(
+  value: unknown,
+  hashFn: (input: string) => string = fnv1aHash
+): string {
   const stringified = stableStringify(value)
   return hashFn(stringified)
 }
@@ -156,7 +166,7 @@ export function stableHash(value: unknown, hashFn: (input: string) => string = f
 function filterFields(
   input: Record<string, unknown>,
   includeFields?: string[],
-  excludeFields?: string[],
+  excludeFields?: string[]
 ): Record<string, unknown> {
   if (!includeFields && !excludeFields) {
     return input
@@ -196,7 +206,7 @@ function filterFields(
 export function generateCacheKey(
   serviceName: string,
   input: unknown,
-  customKeyFn?: (input: unknown) => string,
+  customKeyFn?: (input: unknown) => string
 ): string {
   if (customKeyFn) {
     const customKey = customKeyFn(input)
@@ -222,11 +232,19 @@ export function generateCacheKey(
  * ```
  */
 export function createCacheKeyGenerator(
-  options: CacheKeyOptions = {},
-): (serviceName: string, input: unknown, customKeyFn?: (input: unknown) => string) => string {
+  options: CacheKeyOptions = {}
+): (
+  serviceName: string,
+  input: unknown,
+  customKeyFn?: (input: unknown) => string
+) => string {
   const mergedOptions = { ...DEFAULT_CACHE_KEY_OPTIONS, ...options }
 
-  return (serviceName: string, input: unknown, customKeyFn?: (input: unknown) => string): string => {
+  return (
+    serviceName: string,
+    input: unknown,
+    customKeyFn?: (input: unknown) => string
+  ): string => {
     let key: string
 
     if (customKeyFn) {
@@ -240,7 +258,11 @@ export function createCacheKeyGenerator(
         !Array.isArray(input) &&
         (mergedOptions.includeFields || mergedOptions.excludeFields)
       ) {
-        processedInput = filterFields(input as Record<string, unknown>, mergedOptions.includeFields, mergedOptions.excludeFields)
+        processedInput = filterFields(
+          input as Record<string, unknown>,
+          mergedOptions.includeFields,
+          mergedOptions.excludeFields
+        )
       }
 
       const hashFn = mergedOptions.hashFn ?? fnv1aHash

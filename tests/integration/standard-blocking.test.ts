@@ -20,8 +20,18 @@ describe('Standard Blocking Integration', () => {
     it('reduces comparisons by 85%+ on sample dataset', () => {
       // Create a realistic dataset with 100 people
       const people: Person[] = []
-      const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                         'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez']
+      const lastNames = [
+        'Smith',
+        'Johnson',
+        'Williams',
+        'Brown',
+        'Jones',
+        'Garcia',
+        'Miller',
+        'Davis',
+        'Rodriguez',
+        'Martinez',
+      ]
 
       for (let i = 0; i < 100; i++) {
         people.push({
@@ -51,8 +61,18 @@ describe('Standard Blocking Integration', () => {
     it('achieves good reduction with Soundex', () => {
       // Create dataset with similar-sounding names
       const people: Person[] = []
-      const lastNames = ['Smith', 'Smyth', 'Schmidt', 'Jones', 'Jonas',
-                         'Williams', 'Wiliams', 'Brown', 'Browne', 'Miller']
+      const lastNames = [
+        'Smith',
+        'Smyth',
+        'Schmidt',
+        'Jones',
+        'Jonas',
+        'Williams',
+        'Wiliams',
+        'Brown',
+        'Browne',
+        'Miller',
+      ]
 
       for (let i = 0; i < 100; i++) {
         people.push({
@@ -108,11 +128,46 @@ describe('Standard Blocking Integration', () => {
   describe('real-world scenarios', () => {
     it('handles person matching scenario', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jon', lastName: 'Smith', email: 'jon.smith@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '3', firstName: 'John', lastName: 'Smyth', email: 'john.smyth@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '4', firstName: 'Jane', lastName: 'Jones', email: 'jane.jones@example.com', birthYear: 1985, city: 'LA' },
-        { id: '5', firstName: 'Bob', lastName: 'Brown', email: 'bob.brown@example.com', birthYear: 1995, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jon',
+          lastName: 'Smith',
+          email: 'jon.smith@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '3',
+          firstName: 'John',
+          lastName: 'Smyth',
+          email: 'john.smyth@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '4',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane.jones@example.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
+        {
+          id: '5',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob.brown@example.com',
+          birthYear: 1995,
+          city: 'Chicago',
+        },
       ]
 
       // Block on Soundex of last name to catch similar names
@@ -124,17 +179,45 @@ describe('Standard Blocking Integration', () => {
       const blocks = strategy.generateBlocks(people)
 
       // Smith and Smyth should be in the same block
-      const smithBlock = Array.from(blocks.values()).find(b => b.length === 3)
+      const smithBlock = Array.from(blocks.values()).find((b) => b.length === 3)
       expect(smithBlock).toBeDefined()
       expect(smithBlock).toHaveLength(3)
     })
 
     it('handles email domain blocking', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@company-a.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Jones', email: 'jane@company-a.com', birthYear: 1985, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Brown', email: 'bob@company-b.com', birthYear: 1995, city: 'Chicago' },
-        { id: '4', firstName: 'Alice', lastName: 'Wilson', email: 'alice@company-a.com', birthYear: 1992, city: 'NYC' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@company-a.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane@company-a.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob@company-b.com',
+          birthYear: 1995,
+          city: 'Chicago',
+        },
+        {
+          id: '4',
+          firstName: 'Alice',
+          lastName: 'Wilson',
+          email: 'alice@company-a.com',
+          birthYear: 1992,
+          city: 'NYC',
+        },
       ]
 
       const strategy = new StandardBlockingStrategy<Person>({
@@ -155,9 +238,30 @@ describe('Standard Blocking Integration', () => {
 
     it('handles year-based blocking for birth dates', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Jones', email: 'jane@example.com', birthYear: 1990, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Brown', email: 'bob@example.com', birthYear: 1985, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob@example.com',
+          birthYear: 1985,
+          city: 'Chicago',
+        },
       ]
 
       const strategy = new StandardBlockingStrategy<Person>({
@@ -196,9 +300,30 @@ describe('Standard Blocking Integration', () => {
       })
 
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', email: 'jane@example.com', birthYear: 1990, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', birthYear: 1985, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob@example.com',
+          birthYear: 1985,
+          city: 'Chicago',
+        },
       ]
 
       const stats = engine.getBlockingStats(people)
@@ -213,10 +338,28 @@ describe('Standard Blocking Integration', () => {
     it('demonstrates blocking value on large dataset', () => {
       // Generate 1000 people
       const people: Person[] = []
-      const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                         'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-                         'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
-                         'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin']
+      const lastNames = [
+        'Smith',
+        'Johnson',
+        'Williams',
+        'Brown',
+        'Jones',
+        'Garcia',
+        'Miller',
+        'Davis',
+        'Rodriguez',
+        'Martinez',
+        'Hernandez',
+        'Lopez',
+        'Gonzalez',
+        'Wilson',
+        'Anderson',
+        'Thomas',
+        'Taylor',
+        'Moore',
+        'Jackson',
+        'Martin',
+      ]
 
       for (let i = 0; i < 1000; i++) {
         people.push({

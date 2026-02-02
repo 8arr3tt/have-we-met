@@ -81,7 +81,9 @@ interface SortableRecord<T> {
  * })
  * ```
  */
-export class SortedNeighbourhoodStrategy<T = unknown> implements BlockingStrategy<T> {
+export class SortedNeighbourhoodStrategy<
+  T = unknown,
+> implements BlockingStrategy<T> {
   readonly name: string
   private config: SortedNeighbourhoodConfig
   private sortFields: SortField[]
@@ -189,7 +191,9 @@ export class SortedNeighbourhoodStrategy<T = unknown> implements BlockingStrateg
    * @param sortableRecords - Records with computed sort keys
    * @returns Sorted array of sortable records
    */
-  private sortRecords(sortableRecords: Array<SortableRecord<T>>): Array<SortableRecord<T>> {
+  private sortRecords(
+    sortableRecords: Array<SortableRecord<T>>
+  ): Array<SortableRecord<T>> {
     return sortableRecords.sort((a, b) => {
       // Compare each sort key in order
       for (let i = 0; i < this.sortFields.length; i++) {

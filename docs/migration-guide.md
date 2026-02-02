@@ -67,12 +67,12 @@ UPDATE customers SET soundex_lastname = SOUNDEX(last_name);
 
 ### 4. Choose a Strategy
 
-| Strategy | Best For | Downtime | Risk |
-|----------|----------|----------|------|
-| Offline (full) | Small datasets (< 100k) | Hours | Low |
-| Online (incremental) | Large datasets | Minimal | Medium |
-| Shadow (parallel) | Critical systems | None | Low |
-| Hybrid | Medium datasets | Minutes | Low |
+| Strategy             | Best For                | Downtime | Risk   |
+| -------------------- | ----------------------- | -------- | ------ |
+| Offline (full)       | Small datasets (< 100k) | Hours    | Low    |
+| Online (incremental) | Large datasets          | Minimal  | Medium |
+| Shadow (parallel)    | Critical systems        | None     | Low    |
+| Hybrid               | Medium datasets         | Minutes  | Low    |
 
 ## Strategy 1: Offline Migration (Full)
 
@@ -100,14 +100,14 @@ async function offlineMigration() {
     console.log('Running deduplication...')
     const result = await resolver.deduplicateBatchFromDatabase({
       batchSize: 1000,
-      persistResults: false  // Don't auto-merge yet
+      persistResults: false, // Don't auto-merge yet
     })
 
     console.log(`Found ${result.duplicateGroupsFound} duplicate groups`)
     console.log(`Total duplicates: ${result.totalDuplicates}`)
 
     // Step 3: Review high-confidence matches
-    const highConfidence = result.results.filter(r => r.score >= 70)
+    const highConfidence = result.results.filter((r) => r.score >= 70)
     console.log(`High confidence duplicates: ${highConfidence.length}`)
 
     // Step 4: Merge duplicates
@@ -126,17 +126,22 @@ async function offlineMigration() {
     console.log('Verification:', verification)
 
     console.log('Migration complete!')
-
   } finally {
     // Step 6: Bring application back online
     await setMaintenanceMode(false)
   }
 }
 
-async function mergeDuplicateGroup(group: { masterRecordId: string; duplicateIds: string[] }) {
+async function mergeDuplicateGroup(group: {
+  masterRecordId: string
+  duplicateIds: string[]
+}) {
   await adapter.transaction(async (tx) => {
     // Get all records in group
-    const records = await tx.findByIds([group.masterRecordId, ...group.duplicateIds])
+    const records = await tx.findByIds([
+      group.masterRecordId,
+      ...group.duplicateIds,
+    ])
 
     // Merge strategy: take most complete data
     const merged = mergeRecords(records)
@@ -174,6 +179,7 @@ Best for: Large datasets, cannot afford downtime
 ### Concept
 
 Process records in batches while application remains online:
+
 1. Add `dedup_status` column to track progress
 2. Process records in batches
 3. Handle new records separately
@@ -228,28 +234,34 @@ async function incrementalMigration() {
 async function processRecordForDuplication(record: any) {
   // Check for duplicates
   const matches = await resolver.resolveWithDatabase(record, {
-    useBlocking: true
+    useBlocking: true,
   })
 
-  const definiteMatch = matches.find(m => m.outcome === 'definite-match')
+  const definiteMatch = matches.find((m) => m.outcome === 'definite-match')
 
   if (definiteMatch) {
     // Mark as duplicate, link to master
-    await db.query(`
+    await db.query(
+      `
       UPDATE customers
       SET dedup_status = 'duplicate',
           dedup_master_id = $1,
           dedup_checked_at = NOW()
       WHERE id = $2
-    `, [definiteMatch.record.id, record.id])
+    `,
+      [definiteMatch.record.id, record.id]
+    )
   } else {
     // Mark as unique
-    await db.query(`
+    await db.query(
+      `
       UPDATE customers
       SET dedup_status = 'unique',
           dedup_checked_at = NOW()
       WHERE id = $1
-    `, [record.id])
+    `,
+      [record.id]
+    )
   }
 }
 ```
@@ -269,7 +281,10 @@ async function mergeIdentifiedDuplicates() {
 
   for (const group of duplicateGroups) {
     await adapter.transaction(async (tx) => {
-      const records = await tx.findByIds([group.dedup_master_id, ...group.duplicate_ids])
+      const records = await tx.findByIds([
+        group.dedup_master_id,
+        ...group.duplicate_ids,
+      ])
       const merged = mergeRecords(records)
 
       await tx.update(group.dedup_master_id, merged)
@@ -279,7 +294,9 @@ async function mergeIdentifiedDuplicates() {
       }
     })
 
-    console.log(`Merged group: master ${group.dedup_master_id}, ${group.duplicate_ids.length} duplicates`)
+    console.log(
+      `Merged group: master ${group.dedup_master_id}, ${group.duplicate_ids.length} duplicates`
+    )
   }
 }
 ```
@@ -359,13 +376,16 @@ async function hybridMigration() {
   const inactiveThreshold = new Date()
   inactiveThreshold.setMonth(inactiveThreshold.getMonth() - 6)
 
-  const inactiveRecords = await db.query(`
+  const inactiveRecords = await db.query(
+    `
     SELECT * FROM customers
     WHERE updated_at < $1
-  `, [inactiveThreshold])
+  `,
+    [inactiveThreshold]
+  )
 
   const inactiveResult = resolver.deduplicateBatch(inactiveRecords)
-  await mergeGroups(inactiveResult.results.filter(r => r.score >= 70))
+  await mergeGroups(inactiveResult.results.filter((r) => r.score >= 70))
 
   // Phase 2: Online - Process active records incrementally
   console.log('Phase 2: Processing active records...')
@@ -399,19 +419,22 @@ function schedulePeriodicMerges() {
 When merging, conflicts may occur:
 
 ```typescript
-function mergeRecordsWithConflicts(records: any[]): { merged: any; conflicts: any[] } {
+function mergeRecordsWithConflicts(records: any[]): {
+  merged: any
+  conflicts: any[]
+} {
   const merged = { ...records[0] }
   const conflicts = []
 
   for (const key of Object.keys(records[0])) {
-    const values = records.map(r => r[key]).filter(v => v != null)
+    const values = records.map((r) => r[key]).filter((v) => v != null)
     const uniqueValues = [...new Set(values)]
 
     if (uniqueValues.length > 1) {
       // Conflict: multiple different non-null values
       conflicts.push({
         field: key,
-        values: uniqueValues
+        values: uniqueValues,
       })
 
       // Resolution strategy: take most common value
@@ -420,8 +443,9 @@ function mergeRecordsWithConflicts(records: any[]): { merged: any; conflicts: an
         return acc
       }, {})
 
-      const mostCommon = Object.entries(valueCounts)
-        .sort(([,a], [,b]) => (b as number) - (a as number))[0][0]
+      const mostCommon = Object.entries(valueCounts).sort(
+        ([, a], [, b]) => (b as number) - (a as number)
+      )[0][0]
 
       merged[key] = mostCommon
     } else if (uniqueValues.length === 1) {
@@ -441,15 +465,21 @@ Update references before deleting:
 async function mergeWithForeignKeys(masterId: string, duplicateIds: string[]) {
   await adapter.transaction(async (tx) => {
     // Update all foreign key references
-    await db.query(`
+    await db.query(
+      `
       UPDATE orders SET customer_id = $1
       WHERE customer_id = ANY($2)
-    `, [masterId, duplicateIds])
+    `,
+      [masterId, duplicateIds]
+    )
 
-    await db.query(`
+    await db.query(
+      `
       UPDATE invoices SET customer_id = $1
       WHERE customer_id = ANY($2)
-    `, [masterId, duplicateIds])
+    `,
+      [masterId, duplicateIds]
+    )
 
     // Now safe to delete duplicates
     for (const duplicateId of duplicateIds) {
@@ -479,10 +509,18 @@ CREATE TABLE dedup_audit (
 async function auditedMerge(group: any) {
   const { merged, conflicts } = mergeRecordsWithConflicts(group.records)
 
-  await db.query(`
+  await db.query(
+    `
     INSERT INTO dedup_audit (master_id, duplicate_ids, conflict_count, conflicts)
     VALUES ($1, $2, $3, $4)
-  `, [group.masterRecordId, group.duplicateIds, conflicts.length, JSON.stringify(conflicts)])
+  `,
+    [
+      group.masterRecordId,
+      group.duplicateIds,
+      conflicts.length,
+      JSON.stringify(conflicts),
+    ]
+  )
 
   // Proceed with merge
   await mergeDuplicateGroup(group)
@@ -497,7 +535,7 @@ async function auditedMerge(group: any) {
 const preMigration = {
   totalRecords: await adapter.count(),
   totalEmails: await db.query('SELECT COUNT(DISTINCT email) FROM customers'),
-  totalPhones: await db.query('SELECT COUNT(DISTINCT phone) FROM customers')
+  totalPhones: await db.query('SELECT COUNT(DISTINCT phone) FROM customers'),
 }
 ```
 
@@ -508,12 +546,16 @@ async function verifyDataIntegrity() {
   const postMigration = {
     totalRecords: await adapter.count(),
     totalEmails: await db.query('SELECT COUNT(DISTINCT email) FROM customers'),
-    totalPhones: await db.query('SELECT COUNT(DISTINCT phone) FROM customers')
+    totalPhones: await db.query('SELECT COUNT(DISTINCT phone) FROM customers'),
   }
 
   console.log('Verification:')
-  console.log(`Records: ${preMigration.totalRecords} → ${postMigration.totalRecords}`)
-  console.log(`Reduction: ${preMigration.totalRecords - postMigration.totalRecords} (${((1 - postMigration.totalRecords / preMigration.totalRecords) * 100).toFixed(2)}%)`)
+  console.log(
+    `Records: ${preMigration.totalRecords} → ${postMigration.totalRecords}`
+  )
+  console.log(
+    `Reduction: ${preMigration.totalRecords - postMigration.totalRecords} (${((1 - postMigration.totalRecords / preMigration.totalRecords) * 100).toFixed(2)}%)`
+  )
 
   // Ensure no orphaned foreign keys
   const orphanedOrders = await db.query(`
@@ -551,22 +593,28 @@ async function softDeleteDuplicates(group: any) {
 
     // Soft delete duplicates
     for (const duplicateId of group.duplicateIds) {
-      await db.query(`
+      await db.query(
+        `
         UPDATE customers
         SET deleted_at = NOW()
         WHERE id = $1
-      `, [duplicateId])
+      `,
+        [duplicateId]
+      )
     }
   })
 }
 
 // Rollback if needed
 async function rollbackMerge(masterId: string) {
-  await db.query(`
+  await db.query(
+    `
     UPDATE customers
     SET deleted_at = NULL
     WHERE dedup_master_id = $1
-  `, [masterId])
+  `,
+    [masterId]
+  )
 }
 ```
 
@@ -595,16 +643,20 @@ async function parallelBatchMigration() {
   for (let i = 0; i < batches.length; i += concurrency) {
     const chunk = batches.slice(i, i + concurrency)
 
-    await Promise.all(chunk.map(async (batchNum) => {
-      const offset = batchNum * batchSize
-      const batch = await adapter.findAll({ limit: batchSize, offset })
+    await Promise.all(
+      chunk.map(async (batchNum) => {
+        const offset = batchNum * batchSize
+        const batch = await adapter.findAll({ limit: batchSize, offset })
 
-      for (const record of batch) {
-        await processRecordForDuplication(record)
-      }
-    }))
+        for (const record of batch) {
+          await processRecordForDuplication(record)
+        }
+      })
+    )
 
-    console.log(`Progress: ${Math.min((i + concurrency) * batchSize, totalRecords)}/${totalRecords}`)
+    console.log(
+      `Progress: ${Math.min((i + concurrency) * batchSize, totalRecords)}/${totalRecords}`
+    )
   }
 }
 ```
@@ -633,7 +685,7 @@ class MigrationProgress {
     const elapsed = Date.now() - this.startTime
     const rate = this.processed / (elapsed / 1000)
     const remaining = (this.total - this.processed) / rate
-    const percentage = (this.processed / this.total * 100).toFixed(2)
+    const percentage = ((this.processed / this.total) * 100).toFixed(2)
 
     console.log(`Progress: ${this.processed}/${this.total} (${percentage}%)`)
     console.log(`Rate: ${Math.round(rate)} records/sec`)
@@ -653,7 +705,7 @@ const metrics = {
   recordsMerged: 0,
   conflictsDetected: 0,
   errors: 0,
-  duration: 0
+  duration: 0,
 }
 
 // Export metrics for monitoring
@@ -665,7 +717,9 @@ setInterval(() => {
 ## Complete Migration Script
 
 ```typescript
-async function completeMigration(strategy: 'offline' | 'online' | 'shadow' | 'hybrid') {
+async function completeMigration(
+  strategy: 'offline' | 'online' | 'shadow' | 'hybrid'
+) {
   console.log(`Starting ${strategy} migration...`)
 
   // Pre-flight checks

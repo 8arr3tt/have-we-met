@@ -34,7 +34,10 @@ describe('Normalizer Integration', () => {
         createPersonRecord({ email: 'john@example.com' }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Should match because email normalizer removes plus-addressing
       expect(results.length).toBeGreaterThan(0)
@@ -88,7 +91,10 @@ describe('Normalizer Integration', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Should match because name normalizer handles whitespace and casing
       expect(results.length).toBeGreaterThan(0)
@@ -117,7 +123,10 @@ describe('Normalizer Integration', () => {
         createPersonRecord({ email: 'john.smith@example.com' }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -141,9 +150,14 @@ describe('Normalizer Integration', () => {
         'input'
       )
 
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -163,10 +177,15 @@ describe('Normalizer Integration', () => {
         .build()
 
       const input = createPersonRecord({ email: 'john@example.com' }, 'input')
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
       // Should not throw, should use original value
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -196,7 +215,10 @@ describe('Normalizer Integration', () => {
       const input = createPersonRecord({ phone: '555-123-4567' }, 'input')
       const candidates = [createPersonRecord({ phone: '5551234567' }, '1')]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -221,10 +243,15 @@ describe('Normalizer Integration', () => {
         .build()
 
       const input = createPersonRecord({ email: 'john@example.com' }, 'input')
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
       // Should not throw, should use original value
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -255,7 +282,10 @@ describe('Normalizer Integration', () => {
         createPersonRecord({ email: 'JOHN@EXAMPLE.COM' }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Should match because custom normalizer (uppercase) is used
       expect(results.length).toBeGreaterThan(0)
@@ -285,9 +315,14 @@ describe('Normalizer Integration', () => {
         'input'
       )
 
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Should NOT match because plus-addressing is kept
       expect(results.length).toBeGreaterThan(0)
@@ -340,7 +375,10 @@ describe('Normalizer Integration', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -366,7 +404,10 @@ describe('Normalizer Integration', () => {
       const input = createPersonRecord({ firstName: '  John  ' }, 'input')
       const candidates = [createPersonRecord({ firstName: 'John' }, '1')]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // After trimming, should be exact match (similarity = 1.0)
       expect(results.length).toBeGreaterThan(0)
@@ -391,7 +432,10 @@ describe('Normalizer Integration', () => {
       const input = createPersonRecord({ firstName: 'JOHN' }, 'input')
       const candidates = [createPersonRecord({ firstName: 'john' }, '1')]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // After lowercasing, should be exact match (similarity = 1.0)
       expect(results.length).toBeGreaterThan(0)
@@ -416,7 +460,10 @@ describe('Normalizer Integration', () => {
         createPersonRecord({ lastName: 'Smythe' }, '1'), // Sounds similar
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // After trimming, Soundex should match (Smith and Smythe sound similar)
       expect(results.length).toBeGreaterThan(0)
@@ -434,9 +481,14 @@ describe('Normalizer Integration', () => {
         .build()
 
       const input = createPersonRecord({ email: 'john@example.com' }, 'input')
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -450,13 +502,15 @@ describe('Normalizer Integration', () => {
         .thresholds({ noMatch: 20, definiteMatch: 75 })
         .build()
 
-      const input = createPersonRecord(
-        { email: 'John@Example.COM' },
-        'input'
-      )
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const input = createPersonRecord({ email: 'John@Example.COM' }, 'input')
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Should NOT match because no normalization was applied
       expect(results.length).toBeGreaterThan(0)
@@ -487,7 +541,10 @@ describe('Normalizer Integration', () => {
         createPersonRecord({ email: 'JOHN+Personal@example.com' }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -513,9 +570,14 @@ describe('Normalizer Integration', () => {
         .build()
 
       const input = createPersonRecord({ email: 'john@example.com' }, 'input')
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -543,9 +605,14 @@ describe('Normalizer Integration', () => {
 
       // Email with no leading/trailing whitespace
       const input = createPersonRecord({ email: 'john@example.com' }, 'input')
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       const emailComparison = results[0].score.fieldScores.find(
         (fc) => fc.field === 'email'
@@ -569,12 +636,18 @@ describe('Normalizer Integration', () => {
         .thresholds({ noMatch: 20, definiteMatch: 75 })
         .build()
 
-      const input = createPersonRecord({ email: null as unknown as string }, 'input')
+      const input = createPersonRecord(
+        { email: null as unknown as string },
+        'input'
+      )
       const candidates = [
         createPersonRecord({ email: null as unknown as string }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Both null values should match
       expect(results.length).toBeGreaterThan(0)
@@ -597,7 +670,10 @@ describe('Normalizer Integration', () => {
       const input = createPersonRecord({ phone: undefined }, 'input')
       const candidates = [createPersonRecord({ phone: undefined }, '1')]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Both undefined values should match
       expect(results.length).toBeGreaterThan(0)
@@ -621,9 +697,14 @@ describe('Normalizer Integration', () => {
         .build()
 
       const input = createPersonRecord({ email: 'john@example.com' }, 'input')
-      const candidates = [createPersonRecord({ email: 'john@example.com' }, '1')]
+      const candidates = [
+        createPersonRecord({ email: 'john@example.com' }, '1'),
+      ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Should use original values when normalizer returns null
       expect(results.length).toBeGreaterThan(0)

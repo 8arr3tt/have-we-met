@@ -16,7 +16,9 @@ import { QueueReporter } from '../../src/queue/reporter'
 import { QueueAlerts } from '../../src/queue/alerts'
 
 // Simple mock adapter for examples
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   const records: T[] = []
   const queueItems: QueueItem<T>[] = []
 
@@ -27,9 +29,10 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
       records.push(newRecord)
       return newRecord
     },
-    update: async () => ({} as T),
+    update: async () => ({}) as T,
     delete: async () => {},
-    findById: async (id: string) => records.find((r) => (r as any).id === id) || null,
+    findById: async (id: string) =>
+      records.find((r) => (r as any).id === id) || null,
     findAll: async () => records,
     count: async () => records.length,
     batchInsert: async (batch: T[]) => batch,
@@ -49,7 +52,8 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
         return item
       },
       findQueueItems: async () => queueItems,
-      findQueueItemById: async (id: string) => queueItems.find((i) => i.id === id) || null,
+      findQueueItemById: async (id: string) =>
+        queueItems.find((i) => i.id === id) || null,
       deleteQueueItem: async (id: string) => {
         const index = queueItems.findIndex((i) => i.id === id)
         if (index >= 0) queueItems.splice(index, 1)
@@ -84,9 +88,12 @@ async function queueMetricsExample() {
     .blocking((block) => block.exact('email'))
     .matching((match) =>
       match
-        .field('firstName').using('jaro-winkler', { weight: 1.0 })
-        .field('lastName').using('jaro-winkler', { weight: 1.5 })
-        .field('email').using('exact', { weight: 2.0 })
+        .field('firstName')
+        .using('jaro-winkler', { weight: 1.0 })
+        .field('lastName')
+        .using('jaro-winkler', { weight: 1.5 })
+        .field('email')
+        .using('exact', { weight: 2.0 })
     )
     .thresholds({ noMatch: 20, definiteMatch: 50 })
     .adapter(adapter)
@@ -97,35 +104,68 @@ async function queueMetricsExample() {
 
   const queueItems = [
     {
-      candidateRecord: { firstName: 'Alice', lastName: 'Johnson', email: 'a.johnson@example.com' },
-      potentialMatches: [{
-        record: { id: 'c1', firstName: 'Alicia', lastName: 'Johnson', email: 'alicia.j@example.com' },
-        score: 35,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 35, fieldScores: [], missingFields: [] },
-      }],
+      candidateRecord: {
+        firstName: 'Alice',
+        lastName: 'Johnson',
+        email: 'a.johnson@example.com',
+      },
+      potentialMatches: [
+        {
+          record: {
+            id: 'c1',
+            firstName: 'Alicia',
+            lastName: 'Johnson',
+            email: 'alicia.j@example.com',
+          },
+          score: 35,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 35, fieldScores: [], missingFields: [] },
+        },
+      ],
       priority: 2,
       tags: ['high-priority', 'import'],
     },
     {
-      candidateRecord: { firstName: 'Bob', lastName: 'Smith', email: 'bob.smith@example.com' },
-      potentialMatches: [{
-        record: { id: 'c2', firstName: 'Robert', lastName: 'Smith', email: 'r.smith@example.com' },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      candidateRecord: {
+        firstName: 'Bob',
+        lastName: 'Smith',
+        email: 'bob.smith@example.com',
+      },
+      potentialMatches: [
+        {
+          record: {
+            id: 'c2',
+            firstName: 'Robert',
+            lastName: 'Smith',
+            email: 'r.smith@example.com',
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+        },
+      ],
       priority: 1,
       tags: ['import'],
     },
     {
-      candidateRecord: { firstName: 'Carol', lastName: 'White', email: 'carol.w@example.com' },
-      potentialMatches: [{
-        record: { id: 'c3', firstName: 'Caroline', lastName: 'White', email: 'caroline.white@example.com' },
-        score: 38,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 38, fieldScores: [], missingFields: [] },
-      }],
+      candidateRecord: {
+        firstName: 'Carol',
+        lastName: 'White',
+        email: 'carol.w@example.com',
+      },
+      potentialMatches: [
+        {
+          record: {
+            id: 'c3',
+            firstName: 'Caroline',
+            lastName: 'White',
+            email: 'caroline.white@example.com',
+          },
+          score: 38,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 38, fieldScores: [], missingFields: [] },
+        },
+      ],
       priority: 0,
       tags: ['import', 'review-needed'],
     },
@@ -152,7 +192,10 @@ async function queueMetricsExample() {
   }
 
   // Get the second item and reject it
-  const pendingItems = await resolver.queue.list({ status: 'pending', limit: 1 })
+  const pendingItems = await resolver.queue.list({
+    status: 'pending',
+    limit: 1,
+  })
   if (pendingItems.items.length > 0) {
     const item = pendingItems.items[0]
     await resolver.queue.reject(item.id, {

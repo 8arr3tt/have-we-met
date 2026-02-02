@@ -23,11 +23,13 @@ const customValidator = createNHSNumberValidator({
 ```
 
 **Validation Checks:**
+
 1. **presence** - Value must not be empty
 2. **format** - Must be exactly 10 digits
 3. **checksum** - Modulus 11 checksum must be valid
 
 **NHS Checksum Algorithm:**
+
 1. Multiply each of the first 9 digits by weights (10, 9, 8, 7, 6, 5, 4, 3, 2)
 2. Sum the products
 3. Take modulo 11 of the sum
@@ -64,7 +66,7 @@ const customValidator = createNHSNumberValidator({
 ```typescript
 import { validateNHSChecksum, normalizeNHSNumber } from 'have-we-met/services'
 
-validateNHSChecksum('9434765919')  // true
+validateNHSChecksum('9434765919') // true
 normalizeNHSNumber('943 476 5919') // '9434765919'
 ```
 
@@ -93,15 +95,16 @@ const strictValidator = createEmailValidator({
 
 **Options:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | 'email-validator' | Service name |
-| `checkMx` | boolean | false | Verify domain has MX records |
-| `checkDisposable` | boolean | false | Reject disposable email domains |
-| `requireTld` | boolean | true | Require top-level domain |
-| `disposableDomains` | string[] | (built-in list) | Custom disposable domain list |
+| Option              | Type     | Default           | Description                     |
+| ------------------- | -------- | ----------------- | ------------------------------- |
+| `name`              | string   | 'email-validator' | Service name                    |
+| `checkMx`           | boolean  | false             | Verify domain has MX records    |
+| `checkDisposable`   | boolean  | false             | Reject disposable email domains |
+| `requireTld`        | boolean  | true              | Require top-level domain        |
+| `disposableDomains` | string[] | (built-in list)   | Custom disposable domain list   |
 
 **Validation Checks:**
+
 1. **format** - Valid email format (RFC 5322 simplified)
 2. **tld** - Has valid top-level domain (if `requireTld`)
 3. **mx** - Domain has MX records (if `checkMx`)
@@ -118,9 +121,9 @@ import {
 } from 'have-we-met/services'
 
 validateEmailFormat('user@example.com') // true
-normalizeEmail('User@Example.COM')      // 'user@example.com'
-extractDomain('user@example.com')       // 'example.com'
-isDisposableDomain('mailinator.com')    // true
+normalizeEmail('User@Example.COM') // 'user@example.com'
+extractDomain('user@example.com') // 'example.com'
+isDisposableDomain('mailinator.com') // true
 ```
 
 ---
@@ -147,15 +150,16 @@ const ukPhoneValidator = createPhoneValidator({
 
 **Options:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | 'phone-validator' | Service name |
-| `defaultCountry` | string | 'US' | Default country for parsing |
-| `allowedCountries` | string[] | (all) | Restrict to specific countries |
-| `requireCountryCode` | boolean | false | Require international format |
-| `validateType` | boolean | true | Validate number type (mobile/landline) |
+| Option               | Type     | Default           | Description                            |
+| -------------------- | -------- | ----------------- | -------------------------------------- |
+| `name`               | string   | 'phone-validator' | Service name                           |
+| `defaultCountry`     | string   | 'US'              | Default country for parsing            |
+| `allowedCountries`   | string[] | (all)             | Restrict to specific countries         |
+| `requireCountryCode` | boolean  | false             | Require international format           |
+| `validateType`       | boolean  | true              | Validate number type (mobile/landline) |
 
 **Validation Checks:**
+
 1. **format** - Valid phone number format
 2. **country** - Country code is recognized
 3. **possible** - Number is possible for the country
@@ -189,8 +193,8 @@ import {
   normalizePhoneInput,
 } from 'have-we-met/services'
 
-getValidCountryCodes()        // ['US', 'GB', 'DE', ...]
-isValidCountryCode('GB')      // true
+getValidCountryCodes() // ['US', 'GB', 'DE', ...]
+isValidCountryCode('GB') // true
 normalizePhoneInput('07911 123456', 'GB') // '+447911123456'
 ```
 
@@ -217,13 +221,14 @@ const strictSsnValidator = createSSNValidator({
 
 **Options:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | 'ssn-validator' | Service name |
-| `checkKnownInvalid` | boolean | true | Check against known invalid SSNs |
-| `allowAreas` | boolean | true | Validate area number (first 3 digits) |
+| Option              | Type    | Default         | Description                           |
+| ------------------- | ------- | --------------- | ------------------------------------- |
+| `name`              | string  | 'ssn-validator' | Service name                          |
+| `checkKnownInvalid` | boolean | true            | Check against known invalid SSNs      |
+| `allowAreas`        | boolean | true            | Validate area number (first 3 digits) |
 
 **Validation Checks:**
+
 1. **format** - Valid XXX-XX-XXXX format (9 digits)
 2. **area** - Area number not 000, 666, or 900-999
 3. **group** - Group number not 00
@@ -241,12 +246,12 @@ import {
   isKnownInvalidSSN,
 } from 'have-we-met/services'
 
-normalizeSSN('123-45-6789')       // '123456789'
-formatSSN('123456789')            // '123-45-6789'
-parseSSN('123-45-6789')           // { area: '123', group: '45', serial: '6789' }
-hasValidAreaNumber('123')         // true
-hasValidAreaNumber('000')         // false
-isKnownInvalidSSN('123456789')    // true (test number)
+normalizeSSN('123-45-6789') // '123456789'
+formatSSN('123456789') // '123-45-6789'
+parseSSN('123-45-6789') // { area: '123', group: '45', serial: '6789' }
+hasValidAreaNumber('123') // true
+hasValidAreaNumber('000') // false
+isKnownInvalidSSN('123456789') // true (test number)
 ```
 
 ---
@@ -271,12 +276,13 @@ const customNinoValidator = createNINOValidator({
 
 **Options:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | string | 'nino-validator' | Service name |
-| `checkAdministrative` | boolean | false | Flag administrative prefixes |
+| Option                | Type    | Default          | Description                  |
+| --------------------- | ------- | ---------------- | ---------------------------- |
+| `name`                | string  | 'nino-validator' | Service name                 |
+| `checkAdministrative` | boolean | false            | Flag administrative prefixes |
 
 **Validation Checks:**
+
 1. **format** - Valid format: 2 letters + 6 digits + 1 letter
 2. **prefix** - Valid prefix (not D, F, I, Q, U, V)
 3. **second** - Valid second letter (not O)
@@ -315,11 +321,11 @@ import {
   isAdministrativeNINO,
 } from 'have-we-met/services'
 
-normalizeNINO('AB 12 34 56 C')  // 'AB123456C'
-formatNINO('AB123456C')         // 'AB 12 34 56 C'
-parseNINO('AB123456C')          // { prefix: 'AB', numbers: '123456', suffix: 'C' }
-hasValidPrefix('AB')            // true
-hasValidPrefix('QQ')            // false
+normalizeNINO('AB 12 34 56 C') // 'AB123456C'
+formatNINO('AB123456C') // 'AB 12 34 56 C'
+parseNINO('AB123456C') // { prefix: 'AB', numbers: '123456', suffix: 'C' }
+hasValidPrefix('AB') // true
+hasValidPrefix('QQ') // false
 isAdministrativeNINO('TN123456A') // true
 ```
 
@@ -356,15 +362,16 @@ const addressLookup = createAddressStandardization({
 
 **Configuration:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `provider` | string | 'mock' | Provider: 'mock', 'google', 'usps', 'loqate', 'custom' |
-| `apiKey` | string | - | API key for the provider |
-| `apiEndpoint` | string | - | Custom API endpoint |
-| `fieldMapping` | object | - | Map provider fields to schema fields |
-| `defaultCountry` | string | 'US' | Default country for parsing |
+| Option           | Type   | Default | Description                                            |
+| ---------------- | ------ | ------- | ------------------------------------------------------ |
+| `provider`       | string | 'mock'  | Provider: 'mock', 'google', 'usps', 'loqate', 'custom' |
+| `apiKey`         | string | -       | API key for the provider                               |
+| `apiEndpoint`    | string | -       | Custom API endpoint                                    |
+| `fieldMapping`   | object | -       | Map provider fields to schema fields                   |
+| `defaultCountry` | string | 'US'    | Default country for parsing                            |
 
 **Supported Providers:**
+
 - `mock` - Development/testing with canned responses
 - `google` - Google Maps Geocoding API
 - `usps` - USPS Address Validation
@@ -441,13 +448,13 @@ const emailLookup = createEmailEnrichment({
 
 **Configuration:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `provider` | string | 'mock' | Provider: 'mock', 'clearbit', 'hunter', 'custom' |
-| `apiKey` | string | - | API key for the provider |
-| `fieldMapping` | object | - | Map provider fields to schema fields |
-| `includeCompany` | boolean | true | Include company information |
-| `includeSocial` | boolean | false | Include social profiles |
+| Option           | Type    | Default | Description                                      |
+| ---------------- | ------- | ------- | ------------------------------------------------ |
+| `provider`       | string  | 'mock'  | Provider: 'mock', 'clearbit', 'hunter', 'custom' |
+| `apiKey`         | string  | -       | API key for the provider                         |
+| `fieldMapping`   | object  | -       | Map provider fields to schema fields             |
+| `includeCompany` | boolean | true    | Include company information                      |
+| `includeSocial`  | boolean | false   | Include social profiles                          |
 
 **Result:**
 
@@ -497,12 +504,12 @@ const carrierLookup = createPhoneCarrierLookup({
 
 **Configuration:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `provider` | string | 'mock' | Provider: 'mock', 'twilio', 'plivo', 'custom' |
-| `apiKey` | string | - | API key/account SID |
-| `apiSecret` | string | - | API secret/auth token |
-| `fieldMapping` | object | - | Map provider fields to schema fields |
+| Option         | Type   | Default | Description                                   |
+| -------------- | ------ | ------- | --------------------------------------------- |
+| `provider`     | string | 'mock'  | Provider: 'mock', 'twilio', 'plivo', 'custom' |
+| `apiKey`       | string | -       | API key/account SID                           |
+| `apiSecret`    | string | -       | API secret/auth token                         |
+| `fieldMapping` | object | -       | Map provider fields to schema fields          |
 
 **Line Types:**
 
@@ -551,8 +558,8 @@ import {
 // Basic mock with canned responses
 const mock = createMockLookup({
   responses: {
-    'key1': { found: true, data: { name: 'Test' } },
-    'key2': { found: false },
+    key1: { found: true, data: { name: 'Test' } },
+    key2: { found: false },
   },
   defaultResponse: { found: false },
   latencyMs: 50,
@@ -577,13 +584,13 @@ const flakyMock = createFlakyMock(0.3) // 30% failure rate
 
 **Configuration:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `responses` | object | {} | Map of input hash to response |
-| `defaultResponse` | object | { found: false } | Response when no match |
-| `latencyMs` | number | 0 | Simulated latency |
-| `failureRate` | number | 0 | Probability of failure (0-1) |
-| `failureError` | Error | ServiceNetworkError | Error to throw on failure |
+| Option            | Type   | Default             | Description                   |
+| ----------------- | ------ | ------------------- | ----------------------------- |
+| `responses`       | object | {}                  | Map of input hash to response |
+| `defaultResponse` | object | { found: false }    | Response when no match        |
+| `latencyMs`       | number | 0                   | Simulated latency             |
+| `failureRate`     | number | 0                   | Probability of failure (0-1)  |
+| `failureError`    | Error  | ServiceNetworkError | Error to throw on failure     |
 
 **Tracking Calls:**
 

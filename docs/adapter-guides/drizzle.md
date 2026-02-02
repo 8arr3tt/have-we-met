@@ -25,37 +25,53 @@ npm install better-sqlite3  # SQLite
 Create your Drizzle schema (e.g., `src/db/schema.ts`):
 
 ```typescript
-import { pgTable, uuid, varchar, integer, timestamp, index } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  uuid,
+  varchar,
+  integer,
+  timestamp,
+  index,
+} from 'drizzle-orm/pg-core'
 
-export const patients = pgTable('patients', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  firstName: varchar('first_name', { length: 255 }).notNull(),
-  lastName: varchar('last_name', { length: 255 }).notNull(),
-  dateOfBirth: timestamp('date_of_birth').notNull(),
-  ssn: varchar('ssn', { length: 11 }),
-  medicalRecordNumber: varchar('medical_record_number', { length: 50 }).notNull(),
-  phone: varchar('phone', { length: 20 }),
-  email: varchar('email', { length: 255 }),
-  address: varchar('address', { length: 500 }),
-  city: varchar('city', { length: 100 }),
-  state: varchar('state', { length: 2 }),
-  zipCode: varchar('zip_code', { length: 10 }),
-  insuranceId: varchar('insurance_id', { length: 50 }),
+export const patients = pgTable(
+  'patients',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    firstName: varchar('first_name', { length: 255 }).notNull(),
+    lastName: varchar('last_name', { length: 255 }).notNull(),
+    dateOfBirth: timestamp('date_of_birth').notNull(),
+    ssn: varchar('ssn', { length: 11 }),
+    medicalRecordNumber: varchar('medical_record_number', {
+      length: 50,
+    }).notNull(),
+    phone: varchar('phone', { length: 20 }),
+    email: varchar('email', { length: 255 }),
+    address: varchar('address', { length: 500 }),
+    city: varchar('city', { length: 100 }),
+    state: varchar('state', { length: 2 }),
+    zipCode: varchar('zip_code', { length: 10 }),
+    insuranceId: varchar('insurance_id', { length: 50 }),
 
-  // Pre-computed blocking keys
-  soundexLastName: varchar('soundex_lastname', { length: 4 }),
-  birthYear: integer('birth_year'),
+    // Pre-computed blocking keys
+    soundexLastName: varchar('soundex_lastname', { length: 4 }),
+    birthYear: integer('birth_year'),
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-}, (table) => ({
-  lastNameIdx: index('idx_patients_lastname').on(table.lastName),
-  mrnIdx: index('idx_patients_mrn').on(table.medicalRecordNumber),
-  ssnIdx: index('idx_patients_ssn').on(table.ssn),
-  soundexIdx: index('idx_patients_soundex').on(table.soundexLastName),
-  birthYearIdx: index('idx_patients_birth_year').on(table.birthYear),
-  compositeIdx: index('idx_patients_lastname_year').on(table.lastName, table.birthYear),
-}))
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    lastNameIdx: index('idx_patients_lastname').on(table.lastName),
+    mrnIdx: index('idx_patients_mrn').on(table.medicalRecordNumber),
+    ssnIdx: index('idx_patients_ssn').on(table.ssn),
+    soundexIdx: index('idx_patients_soundex').on(table.soundexLastName),
+    birthYearIdx: index('idx_patients_birth_year').on(table.birthYear),
+    compositeIdx: index('idx_patients_lastname_year').on(
+      table.lastName,
+      table.birthYear
+    ),
+  })
+)
 
 export type Patient = typeof patients.$inferSelect
 export type NewPatient = typeof patients.$inferInsert
@@ -74,7 +90,7 @@ const pool = new Pool({
   user: 'postgres',
   password: 'password',
   database: 'healthcare',
-  max: 20  // Connection pool size
+  max: 20, // Connection pool size
 })
 
 export const db = drizzle(pool, { schema })
@@ -100,7 +116,7 @@ type Patient = {
 }
 
 const resolver = HaveWeMet.create<Patient>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
@@ -110,20 +126,37 @@ const resolver = HaveWeMet.create<Patient>()
       .field('phone', { type: 'phone' })
       .field('email', { type: 'email' })
   })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-    .onField('medicalRecordNumber')
-    .onField('ssn')
+  .blocking((block) =>
+    block
+      .onField('lastName', { transform: 'soundex' })
+      .onField('medicalRecordNumber')
+      .onField('ssn')
   )
-  .matching(match => {
+  .matching((match) => {
     match
-      .field('ssn').strategy('exact').weight(25)
-      .field('medicalRecordNumber').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('dateOfBirth').strategy('exact').weight(15)
-      .field('phone').strategy('exact').weight(10)
-      .field('email').strategy('exact').weight(10)
+      .field('ssn')
+      .strategy('exact')
+      .weight(25)
+      .field('medicalRecordNumber')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('dateOfBirth')
+      .strategy('exact')
+      .weight(15)
+      .field('phone')
+      .strategy('exact')
+      .weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(10)
       .thresholds({ noMatch: 30, definiteMatch: 70 })
   })
   .adapter(drizzleAdapter(db, patients, { tableName: 'patients' }))
@@ -140,7 +173,7 @@ import { pgTable, uuid, varchar } from 'drizzle-orm/pg-core'
 import { Pool } from 'pg'
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 })
 
 const db = drizzle(pool)
@@ -156,7 +189,7 @@ import mysql from 'mysql2/promise'
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  database: 'mydb'
+  database: 'mydb',
 })
 
 const db = drizzle(pool)
@@ -194,7 +227,7 @@ export const patients = sqliteTable('patients', {
 ```typescript
 const adapter = drizzleAdapter(db, patients, {
   tableName: 'patients',
-  primaryKey: 'id'  // default: 'id'
+  primaryKey: 'id', // default: 'id'
 })
 ```
 
@@ -209,8 +242,8 @@ const adapter = drizzleAdapter(db, patients, {
     firstName: 'first_name',
     lastName: 'last_name',
     medicalRecordNumber: 'medical_record_number',
-    dateOfBirth: 'date_of_birth'
-  }
+    dateOfBirth: 'date_of_birth',
+  },
 })
 ```
 
@@ -226,16 +259,16 @@ const newPatient = {
   ssn: '123-45-6789',
   medicalRecordNumber: 'MRN-2024-001',
   phone: '555-0200',
-  email: 'sarah.johnson@example.com'
+  email: 'sarah.johnson@example.com',
 }
 
 const matches = await resolver.resolveWithDatabase(newPatient, {
   useBlocking: true,
-  maxFetchSize: 500
+  maxFetchSize: 500,
 })
 
 console.log(`Found ${matches.length} potential matches`)
-matches.forEach(match => {
+matches.forEach((match) => {
   if (match.outcome === 'definite-match') {
     console.log(`Duplicate patient found: ${match.record.id}`)
     console.log(`Score: ${match.score.totalScore}`)
@@ -248,7 +281,7 @@ matches.forEach(match => {
 ```typescript
 const result = await resolver.deduplicateBatchFromDatabase({
   batchSize: 1000,
-  persistResults: false
+  persistResults: false,
 })
 
 console.log(`Processed ${result.totalProcessed} patients`)
@@ -280,9 +313,9 @@ const mergedPatient = await adapter.transaction(async (txAdapter) => {
   // Merge data - take most complete information
   const mergedData = {
     ...primary,
-    phone: others.find(p => p.phone)?.phone || primary.phone,
-    email: others.find(p => p.email)?.email || primary.email,
-    address: others.find(p => p.address)?.address || primary.address
+    phone: others.find((p) => p.phone)?.phone || primary.phone,
+    email: others.find((p) => p.email)?.email || primary.email,
+    address: others.find((p) => p.address)?.address || primary.address,
   }
 
   // Update primary record
@@ -310,12 +343,7 @@ import { eq, and, like } from 'drizzle-orm'
 const recentPatients = await db
   .select()
   .from(patients)
-  .where(
-    and(
-      eq(patients.state, 'IL'),
-      like(patients.lastName, 'Smith%')
-    )
-  )
+  .where(and(eq(patients.state, 'IL'), like(patients.lastName, 'Smith%')))
   .limit(100)
 
 // Then check each for duplicates
@@ -334,22 +362,29 @@ Define indexes in your schema:
 ```typescript
 import { pgTable, index } from 'drizzle-orm/pg-core'
 
-export const patients = pgTable('patients', {
-  // ... column definitions
-}, (table) => ({
-  // Single-column indexes
-  lastNameIdx: index('idx_patients_lastname').on(table.lastName),
-  mrnIdx: index('idx_patients_mrn').on(table.medicalRecordNumber),
-  ssnIdx: index('idx_patients_ssn').on(table.ssn),
-  phoneIdx: index('idx_patients_phone').on(table.phone),
+export const patients = pgTable(
+  'patients',
+  {
+    // ... column definitions
+  },
+  (table) => ({
+    // Single-column indexes
+    lastNameIdx: index('idx_patients_lastname').on(table.lastName),
+    mrnIdx: index('idx_patients_mrn').on(table.medicalRecordNumber),
+    ssnIdx: index('idx_patients_ssn').on(table.ssn),
+    phoneIdx: index('idx_patients_phone').on(table.phone),
 
-  // Pre-computed blocking key indexes
-  soundexIdx: index('idx_patients_soundex').on(table.soundexLastName),
-  birthYearIdx: index('idx_patients_birth_year').on(table.birthYear),
+    // Pre-computed blocking key indexes
+    soundexIdx: index('idx_patients_soundex').on(table.soundexLastName),
+    birthYearIdx: index('idx_patients_birth_year').on(table.birthYear),
 
-  // Composite indexes
-  compositeIdx: index('idx_patients_lastname_year').on(table.lastName, table.birthYear),
-}))
+    // Composite indexes
+    compositeIdx: index('idx_patients_lastname_year').on(
+      table.lastName,
+      table.birthYear
+    ),
+  })
+)
 ```
 
 Generate migrations:
@@ -373,7 +408,7 @@ async function insertPatient(patient: NewPatient) {
   return db.insert(patients).values({
     ...patient,
     soundexLastName,
-    birthYear
+    birthYear,
   })
 }
 ```
@@ -401,10 +436,10 @@ Configure appropriate pool size based on your workload:
 
 ```typescript
 const pool = new Pool({
-  max: 20,              // Maximum pool size
-  min: 5,               // Minimum pool size
-  idleTimeoutMillis: 30000,  // Close idle connections after 30s
-  connectionTimeoutMillis: 2000  // Fail after 2s if no connection available
+  max: 20, // Maximum pool size
+  min: 5, // Minimum pool size
+  idleTimeoutMillis: 30000, // Close idle connections after 30s
+  connectionTimeoutMillis: 2000, // Fail after 2s if no connection available
 })
 ```
 
@@ -421,7 +456,9 @@ import { sql } from 'drizzle-orm'
 const searchResults = await db
   .select()
   .from(patients)
-  .where(sql`to_tsvector('english', first_name || ' ' || last_name) @@ to_tsquery('english', ${searchTerm})`)
+  .where(
+    sql`to_tsvector('english', first_name || ' ' || last_name) @@ to_tsquery('english', ${searchTerm})`
+  )
 
 // Trigram similarity (requires pg_trgm extension)
 const similarNames = await db
@@ -438,20 +475,26 @@ const similarNames = await db
 const searchResults = await db
   .select()
   .from(patients)
-  .where(sql`MATCH(first_name, last_name) AGAINST(${searchTerm} IN BOOLEAN MODE)`)
+  .where(
+    sql`MATCH(first_name, last_name) AGAINST(${searchTerm} IN BOOLEAN MODE)`
+  )
 ```
 
 ### SQLite
 
 ```typescript
 // SQLite has limited features but is great for development
-const db = drizzle(new Database(':memory:'))  // In-memory database for tests
+const db = drizzle(new Database(':memory:')) // In-memory database for tests
 ```
 
 ## Error Handling
 
 ```typescript
-import { ConnectionError, QueryError, TransactionError } from 'have-we-met/adapters'
+import {
+  ConnectionError,
+  QueryError,
+  TransactionError,
+} from 'have-we-met/adapters'
 
 try {
   const matches = await resolver.resolveWithDatabase(patient)
@@ -481,14 +524,21 @@ describe('Patient Matching', () => {
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
-    execute: vi.fn()
+    execute: vi.fn(),
   }
 
-  const adapter = new DrizzleAdapter(mockDb, patients, { tableName: 'patients' })
+  const adapter = new DrizzleAdapter(mockDb, patients, {
+    tableName: 'patients',
+  })
 
   it('finds patients by medical record number', async () => {
     mockDb.execute.mockResolvedValue([
-      { id: '1', medicalRecordNumber: 'MRN-001', firstName: 'John', lastName: 'Doe' }
+      {
+        id: '1',
+        medicalRecordNumber: 'MRN-001',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
     ])
 
     const results = await adapter.findByBlockingKeys(
@@ -530,8 +580,18 @@ describe('Integration: Patient Deduplication', () => {
   it('identifies duplicate patients', async () => {
     // Insert test data
     await db.insert(patients).values([
-      { id: '1', firstName: 'Sarah', lastName: 'Johnson', medicalRecordNumber: 'MRN-001' },
-      { id: '2', firstName: 'Sara', lastName: 'Johnson', medicalRecordNumber: 'MRN-002' }
+      {
+        id: '1',
+        firstName: 'Sarah',
+        lastName: 'Johnson',
+        medicalRecordNumber: 'MRN-001',
+      },
+      {
+        id: '2',
+        firstName: 'Sara',
+        lastName: 'Johnson',
+        medicalRecordNumber: 'MRN-002',
+      },
     ])
 
     const result = await resolver.deduplicateBatchFromDatabase()
@@ -557,7 +617,7 @@ async function processNewPatients() {
   for (const patient of newPatients) {
     const matches = await resolver.resolveWithDatabase(patient)
 
-    if (matches.some(m => m.outcome === 'definite-match')) {
+    if (matches.some((m) => m.outcome === 'definite-match')) {
       console.log(`Duplicate found for patient ${patient.id}`)
       // Handle duplicate
     }
@@ -574,7 +634,7 @@ async function bulkImport(newPatients: NewPatient[]) {
   for (const patient of newPatients) {
     const matches = await resolver.resolveWithDatabase(patient)
 
-    if (!matches.some(m => m.outcome === 'definite-match')) {
+    if (!matches.some((m) => m.outcome === 'definite-match')) {
       await db.insert(patients).values(patient)
       stats.imported++
     } else {
@@ -594,7 +654,7 @@ Use Drizzle's query logging:
 
 ```typescript
 const db = drizzle(pool, {
-  logger: true  // Log all queries
+  logger: true, // Log all queries
 })
 ```
 
@@ -606,8 +666,8 @@ const db = drizzle(pool, {
     logQuery(query, params) {
       console.log('Query:', query)
       console.log('Params:', params)
-    }
-  }
+    },
+  },
 })
 ```
 

@@ -4,23 +4,23 @@ Merge strategies determine how field values are selected or combined when creati
 
 ## Strategy Overview
 
-| Strategy | Category | Description | Best For |
-|----------|----------|-------------|----------|
-| `preferFirst` | Basic | First non-undefined value | Consistent ordering |
-| `preferLast` | Basic | Last non-undefined value | Most recent in order |
-| `preferNonNull` | Basic | First truthy value | Optional fields |
-| `preferNewer` | Temporal | From most recent record | Current contact info |
-| `preferOlder` | Temporal | From oldest record | Immutable data (DOB) |
-| `preferLonger` | String | Longest string value | Names, descriptions |
-| `preferShorter` | String | Shortest non-empty string | Codes, abbreviations |
-| `concatenate` | Array | Combine all values | Tags, categories |
-| `union` | Array | Unique values only | Addresses, emails |
-| `mostFrequent` | Numeric | Most common value | Categorical data |
-| `average` | Numeric | Mean of values | Scores, ratings |
-| `sum` | Numeric | Total of values | Counts, quantities |
-| `min` | Numeric | Minimum value | Lower bounds |
-| `max` | Numeric | Maximum value | Upper bounds |
-| `custom` | Custom | User-defined function | Complex logic |
+| Strategy        | Category | Description               | Best For             |
+| --------------- | -------- | ------------------------- | -------------------- |
+| `preferFirst`   | Basic    | First non-undefined value | Consistent ordering  |
+| `preferLast`    | Basic    | Last non-undefined value  | Most recent in order |
+| `preferNonNull` | Basic    | First truthy value        | Optional fields      |
+| `preferNewer`   | Temporal | From most recent record   | Current contact info |
+| `preferOlder`   | Temporal | From oldest record        | Immutable data (DOB) |
+| `preferLonger`  | String   | Longest string value      | Names, descriptions  |
+| `preferShorter` | String   | Shortest non-empty string | Codes, abbreviations |
+| `concatenate`   | Array    | Combine all values        | Tags, categories     |
+| `union`         | Array    | Unique values only        | Addresses, emails    |
+| `mostFrequent`  | Numeric  | Most common value         | Categorical data     |
+| `average`       | Numeric  | Mean of values            | Scores, ratings      |
+| `sum`           | Numeric  | Total of values           | Counts, quantities   |
+| `min`           | Numeric  | Minimum value             | Lower bounds         |
+| `max`           | Numeric  | Maximum value             | Upper bounds         |
+| `custom`        | Custom   | User-defined function     | Complex logic        |
 
 ## Basic Strategies
 
@@ -33,12 +33,14 @@ Returns the first non-undefined value from source records in the order they were
 ```
 
 **Behavior:**
+
 - Iterates through values in order
 - Skips `undefined` values
 - Returns first valid value found
 - Respects `nullHandling` option
 
 **Example:**
+
 ```typescript
 // Source records in order: [rec-001, rec-002, rec-003]
 // Values: [undefined, 'CUST-001', 'CUST-002']
@@ -46,6 +48,7 @@ Returns the first non-undefined value from source records in the order they were
 ```
 
 **Use cases:**
+
 - Primary keys where first is authoritative
 - Records processed in priority order
 - Default values when order matters
@@ -59,17 +62,20 @@ Returns the last non-undefined value from source records.
 ```
 
 **Behavior:**
+
 - Iterates through values from end
 - Skips `undefined` values
 - Returns last valid value found
 
 **Example:**
+
 ```typescript
 // Values: ['CUST-001', 'CUST-002', undefined]
 // Result: 'CUST-002'
 ```
 
 **Use cases:**
+
 - Most recent update wins
 - Correction records at end
 - Append-only data sources
@@ -83,17 +89,20 @@ Returns the first "truthy" value, skipping null, empty strings, and other falsy 
 ```
 
 **Behavior:**
+
 - Skips `undefined`, `null`, empty strings (`''`)
 - Returns first value that passes truthy check
 - More selective than `preferFirst`
 
 **Example:**
+
 ```typescript
 // Values: [null, '', '+1-555-0100', '+1-555-0200']
 // Result: '+1-555-0100'
 ```
 
 **Use cases:**
+
 - Optional fields where any value is better than none
 - Contact information (phone, email)
 - Fallback data completion
@@ -114,15 +123,18 @@ Returns the value from the most recently updated source record.
 ```
 
 **Requirements:**
+
 - `timestampField` must be configured
 - Source records must have `updatedAt` timestamps
 
 **Behavior:**
+
 - Compares record timestamps
 - Selects value from record with latest timestamp
 - Falls back to `preferLast` if timestamps equal
 
 **Example:**
+
 ```typescript
 // Record 1: { email: 'old@example.com', updatedAt: '2023-01-01' }
 // Record 2: { email: 'new@example.com', updatedAt: '2024-01-01' }
@@ -130,6 +142,7 @@ Returns the value from the most recently updated source record.
 ```
 
 **Use cases:**
+
 - Current contact information
 - Latest status updates
 - Most recent preferences
@@ -146,10 +159,12 @@ Returns the value from the oldest source record.
 ```
 
 **Behavior:**
+
 - Compares record timestamps
 - Selects value from record with earliest timestamp
 
 **Example:**
+
 ```typescript
 // Record 1: { dob: '1985-03-15', createdAt: '2020-01-01' }
 // Record 2: { dob: '1985-03-16', createdAt: '2023-01-01' }  // Typo correction
@@ -157,6 +172,7 @@ Returns the value from the oldest source record.
 ```
 
 **Use cases:**
+
 - Immutable data (birth date, creation date)
 - Original source data
 - Historical records
@@ -186,17 +202,20 @@ Returns the longest string value among all source records.
 ```
 
 **Behavior:**
+
 - Compares string lengths
 - Selects longest non-empty string
 - Returns first on tie
 
 **Example:**
+
 ```typescript
 // Values: ['Jon', 'Jonathan', 'Johnny']
 // Result: 'Jonathan' (8 characters)
 ```
 
 **Use cases:**
+
 - Names (full name vs. nickname)
 - Descriptions (complete vs. abbreviated)
 - Any field where more data is better
@@ -210,17 +229,20 @@ Returns the shortest non-empty string value.
 ```
 
 **Behavior:**
+
 - Compares string lengths
 - Ignores empty strings
 - Selects shortest non-empty string
 
 **Example:**
+
 ```typescript
 // Values: ['California', 'CA', 'Calif.']
 // Result: 'CA' (2 characters)
 ```
 
 **Use cases:**
+
 - Codes and abbreviations
 - Normalized identifiers
 - Canonical short forms
@@ -236,11 +258,13 @@ Combines all array values into a single array.
 ```
 
 **Behavior:**
+
 - Flattens arrays from all sources
 - Preserves duplicates by default
 - Can remove duplicates with option
 
 **Options:**
+
 ```typescript
 .field('tags').strategy('concatenate').options({
   removeDuplicates: true,
@@ -249,6 +273,7 @@ Combines all array values into a single array.
 ```
 
 **Example:**
+
 ```typescript
 // Values: [['vip', 'premium'], ['vip', 'enterprise']]
 // Result: ['vip', 'premium', 'vip', 'enterprise']
@@ -256,6 +281,7 @@ Combines all array values into a single array.
 ```
 
 **Use cases:**
+
 - Tags and categories
 - Historical records
 - Audit trails
@@ -269,17 +295,20 @@ Returns unique values from all source records.
 ```
 
 **Behavior:**
+
 - Combines all arrays
 - Removes duplicates
 - Preserves order of first occurrence
 
 **Example:**
+
 ```typescript
 // Values: [['home@example.com'], ['work@example.com', 'home@example.com']]
 // Result: ['home@example.com', 'work@example.com']
 ```
 
 **Use cases:**
+
 - Multiple addresses
 - Multiple phone numbers
 - All known identifiers
@@ -295,17 +324,20 @@ Returns the value that appears most often across source records.
 ```
 
 **Behavior:**
+
 - Counts occurrences of each value
 - Returns the mode (most common)
 - First value on tie
 
 **Example:**
+
 ```typescript
 // Values: ['en', 'fr', 'en', 'en', 'de']
 // Result: 'en' (appears 3 times)
 ```
 
 **Use cases:**
+
 - Categorical data
 - User preferences
 - Consensus values
@@ -319,17 +351,20 @@ Returns the arithmetic mean of numeric values.
 ```
 
 **Behavior:**
+
 - Calculates mean of all values
 - Ignores null/undefined
 - Returns number (may have decimals)
 
 **Example:**
+
 ```typescript
 // Values: [4, 5, 3, 4]
 // Result: 4 (average of 4+5+3+4 = 16/4)
 ```
 
 **Use cases:**
+
 - Ratings and scores
 - Normalized metrics
 - Aggregated values
@@ -343,16 +378,19 @@ Returns the total sum of numeric values.
 ```
 
 **Behavior:**
+
 - Adds all numeric values
 - Ignores null/undefined
 
 **Example:**
+
 ```typescript
 // Values: [100, 250, 75]
 // Result: 425
 ```
 
 **Use cases:**
+
 - Counts and totals
 - Accumulated values
 - Aggregations
@@ -366,12 +404,14 @@ Returns the minimum numeric value.
 ```
 
 **Example:**
+
 ```typescript
 // Values: [29.99, 24.99, 34.99]
 // Result: 24.99
 ```
 
 **Use cases:**
+
 - Lower bounds
 - Earliest dates (as timestamps)
 - Minimum thresholds
@@ -385,12 +425,14 @@ Returns the maximum numeric value.
 ```
 
 **Example:**
+
 ```typescript
 // Values: [85, 92, 78]
 // Result: 92
 ```
 
 **Use cases:**
+
 - Upper bounds
 - Peak values
 - Maximum limits
@@ -475,6 +517,7 @@ Control how null and undefined values are treated:
 ```
 
 **Options:**
+
 - `'skip'` (default): Skip null and undefined, find first valid value
 - `'include'`: Treat null as a valid value (can be selected)
 - `'preferNull'`: Prefer null when present
@@ -514,6 +557,7 @@ Default: preferNonNull
 ### Common Configurations
 
 **Customer Data:**
+
 ```typescript
 .merge(merge => merge
   .timestampField('updatedAt')
@@ -527,6 +571,7 @@ Default: preferNonNull
 ```
 
 **Employee Data:**
+
 ```typescript
 .merge(merge => merge
   .timestampField('updatedAt')
@@ -539,6 +584,7 @@ Default: preferNonNull
 ```
 
 **Product Data:**
+
 ```typescript
 .merge(merge => merge
   .defaultStrategy('preferNonNull')

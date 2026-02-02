@@ -75,7 +75,7 @@ export function normalizeSSN(value: unknown): string {
   if (value === null || value === undefined) {
     return ''
   }
-  return String(value).replace(/[\s\-]/g, '')
+  return String(value).replace(/[\s-]/g, '')
 }
 
 /**
@@ -141,7 +141,7 @@ export function isKnownInvalidSSN(ssn: string): boolean {
 function createSuccessResult(
   data: ValidationOutput,
   startedAt: Date,
-  cached: boolean = false,
+  cached: boolean = false
 ): ServiceResult<ValidationOutput> {
   const completedAt = new Date()
   return {
@@ -176,7 +176,9 @@ export interface SSNValidatorOptions {
 /**
  * Default SSN validator options
  */
-const DEFAULT_OPTIONS: Required<Omit<SSNValidatorOptions, 'name' | 'description' | 'additionalInvalidSSNs'>> = {
+const DEFAULT_OPTIONS: Required<
+  Omit<SSNValidatorOptions, 'name' | 'description' | 'additionalInvalidSSNs'>
+> = {
   rejectITINPatterns: true,
 }
 
@@ -200,7 +202,7 @@ const DEFAULT_OPTIONS: Required<Omit<SSNValidatorOptions, 'name' | 'description'
  * ```
  */
 export function createSSNValidator(
-  options: SSNValidatorOptions = {},
+  options: SSNValidatorOptions = {}
 ): ValidationService {
   const {
     name = 'ssn-validator',
@@ -212,7 +214,7 @@ export function createSSNValidator(
   // Create combined invalid SSNs set
   const invalidSSNs = new Set([
     ...KNOWN_INVALID_SSNS,
-    ...additionalInvalidSSNs.map(ssn => normalizeSSN(ssn)),
+    ...additionalInvalidSSNs.map((ssn) => normalizeSSN(ssn)),
   ])
 
   return {
@@ -222,7 +224,7 @@ export function createSSNValidator(
 
     async execute(
       input: ValidationInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<ValidationOutput>> {
       const startedAt = new Date()
       const { value } = input
@@ -237,11 +239,14 @@ export function createSSNValidator(
           message: 'SSN is required',
         })
 
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'SSN is required',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'SSN is required',
+          },
+          startedAt
+        )
       }
 
       // Format check - must be exactly 9 digits
@@ -251,31 +256,38 @@ export function createSSNValidator(
       checks.push({
         name: 'format',
         passed: formatMatch && isNineDigits,
-        message: formatMatch && isNineDigits
-          ? 'Valid SSN format (9 digits)'
-          : 'SSN must be 9 digits in format XXX-XX-XXXX',
+        message:
+          formatMatch && isNineDigits
+            ? 'Valid SSN format (9 digits)'
+            : 'SSN must be 9 digits in format XXX-XX-XXXX',
       })
 
       if (!formatMatch || !isNineDigits) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Invalid SSN format',
-          suggestions: [
-            'SSN must be exactly 9 digits',
-            'Format should be XXX-XX-XXXX or XXXXXXXXX',
-          ],
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Invalid SSN format',
+            suggestions: [
+              'SSN must be exactly 9 digits',
+              'Format should be XXX-XX-XXXX or XXXXXXXXX',
+            ],
+          },
+          startedAt
+        )
       }
 
       // Parse the SSN
       const parsed = parseSSN(normalized)
       if (!parsed) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Unable to parse SSN',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Unable to parse SSN',
+          },
+          startedAt
+        )
       }
 
       // Area number validation
@@ -291,19 +303,22 @@ export function createSSNValidator(
       if (!areaValid) {
         const isITINPattern = parseInt(parsed.area, 10) >= 900
 
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: normalized,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: normalized,
+            },
+            invalidReason: isITINPattern
+              ? 'Area number 9XX is reserved and not valid for SSNs'
+              : 'Invalid area number (000 or 666 are not valid)',
+            suggestions: isITINPattern
+              ? ['This appears to be an ITIN pattern, not an SSN']
+              : ['Verify the first three digits are correct'],
           },
-          invalidReason: isITINPattern
-            ? 'Area number 9XX is reserved and not valid for SSNs'
-            : 'Invalid area number (000 or 666 are not valid)',
-          suggestions: isITINPattern
-            ? ['This appears to be an ITIN pattern, not an SSN']
-            : ['Verify the first three digits are correct'],
-        }, startedAt)
+          startedAt
+        )
       }
 
       // Group number validation
@@ -311,21 +326,22 @@ export function createSSNValidator(
       checks.push({
         name: 'group',
         passed: groupValid,
-        message: groupValid
-          ? 'Valid group number'
-          : 'Invalid group number: 00',
+        message: groupValid ? 'Valid group number' : 'Invalid group number: 00',
       })
 
       if (!groupValid) {
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: normalized,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: normalized,
+            },
+            invalidReason: 'Group number 00 is not valid',
+            suggestions: ['Verify the middle two digits are correct'],
           },
-          invalidReason: 'Group number 00 is not valid',
-          suggestions: ['Verify the middle two digits are correct'],
-        }, startedAt)
+          startedAt
+        )
       }
 
       // Serial number validation
@@ -339,15 +355,18 @@ export function createSSNValidator(
       })
 
       if (!serialValid) {
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: normalized,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: normalized,
+            },
+            invalidReason: 'Serial number 0000 is not valid',
+            suggestions: ['Verify the last four digits are correct'],
           },
-          invalidReason: 'Serial number 0000 is not valid',
-          suggestions: ['Verify the last four digits are correct'],
-        }, startedAt)
+          startedAt
+        )
       }
 
       // Known invalid SSN check
@@ -361,26 +380,34 @@ export function createSSNValidator(
       })
 
       if (isKnownInvalid) {
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: normalized,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: normalized,
+            },
+            invalidReason: 'This SSN is a known invalid or test number',
+            suggestions: [
+              'This number has been publicly disclosed and cannot be used',
+            ],
           },
-          invalidReason: 'This SSN is a known invalid or test number',
-          suggestions: ['This number has been publicly disclosed and cannot be used'],
-        }, startedAt)
+          startedAt
+        )
       }
 
       // All checks passed
-      return createSuccessResult({
-        valid: true,
-        details: {
-          checks,
-          normalizedValue: normalized,
-          confidence: 1.0,
+      return createSuccessResult(
+        {
+          valid: true,
+          details: {
+            checks,
+            normalizedValue: normalized,
+            confidence: 1.0,
+          },
         },
-      }, startedAt)
+        startedAt
+      )
     },
 
     async healthCheck(): Promise<HealthCheckResult> {
@@ -406,7 +433,9 @@ export function createSSNValidator(
           checkedAt: completedAt,
           details: {
             validFormatTestPassed: validSSN !== null,
-            invalidAreaTestPassed: invalidAreaParsed !== null && !hasValidAreaNumber(invalidAreaParsed.area),
+            invalidAreaTestPassed:
+              invalidAreaParsed !== null &&
+              !hasValidAreaNumber(invalidAreaParsed.area),
             knownInvalidTestPassed: knownInvalid,
             rejectITINPatterns,
           },

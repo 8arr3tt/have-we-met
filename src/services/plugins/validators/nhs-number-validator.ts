@@ -65,7 +65,7 @@ export function normalizeNHSNumber(value: unknown): string {
   if (value === null || value === undefined) {
     return ''
   }
-  return String(value).replace(/[\s\-]/g, '')
+  return String(value).replace(/[\s-]/g, '')
 }
 
 /**
@@ -74,7 +74,7 @@ export function normalizeNHSNumber(value: unknown): string {
 function createSuccessResult(
   data: ValidationOutput,
   startedAt: Date,
-  cached: boolean = false,
+  cached: boolean = false
 ): ServiceResult<ValidationOutput> {
   const completedAt = new Date()
   return {
@@ -117,7 +117,7 @@ export const nhsNumberValidator: ValidationService = {
 
   async execute(
     input: ValidationInput,
-    _context: ServiceContext,
+    _context: ServiceContext
   ): Promise<ServiceResult<ValidationOutput>> {
     const startedAt = new Date()
     const { value } = input
@@ -132,11 +132,14 @@ export const nhsNumberValidator: ValidationService = {
         message: 'NHS number is required',
       })
 
-      return createSuccessResult({
-        valid: false,
-        details: { checks },
-        invalidReason: 'NHS number is required',
-      }, startedAt)
+      return createSuccessResult(
+        {
+          valid: false,
+          details: { checks },
+          invalidReason: 'NHS number is required',
+        },
+        startedAt
+      )
     }
 
     // Format check - must be exactly 10 digits
@@ -152,22 +155,29 @@ export const nhsNumberValidator: ValidationService = {
     if (!formatValid) {
       // Check if it contains non-digit characters
       if (/\D/.test(normalized)) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'NHS number must contain only digits',
-          suggestions: ['Remove any letters or special characters'],
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'NHS number must contain only digits',
+            suggestions: ['Remove any letters or special characters'],
+          },
+          startedAt
+        )
       }
 
-      return createSuccessResult({
-        valid: false,
-        details: { checks },
-        invalidReason: 'NHS number must be exactly 10 digits',
-        suggestions: normalized.length < 10
-          ? ['Check if any digits are missing']
-          : ['Check if there are extra digits'],
-      }, startedAt)
+      return createSuccessResult(
+        {
+          valid: false,
+          details: { checks },
+          invalidReason: 'NHS number must be exactly 10 digits',
+          suggestions:
+            normalized.length < 10
+              ? ['Check if any digits are missing']
+              : ['Check if there are extra digits'],
+        },
+        startedAt
+      )
     }
 
     // Checksum validation using modulus 11 algorithm
@@ -175,32 +185,36 @@ export const nhsNumberValidator: ValidationService = {
     checks.push({
       name: 'checksum',
       passed: checksumValid,
-      message: checksumValid
-        ? 'Valid modulus 11 checksum'
-        : 'Invalid checksum',
+      message: checksumValid ? 'Valid modulus 11 checksum' : 'Invalid checksum',
     })
 
     if (!checksumValid) {
-      return createSuccessResult({
-        valid: false,
-        details: {
-          checks,
-          normalizedValue: normalized,
+      return createSuccessResult(
+        {
+          valid: false,
+          details: {
+            checks,
+            normalizedValue: normalized,
+          },
+          invalidReason: 'Invalid NHS number checksum',
+          suggestions: ['Verify the number was entered correctly'],
         },
-        invalidReason: 'Invalid NHS number checksum',
-        suggestions: ['Verify the number was entered correctly'],
-      }, startedAt)
+        startedAt
+      )
     }
 
     // All checks passed
-    return createSuccessResult({
-      valid: true,
-      details: {
-        checks,
-        normalizedValue: normalized,
-        confidence: 1.0,
+    return createSuccessResult(
+      {
+        valid: true,
+        details: {
+          checks,
+          normalizedValue: normalized,
+          confidence: 1.0,
+        },
       },
-    }, startedAt)
+      startedAt
+    )
   },
 
   async healthCheck(): Promise<HealthCheckResult> {
@@ -246,7 +260,7 @@ export interface NHSNumberValidatorOptions {
  * Factory function to create an NHS number validator with custom options
  */
 export function createNHSNumberValidator(
-  options: NHSNumberValidatorOptions = {},
+  options: NHSNumberValidatorOptions = {}
 ): ValidationService {
   return {
     ...nhsNumberValidator,

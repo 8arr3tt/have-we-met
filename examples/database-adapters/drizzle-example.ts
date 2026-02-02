@@ -108,7 +108,9 @@ async function patientMatchingExample() {
     }
   } catch (error) {
     console.log('Note: This example requires a configured Drizzle database')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -121,13 +123,17 @@ async function patientMatchingExample() {
     })
 
     console.log('Deduplication Results:')
-    console.log(`  Total records processed: ${deduplicationResult.totalRecords}`)
+    console.log(
+      `  Total records processed: ${deduplicationResult.totalRecords}`
+    )
     console.log(`  Definite matches: ${deduplicationResult.definiteMatches}`)
     console.log(`  Potential matches: ${deduplicationResult.potentialMatches}`)
     console.log(`  No matches: ${deduplicationResult.noMatches}`)
   } catch (error) {
     console.log('Note: This example requires a configured Drizzle database')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -168,7 +174,9 @@ async function patientMatchingExample() {
     })
   } catch (error) {
     console.log('Note: This example requires a configured Drizzle database')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -209,13 +217,17 @@ const adapter = new DrizzleAdapter(db, patients, {
   console.log('\n---\n')
   console.log('Scenario 5: Recommended database indexes\n')
 
-  console.log('For optimal performance, create these indexes on your patients table:')
+  console.log(
+    'For optimal performance, create these indexes on your patients table:'
+  )
   console.log('')
   console.log('-- Index for lastName blocking')
   console.log('CREATE INDEX idx_patients_lastname ON patients(last_name);')
   console.log('')
   console.log('-- Index for medicalRecordNumber blocking')
-  console.log('CREATE INDEX idx_patients_mrn ON patients(medical_record_number);')
+  console.log(
+    'CREATE INDEX idx_patients_mrn ON patients(medical_record_number);'
+  )
   console.log('')
   console.log('-- Index for SSN blocking')
   console.log('CREATE INDEX idx_patients_ssn ON patients(ssn);')
@@ -225,7 +237,9 @@ const adapter = new DrizzleAdapter(db, patients, {
   console.log('')
   console.log('-- Index for Soundex blocking (requires pre-computed column)')
   console.log('ALTER TABLE patients ADD COLUMN soundex_lastname VARCHAR(4);')
-  console.log('CREATE INDEX idx_patients_soundex_lastname ON patients(soundex_lastname);')
+  console.log(
+    'CREATE INDEX idx_patients_soundex_lastname ON patients(soundex_lastname);'
+  )
   console.log('')
   console.log('-- Index for birth year blocking')
   console.log('ALTER TABLE patients ADD COLUMN birth_year INT;')

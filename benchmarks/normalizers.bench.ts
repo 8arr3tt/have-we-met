@@ -31,7 +31,7 @@ const testData = {
     '  JOHN   DOE  ',
     'DR. JANE SMITH',
     'Mr. Robert Johnson Jr.',
-    'Mary-Jane O\'Connor',
+    "Mary-Jane O'Connor",
     'Jean-Claude Van Damme',
   ],
   emails: [
@@ -129,7 +129,7 @@ describe('Name Normalizer Performance', () => {
   })
 
   bench('normalizeName: name with special characters', () => {
-    normalizeName('Mary-Jane O\'Connor')
+    normalizeName("Mary-Jane O'Connor")
   })
 
   bench('normalizeName: batch 1000 names', () => {

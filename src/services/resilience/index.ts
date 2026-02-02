@@ -68,8 +68,18 @@ export {
 export type { CircuitBreakerInput as ExtendedCircuitBreakerConfig } from './circuit-breaker.js'
 
 // Re-export types from main types module
-import type { RetryConfig, CircuitBreakerConfig, CircuitState, CircuitBreakerStatus } from '../types.js'
-export type { RetryConfig, CircuitBreakerConfig, CircuitState, CircuitBreakerStatus }
+import type {
+  RetryConfig,
+  CircuitBreakerConfig,
+  CircuitState,
+  CircuitBreakerStatus,
+} from '../types.js'
+export type {
+  RetryConfig,
+  CircuitBreakerConfig,
+  CircuitState,
+  CircuitBreakerStatus,
+}
 
 import type { TimeoutOptions } from './timeout.js'
 import type { ExtendedRetryConfig } from './retry.js'
@@ -139,14 +149,15 @@ export interface ResilienceResult<T> {
  */
 export async function withResilience<T>(
   fn: () => Promise<T>,
-  config: ResilienceConfig,
+  config: ResilienceConfig
 ): Promise<T> {
   // Get or create circuit breaker
   let breaker: CircuitBreaker | undefined
   if (config.circuitBreaker) {
-    breaker = config.circuitBreaker instanceof CircuitBreaker
-      ? config.circuitBreaker
-      : new CircuitBreaker(config.circuitBreaker)
+    breaker =
+      config.circuitBreaker instanceof CircuitBreaker
+        ? config.circuitBreaker
+        : new CircuitBreaker(config.circuitBreaker)
   }
 
   // Build the operation with timeout if configured
@@ -176,7 +187,7 @@ export async function withResilience<T>(
  */
 export async function withResilienceDetailed<T>(
   fn: () => Promise<T>,
-  config: ResilienceConfig,
+  config: ResilienceConfig
 ): Promise<ResilienceResult<T>> {
   const detailedStartTime = Date.now()
   let attempts = 1
@@ -186,9 +197,10 @@ export async function withResilienceDetailed<T>(
   // Get or create circuit breaker
   let breaker: CircuitBreaker | undefined
   if (config.circuitBreaker) {
-    breaker = config.circuitBreaker instanceof CircuitBreaker
-      ? config.circuitBreaker
-      : new CircuitBreaker(config.circuitBreaker)
+    breaker =
+      config.circuitBreaker instanceof CircuitBreaker
+        ? config.circuitBreaker
+        : new CircuitBreaker(config.circuitBreaker)
     circuitBreakerInvolved = true
     circuitState = breaker.state
   }
@@ -209,20 +221,22 @@ export async function withResilienceDetailed<T>(
           try {
             return await timedOperation()
           } catch (error) {
-            lastError = error instanceof Error ? error : new Error(String(error))
+            lastError =
+              error instanceof Error ? error : new Error(String(error))
 
             if (attempt === maxAttempts) {
               break
             }
 
             // Calculate delay
-            const { calculateRetryDelay, shouldRetryError } = await import('./retry.js')
+            const { calculateRetryDelay, shouldRetryError } =
+              await import('./retry.js')
             if (!shouldRetryError(lastError, config.retry!)) {
               break
             }
 
             const delay = calculateRetryDelay(attempt, config.retry!)
-            await new Promise(resolve => setTimeout(resolve, delay))
+            await new Promise((resolve) => setTimeout(resolve, delay))
           }
         }
 
@@ -271,7 +285,7 @@ export async function withResilienceDetailed<T>(
  */
 export function createResilient<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
-  config: ResilienceConfig,
+  config: ResilienceConfig
 ): {
   (...args: TArgs): Promise<TResult>
   breaker?: CircuitBreaker
@@ -311,7 +325,7 @@ export function createResilient<TArgs extends unknown[], TResult>(
 export async function executeWithAbortableTimeout<T>(
   fn: (signal: AbortSignal) => Promise<T>,
   timeoutMs: number,
-  serviceName: string = 'unknown',
+  serviceName: string = 'unknown'
 ): Promise<T> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)

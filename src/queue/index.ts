@@ -55,8 +55,4 @@ export {
 } from './reporter.js'
 
 // Alerts
-export {
-  QueueAlerts,
-  type AlertSeverity,
-  type QueueAlert,
-} from './alerts.js'
+export { QueueAlerts, type AlertSeverity, type QueueAlert } from './alerts.js'

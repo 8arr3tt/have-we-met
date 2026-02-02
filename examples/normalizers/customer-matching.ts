@@ -153,7 +153,9 @@ webFormSubmissions.forEach((submission) => {
   } else if (result.outcome === 'review') {
     console.log(`  ? Potential matches found:`)
     result.candidates.forEach((candidate) => {
-      console.log(`    - ${candidate.record.id}: ${candidate.score.total.toFixed(1)}%`)
+      console.log(
+        `    - ${candidate.record.id}: ${candidate.score.total.toFixed(1)}%`
+      )
     })
     console.log(`  ? Requires manual review`)
   } else {

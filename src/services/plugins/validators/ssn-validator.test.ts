@@ -15,10 +15,11 @@ import {
   isKnownInvalidSSN,
 } from './ssn-validator.js'
 import type { ServiceContext } from '../../types.js'
+import type { ResolverConfig } from '../../../types/config.js'
 
 const createMockContext = (): ServiceContext => ({
   record: {},
-  config: {} as any,
+  config: {} as unknown as ResolverConfig,
   metadata: {
     correlationId: 'test-123',
     startedAt: new Date(),
@@ -162,7 +163,7 @@ describe('SSN Validator', () => {
     it('validates correct SSN format', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '078-05-1121' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -174,7 +175,7 @@ describe('SSN Validator', () => {
     it('validates SSN without dashes', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '078051121' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -184,7 +185,7 @@ describe('SSN Validator', () => {
     it('rejects empty values', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -195,7 +196,7 @@ describe('SSN Validator', () => {
     it('rejects invalid format', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '12345' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -207,7 +208,7 @@ describe('SSN Validator', () => {
       // Area 000
       const result000 = await ssnValidator.execute(
         { field: 'ssn', value: '000-12-3456' },
-        context,
+        context
       )
       expect(result000.data?.valid).toBe(false)
       expect(result000.data?.invalidReason).toContain('000')
@@ -215,7 +216,7 @@ describe('SSN Validator', () => {
       // Area 666
       const result666 = await ssnValidator.execute(
         { field: 'ssn', value: '666-12-3456' },
-        context,
+        context
       )
       expect(result666.data?.valid).toBe(false)
       expect(result666.data?.invalidReason).toContain('666')
@@ -223,7 +224,7 @@ describe('SSN Validator', () => {
       // Area 900+
       const result900 = await ssnValidator.execute(
         { field: 'ssn', value: '900-12-3456' },
-        context,
+        context
       )
       expect(result900.data?.valid).toBe(false)
       expect(result900.data?.invalidReason).toContain('9XX')
@@ -232,7 +233,7 @@ describe('SSN Validator', () => {
     it('rejects invalid group number 00', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '123-00-4567' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -243,7 +244,7 @@ describe('SSN Validator', () => {
     it('rejects invalid serial number 0000', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '123-45-0000' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -255,7 +256,7 @@ describe('SSN Validator', () => {
       // Woolworth card SSN
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '078-05-1120' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -266,7 +267,7 @@ describe('SSN Validator', () => {
     it('rejects sequential pattern SSNs', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '123-45-6789' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -276,7 +277,7 @@ describe('SSN Validator', () => {
     it('rejects repeated digit SSNs', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '111-11-1111' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -286,7 +287,7 @@ describe('SSN Validator', () => {
     it('returns validation checks detail', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '078-05-1121' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -297,7 +298,7 @@ describe('SSN Validator', () => {
     it('tracks timing information', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '078-05-1121' },
-        context,
+        context
       )
 
       expect(result.timing).toBeDefined()
@@ -333,7 +334,7 @@ describe('SSN Validator', () => {
 
       const result = await validator.execute(
         { field: 'ssn', value: '111-22-3333' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -365,7 +366,7 @@ describe('SSN Validator', () => {
     it('handles whitespace-only input', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '   ' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -378,7 +379,7 @@ describe('SSN Validator', () => {
       // Extra spaces around dashes will not match the expected format
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '078-05-1121' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -388,7 +389,7 @@ describe('SSN Validator', () => {
     it('handles leading zeros', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '001-01-0001' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -398,7 +399,7 @@ describe('SSN Validator', () => {
     it('rejects non-numeric characters', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '12A-45-6789' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -408,7 +409,7 @@ describe('SSN Validator', () => {
     it('provides helpful suggestions for invalid SSNs', async () => {
       const result = await ssnValidator.execute(
         { field: 'ssn', value: '000-12-3456' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)

@@ -9,7 +9,9 @@ import {
 describe('Queue Options', () => {
   describe('DEFAULT_QUEUE_OPTIONS', () => {
     it('has sensible defaults', () => {
-      expect(DEFAULT_QUEUE_OPTIONS.autoExpireAfter).toBe(30 * 24 * 60 * 60 * 1000) // 30 days
+      expect(DEFAULT_QUEUE_OPTIONS.autoExpireAfter).toBe(
+        30 * 24 * 60 * 60 * 1000
+      ) // 30 days
       expect(DEFAULT_QUEUE_OPTIONS.defaultPriority).toBe(0)
       expect(DEFAULT_QUEUE_OPTIONS.enableMetrics).toBe(true)
       expect(DEFAULT_QUEUE_OPTIONS.alertThresholds).toBeDefined()
@@ -43,7 +45,9 @@ describe('Queue Options', () => {
       expect(merged.autoExpireAfter).toBe(7 * 24 * 60 * 60 * 1000)
       expect(merged.defaultPriority).toBe(DEFAULT_QUEUE_OPTIONS.defaultPriority)
       expect(merged.enableMetrics).toBe(DEFAULT_QUEUE_OPTIONS.enableMetrics)
-      expect(merged.alertThresholds).toEqual(DEFAULT_QUEUE_OPTIONS.alertThresholds)
+      expect(merged.alertThresholds).toEqual(
+        DEFAULT_QUEUE_OPTIONS.alertThresholds
+      )
     })
 
     it('merges custom priority', () => {
@@ -75,7 +79,9 @@ describe('Queue Options', () => {
       const merged = mergeQueueOptions(options)
 
       expect(merged.alertThresholds.maxQueueSize).toBe(500)
-      expect(merged.alertThresholds.maxAge).toBe(DEFAULT_QUEUE_OPTIONS.alertThresholds.maxAge)
+      expect(merged.alertThresholds.maxAge).toBe(
+        DEFAULT_QUEUE_OPTIONS.alertThresholds.maxAge
+      )
       expect(merged.alertThresholds.minThroughput).toBe(
         DEFAULT_QUEUE_OPTIONS.alertThresholds.minThroughput
       )

@@ -76,7 +76,10 @@ export class BlockGenerator {
    * @param uniqueRecordCount - Optional count of unique records (for strategies where records appear in multiple blocks)
    * @returns Blocking statistics
    */
-  calculateStats<T>(blockSet: BlockSet<T>, uniqueRecordCount?: number): BlockingStats {
+  calculateStats<T>(
+    blockSet: BlockSet<T>,
+    uniqueRecordCount?: number
+  ): BlockingStats {
     const blocks = Array.from(blockSet.values())
     const totalBlocks = blocks.length
 

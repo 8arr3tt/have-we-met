@@ -3,7 +3,7 @@
  * @module core/resolver-service-integration.test
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { HaveWeMet } from '../builder/resolver-builder.js'
 import type {
   ValidationService,
@@ -34,7 +34,13 @@ function createMockValidationService(
     errorMessage?: string
   } = {}
 ): ValidationService {
-  const { valid = true, normalizedValue, invalidReason, shouldFail = false, errorMessage } = options
+  const {
+    valid = true,
+    normalizedValue,
+    invalidReason,
+    shouldFail = false,
+    errorMessage,
+  } = options
 
   return {
     name,
@@ -49,7 +55,9 @@ function createMockValidationService(
         data: {
           valid,
           details: {
-            checks: [{ name: 'mock-check', passed: valid, message: 'Mock check' }],
+            checks: [
+              { name: 'mock-check', passed: valid, message: 'Mock check' },
+            ],
             normalizedValue,
             confidence: valid ? 1.0 : 0.0,
           },
@@ -140,6 +148,7 @@ function createMockCustomService(
 }
 
 interface TestPerson {
+  [key: string]: unknown
   id?: string
   firstName: string
   lastName: string
@@ -158,20 +167,17 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
-          services
-            .validate('email')
-            .using(validator)
-            .onInvalid('continue'),
+          services.validate('email').using(validator).onInvalid('continue')
         )
         .build()
 
@@ -186,7 +192,10 @@ describe('Resolver Service Integration', () => {
         { firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' },
       ]
 
-      const result = await resolver.resolveWithServices(candidateRecord, existingRecords)
+      const result = await resolver.resolveWithServices(
+        candidateRecord,
+        existingRecords
+      )
 
       expect(result.rejected).toBe(false)
       expect(result.serviceResults).toBeDefined()
@@ -206,27 +215,27 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .validate('email')
             .using(validator)
             .onInvalid('reject')
-            .required(true),
+            .required(true)
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'invalid-email' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(true)
@@ -245,26 +254,23 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
-          services
-            .validate('email')
-            .using(validator)
-            .onInvalid('continue'),
+          services.validate('email').using(validator).onInvalid('continue')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(false)
@@ -282,26 +288,23 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
-          services
-            .validate('email')
-            .using(validator)
-            .onInvalid('flag'),
+          services.validate('email').using(validator).onInvalid('flag')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(false)
@@ -322,27 +325,27 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .lookup('email')
             .using(lookup)
             .mapFields({ normalizedEmail: 'email' })
-            .onNotFound('continue'),
+            .onNotFound('continue')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'JOHN@EXAMPLE.COM' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(false)
@@ -364,30 +367,32 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .lookup('email')
             .using(lookup)
-            .mapFields({ extraField: 'extraField' }),
+            .mapFields({ extraField: 'extraField' })
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' }],
+        [{ firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' }]
       )
 
       expect(result.enrichedRecord).toBeDefined()
-      expect((result.enrichedRecord as Record<string, unknown>)?.extraField).toBe('enriched-value')
+      expect(
+        (result.enrichedRecord as Record<string, unknown>)?.extraField
+      ).toBe('enriched-value')
     })
   })
 
@@ -403,26 +408,26 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .custom('fraud-check')
             .using(customService)
-            .executeAt('post-match'),
+            .executeAt('post-match')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(false)
@@ -442,26 +447,26 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .custom('score-adjuster')
             .using(customService)
-            .executeAt('post-match'),
+            .executeAt('post-match')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(false)
@@ -482,27 +487,27 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .custom('fraud-detector')
             .using(customService)
             .executeAt('post-match')
-            .required(true),
+            .required(true)
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(true)
@@ -533,26 +538,26 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .custom('context-checker')
             .using(customService)
-            .executeAt('post-match'),
+            .executeAt('post-match')
         )
         .build()
 
       await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(customService.execute).toHaveBeenCalled()
@@ -571,14 +576,14 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
@@ -588,13 +593,13 @@ describe('Resolver Service Integration', () => {
             .using(lookup)
             .custom('custom-1')
             .using(custom)
-            .executeAt('post-match'),
+            .executeAt('post-match')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.serviceResults).toBeDefined()
@@ -618,14 +623,14 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
@@ -634,13 +639,13 @@ describe('Resolver Service Integration', () => {
             .executeAt('pre-match')
             .custom('custom-2')
             .using(custom2)
-            .executeAt('post-match'),
+            .executeAt('post-match')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.serviceFlags).toBeDefined()
@@ -657,23 +662,21 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.serviceExecutionTimeMs).toBeDefined()
@@ -688,20 +691,20 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 20 }),
+            .thresholds({ noMatch: 10, definiteMatch: 20 })
         )
         .build()
 
       const results = resolver.resolve(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(results).toHaveLength(1)
@@ -714,20 +717,20 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 20 }),
+            .thresholds({ noMatch: 10, definiteMatch: 20 })
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(false)
@@ -744,24 +747,22 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
         [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
-        { skipServices: true },
+        { skipServices: true }
       )
 
       expect(validator.execute).not.toHaveBeenCalled()
@@ -772,36 +773,39 @@ describe('Resolver Service Integration', () => {
 
   describe('service error handling', () => {
     it('handles service failures gracefully with onFailure: continue', async () => {
-      const failingValidator = createMockValidationService('failing-validator', {
-        shouldFail: true,
-        errorMessage: 'Service is down',
-      })
+      const failingValidator = createMockValidationService(
+        'failing-validator',
+        {
+          shouldFail: true,
+          errorMessage: 'Service is down',
+        }
+      )
 
       const resolver = HaveWeMet.create<TestPerson>()
         .schema((schema) =>
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .validate('email')
             .using(failingValidator)
-            .onFailure('continue'),
+            .onFailure('continue')
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       // Should continue despite service failure
@@ -810,37 +814,40 @@ describe('Resolver Service Integration', () => {
     })
 
     it('rejects on service failure with onFailure: reject and required: true', async () => {
-      const failingValidator = createMockValidationService('failing-validator', {
-        shouldFail: true,
-        errorMessage: 'Service is down',
-      })
+      const failingValidator = createMockValidationService(
+        'failing-validator',
+        {
+          shouldFail: true,
+          errorMessage: 'Service is down',
+        }
+      )
 
       const resolver = HaveWeMet.create<TestPerson>()
         .schema((schema) =>
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .services((services) =>
           services
             .validate('email')
             .using(failingValidator)
             .onFailure('reject')
-            .required(true),
+            .required(true)
         )
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }],
+        [{ firstName: 'John', lastName: 'Smith', email: 'john@example.com' }]
       )
 
       expect(result.rejected).toBe(true)
@@ -855,14 +862,14 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .build()
 
@@ -877,18 +884,16 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       expect(resolver.hasServices).toBe(true)
@@ -918,18 +923,16 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       const healthStatus = await resolver.getServiceHealthStatus()
@@ -944,19 +947,19 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .build()
 
       await expect(resolver.getServiceHealthStatus()).rejects.toThrow(
-        'Services are not configured',
+        'Services are not configured'
       )
     })
 
@@ -968,18 +971,16 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       const circuitStatus = resolver.getServiceCircuitStatus()
@@ -994,19 +995,19 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .build()
 
       expect(() => resolver.getServiceCircuitStatus()).toThrow(
-        'Services are not configured',
+        'Services are not configured'
       )
     })
   })
@@ -1031,18 +1032,16 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       await resolver.disposeServices()
@@ -1056,14 +1055,14 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
         .build()
 
@@ -1081,23 +1080,21 @@ describe('Resolver Service Integration', () => {
           schema
             .field('firstName', { type: 'name', component: 'first' })
             .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' }),
+            .field('email', { type: 'email' })
         )
         .matching((match) =>
           match
             .field('email')
             .strategy('exact')
             .weight(20)
-            .thresholds({ noMatch: 10, definiteMatch: 40 }),
+            .thresholds({ noMatch: 10, definiteMatch: 40 })
         )
-        .services((services) =>
-          services.validate('email').using(validator),
-        )
+        .services((services) => services.validate('email').using(validator))
         .build()
 
       const result = await resolver.resolveWithServices(
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        [],
+        []
       )
 
       expect(result.rejected).toBe(false)

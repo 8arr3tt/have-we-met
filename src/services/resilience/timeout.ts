@@ -54,7 +54,7 @@ export interface TimedResult<T> {
  */
 export async function withTimeout<T>(
   promise: Promise<T>,
-  options: TimeoutOptions,
+  options: TimeoutOptions
 ): Promise<T> {
   const { timeoutMs, serviceName = 'unknown', signal } = options
 
@@ -64,7 +64,9 @@ export async function withTimeout<T>(
 
   // Check if already aborted
   if (signal?.aborted) {
-    throw new ServiceTimeoutError(serviceName, 0, { reason: 'Operation was aborted before starting' })
+    throw new ServiceTimeoutError(serviceName, 0, {
+      reason: 'Operation was aborted before starting',
+    })
   }
 
   return new Promise<T>((resolve, reject) => {
@@ -76,7 +78,10 @@ export async function withTimeout<T>(
         clearTimeout(timeoutIdHolder.id)
       }
       if (signal && 'removeEventListener' in signal) {
-        (signal as unknown as EventTarget).removeEventListener('abort', onAbort)
+        ;(signal as unknown as EventTarget).removeEventListener(
+          'abort',
+          onAbort
+        )
       }
     }
 
@@ -84,7 +89,11 @@ export async function withTimeout<T>(
       if (settled) return
       settled = true
       cleanup()
-      reject(new ServiceTimeoutError(serviceName, timeoutMs, { reason: 'Operation was aborted' }))
+      reject(
+        new ServiceTimeoutError(serviceName, timeoutMs, {
+          reason: 'Operation was aborted',
+        })
+      )
     }
 
     const onTimeout = () => {
@@ -113,7 +122,7 @@ export async function withTimeout<T>(
 
     // Set up abort listener
     if (signal && 'addEventListener' in signal) {
-      (signal as unknown as EventTarget).addEventListener('abort', onAbort)
+      ;(signal as unknown as EventTarget).addEventListener('abort', onAbort)
     }
 
     // Handle promise resolution/rejection
@@ -139,7 +148,7 @@ export async function withTimeout<T>(
  */
 export function withTimeoutFn<T>(
   fn: () => Promise<T>,
-  options: TimeoutOptions,
+  options: TimeoutOptions
 ): () => Promise<T> {
   return () => withTimeout(fn(), options)
 }
@@ -162,7 +171,7 @@ export function withTimeoutFn<T>(
  */
 export async function withTimeoutTimed<T>(
   promise: Promise<T>,
-  options: TimeoutOptions,
+  options: TimeoutOptions
 ): Promise<TimedResult<T>> {
   const startTime = Date.now()
 
@@ -174,7 +183,10 @@ export async function withTimeoutTimed<T>(
       aborted: false,
     }
   } catch (error) {
-    if (error instanceof ServiceTimeoutError && error.context?.reason === 'Operation was aborted') {
+    if (
+      error instanceof ServiceTimeoutError &&
+      error.context?.reason === 'Operation was aborted'
+    ) {
       throw Object.assign(error, { durationMs: Date.now() - startTime })
     }
     throw error
@@ -200,7 +212,7 @@ export async function withTimeoutTimed<T>(
  */
 export function createTimeoutController(
   timeoutMs: number,
-  serviceName: string = 'unknown',
+  serviceName: string = 'unknown'
 ): TimeoutController {
   return new TimeoutController(timeoutMs, serviceName)
 }

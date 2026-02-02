@@ -51,12 +51,15 @@ describe('Integration: Service Resilience', () => {
     it('times out slow services', async () => {
       vi.useRealTimers() // Use real timers for this test
 
-      const slowService = createSlowMock(200, { found: true, data: { slow: true } })
+      const slowService = createSlowMock(200, {
+        found: true,
+        data: { slow: true },
+      })
 
       const servicesConfig = createServiceBuilder<TestRecord>()
         .lookup('email')
-          .using(slowService)
-          .timeout(50) // 50ms timeout, service takes 200ms
+        .using(slowService)
+        .timeout(50) // 50ms timeout, service takes 200ms
         .build()
 
       const executor = createServiceExecutor({
@@ -68,7 +71,10 @@ describe('Integration: Service Resilience', () => {
         executor.register(config)
       }
 
-      const result = await executor.executePreMatch({ name: 'Test', email: 'test@example.com' })
+      const result = await executor.executePreMatch({
+        name: 'Test',
+        email: 'test@example.com',
+      })
 
       // Should fail due to timeout
       expect(result.results['mock-lookup'].success).toBe(false)
@@ -80,12 +86,15 @@ describe('Integration: Service Resilience', () => {
     it('succeeds when operation completes within timeout', async () => {
       vi.useRealTimers()
 
-      const fastService = createSlowMock(10, { found: true, data: { fast: true } })
+      const fastService = createSlowMock(10, {
+        found: true,
+        data: { fast: true },
+      })
 
       const servicesConfig = createServiceBuilder<TestRecord>()
         .lookup('email')
-          .using(fastService)
-          .timeout(1000) // 1s timeout, service takes 10ms
+        .using(fastService)
+        .timeout(1000) // 1s timeout, service takes 10ms
         .build()
 
       const executor = createServiceExecutor({
@@ -97,7 +106,10 @@ describe('Integration: Service Resilience', () => {
         executor.register(config)
       }
 
-      const result = await executor.executePreMatch({ name: 'Test', email: 'test@example.com' })
+      const result = await executor.executePreMatch({
+        name: 'Test',
+        email: 'test@example.com',
+      })
 
       expect(result.results['mock-lookup'].success).toBe(true)
       expect(result.results['mock-lookup'].data?.found).toBe(true)
@@ -109,12 +121,12 @@ describe('Integration: Service Resilience', () => {
       vi.useRealTimers()
 
       const slowOperation = async (): Promise<string> => {
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
         return 'completed'
       }
 
       await expect(
-        withTimeout(slowOperation(), { timeoutMs: 20, serviceName: 'test' }),
+        withTimeout(slowOperation(), { timeoutMs: 20, serviceName: 'test' })
       ).rejects.toThrow(ServiceTimeoutError)
     })
 
@@ -122,11 +134,14 @@ describe('Integration: Service Resilience', () => {
       vi.useRealTimers()
 
       const fastOperation = async (): Promise<string> => {
-        await new Promise(resolve => setTimeout(resolve, 10))
+        await new Promise((resolve) => setTimeout(resolve, 10))
         return 'completed'
       }
 
-      const result = await withTimeout(fastOperation(), { timeoutMs: 500, serviceName: 'test' })
+      const result = await withTimeout(fastOperation(), {
+        timeoutMs: 500,
+        serviceName: 'test',
+      })
       expect(result).toBe('completed')
     })
   })
@@ -172,7 +187,7 @@ describe('Integration: Service Resilience', () => {
           backoffMultiplier: 2,
           maxDelayMs: 50,
           retryOn: ['all'],
-        }),
+        })
       ).rejects.toThrow('Permanent failure')
 
       expect(attemptCount).toBe(3)
@@ -219,14 +234,14 @@ describe('Integration: Service Resilience', () => {
 
       const servicesConfig = createServiceBuilder<TestRecord>()
         .lookup('email')
-          .using(flakyService)
-          .retry({
-            maxAttempts: 5,
-            initialDelayMs: 10,
-            backoffMultiplier: 2,
-            maxDelayMs: 100,
-          })
-          .onFailure('continue')
+        .using(flakyService)
+        .retry({
+          maxAttempts: 5,
+          initialDelayMs: 10,
+          backoffMultiplier: 2,
+          maxDelayMs: 100,
+        })
+        .onFailure('continue')
         .build()
 
       const executor = createServiceExecutor({
@@ -242,7 +257,10 @@ describe('Integration: Service Resilience', () => {
       let successCount = 0
       for (let i = 0; i < 10; i++) {
         flakyService.reset()
-        const result = await executor.executePreMatch({ name: 'Test', email: `test${i}@example.com` })
+        const result = await executor.executePreMatch({
+          name: 'Test',
+          email: `test${i}@example.com`,
+        })
         if (result.results['mock-lookup'].success) {
           successCount++
         }
@@ -311,7 +329,7 @@ describe('Integration: Service Resilience', () => {
       const startTime = Date.now()
       try {
         await breaker.execute(async () => {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000))
           return 'should not reach'
         })
       } catch (error) {
@@ -345,7 +363,7 @@ describe('Integration: Service Resilience', () => {
       expect(breaker.state).toBe('open')
 
       // Wait for reset timeout
-      await new Promise(resolve => setTimeout(resolve, 150))
+      await new Promise((resolve) => setTimeout(resolve, 150))
 
       // Next call should transition to half-open
       try {
@@ -384,7 +402,7 @@ describe('Integration: Service Resilience', () => {
       expect(breaker.state).toBe('open')
 
       // Wait for reset timeout
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Success calls to close the circuit
       for (let i = 0; i < 2; i++) {
@@ -404,8 +422,8 @@ describe('Integration: Service Resilience', () => {
       // First call succeeds and caches
       const servicesConfig = createServiceBuilder<TestRecord>()
         .lookup('email')
-          .using(mockLookup)
-          .cache({ enabled: true, ttlSeconds: 60, staleOnError: true })
+        .using(mockLookup)
+        .cache({ enabled: true, ttlSeconds: 60, staleOnError: true })
         .build()
 
       const executor = createServiceExecutor({
@@ -419,7 +437,10 @@ describe('Integration: Service Resilience', () => {
       }
 
       // First call - should succeed and cache
-      const firstResult = await executor.executePreMatch({ name: 'Test', email: 'test@example.com' })
+      const firstResult = await executor.executePreMatch({
+        name: 'Test',
+        email: 'test@example.com',
+      })
       expect(firstResult.results['mock-lookup'].success).toBe(true)
 
       // Note: Full cache implementation would need more complex testing
@@ -489,7 +510,7 @@ describe('Integration: Service Resilience', () => {
               maxDelayMs: 50,
             },
             circuitBreaker: breaker,
-          },
+          }
         )
       } catch {
         // Expected
@@ -507,7 +528,7 @@ describe('Integration: Service Resilience', () => {
             },
             {
               circuitBreaker: breaker,
-            },
+            }
           )
         } catch {
           // Expected
@@ -594,17 +615,14 @@ describe('Integration: Service Resilience', () => {
     it('exposes circuit breaker for monitoring', async () => {
       vi.useRealTimers()
 
-      const resilientFn = createResilient(
-        async (x: number) => x * 2,
-        {
-          circuitBreaker: {
-            failureThreshold: 3,
-            resetTimeoutMs: 1000,
-            successThreshold: 2,
-            failureWindowMs: 5000,
-          },
+      const resilientFn = createResilient(async (x: number) => x * 2, {
+        circuitBreaker: {
+          failureThreshold: 3,
+          resetTimeoutMs: 1000,
+          successThreshold: 2,
+          failureWindowMs: 5000,
         },
-      )
+      })
 
       expect(resilientFn.breaker).toBeDefined()
       expect(resilientFn.breaker?.state).toBe('closed')
@@ -625,8 +643,8 @@ describe('Integration: Service Resilience', () => {
 
       const servicesConfig = createServiceBuilder<TestRecord>()
         .lookup('email')
-          .using(fastService)
-          .cache({ enabled: true, ttlSeconds: 60 })
+        .using(fastService)
+        .cache({ enabled: true, ttlSeconds: 60 })
         .build()
 
       const executor = createServiceExecutor({
@@ -643,7 +661,10 @@ describe('Integration: Service Resilience', () => {
 
       for (let i = 0; i < 10; i++) {
         const start = Date.now()
-        await executor.executePreMatch({ name: 'Test', email: 'test@example.com' })
+        await executor.executePreMatch({
+          name: 'Test',
+          email: 'test@example.com',
+        })
         timings.push(Date.now() - start)
       }
 
@@ -690,14 +711,14 @@ describe('Integration: Service Resilience', () => {
 
       const servicesConfig = createServiceBuilder<TestRecord>()
         .lookup('email')
-          .using(fastLookup)
-          .timeout(1000)
-          .retry({
-            maxAttempts: 2,
-            initialDelayMs: 10,
-            backoffMultiplier: 2,
-            maxDelayMs: 50,
-          })
+        .using(fastLookup)
+        .timeout(1000)
+        .retry({
+          maxAttempts: 2,
+          initialDelayMs: 10,
+          backoffMultiplier: 2,
+          maxDelayMs: 50,
+        })
         .build()
 
       const executor = createServiceExecutor({
@@ -710,7 +731,10 @@ describe('Integration: Service Resilience', () => {
       }
 
       const startTime = Date.now()
-      const result = await executor.executePreMatch({ name: 'Test', email: 'test@example.com' })
+      const result = await executor.executePreMatch({
+        name: 'Test',
+        email: 'test@example.com',
+      })
       const duration = Date.now() - startTime
 
       expect(result.proceed).toBe(true)

@@ -11,6 +11,7 @@ External services are categorized into three types:
 3. **Custom Services** - Arbitrary processing (e.g., fraud detection, risk scoring)
 
 Services integrate into the resolution workflow at two points:
+
 - **Pre-match**: Execute before matching to validate inputs or enrich data
 - **Post-match**: Execute after matching to adjust scores or flag results
 
@@ -24,43 +25,57 @@ import {
   createAddressStandardization,
 } from 'have-we-met/services'
 
-const resolver = HaveWeMet
-  .schema({
-    firstName: { type: 'name', component: 'first' },
-    lastName: { type: 'name', component: 'last' },
-    nhsNumber: { type: 'string' },
-    email: { type: 'email' },
-    address: { type: 'address' }
-  })
-  .matching(match => match
-    .field('nhsNumber').strategy('exact').weight(25)
-    .field('email').strategy('exact').weight(15)
-    .field('firstName').strategy('jaro-winkler').weight(10)
-    .field('lastName').strategy('jaro-winkler').weight(10)
+const resolver = HaveWeMet.schema({
+  firstName: { type: 'name', component: 'first' },
+  lastName: { type: 'name', component: 'last' },
+  nhsNumber: { type: 'string' },
+  email: { type: 'email' },
+  address: { type: 'address' },
+})
+  .matching((match) =>
+    match
+      .field('nhsNumber')
+      .strategy('exact')
+      .weight(25)
+      .field('email')
+      .strategy('exact')
+      .weight(15)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
   )
-  .services(services => services
-    .defaultTimeout(5000)
-    .defaultRetry({ maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 1000 })
-    .caching(true)
+  .services((services) =>
+    services
+      .defaultTimeout(5000)
+      .defaultRetry({
+        maxAttempts: 3,
+        initialDelayMs: 100,
+        backoffMultiplier: 2,
+        maxDelayMs: 1000,
+      })
+      .caching(true)
 
-    // Validate NHS number before matching
-    .validate('nhsNumber')
+      // Validate NHS number before matching
+      .validate('nhsNumber')
       .using(nhsNumberValidator)
       .onInvalid('reject')
       .required(true)
 
-    // Validate email format
-    .validate('email')
+      // Validate email format
+      .validate('email')
       .using(emailValidator)
       .onInvalid('flag')
 
-    // Enrich address data
-    .lookup('address')
+      // Enrich address data
+      .lookup('address')
       .using(createAddressStandardization({ provider: 'mock' }))
       .mapFields({
-        'streetAddress': 'address.street',
-        'city': 'address.city',
-        'postalCode': 'address.postcode'
+        streetAddress: 'address.street',
+        city: 'address.city',
+        postalCode: 'address.postcode',
       })
       .onNotFound('continue')
   )
@@ -80,29 +95,33 @@ const result = await resolver.resolve(newRecord)
 Validation services verify identifier values against format rules, checksums, or external registries.
 
 ```typescript
-interface ValidationService extends ServicePlugin<ValidationInput, ValidationOutput> {
+interface ValidationService extends ServicePlugin<
+  ValidationInput,
+  ValidationOutput
+> {
   type: 'validation'
 }
 
 interface ValidationInput {
-  field: string          // Field being validated
-  value: unknown         // Value to validate
+  field: string // Field being validated
+  value: unknown // Value to validate
   context?: Record<string, unknown>
 }
 
 interface ValidationOutput {
-  valid: boolean         // Whether the value is valid
+  valid: boolean // Whether the value is valid
   details?: {
-    checks: ValidationCheck[]      // Individual validation checks
-    normalizedValue?: unknown      // Normalized/corrected value
-    confidence?: number            // Confidence score (0-1)
+    checks: ValidationCheck[] // Individual validation checks
+    normalizedValue?: unknown // Normalized/corrected value
+    confidence?: number // Confidence score (0-1)
   }
-  invalidReason?: string           // Why validation failed
-  suggestions?: string[]           // Suggestions for correction
+  invalidReason?: string // Why validation failed
+  suggestions?: string[] // Suggestions for correction
 }
 ```
 
 **Built-in Validators:**
+
 - `nhsNumberValidator` - UK NHS number (format + modulus 11 checksum)
 - `emailValidator` - Email format validation with optional DNS check
 - `phoneValidator` - Phone number validation using libphonenumber-js
@@ -119,13 +138,13 @@ interface LookupService extends ServicePlugin<LookupInput, LookupOutput> {
 }
 
 interface LookupInput {
-  keyFields: Record<string, unknown>  // Fields to use as lookup key
-  requestedFields?: string[]          // Fields to retrieve
+  keyFields: Record<string, unknown> // Fields to use as lookup key
+  requestedFields?: string[] // Fields to retrieve
 }
 
 interface LookupOutput {
-  found: boolean                      // Whether a record was found
-  data?: Record<string, unknown>      // Retrieved data
+  found: boolean // Whether a record was found
+  data?: Record<string, unknown> // Retrieved data
   matchQuality?: 'exact' | 'partial' | 'fuzzy'
   source?: {
     system: string
@@ -136,6 +155,7 @@ interface LookupOutput {
 ```
 
 **Built-in Lookup Services:**
+
 - `createAddressStandardization()` - Address standardization via external API
 - `createEmailEnrichment()` - Email data enrichment (name, company, etc.)
 - `createPhoneCarrierLookup()` - Phone carrier and line type lookup
@@ -151,15 +171,15 @@ interface CustomService extends ServicePlugin<CustomInput, CustomOutput> {
 }
 
 interface CustomInput {
-  record: Record<string, unknown>     // Complete record
-  params?: Record<string, unknown>    // Custom parameters
+  record: Record<string, unknown> // Complete record
+  params?: Record<string, unknown> // Custom parameters
 }
 
 interface CustomOutput {
-  result: unknown          // Service-specific result
-  proceed: boolean         // Whether to continue processing
+  result: unknown // Service-specific result
+  proceed: boolean // Whether to continue processing
   scoreAdjustment?: number // Score adjustment
-  flags?: string[]         // Flags to add
+  flags?: string[] // Flags to add
 }
 ```
 
@@ -230,30 +250,30 @@ const config = createServiceBuilder<MyRecord>()
 
 Controls what happens when validation fails:
 
-| Value | Behavior |
-|-------|----------|
-| `'reject'` | Stop processing, return rejection result |
-| `'continue'` | Continue processing, ignore invalid |
-| `'flag'` | Continue processing, add flag to result |
+| Value        | Behavior                                 |
+| ------------ | ---------------------------------------- |
+| `'reject'`   | Stop processing, return rejection result |
+| `'continue'` | Continue processing, ignore invalid      |
+| `'flag'`     | Continue processing, add flag to result  |
 
 ### On Not Found (Lookup)
 
 Controls what happens when lookup returns no results:
 
-| Value | Behavior |
-|-------|----------|
-| `'continue'` | Continue processing without enrichment |
-| `'flag'` | Continue processing, add flag to result |
+| Value        | Behavior                                |
+| ------------ | --------------------------------------- |
+| `'continue'` | Continue processing without enrichment  |
+| `'flag'`     | Continue processing, add flag to result |
 
 ### On Failure (All Services)
 
 Controls what happens when a service call fails:
 
-| Value | Behavior |
-|-------|----------|
-| `'reject'` | Stop processing if service is required |
-| `'continue'` | Continue processing, ignore failure |
-| `'flag'` | Continue processing, add flag to result |
+| Value        | Behavior                                |
+| ------------ | --------------------------------------- |
+| `'reject'`   | Stop processing if service is required  |
+| `'continue'` | Continue processing, ignore failure     |
+| `'flag'`     | Continue processing, add flag to result |
 
 ## Execution Flow
 
@@ -309,22 +329,22 @@ interface ResolutionResult<T> {
   matches?: MatchCandidate<T>[]
 
   // Service integration
-  serviceResults?: Record<string, ServiceResult>  // Results by service name
-  enrichedRecord?: T                              // Record after enrichment
-  serviceFlags?: string[]                         // Accumulated flags
+  serviceResults?: Record<string, ServiceResult> // Results by service name
+  enrichedRecord?: T // Record after enrichment
+  serviceFlags?: string[] // Accumulated flags
 }
 
 interface ServiceResult<T = unknown> {
   success: boolean
-  data?: T                    // Result data (if success)
-  error?: ServiceErrorInfo    // Error info (if failure)
+  data?: T // Result data (if success)
+  error?: ServiceErrorInfo // Error info (if failure)
   timing: {
     startedAt: Date
     completedAt: Date
     durationMs: number
   }
-  cached: boolean             // Whether result was from cache
-  retryAttempts?: number      // Number of retry attempts
+  cached: boolean // Whether result was from cache
+  retryAttempts?: number // Number of retry attempts
   metadata?: Record<string, unknown>
 }
 ```
@@ -391,15 +411,15 @@ Configure failure behavior based on business requirements:
 
 Service errors are categorized for appropriate handling:
 
-| Error Type | Description | Retryable |
-|------------|-------------|-----------|
-| `ServiceTimeoutError` | Operation timed out | Yes |
-| `ServiceNetworkError` | Network connectivity issue | Yes |
-| `ServiceServerError` | Server returned 5xx error | Yes |
-| `ServiceInputValidationError` | Invalid input to service | No |
-| `ServiceNotFoundError` | Lookup returned no results | No |
-| `ServiceRejectedError` | Service rejected request | No |
-| `ServiceUnavailableError` | Circuit breaker is open | No |
+| Error Type                    | Description                | Retryable |
+| ----------------------------- | -------------------------- | --------- |
+| `ServiceTimeoutError`         | Operation timed out        | Yes       |
+| `ServiceNetworkError`         | Network connectivity issue | Yes       |
+| `ServiceServerError`          | Server returned 5xx error  | Yes       |
+| `ServiceInputValidationError` | Invalid input to service   | No        |
+| `ServiceNotFoundError`        | Lookup returned no results | No        |
+| `ServiceRejectedError`        | Service rejected request   | No        |
+| `ServiceUnavailableError`     | Circuit breaker is open    | No        |
 
 ```typescript
 import { isRetryableError, ServiceTimeoutError } from 'have-we-met/services'
@@ -411,7 +431,9 @@ try {
     // Could retry later
   }
   if (error instanceof ServiceTimeoutError) {
-    console.log(`Service ${error.serviceName} timed out after ${error.timeoutMs}ms`)
+    console.log(
+      `Service ${error.serviceName} timed out after ${error.timeoutMs}ms`
+    )
   }
 }
 ```

@@ -12,7 +12,11 @@ import type {
   CustomMergeFunction,
   SourceRecord,
 } from '../merge/types.js'
-import { DEFAULT_MERGE_CONFIG, MERGE_STRATEGIES, NUMERIC_STRATEGIES } from '../merge/types.js'
+import {
+  DEFAULT_MERGE_CONFIG,
+  MERGE_STRATEGIES,
+  NUMERIC_STRATEGIES,
+} from '../merge/types.js'
 import type { SchemaDefinition, FieldType } from '../types/schema.js'
 
 /**
@@ -48,10 +52,7 @@ export class FieldMergeBuilder<T extends Record<string, unknown>> {
   /** @internal Reference to parent builder for chaining */
   public readonly _parent: MergeBuilder<T>
 
-  constructor(
-    parent: MergeBuilder<T>,
-    fieldPath: string,
-  ) {
+  constructor(parent: MergeBuilder<T>, fieldPath: string) {
     this._parent = parent
     this.config.field = fieldPath
   }
@@ -170,10 +171,12 @@ export class FieldMergeBuilder<T extends Record<string, unknown>> {
  */
 export class MergeBuilder<T extends Record<string, unknown>> {
   private fieldStrategies: FieldMergeConfig[] = []
-  private defaultMergeStrategy: MergeStrategy = DEFAULT_MERGE_CONFIG.defaultStrategy
+  private defaultMergeStrategy: MergeStrategy =
+    DEFAULT_MERGE_CONFIG.defaultStrategy
   private timestampFieldName?: string
   private provenanceTracking: boolean = DEFAULT_MERGE_CONFIG.trackProvenance
-  private conflictResolutionMode: ConflictResolution = DEFAULT_MERGE_CONFIG.conflictResolution
+  private conflictResolutionMode: ConflictResolution =
+    DEFAULT_MERGE_CONFIG.conflictResolution
   private schema?: SchemaDefinition<T>
   /** @internal Track the current pending field builder for finalization */
   private _pendingFieldBuilder?: FieldMergeBuilder<T>
@@ -294,7 +297,9 @@ export class MergeBuilder<T extends Record<string, unknown>> {
    */
   addFieldConfig(config: FieldMergeConfig): void {
     // Check for duplicate field paths
-    const existingIndex = this.fieldStrategies.findIndex((fs) => fs.field === config.field)
+    const existingIndex = this.fieldStrategies.findIndex(
+      (fs) => fs.field === config.field
+    )
     if (existingIndex !== -1) {
       // Replace existing configuration
       this.fieldStrategies[existingIndex] = config
@@ -332,7 +337,7 @@ export class MergeBuilder<T extends Record<string, unknown>> {
   private validateStrategy(strategy: MergeStrategy): void {
     if (!MERGE_STRATEGIES.includes(strategy)) {
       throw new MergeBuilderError(
-        `Invalid merge strategy '${strategy}'. Valid strategies are: ${MERGE_STRATEGIES.join(', ')}`,
+        `Invalid merge strategy '${strategy}'. Valid strategies are: ${MERGE_STRATEGIES.join(', ')}`
       )
     }
   }
@@ -342,10 +347,14 @@ export class MergeBuilder<T extends Record<string, unknown>> {
    * @internal
    */
   private validateConflictResolution(mode: ConflictResolution): void {
-    const validModes: ConflictResolution[] = ['error', 'useDefault', 'markConflict']
+    const validModes: ConflictResolution[] = [
+      'error',
+      'useDefault',
+      'markConflict',
+    ]
     if (!validModes.includes(mode)) {
       throw new MergeBuilderError(
-        `Invalid conflict resolution mode '${mode}'. Valid modes are: ${validModes.join(', ')}`,
+        `Invalid conflict resolution mode '${mode}'. Valid modes are: ${validModes.join(', ')}`
       )
     }
   }
@@ -361,7 +370,7 @@ export class MergeBuilder<T extends Record<string, unknown>> {
     if (!(rootField in this.schema)) {
       const availableFields = Object.keys(this.schema).join(', ')
       throw new MergeBuilderError(
-        `Field '${rootField}' does not exist in schema. Available fields: ${availableFields}`,
+        `Field '${rootField}' does not exist in schema. Available fields: ${availableFields}`
       )
     }
   }
@@ -383,7 +392,7 @@ export class MergeBuilder<T extends Record<string, unknown>> {
       if (fieldConfig.strategy === 'custom' && !fieldConfig.customMerge) {
         throw new MergeBuilderError(
           `Field '${fieldConfig.field}' uses 'custom' strategy but no custom merge function was provided. ` +
-            `Use .custom(fn) instead of .strategy('custom').`,
+            `Use .custom(fn) instead of .strategy('custom').`
         )
       }
 
@@ -394,7 +403,7 @@ export class MergeBuilder<T extends Record<string, unknown>> {
         if (fieldDef && !NUMERIC_FIELD_TYPES.includes(fieldDef.type)) {
           throw new MergeBuilderError(
             `Strategy '${fieldConfig.strategy}' requires a numeric field, but '${rootField}' has type '${fieldDef.type}'. ` +
-              `Numeric strategies (average, sum, min, max) can only be used with number fields.`,
+              `Numeric strategies (average, sum, min, max) can only be used with number fields.`
           )
         }
       }
@@ -406,7 +415,7 @@ export class MergeBuilder<T extends Record<string, unknown>> {
     for (const path of fieldPaths) {
       if (seen.has(path)) {
         throw new MergeBuilderError(
-          `Duplicate field configuration for '${path}'. Each field can only be configured once.`,
+          `Duplicate field configuration for '${path}'. Each field can only be configured once.`
         )
       }
       seen.add(path)
@@ -422,7 +431,7 @@ export class MergeBuilder<T extends Record<string, unknown>> {
  * @returns A new MergeBuilder instance
  */
 export function createMergeBuilder<T extends Record<string, unknown>>(
-  schema?: SchemaDefinition<T>,
+  schema?: SchemaDefinition<T>
 ): MergeBuilder<T> {
   return new MergeBuilder<T>(schema)
 }

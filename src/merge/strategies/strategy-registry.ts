@@ -26,7 +26,10 @@ const strategyRegistry = new Map<string, StrategyFunction>()
  * })
  * ```
  */
-export function registerStrategy<T = unknown>(name: string, fn: StrategyFunction<T>): void {
+export function registerStrategy<T = unknown>(
+  name: string,
+  fn: StrategyFunction<T>
+): void {
   if (!name || name.trim() === '') {
     throw new InvalidStrategyError('Strategy name cannot be empty')
   }
@@ -50,7 +53,7 @@ export function getStrategy<T = unknown>(name: string): StrategyFunction<T> {
   const strategy = strategyRegistry.get(name)
   if (!strategy) {
     throw new InvalidStrategyError(
-      `Unknown strategy '${name}'. Available strategies: ${getRegisteredStrategies().join(', ')}`,
+      `Unknown strategy '${name}'. Available strategies: ${getRegisteredStrategies().join(', ')}`
     )
   }
   return strategy as StrategyFunction<T>

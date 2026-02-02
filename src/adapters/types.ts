@@ -208,7 +208,10 @@ export interface QueryOptions {
 export interface FilterCriteria {
   [field: string]:
     | unknown
-    | { operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'like'; value: unknown }
+    | {
+        operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'like'
+        value: unknown
+      }
 }
 
 /**

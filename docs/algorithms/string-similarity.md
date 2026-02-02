@@ -22,12 +22,14 @@ This guide covers the string similarity algorithms available in have-we-met for 
 In identity resolution, records rarely match exactly. Names may have typos, addresses may be formatted differently, and data entry errors are common. String similarity algorithms enable matching despite these variations.
 
 **When to use fuzzy matching:**
+
 - Name matching (typos, nicknames, cultural variations)
 - Address matching (formatting differences, abbreviations)
 - Email or username matching with typos
 - Any text field where human data entry introduces variation
 
 **When to use exact matching:**
+
 - Unique identifiers (IDs, account numbers)
 - Standardized codes (country codes, zip codes)
 - Boolean or numeric fields
@@ -36,6 +38,7 @@ In identity resolution, records rarely match exactly. Names may have typos, addr
 ### How Similarity Scores Work
 
 All algorithms return a normalized score between 0 and 1:
+
 - **1.0**: Perfect match (identical strings)
 - **0.9-0.99**: Very similar (likely the same entity)
 - **0.7-0.89**: Moderately similar (review recommended)
@@ -45,16 +48,17 @@ These scores are weighted and combined with other field comparisons to produce a
 
 ## Algorithm Comparison
 
-| Algorithm | Best Use Case | Performance | Handles Typos | Handles Transpositions | Phonetic Matching |
-|-----------|--------------|-------------|---------------|----------------------|-------------------|
-| **Levenshtein** | General text, addresses | ~0.0004ms | ✅ Excellent | ❌ No | ❌ No |
-| **Jaro-Winkler** | Names, short strings | ~0.0002ms | ✅ Good | ✅ Yes | ❌ No |
-| **Soundex** | Name blocking, phonetic grouping | ~0.0002ms | ❌ No | ❌ No | ✅ Yes |
-| **Metaphone** | Improved phonetic matching | ~0.0003ms | ❌ No | ❌ No | ✅ Yes (better) |
+| Algorithm        | Best Use Case                    | Performance | Handles Typos | Handles Transpositions | Phonetic Matching |
+| ---------------- | -------------------------------- | ----------- | ------------- | ---------------------- | ----------------- |
+| **Levenshtein**  | General text, addresses          | ~0.0004ms   | ✅ Excellent  | ❌ No                  | ❌ No             |
+| **Jaro-Winkler** | Names, short strings             | ~0.0002ms   | ✅ Good       | ✅ Yes                 | ❌ No             |
+| **Soundex**      | Name blocking, phonetic grouping | ~0.0002ms   | ❌ No         | ❌ No                  | ✅ Yes            |
+| **Metaphone**    | Improved phonetic matching       | ~0.0003ms   | ❌ No         | ❌ No                  | ✅ Yes (better)   |
 
 ### Strengths and Weaknesses
 
 **Levenshtein Distance**
+
 - ✅ Versatile: Works well for any text
 - ✅ Intuitive: Counts character edits needed
 - ✅ Handles insertions, deletions, substitutions
@@ -63,6 +67,7 @@ These scores are weighted and combined with other field comparisons to produce a
 - ❌ Transpositions count as 2 edits
 
 **Jaro-Winkler Similarity**
+
 - ✅ Optimized for names
 - ✅ Rewards common prefixes
 - ✅ Handles transpositions efficiently
@@ -71,6 +76,7 @@ These scores are weighted and combined with other field comparisons to produce a
 - ❌ May overweight prefix matches
 
 **Soundex**
+
 - ✅ Groups similar-sounding names
 - ✅ Extremely fast encoding
 - ✅ Good for blocking strategies
@@ -81,6 +87,7 @@ These scores are weighted and combined with other field comparisons to produce a
 - ❌ Many false positives
 
 **Metaphone**
+
 - ✅ More accurate phonetic matching
 - ✅ Handles complex pronunciation rules
 - ✅ Better than Soundex for most cases
@@ -96,6 +103,7 @@ These scores are weighted and combined with other field comparisons to produce a
 **How it works:** Calculates the minimum number of single-character edits (insertions, deletions, substitutions) needed to transform one string into another. The edit distance is normalized by the maximum string length to produce a 0-1 similarity score.
 
 **When to use:**
+
 - General-purpose text matching
 - Address matching with formatting variations
 - Any field where typos are common
@@ -105,9 +113,9 @@ These scores are weighted and combined with other field comparisons to produce a
 
 ```typescript
 interface LevenshteinOptions {
-  caseSensitive?: boolean        // Default: false
-  normalizeWhitespace?: boolean  // Default: true
-  nullMatchesNull?: boolean      // Default: true
+  caseSensitive?: boolean // Default: false
+  normalizeWhitespace?: boolean // Default: true
+  nullMatchesNull?: boolean // Default: true
 }
 ```
 
@@ -120,10 +128,7 @@ import { HaveWeMet } from 'have-we-met'
 const resolver = HaveWeMet.create<Person>()
   .schema((s) => s.field('firstName', { type: 'name' }))
   .matching((m) =>
-    m.field('firstName')
-      .strategy('levenshtein')
-      .weight(15)
-      .threshold(0.85)
+    m.field('firstName').strategy('levenshtein').weight(15).threshold(0.85)
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
   .build()
@@ -132,7 +137,8 @@ const resolver = HaveWeMet.create<Person>()
 const resolver = HaveWeMet.create<Address>()
   .schema((s) => s.field('street', { type: 'address' }))
   .matching((m) =>
-    m.field('street')
+    m
+      .field('street')
       .strategy('levenshtein')
       .levenshteinOptions({ normalizeWhitespace: true, caseSensitive: false })
       .weight(20)
@@ -147,14 +153,15 @@ const resolver = HaveWeMet.create<Address>()
 ```typescript
 import { levenshtein } from 'have-we-met'
 
-levenshtein('hello', 'hello')      // 1.0 (identical)
-levenshtein('hello', 'hallo')      // 0.8 (one character different)
-levenshtein('cat', 'category')     // ~0.375 (different lengths)
-levenshtein('Hello', 'hello')      // 1.0 (case-insensitive by default)
+levenshtein('hello', 'hello') // 1.0 (identical)
+levenshtein('hello', 'hallo') // 0.8 (one character different)
+levenshtein('cat', 'category') // ~0.375 (different lengths)
+levenshtein('Hello', 'hello') // 1.0 (case-insensitive by default)
 levenshtein('Hello', 'hello', { caseSensitive: true }) // 0.8
 ```
 
 **Common pitfalls:**
+
 - Don't use on very long text (>1000 chars) without testing performance
 - Remember transpositions count as 2 edits (use Jaro-Winkler if transpositions are common)
 - Whitespace normalization is enabled by default (disable if whitespace is significant)
@@ -168,6 +175,7 @@ levenshtein('Hello', 'hello', { caseSensitive: true }) // 0.8
 **How it works:** Considers matching characters within a search window and counts transpositions. Applies a bonus for common prefixes (up to 4 characters). Optimized for short strings where prefix similarity indicates a match.
 
 **When to use:**
+
 - Name matching (first names, last names)
 - Short text fields (< 50 characters)
 - When typos often appear at the end of strings
@@ -177,10 +185,10 @@ levenshtein('Hello', 'hello', { caseSensitive: true }) // 0.8
 
 ```typescript
 interface JaroWinklerOptions {
-  caseSensitive?: boolean      // Default: false
-  prefixScale?: number         // Default: 0.1 (range: 0-0.25)
-  maxPrefixLength?: number     // Default: 4
-  nullMatchesNull?: boolean    // Default: true
+  caseSensitive?: boolean // Default: false
+  prefixScale?: number // Default: 0.1 (range: 0-0.25)
+  maxPrefixLength?: number // Default: 4
+  nullMatchesNull?: boolean // Default: true
 }
 ```
 
@@ -191,16 +199,18 @@ import { HaveWeMet } from 'have-we-met'
 
 // Name matching with Jaro-Winkler (recommended)
 const resolver = HaveWeMet.create<Person>()
-  .schema((s) => s
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((s) =>
+    s
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
-  .matching((m) => m
-    .field('firstName')
+  .matching((m) =>
+    m
+      .field('firstName')
       .strategy('jaro-winkler')
       .weight(10)
       .threshold(0.9)
-    .field('lastName')
+      .field('lastName')
       .strategy('jaro-winkler')
       .weight(15)
       .threshold(0.92)
@@ -212,7 +222,8 @@ const resolver = HaveWeMet.create<Person>()
 const resolver = HaveWeMet.create<Person>()
   .schema((s) => s.field('firstName', { type: 'name' }))
   .matching((m) =>
-    m.field('firstName')
+    m
+      .field('firstName')
       .strategy('jaro-winkler')
       .jaroWinklerOptions({ prefixScale: 0.15 }) // More prefix emphasis
       .weight(15)
@@ -227,13 +238,14 @@ const resolver = HaveWeMet.create<Person>()
 ```typescript
 import { jaroWinkler } from 'have-we-met'
 
-jaroWinkler('MARTHA', 'MARTHA')      // 1.0 (identical)
-jaroWinkler('MARTHA', 'MARHTA')      // ~0.96 (transposition handled well)
-jaroWinkler('DIXON', 'DICKSONX')     // ~0.81 (benefits from prefix bonus)
-jaroWinkler('martha', 'MARTHA')      // 1.0 (case-insensitive by default)
+jaroWinkler('MARTHA', 'MARTHA') // 1.0 (identical)
+jaroWinkler('MARTHA', 'MARHTA') // ~0.96 (transposition handled well)
+jaroWinkler('DIXON', 'DICKSONX') // ~0.81 (benefits from prefix bonus)
+jaroWinkler('martha', 'MARTHA') // 1.0 (case-insensitive by default)
 ```
 
 **Common pitfalls:**
+
 - Don't use for long text (optimized for < 50 characters)
 - Prefix scale > 0.25 can produce counterintuitive results
 - May over-match when prefixes are common in your dataset (e.g., "John" matches "Johnny" highly)
@@ -247,6 +259,7 @@ jaroWinkler('martha', 'MARTHA')      // 1.0 (case-insensitive by default)
 **How it works:** Encodes names into 4-character phonetic codes based on how they sound in English. Names that sound similar get the same code. Returns 1 if codes match, 0 if they differ (binary output).
 
 **When to use:**
+
 - Blocking strategy for name matching (group candidates by Soundex code)
 - Supplementary evidence in multi-field matching
 - When you need very fast phonetic grouping
@@ -256,7 +269,7 @@ jaroWinkler('martha', 'MARTHA')      // 1.0 (case-insensitive by default)
 
 ```typescript
 interface SoundexOptions {
-  nullMatchesNull?: boolean    // Default: true
+  nullMatchesNull?: boolean // Default: true
 }
 ```
 
@@ -267,18 +280,21 @@ import { HaveWeMet } from 'have-we-met'
 
 // Using Soundex as supporting evidence
 const resolver = HaveWeMet.create<Person>()
-  .schema((s) => s
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((s) =>
+    s
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
-  .matching((m) => m
-    .field('firstName')
-      .strategy('jaro-winkler')  // Primary strategy
-      .weight(10)
-      .threshold(0.88)
-    .field('lastName')
-      .strategy('soundex')        // Phonetic support
-      .weight(5)                  // Lower weight
+  .matching(
+    (m) =>
+      m
+        .field('firstName')
+        .strategy('jaro-winkler') // Primary strategy
+        .weight(10)
+        .threshold(0.88)
+        .field('lastName')
+        .strategy('soundex') // Phonetic support
+        .weight(5) // Lower weight
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
   .build()
@@ -287,11 +303,7 @@ const resolver = HaveWeMet.create<Person>()
 const resolver = HaveWeMet.create<Person>()
   .schema((s) => s.field('lastName', { type: 'name', component: 'last' }))
   .blocking((b) => b.soundex('lastName'))
-  .matching((m) => m
-    .field('lastName')
-      .strategy('jaro-winkler')
-      .weight(15)
-  )
+  .matching((m) => m.field('lastName').strategy('jaro-winkler').weight(15))
   .thresholds({ noMatch: 20, definiteMatch: 45 })
   .build()
 ```
@@ -302,19 +314,20 @@ const resolver = HaveWeMet.create<Person>()
 import { soundex, soundexEncode } from 'have-we-met'
 
 // Comparison function (returns 1 or 0)
-soundex('Robert', 'Rupert')    // 1 (both encode to R163)
-soundex('Smith', 'Smyth')      // 1 (both encode to S530)
-soundex('Smith', 'Jones')      // 0 (S530 vs J520)
-soundex('Lee', 'Li')           // 1 (both encode to L000)
+soundex('Robert', 'Rupert') // 1 (both encode to R163)
+soundex('Smith', 'Smyth') // 1 (both encode to S530)
+soundex('Smith', 'Jones') // 0 (S530 vs J520)
+soundex('Lee', 'Li') // 1 (both encode to L000)
 
 // Encoding function (for blocking)
-soundexEncode('Robert')        // 'R163'
-soundexEncode('Rupert')        // 'R163'
-soundexEncode('Smith')         // 'S530'
-soundexEncode('Smyth')         // 'S530'
+soundexEncode('Robert') // 'R163'
+soundexEncode('Rupert') // 'R163'
+soundexEncode('Smith') // 'S530'
+soundexEncode('Smyth') // 'S530'
 ```
 
 **Common pitfalls:**
+
 - Binary output (1 or 0) means it can't distinguish between "very similar" and "somewhat similar"
 - Many false positives (unrelated names may have same code)
 - English-only: doesn't work for non-English names
@@ -330,6 +343,7 @@ soundexEncode('Smyth')         // 'S530'
 **How it works:** Improved phonetic algorithm that handles more English pronunciation rules than Soundex. Produces variable-length codes that better represent how words sound. Returns 1 if codes match, 0 if they differ (binary output).
 
 **When to use:**
+
 - Phonetic name matching with better accuracy than Soundex
 - Blocking strategy when Soundex produces too many false positives
 - Matching names with silent letters or complex pronunciation
@@ -339,8 +353,8 @@ soundexEncode('Smyth')         // 'S530'
 
 ```typescript
 interface MetaphoneOptions {
-  maxLength?: number           // Default: 4
-  nullMatchesNull?: boolean    // Default: true
+  maxLength?: number // Default: 4
+  nullMatchesNull?: boolean // Default: true
 }
 ```
 
@@ -351,18 +365,21 @@ import { HaveWeMet } from 'have-we-met'
 
 // Using Metaphone for phonetic matching
 const resolver = HaveWeMet.create<Person>()
-  .schema((s) => s
-    .field('firstName', { type: 'name', component: 'first' })
-    .field('lastName', { type: 'name', component: 'last' })
+  .schema((s) =>
+    s
+      .field('firstName', { type: 'name', component: 'first' })
+      .field('lastName', { type: 'name', component: 'last' })
   )
-  .matching((m) => m
-    .field('firstName')
-      .strategy('jaro-winkler')  // Primary strategy
-      .weight(10)
-      .threshold(0.88)
-    .field('lastName')
-      .strategy('metaphone')      // Better phonetic matching
-      .weight(6)                  // Supporting evidence
+  .matching(
+    (m) =>
+      m
+        .field('firstName')
+        .strategy('jaro-winkler') // Primary strategy
+        .weight(10)
+        .threshold(0.88)
+        .field('lastName')
+        .strategy('metaphone') // Better phonetic matching
+        .weight(6) // Supporting evidence
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
   .build()
@@ -371,9 +388,10 @@ const resolver = HaveWeMet.create<Person>()
 const resolver = HaveWeMet.create<Person>()
   .schema((s) => s.field('lastName', { type: 'name', component: 'last' }))
   .matching((m) =>
-    m.field('lastName')
+    m
+      .field('lastName')
       .strategy('metaphone')
-      .metaphoneOptions({ maxLength: 6 })  // Longer code = more precise
+      .metaphoneOptions({ maxLength: 6 }) // Longer code = more precise
       .weight(8)
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
@@ -386,19 +404,20 @@ const resolver = HaveWeMet.create<Person>()
 import { metaphone, metaphoneEncode } from 'have-we-met'
 
 // Comparison function (returns 1 or 0)
-metaphone('Christine', 'Kristine')  // 1 (similar phonetic encoding)
-metaphone('Stephen', 'Steven')      // 1 (similar sound)
-metaphone('Knight', 'Night')        // 1 (both encode to NXT)
-metaphone('Smith', 'Jones')         // 0 (different phonetic codes)
+metaphone('Christine', 'Kristine') // 1 (similar phonetic encoding)
+metaphone('Stephen', 'Steven') // 1 (similar sound)
+metaphone('Knight', 'Night') // 1 (both encode to NXT)
+metaphone('Smith', 'Jones') // 0 (different phonetic codes)
 
 // Encoding function (for blocking)
-metaphoneEncode('Christine')        // 'XRSTN' (default maxLength: 4 -> 'XRST')
-metaphoneEncode('Kristine')         // 'KRSTN' (default maxLength: 4 -> 'KRST')
-metaphoneEncode('Knight')           // 'NXT'
-metaphoneEncode('Night')            // 'NXT'
+metaphoneEncode('Christine') // 'XRSTN' (default maxLength: 4 -> 'XRST')
+metaphoneEncode('Kristine') // 'KRSTN' (default maxLength: 4 -> 'KRST')
+metaphoneEncode('Knight') // 'NXT'
+metaphoneEncode('Night') // 'NXT'
 ```
 
 **Common pitfalls:**
+
 - Binary output (1 or 0) like Soundex
 - English-only algorithm (doesn't work for non-English names)
 - Longer maxLength = more precision but fewer matches
@@ -503,14 +522,15 @@ When false negatives are expensive (e.g., finding potential duplicates for manua
 
 Field-level thresholds filter out low-similarity matches before they contribute to the overall score. General recommendations:
 
-| Algorithm | Conservative | Balanced | Aggressive |
-|-----------|-------------|----------|------------|
-| Levenshtein | 0.9+ | 0.85 | 0.8 |
-| Jaro-Winkler | 0.95+ | 0.88-0.92 | 0.8-0.85 |
-| Soundex | 1.0 (only exact code matches) | 1.0 | 1.0 |
-| Metaphone | 1.0 (only exact code matches) | 1.0 | 1.0 |
+| Algorithm    | Conservative                  | Balanced  | Aggressive |
+| ------------ | ----------------------------- | --------- | ---------- |
+| Levenshtein  | 0.9+                          | 0.85      | 0.8        |
+| Jaro-Winkler | 0.95+                         | 0.88-0.92 | 0.8-0.85   |
+| Soundex      | 1.0 (only exact code matches) | 1.0       | 1.0        |
+| Metaphone    | 1.0 (only exact code matches) | 1.0       | 1.0        |
 
 **Threshold tuning process:**
+
 1. Start with balanced thresholds
 2. Test on a sample of your data
 3. If too many false positives → increase thresholds
@@ -522,23 +542,27 @@ Field-level thresholds filter out low-similarity matches before they contribute 
 Weights determine how much each field contributes to the overall match score. General guidelines:
 
 **High importance (15-25 points):**
+
 - Unique identifiers (email, username)
 - Last name (more stable than first name)
 - Critical address components
 
 **Medium importance (8-15 points):**
+
 - First name
 - Full address
 - Phone number
 - Date of birth
 
 **Low importance (3-8 points):**
+
 - Phonetic supporting evidence
 - Middle name
 - Secondary contact info
 - Zip code
 
 **Weight tuning process:**
+
 1. Identify your most discriminating fields (fields that best distinguish entities)
 2. Assign higher weights to discriminating fields
 3. Use phonetic strategies with lower weights as supporting evidence
@@ -561,11 +585,13 @@ You can apply multiple strategies to the same field:
 ```
 
 **When to use multiple strategies:**
+
 - Primary strategy for scoring + phonetic strategy for supporting evidence
 - Different strategies for different aspects (prefix matching + overall similarity)
 - A/B testing different algorithms on the same field
 
 **When NOT to use multiple strategies:**
+
 - Don't use more than 2-3 strategies per field (diminishing returns)
 - Don't use both Soundex and Metaphone (they're redundant)
 - Don't use Levenshtein and Jaro-Winkler together (choose one)
@@ -682,12 +708,12 @@ You can apply multiple strategies to the same field:
 
 All algorithms have been benchmarked and exceed performance targets:
 
-| Algorithm | Operations/sec | Mean Time | Use Case |
-|-----------|----------------|-----------|----------|
-| Jaro-Winkler (short) | 4.3M ops/sec | 0.0002ms | Names |
-| Soundex encoding | 5.4M ops/sec | 0.0002ms | Blocking |
-| Levenshtein (short) | 2.5M ops/sec | 0.0004ms | General |
-| Metaphone encoding | 3.8M ops/sec | 0.0003ms | Phonetic |
+| Algorithm            | Operations/sec | Mean Time | Use Case |
+| -------------------- | -------------- | --------- | -------- |
+| Jaro-Winkler (short) | 4.3M ops/sec   | 0.0002ms  | Names    |
+| Soundex encoding     | 5.4M ops/sec   | 0.0002ms  | Blocking |
+| Levenshtein (short)  | 2.5M ops/sec   | 0.0004ms  | General  |
+| Metaphone encoding   | 3.8M ops/sec   | 0.0003ms  | Phonetic |
 
 All algorithms are suitable for real-time matching. See [Performance Report](../../benchmarks/PERFORMANCE-REPORT.md) for detailed benchmarks.
 

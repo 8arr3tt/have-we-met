@@ -48,7 +48,10 @@ class MockRepository<T> {
     },
   }
 
-  private matchesWhere(record: Record<string, unknown>, where: Record<string, unknown>): boolean {
+  private matchesWhere(
+    record: Record<string, unknown>,
+    where: Record<string, unknown>
+  ): boolean {
     for (const [key, value] of Object.entries(where)) {
       if (typeof value === 'object' && value !== null) {
         if ('$in' in value && Array.isArray(value.$in)) {
@@ -84,7 +87,9 @@ class MockRepository<T> {
     let results = Array.from(this.records.values())
 
     if (options?.where) {
-      results = results.filter((record) => this.matchesWhere(record, options.where!))
+      results = results.filter((record) =>
+        this.matchesWhere(record, options.where!)
+      )
     }
 
     if (options?.order) {
@@ -121,7 +126,9 @@ class MockRepository<T> {
     return results as T[]
   }
 
-  async findOne(options?: { where?: Record<string, unknown> }): Promise<T | null> {
+  async findOne(options?: {
+    where?: Record<string, unknown>
+  }): Promise<T | null> {
     const results = await this.find(options)
     return results.length > 0 ? results[0] : null
   }
@@ -154,7 +161,9 @@ class MockRepository<T> {
     return { affected: 1 }
   }
 
-  async delete(criteria: Record<string, unknown>): Promise<{ affected?: number }> {
+  async delete(
+    criteria: Record<string, unknown>
+  ): Promise<{ affected?: number }> {
     const id = criteria.id as string
     const existed = this.records.has(id)
 
@@ -166,7 +175,9 @@ class MockRepository<T> {
     return { affected: 1 }
   }
 
-  async insert(entities: Record<string, unknown>[]): Promise<{ identifiers: Array<{ id: string }> }> {
+  async insert(
+    entities: Record<string, unknown>[]
+  ): Promise<{ identifiers: Array<{ id: string }> }> {
     for (const entity of entities) {
       const id = entity.id as string
       this.records.set(id, entity)
@@ -199,14 +210,34 @@ describe('Integration: TypeORM Adapter', () => {
     records = new Map()
     repository = new MockRepository<TestRecord>(records)
     adapter = new TypeORMAdapter<TestRecord>(
-      repository as unknown as Parameters<typeof TypeORMAdapter<TestRecord>['prototype']['constructor']>[0],
+      repository as unknown as Parameters<
+        (typeof TypeORMAdapter<TestRecord>)['prototype']['constructor']
+      >[0],
       config
     )
 
     repository.seed([
-      { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', dobYear: 1985 },
-      { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', dobYear: 1990 },
-      { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', dobYear: 1985 },
+      {
+        id: '1',
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john@example.com',
+        dobYear: 1985,
+      },
+      {
+        id: '2',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane@example.com',
+        dobYear: 1990,
+      },
+      {
+        id: '3',
+        firstName: 'Bob',
+        lastName: 'Jones',
+        email: 'bob@example.com',
+        dobYear: 1985,
+      },
       {
         id: '4',
         firstName: 'Alice',
@@ -262,9 +293,24 @@ describe('Integration: TypeORM Adapter', () => {
   describe('batch processes efficiently', () => {
     it('batch inserts multiple records', async () => {
       const newRecords: TestRecord[] = [
-        { id: '10', firstName: 'Test1', lastName: 'User', email: 'test1@example.com' },
-        { id: '11', firstName: 'Test2', lastName: 'User', email: 'test2@example.com' },
-        { id: '12', firstName: 'Test3', lastName: 'User', email: 'test3@example.com' },
+        {
+          id: '10',
+          firstName: 'Test1',
+          lastName: 'User',
+          email: 'test1@example.com',
+        },
+        {
+          id: '11',
+          firstName: 'Test2',
+          lastName: 'User',
+          email: 'test2@example.com',
+        },
+        {
+          id: '12',
+          firstName: 'Test3',
+          lastName: 'User',
+          email: 'test3@example.com',
+        },
       ]
 
       const results = await adapter.batchInsert(newRecords)
@@ -296,13 +342,16 @@ describe('Integration: TypeORM Adapter', () => {
     })
 
     it('handles large batch inserts', async () => {
-      const largeRecords: TestRecord[] = Array.from({ length: 100 }, (_, i) => ({
-        id: `batch-${i}`,
-        firstName: `First${i}`,
-        lastName: `Last${i}`,
-        email: `user${i}@example.com`,
-        dobYear: 1980 + (i % 40),
-      }))
+      const largeRecords: TestRecord[] = Array.from(
+        { length: 100 },
+        (_, i) => ({
+          id: `batch-${i}`,
+          firstName: `First${i}`,
+          lastName: `Last${i}`,
+          email: `user${i}@example.com`,
+          dobYear: 1980 + (i % 40),
+        })
+      )
 
       const results = await adapter.batchInsert(largeRecords)
 
@@ -327,7 +376,9 @@ describe('Integration: TypeORM Adapter', () => {
     })
 
     it('updates using update()', async () => {
-      const updated = await adapter.update('1', { email: 'newemail@example.com' })
+      const updated = await adapter.update('1', {
+        email: 'newemail@example.com',
+      })
 
       expect(updated.email).toBe('newemail@example.com')
       expect(updated.firstName).toBe('John')
@@ -393,9 +444,9 @@ describe('Integration: TypeORM Adapter', () => {
 
   describe('error handling', () => {
     it('throws NotFoundError when updating non-existent record', async () => {
-      await expect(adapter.update('999', { email: 'test@example.com' })).rejects.toThrow(
-        'not found'
-      )
+      await expect(
+        adapter.update('999', { email: 'test@example.com' })
+      ).rejects.toThrow('not found')
     })
 
     it('throws NotFoundError when deleting non-existent record', async () => {

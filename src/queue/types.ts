@@ -400,7 +400,7 @@ export interface QueueAdapter<T extends Record<string, unknown>> {
    */
   updateQueueItem(
     id: string,
-    updates: Partial<QueueItem<T>>,
+    updates: Partial<QueueItem<T>>
   ): Promise<QueueItem<T>>
 
   /**

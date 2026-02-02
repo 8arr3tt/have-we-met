@@ -110,7 +110,13 @@ const streetNames = [
   'Pine',
 ]
 
-const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'example.com', 'test.com']
+const domains = [
+  'gmail.com',
+  'yahoo.com',
+  'outlook.com',
+  'example.com',
+  'test.com',
+]
 
 /**
  * Generates a random integer between min and max (inclusive).
@@ -177,7 +183,11 @@ function generatePerson(id: number): PersonRecord {
 /**
  * Creates a duplicate of a person record with optional typos.
  */
-function createDuplicate(person: PersonRecord, newId: number, withTypos: boolean): PersonRecord {
+function createDuplicate(
+  person: PersonRecord,
+  newId: number,
+  withTypos: boolean
+): PersonRecord {
   if (!withTypos) {
     return { ...person, id: newId }
   }
@@ -186,8 +196,10 @@ function createDuplicate(person: PersonRecord, newId: number, withTypos: boolean
   return {
     ...person,
     id: newId,
-    firstName: Math.random() > 0.5 ? introduceTypo(person.firstName) : person.firstName,
-    lastName: Math.random() > 0.5 ? introduceTypo(person.lastName) : person.lastName,
+    firstName:
+      Math.random() > 0.5 ? introduceTypo(person.firstName) : person.firstName,
+    lastName:
+      Math.random() > 0.5 ? introduceTypo(person.lastName) : person.lastName,
     email: Math.random() > 0.3 ? person.email : introduceTypo(person.email),
   }
 }
@@ -275,17 +287,22 @@ export function analyzeBlockDistribution<T>(blocks: Map<string, T[]>) {
   }
 
   const totalBlocks = blockSizes.length
-  const avgBlockSize = blockSizes.reduce((sum, size) => sum + size, 0) / totalBlocks
+  const avgBlockSize =
+    blockSizes.reduce((sum, size) => sum + size, 0) / totalBlocks
   const minBlockSize = Math.min(...blockSizes)
   const maxBlockSize = Math.max(...blockSizes)
 
   // Calculate standard deviation
-  const squaredDiffs = blockSizes.map((size) => Math.pow(size - avgBlockSize, 2))
-  const variance = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / totalBlocks
+  const squaredDiffs = blockSizes.map((size) =>
+    Math.pow(size - avgBlockSize, 2)
+  )
+  const variance =
+    squaredDiffs.reduce((sum, diff) => sum + diff, 0) / totalBlocks
   const stdDeviation = Math.sqrt(variance)
 
   // Calculate skewness (simple measure: (max - avg) / stdDev)
-  const skewness = stdDeviation > 0 ? (maxBlockSize - avgBlockSize) / stdDeviation : 0
+  const skewness =
+    stdDeviation > 0 ? (maxBlockSize - avgBlockSize) / stdDeviation : 0
 
   return {
     totalBlocks,

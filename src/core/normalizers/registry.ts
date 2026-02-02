@@ -22,10 +22,7 @@ const normalizerRegistry = new Map<string, NormalizerFunction>()
  * })
  * ```
  */
-export function registerNormalizer(
-  name: string,
-  fn: NormalizerFunction
-): void {
+export function registerNormalizer(name: string, fn: NormalizerFunction): void {
   if (normalizerRegistry.has(name)) {
     console.warn(
       `Normalizer '${name}' is already registered. Overwriting with new implementation.`
@@ -92,7 +89,9 @@ export function applyNormalizer(
   const normalizer = getNormalizer(normalizerName)
 
   if (!normalizer) {
-    console.warn(`Normalizer '${normalizerName}' not found. Using original value.`)
+    console.warn(
+      `Normalizer '${normalizerName}' not found. Using original value.`
+    )
     return value
   }
 

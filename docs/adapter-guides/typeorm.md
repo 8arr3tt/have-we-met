@@ -26,7 +26,14 @@ npm install mongodb         # MongoDB
 Create your TypeORM entity (e.g., `src/entities/Contact.ts`):
 
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm'
 
 @Entity('contacts')
 @Index(['lastName'])
@@ -107,12 +114,12 @@ export const AppDataSource = new DataSource({
   password: 'password',
   database: 'crm',
   entities: [Contact],
-  synchronize: true,  // Set to false in production
+  synchronize: true, // Set to false in production
   logging: false,
-  maxQueryExecutionTime: 1000,  // Log slow queries
+  maxQueryExecutionTime: 1000, // Log slow queries
   extra: {
-    max: 20,  // Connection pool size
-  }
+    max: 20, // Connection pool size
+  },
 })
 
 // Initialize connection
@@ -130,7 +137,7 @@ import { Contact } from './entities/Contact'
 const contactRepository = AppDataSource.getRepository(Contact)
 
 const resolver = HaveWeMet.create<Contact>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
@@ -138,18 +145,32 @@ const resolver = HaveWeMet.create<Contact>()
       .field('phone', { type: 'phone' })
       .field('company', { type: 'string' })
   })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-    .onField('email')
-    .onField('company')
+  .blocking((block) =>
+    block
+      .onField('lastName', { transform: 'soundex' })
+      .onField('email')
+      .onField('company')
   )
-  .matching(match => {
+  .matching((match) => {
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('phone').strategy('exact').weight(10)
-      .field('company').strategy('jaro-winkler').weight(10).threshold(0.85)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('phone')
+      .strategy('exact')
+      .weight(10)
+      .field('company')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
       .thresholds({ noMatch: 20, definiteMatch: 55 })
   })
   .adapter(typeormAdapter(contactRepository))
@@ -195,7 +216,7 @@ const contact = await Contact.findByEmail('test@example.com')
 ```typescript
 const adapter = typeormAdapter(repository, {
   tableName: 'contacts',
-  primaryKey: 'id'  // default: 'id'
+  primaryKey: 'id', // default: 'id'
 })
 ```
 
@@ -221,12 +242,12 @@ const newContact = {
   email: 'michael.williams@company.com',
   phone: '555-0300',
   company: 'Tech Solutions Inc',
-  title: 'Senior Developer'
+  title: 'Senior Developer',
 }
 
 const matches = await resolver.resolveWithDatabase(newContact, {
   useBlocking: true,
-  maxFetchSize: 1000
+  maxFetchSize: 1000,
 })
 
 console.log(`Found ${matches.length} potential matches`)
@@ -245,7 +266,7 @@ for (const match of matches) {
 ```typescript
 const result = await resolver.deduplicateBatchFromDatabase({
   batchSize: 1000,
-  persistResults: false
+  persistResults: false,
 })
 
 console.log(`Processed: ${result.totalProcessed} contacts`)
@@ -254,7 +275,7 @@ console.log(`Total duplicates: ${result.totalDuplicates}`)
 console.log(`Duration: ${result.durationMs}ms`)
 
 // Process results
-result.results.forEach(group => {
+result.results.forEach((group) => {
   console.log(`Master contact: ${group.masterRecordId}`)
   console.log(`Duplicates: ${group.duplicateIds.join(', ')}`)
 })
@@ -281,12 +302,12 @@ const mergedContact = await adapter.transaction(async (txAdapter) => {
   const mergedData = {
     ...primary,
     // Take most complete data
-    phone: others.find(c => c.phone)?.phone || primary.phone,
-    address: others.find(c => c.address)?.address || primary.address,
-    title: others.find(c => c.title)?.title || primary.title,
-    notes: [primary.notes, ...others.map(c => c.notes)]
+    phone: others.find((c) => c.phone)?.phone || primary.phone,
+    address: others.find((c) => c.address)?.address || primary.address,
+    title: others.find((c) => c.title)?.title || primary.title,
+    notes: [primary.notes, ...others.map((c) => c.notes)]
       .filter(Boolean)
-      .join('\n---\n')
+      .join('\n---\n'),
   }
 
   // Update primary record
@@ -313,18 +334,18 @@ import { Like } from 'typeorm'
 // Find contacts from specific company
 const companyContacts = await contactRepository.find({
   where: {
-    company: Like('%Tech%')
+    company: Like('%Tech%'),
   },
   order: {
-    lastName: 'ASC'
+    lastName: 'ASC',
   },
-  take: 100
+  take: 100,
 })
 
 // Check each for duplicates
 for (const contact of companyContacts) {
   const matches = await resolver.resolveWithDatabase(contact)
-  if (matches.some(m => m.outcome === 'definite-match')) {
+  if (matches.some((m) => m.outcome === 'definite-match')) {
     console.log(`Duplicate found: ${contact.id}`)
   }
 }
@@ -338,11 +359,11 @@ Use decorators to define indexes:
 
 ```typescript
 @Entity()
-@Index(['lastName', 'email'])  // Composite index
+@Index(['lastName', 'email']) // Composite index
 @Index(['company'])
 export class Contact {
   @Column()
-  @Index()  // Single-column index
+  @Index() // Single-column index
   lastName: string
 
   @Column()
@@ -376,7 +397,12 @@ CREATE INDEX idx_contacts_lastname_email ON contacts(last_name, email);
 Use subscribers to auto-compute blocking keys:
 
 ```typescript
-import { EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from 'typeorm'
+import {
+  EntitySubscriberInterface,
+  EventSubscriber,
+  InsertEvent,
+  UpdateEvent,
+} from 'typeorm'
 import { soundex } from 'have-we-met/utils'
 import { Contact } from '../entities/Contact'
 
@@ -405,7 +431,7 @@ Register the subscriber:
 ```typescript
 export const AppDataSource = new DataSource({
   // ... other options
-  subscribers: [ContactSubscriber]
+  subscribers: [ContactSubscriber],
 })
 ```
 
@@ -418,8 +444,8 @@ const contacts = await contactRepository.find({
   where: { company: 'ACME Corp' },
   cache: {
     id: 'contacts_acme',
-    milliseconds: 60000  // Cache for 1 minute
-  }
+    milliseconds: 60000, // Cache for 1 minute
+  },
 })
 ```
 
@@ -431,11 +457,11 @@ Configure connection pool size:
 export const AppDataSource = new DataSource({
   type: 'postgres',
   extra: {
-    max: 20,              // Maximum connections
-    min: 5,               // Minimum connections
-    idleTimeoutMillis: 30000,  // Close idle after 30s
-    connectionTimeoutMillis: 2000
-  }
+    max: 20, // Maximum connections
+    min: 5, // Minimum connections
+    idleTimeoutMillis: 30000, // Close idle after 30s
+    connectionTimeoutMillis: 2000,
+  },
 })
 ```
 
@@ -444,8 +470,8 @@ export const AppDataSource = new DataSource({
 ```typescript
 export const AppDataSource = new DataSource({
   logging: ['query', 'error', 'warn'],
-  maxQueryExecutionTime: 1000,  // Log queries > 1 second
-  logger: 'advanced-console'
+  maxQueryExecutionTime: 1000, // Log queries > 1 second
+  logger: 'advanced-console',
 })
 ```
 
@@ -460,8 +486,8 @@ export const AppDataSource = new DataSource({
   extra: {
     // PostgreSQL-specific options
     statement_timeout: 30000,
-    idle_in_transaction_session_timeout: 30000
-  }
+    idle_in_transaction_session_timeout: 30000,
+  },
 })
 ```
 
@@ -472,10 +498,14 @@ import { Raw } from 'typeorm'
 
 const results = await contactRepository.find({
   where: {
-    firstName: Raw(alias => `to_tsvector('english', ${alias}) @@ to_tsquery('english', :query)`, {
-      query: 'john'
-    })
-  }
+    firstName: Raw(
+      (alias) =>
+        `to_tsvector('english', ${alias}) @@ to_tsquery('english', :query)`,
+      {
+        query: 'john',
+      }
+    ),
+  },
 })
 ```
 
@@ -484,7 +514,7 @@ const results = await contactRepository.find({
 ```typescript
 export const AppDataSource = new DataSource({
   type: 'mysql',
-  charset: 'utf8mb4',  // Support for Unicode
+  charset: 'utf8mb4', // Support for Unicode
   // ... other options
 })
 ```
@@ -506,15 +536,19 @@ export const AppDataSource = new DataSource({
   type: 'mssql',
   options: {
     encrypt: true,
-    trustServerCertificate: true
-  }
+    trustServerCertificate: true,
+  },
 })
 ```
 
 ## Error Handling
 
 ```typescript
-import { ConnectionError, QueryError, TransactionError } from 'have-we-met/adapters'
+import {
+  ConnectionError,
+  QueryError,
+  TransactionError,
+} from 'have-we-met/adapters'
 import { QueryFailedError } from 'typeorm'
 
 try {
@@ -551,15 +585,20 @@ describe('Contact Matching', () => {
     delete: vi.fn(),
     count: vi.fn(),
     manager: {
-      transaction: vi.fn()
-    }
+      transaction: vi.fn(),
+    },
   } as unknown as Repository<Contact>
 
   const adapter = new TypeORMAdapter(mockRepository)
 
   it('finds contacts by email', async () => {
     mockRepository.find.mockResolvedValue([
-      { id: '1', email: 'test@example.com', firstName: 'John', lastName: 'Doe' }
+      {
+        id: '1',
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
     ])
 
     const results = await adapter.findByBlockingKeys(
@@ -585,7 +624,7 @@ describe('Integration: Contact Deduplication', () => {
       type: 'sqlite',
       database: ':memory:',
       entities: [Contact],
-      synchronize: true
+      synchronize: true,
     })
     await dataSource.initialize()
     repository = dataSource.getRepository(Contact)
@@ -603,7 +642,7 @@ describe('Integration: Contact Deduplication', () => {
     // Insert test data
     await repository.save([
       { firstName: 'Michael', lastName: 'Williams', email: 'mike@company.com' },
-      { firstName: 'Mike', lastName: 'Williams', email: 'mike@company.com' }
+      { firstName: 'Mike', lastName: 'Williams', email: 'mike@company.com' },
     ])
 
     const result = await resolver.deduplicateBatchFromDatabase()
@@ -625,14 +664,14 @@ async function processNewContacts() {
 
   const newContacts = await contactRepository.find({
     where: {
-      createdAt: MoreThan(yesterday)
-    }
+      createdAt: MoreThan(yesterday),
+    },
   })
 
   for (const contact of newContacts) {
     const matches = await resolver.resolveWithDatabase(contact)
 
-    if (matches.some(m => m.outcome === 'definite-match')) {
+    if (matches.some((m) => m.outcome === 'definite-match')) {
       console.log(`Duplicate contact: ${contact.id}`)
       // Handle duplicate
     }
@@ -649,7 +688,7 @@ async function bulkImport(contacts: Partial<Contact>[]) {
   for (const contact of contacts) {
     try {
       const matches = await resolver.resolveWithDatabase(contact)
-      const isDuplicate = matches.some(m => m.outcome === 'definite-match')
+      const isDuplicate = matches.some((m) => m.outcome === 'definite-match')
 
       if (!isDuplicate) {
         await contactRepository.save(contact)
@@ -699,7 +738,9 @@ export class AddBlockingKeys1234567890 implements MigrationInterface {
 
   async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX idx_contacts_soundex`)
-    await queryRunner.query(`ALTER TABLE contacts DROP COLUMN soundex_last_name`)
+    await queryRunner.query(
+      `ALTER TABLE contacts DROP COLUMN soundex_last_name`
+    )
   }
 }
 ```
@@ -713,7 +754,7 @@ Enable query logging:
 ```typescript
 export const AppDataSource = new DataSource({
   logging: true,
-  maxQueryExecutionTime: 1000
+  maxQueryExecutionTime: 1000,
 })
 ```
 
@@ -721,12 +762,13 @@ export const AppDataSource = new DataSource({
 
 ```typescript
 // Check active connections
-const activeConnections = AppDataSource.driver.master.pool?._allConnections?.length
+const activeConnections =
+  AppDataSource.driver.master.pool?._allConnections?.length
 console.log(`Active connections: ${activeConnections}`)
 
 // Increase pool size if needed
 extra: {
-  max: 50  // Increase from default 10
+  max: 50 // Increase from default 10
 }
 ```
 
@@ -735,9 +777,12 @@ extra: {
 Use transaction isolation levels:
 
 ```typescript
-await contactRepository.manager.transaction('READ COMMITTED', async (manager) => {
-  // Your transaction logic
-})
+await contactRepository.manager.transaction(
+  'READ COMMITTED',
+  async (manager) => {
+    // Your transaction logic
+  }
+)
 ```
 
 ## Next Steps

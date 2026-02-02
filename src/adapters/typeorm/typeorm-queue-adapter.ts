@@ -17,10 +17,15 @@ type Repository<T> = {
  * TypeORM implementation of the queue adapter.
  * Persists review queue items using TypeORM.
  */
-export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends BaseQueueAdapter<T> {
+export class TypeORMQueueAdapter<
+  T extends Record<string, unknown>,
+> extends BaseQueueAdapter<T> {
   private readonly queueRepository: Repository<Record<string, unknown>>
 
-  constructor(queueRepository: Repository<Record<string, unknown>>, options?: QueueOptions) {
+  constructor(
+    queueRepository: Repository<Record<string, unknown>>,
+    options?: QueueOptions
+  ) {
     super(options)
     this.queueRepository = queueRepository
   }
@@ -39,29 +44,33 @@ export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends Base
 
     if (normalized.since) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.createdAt) where.createdAt = {} as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.createdAt)
+        where.createdAt = {} as any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.createdAt as any).$gte = normalized.since
     }
 
     if (normalized.until) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.createdAt) where.createdAt = {} as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.createdAt)
+        where.createdAt = {} as any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.createdAt as any).$lte = normalized.until
     }
 
     if (normalized.priority?.min !== undefined) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.priority) where.priority = {} as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.priority)
+        where.priority = {} as any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.priority as any).$gte = normalized.priority.min
     }
 
     if (normalized.priority?.max !== undefined) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.priority) where.priority = {} as any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.priority)
+        where.priority = {} as any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.priority as any).$lte = normalized.priority.max
     }
 
@@ -85,7 +94,7 @@ export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends Base
 
   async updateQueueItem(
     id: string,
-    updates: Partial<QueueItem<T>>,
+    updates: Partial<QueueItem<T>>
   ): Promise<QueueItem<T>> {
     try {
       const serializedUpdates: Record<string, unknown> = {}
@@ -94,10 +103,14 @@ export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends Base
         serializedUpdates.status = updates.status
       }
       if (updates.candidateRecord !== undefined) {
-        serializedUpdates.candidateRecord = JSON.stringify(updates.candidateRecord)
+        serializedUpdates.candidateRecord = JSON.stringify(
+          updates.candidateRecord
+        )
       }
       if (updates.potentialMatches !== undefined) {
-        serializedUpdates.potentialMatches = JSON.stringify(updates.potentialMatches)
+        serializedUpdates.potentialMatches = JSON.stringify(
+          updates.potentialMatches
+        )
       }
       if (updates.decidedAt !== undefined) {
         serializedUpdates.decidedAt = updates.decidedAt
@@ -120,7 +133,10 @@ export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends Base
 
       serializedUpdates.updatedAt = new Date()
 
-      const updateResult = await this.queueRepository.update({ id }, serializedUpdates)
+      const updateResult = await this.queueRepository.update(
+        { id },
+        serializedUpdates
+      )
 
       const affected = (updateResult as { affected?: number }).affected
       if (affected === 0) {
@@ -130,7 +146,10 @@ export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends Base
       const updated = await this.queueRepository.findOne({ where: { id } })
 
       if (!updated) {
-        throw new NotFoundError(`Queue item with id '${id}' not found after update`, { id })
+        throw new NotFoundError(
+          `Queue item with id '${id}' not found after update`,
+          { id }
+        )
       }
 
       return this.deserializeQueueItem(updated)
@@ -214,7 +233,9 @@ export class TypeORMQueueAdapter<T extends Record<string, unknown>> extends Base
   async countQueueItems(filter?: QueueFilter): Promise<number> {
     try {
       const where = filter ? this.buildWhereClause(filter) : undefined
-      const result = await this.queueRepository.count(where ? { where } : undefined)
+      const result = await this.queueRepository.count(
+        where ? { where } : undefined
+      )
       return result
     } catch (error) {
       throw new QueryError('Failed to count queue items', {

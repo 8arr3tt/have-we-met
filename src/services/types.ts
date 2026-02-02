@@ -15,7 +15,14 @@ export type ServiceType = 'validation' | 'lookup' | 'custom'
  * Error types that can occur during service execution.
  * Used for retry eligibility and error handling.
  */
-export type ServiceErrorType = 'timeout' | 'network' | 'validation' | 'not_found' | 'rejected' | 'unavailable' | 'unknown'
+export type ServiceErrorType =
+  | 'timeout'
+  | 'network'
+  | 'validation'
+  | 'not_found'
+  | 'rejected'
+  | 'unavailable'
+  | 'unknown'
 
 /**
  * Logger interface for service execution logging
@@ -224,7 +231,10 @@ export interface ServicePlugin<TInput = unknown, TOutput = unknown> {
   description?: string
 
   /** Execute the service call */
-  execute(input: TInput, context: ServiceContext): Promise<ServiceResult<TOutput>>
+  execute(
+    input: TInput,
+    context: ServiceContext
+  ): Promise<ServiceResult<TOutput>>
 
   /** Health check for the service */
   healthCheck?(): Promise<HealthCheckResult>
@@ -290,7 +300,10 @@ export interface ValidationOutput {
 /**
  * Service that validates identifier values
  */
-export interface ValidationService extends ServicePlugin<ValidationInput, ValidationOutput> {
+export interface ValidationService extends ServicePlugin<
+  ValidationInput,
+  ValidationOutput
+> {
   type: 'validation'
 }
 
@@ -344,7 +357,10 @@ export interface LookupOutput {
 /**
  * Service that looks up additional data from external sources
  */
-export interface LookupService extends ServicePlugin<LookupInput, LookupOutput> {
+export interface LookupService extends ServicePlugin<
+  LookupInput,
+  LookupOutput
+> {
   type: 'lookup'
 }
 
@@ -379,7 +395,10 @@ export interface CustomOutput {
 /**
  * Service for arbitrary processing (fraud detection, scoring, etc.)
  */
-export interface CustomService extends ServicePlugin<CustomInput, CustomOutput> {
+export interface CustomService extends ServicePlugin<
+  CustomInput,
+  CustomOutput
+> {
   type: 'custom'
 }
 
@@ -515,7 +534,10 @@ export interface ServiceConfig {
 /**
  * Default service configuration values
  */
-export const DEFAULT_SERVICE_CONFIG: Omit<ServiceConfig, 'plugin' | 'executionPoint'> = {
+export const DEFAULT_SERVICE_CONFIG: Omit<
+  ServiceConfig,
+  'plugin' | 'executionPoint'
+> = {
   onFailure: 'continue',
   timeout: 5000,
   priority: 100,
@@ -614,12 +636,14 @@ export interface ServiceExecutor {
   unregister(name: string): boolean
 
   /** Execute all pre-match services */
-  executePreMatch(record: Record<string, unknown>): Promise<ServiceExecutionResult>
+  executePreMatch(
+    record: Record<string, unknown>
+  ): Promise<ServiceExecutionResult>
 
   /** Execute all post-match services */
   executePostMatch(
     record: Record<string, unknown>,
-    matchResult: MatchResult,
+    matchResult: MatchResult
   ): Promise<ServiceExecutionResult>
 
   /** Execute a specific service */

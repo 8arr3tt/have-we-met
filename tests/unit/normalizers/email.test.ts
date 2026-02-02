@@ -119,54 +119,76 @@ describe('Email Normalizer', () => {
       it('should remove plus-addressing by default', () => {
         expect(normalizeEmail('user+tag@example.com')).toBe('user@example.com')
         expect(normalizeEmail('john+work@domain.com')).toBe('john@domain.com')
-        expect(normalizeEmail('test+spam+filter@test.org')).toBe('test@test.org')
+        expect(normalizeEmail('test+spam+filter@test.org')).toBe(
+          'test@test.org'
+        )
       })
 
       it('should preserve plus-addressing when option is false', () => {
-        expect(normalizeEmail('user+tag@example.com', { removePlusAddressing: false }))
-          .toBe('user+tag@example.com')
-        expect(normalizeEmail('john+work@domain.com', { removePlusAddressing: false }))
-          .toBe('john+work@domain.com')
+        expect(
+          normalizeEmail('user+tag@example.com', {
+            removePlusAddressing: false,
+          })
+        ).toBe('user+tag@example.com')
+        expect(
+          normalizeEmail('john+work@domain.com', {
+            removePlusAddressing: false,
+          })
+        ).toBe('john+work@domain.com')
       })
 
       it('should handle emails without plus-addressing', () => {
         expect(normalizeEmail('user@example.com')).toBe('user@example.com')
-        expect(normalizeEmail('john.doe@example.com')).toBe('john.doe@example.com')
+        expect(normalizeEmail('john.doe@example.com')).toBe(
+          'john.doe@example.com'
+        )
       })
     })
 
     describe('Gmail dot normalization', () => {
       it('should not remove dots by default', () => {
-        expect(normalizeEmail('john.smith@gmail.com')).toBe('john.smith@gmail.com')
-        expect(normalizeEmail('first.last@gmail.com')).toBe('first.last@gmail.com')
+        expect(normalizeEmail('john.smith@gmail.com')).toBe(
+          'john.smith@gmail.com'
+        )
+        expect(normalizeEmail('first.last@gmail.com')).toBe(
+          'first.last@gmail.com'
+        )
       })
 
       it('should remove dots in Gmail addresses when enabled', () => {
-        expect(normalizeEmail('john.smith@gmail.com', { removeGmailDots: true }))
-          .toBe('johnsmith@gmail.com')
-        expect(normalizeEmail('first.last@gmail.com', { removeGmailDots: true }))
-          .toBe('firstlast@gmail.com')
-        expect(normalizeEmail('a.b.c.d@gmail.com', { removeGmailDots: true }))
-          .toBe('abcd@gmail.com')
+        expect(
+          normalizeEmail('john.smith@gmail.com', { removeGmailDots: true })
+        ).toBe('johnsmith@gmail.com')
+        expect(
+          normalizeEmail('first.last@gmail.com', { removeGmailDots: true })
+        ).toBe('firstlast@gmail.com')
+        expect(
+          normalizeEmail('a.b.c.d@gmail.com', { removeGmailDots: true })
+        ).toBe('abcd@gmail.com')
       })
 
       it('should remove dots in googlemail.com addresses when enabled', () => {
-        expect(normalizeEmail('john.smith@googlemail.com', { removeGmailDots: true }))
-          .toBe('johnsmith@googlemail.com')
+        expect(
+          normalizeEmail('john.smith@googlemail.com', { removeGmailDots: true })
+        ).toBe('johnsmith@googlemail.com')
       })
 
       it('should not remove dots in non-Gmail addresses', () => {
-        expect(normalizeEmail('john.smith@example.com', { removeGmailDots: true }))
-          .toBe('john.smith@example.com')
-        expect(normalizeEmail('user.name@yahoo.com', { removeGmailDots: true }))
-          .toBe('user.name@yahoo.com')
+        expect(
+          normalizeEmail('john.smith@example.com', { removeGmailDots: true })
+        ).toBe('john.smith@example.com')
+        expect(
+          normalizeEmail('user.name@yahoo.com', { removeGmailDots: true })
+        ).toBe('user.name@yahoo.com')
       })
 
       it('should work with both plus-addressing and dot removal', () => {
-        expect(normalizeEmail('john.smith+work@gmail.com', {
-          removePlusAddressing: true,
-          removeGmailDots: true,
-        })).toBe('johnsmith@gmail.com')
+        expect(
+          normalizeEmail('john.smith+work@gmail.com', {
+            removePlusAddressing: true,
+            removeGmailDots: true,
+          })
+        ).toBe('johnsmith@gmail.com')
       })
     })
 
@@ -257,22 +279,28 @@ describe('Email Normalizer', () => {
       })
 
       it('should handle whitespace with plus-addressing', () => {
-        expect(normalizeEmail('  user+work@example.com  ')).toBe('user@example.com')
+        expect(normalizeEmail('  user+work@example.com  ')).toBe(
+          'user@example.com'
+        )
       })
 
       it('should handle all options together', () => {
-        expect(normalizeEmail('  John.Smith+Work@Gmail.Com  ', {
-          removePlusAddressing: true,
-          removeGmailDots: true,
-          normalizeDomain: true,
-        })).toBe('johnsmith@gmail.com')
+        expect(
+          normalizeEmail('  John.Smith+Work@Gmail.Com  ', {
+            removePlusAddressing: true,
+            removeGmailDots: true,
+            normalizeDomain: true,
+          })
+        ).toBe('johnsmith@gmail.com')
       })
 
       it('should handle complex Gmail addresses', () => {
-        expect(normalizeEmail('john.smith+newsletters+spam@gmail.com', {
-          removePlusAddressing: true,
-          removeGmailDots: true,
-        })).toBe('johnsmith@gmail.com')
+        expect(
+          normalizeEmail('john.smith+newsletters+spam@gmail.com', {
+            removePlusAddressing: true,
+            removeGmailDots: true,
+          })
+        ).toBe('johnsmith@gmail.com')
       })
     })
 
@@ -283,17 +311,21 @@ describe('Email Normalizer', () => {
       })
 
       it('should handle long domain names', () => {
-        expect(normalizeEmail('user@subdomain.example.co.uk'))
-          .toBe('user@subdomain.example.co.uk')
+        expect(normalizeEmail('user@subdomain.example.co.uk')).toBe(
+          'user@subdomain.example.co.uk'
+        )
       })
 
       it('should handle numbers in emails', () => {
-        expect(normalizeEmail('user123@example456.com')).toBe('user123@example456.com')
+        expect(normalizeEmail('user123@example456.com')).toBe(
+          'user123@example456.com'
+        )
       })
 
       it('should handle hyphens and underscores', () => {
-        expect(normalizeEmail('user-name_test@example.com'))
-          .toBe('user-name_test@example.com')
+        expect(normalizeEmail('user-name_test@example.com')).toBe(
+          'user-name_test@example.com'
+        )
       })
 
       it('should handle international TLDs', () => {

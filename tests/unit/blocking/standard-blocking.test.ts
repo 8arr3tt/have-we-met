@@ -85,7 +85,9 @@ describe('StandardBlockingStrategy', () => {
 
       expect(blocks.size).toBe(2)
       // Knight and Night should have the same Metaphone code
-      const knightBlock = Array.from(blocks.values()).find((b) => b.length === 2)
+      const knightBlock = Array.from(blocks.values()).find(
+        (b) => b.length === 2
+      )
       expect(knightBlock).toBeDefined()
       expect(knightBlock).toHaveLength(2)
     })
@@ -97,9 +99,24 @@ describe('StandardBlockingStrategy', () => {
       })
 
       const records: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', dateOfBirth: new Date('1990-01-15') },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', dateOfBirth: new Date('1990-12-31') },
-        { id: '3', firstName: 'Bob', lastName: 'Jones', dateOfBirth: new Date('1985-06-20') },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          dateOfBirth: new Date('1990-01-15'),
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          dateOfBirth: new Date('1990-12-31'),
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          dateOfBirth: new Date('1985-06-20'),
+        },
       ]
 
       const blocks = strategy.generateBlocks(records)
@@ -121,9 +138,24 @@ describe('StandardBlockingStrategy', () => {
       })
 
       const records: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', email: 'jane@example.com' },
-        { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@other.com' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          email: 'jane@example.com',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob@other.com',
+        },
       ]
 
       const blocks = strategy.generateBlocks(records)
@@ -184,9 +216,24 @@ describe('StandardBlockingStrategy', () => {
       })
 
       const records: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', dateOfBirth: new Date('1990-01-01') },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', dateOfBirth: new Date('1990-12-31') },
-        { id: '3', firstName: 'Bob', lastName: 'Jones', dateOfBirth: new Date('1990-06-15') },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          dateOfBirth: new Date('1990-01-01'),
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          dateOfBirth: new Date('1990-12-31'),
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          dateOfBirth: new Date('1990-06-15'),
+        },
       ]
 
       const blocks = strategy.generateBlocks(records)
@@ -386,7 +433,9 @@ describe('StandardBlockingStrategy', () => {
         field: 'lastName',
       })
 
-      const records: Person[] = [{ id: '1', firstName: 'John', lastName: 'Smith' }]
+      const records: Person[] = [
+        { id: '1', firstName: 'John', lastName: 'Smith' },
+      ]
 
       const blocks = strategy.generateBlocks(records)
       expect(blocks.size).toBe(1)

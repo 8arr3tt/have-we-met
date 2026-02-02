@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { PrismaAdapter } from '../../../src/adapters/prisma/prisma-adapter'
 import { DrizzleAdapter } from '../../../src/adapters/drizzle/drizzle-adapter'
 import { TypeORMAdapter } from '../../../src/adapters/typeorm/typeorm-adapter'
-import type { AdapterConfig, DatabaseAdapter } from '../../../src/adapters/types'
+import type {
+  AdapterConfig,
+  DatabaseAdapter,
+} from '../../../src/adapters/types'
 
 type TestRecord = {
   id: string
@@ -12,7 +15,9 @@ type TestRecord = {
   dobYear?: number
 }
 
-class InMemoryAdapter<T extends Record<string, unknown>> implements DatabaseAdapter<T> {
+class InMemoryAdapter<
+  T extends Record<string, unknown>,
+> implements DatabaseAdapter<T> {
   private records: Map<string, T> = new Map()
   private nextId = 1
 
@@ -43,7 +48,9 @@ class InMemoryAdapter<T extends Record<string, unknown>> implements DatabaseAdap
   }
 
   async findByIds(ids: string[]): Promise<T[]> {
-    return ids.map((id) => this.records.get(id)).filter((r): r is T => r !== undefined)
+    return ids
+      .map((id) => this.records.get(id))
+      .filter((r): r is T => r !== undefined)
   }
 
   async findAll(): Promise<T[]> {
@@ -75,7 +82,9 @@ class InMemoryAdapter<T extends Record<string, unknown>> implements DatabaseAdap
     this.records.delete(id)
   }
 
-  async transaction<R>(callback: (adapter: DatabaseAdapter<T>) => Promise<R>): Promise<R> {
+  async transaction<R>(
+    callback: (adapter: DatabaseAdapter<T>) => Promise<R>
+  ): Promise<R> {
     return callback(this)
   }
 
@@ -87,7 +96,9 @@ class InMemoryAdapter<T extends Record<string, unknown>> implements DatabaseAdap
     return results
   }
 
-  async batchUpdate(updates: Array<{ id: string; updates: Partial<T> }>): Promise<T[]> {
+  async batchUpdate(
+    updates: Array<{ id: string; updates: Partial<T> }>
+  ): Promise<T[]> {
     const results: T[] = []
     for (const { id, updates: updateData } of updates) {
       results.push(await this.update(id, updateData))
@@ -138,7 +149,9 @@ describe('Performance: Database Adapters', () => {
 
       const start = Date.now()
 
-      const results = await adapter.findByBlockingKeys(new Map([['lastName', 'Last42']]))
+      const results = await adapter.findByBlockingKeys(
+        new Map([['lastName', 'Last42']])
+      )
 
       const duration = Date.now() - start
       expect(duration).toBeLessThan(100)
@@ -185,7 +198,9 @@ describe('Performance: Database Adapters', () => {
       await adapter.batchInsert(records)
 
       const allRecords = await adapter.findAll()
-      const blockedRecords = await adapter.findByBlockingKeys(new Map([['lastName', 'Last42']]))
+      const blockedRecords = await adapter.findByBlockingKeys(
+        new Map([['lastName', 'Last42']])
+      )
 
       expect(blockedRecords.length).toBeLessThan(allRecords.length)
       expect(blockedRecords.length).toBeGreaterThan(0)
@@ -197,7 +212,9 @@ describe('Performance: Database Adapters', () => {
       const records = generateRecords(5000)
       await adapter.batchInsert(records)
 
-      const singleKeyResults = await adapter.findByBlockingKeys(new Map([['lastName', 'Last42']]))
+      const singleKeyResults = await adapter.findByBlockingKeys(
+        new Map([['lastName', 'Last42']])
+      )
 
       const multiKeyResults = await adapter.findByBlockingKeys(
         new Map([
@@ -206,7 +223,9 @@ describe('Performance: Database Adapters', () => {
         ])
       )
 
-      expect(multiKeyResults.length).toBeLessThanOrEqual(singleKeyResults.length)
+      expect(multiKeyResults.length).toBeLessThanOrEqual(
+        singleKeyResults.length
+      )
     })
   })
 
@@ -275,7 +294,9 @@ describe('Performance: Database Adapters', () => {
 
       await adapter.batchInsert(customers)
 
-      const duplicates = await adapter.findByBlockingKeys(new Map([['lastName', 'Smith']]))
+      const duplicates = await adapter.findByBlockingKeys(
+        new Map([['lastName', 'Smith']])
+      )
 
       expect(duplicates.length).toBe(1000)
 
@@ -298,9 +319,13 @@ describe('Performance: Database Adapters', () => {
 
       const start = Date.now()
 
-      const byLastName = await adapter.findByBlockingKeys(new Map([['lastName', 'LastName42']]))
+      const byLastName = await adapter.findByBlockingKeys(
+        new Map([['lastName', 'LastName42']])
+      )
 
-      const byDob = await adapter.findByBlockingKeys(new Map([['dobYear', 1980]]))
+      const byDob = await adapter.findByBlockingKeys(
+        new Map([['dobYear', 1980]])
+      )
 
       const byBoth = await adapter.findByBlockingKeys(
         new Map([
@@ -332,7 +357,9 @@ describe('Performance: Database Adapters', () => {
       await adapter.batchInsert(newBatch)
 
       for (const newRecord of newBatch.slice(0, 10)) {
-        await adapter.findByBlockingKeys(new Map([['lastName', newRecord.lastName]]))
+        await adapter.findByBlockingKeys(
+          new Map([['lastName', newRecord.lastName]])
+        )
       }
 
       const duration = Date.now() - start
@@ -349,7 +376,9 @@ describe('Performance: Database Adapters', () => {
       const records = generateRecords(10000)
       await adapter.batchInsert(records)
 
-      const indexedResults = await adapter.findByBlockingKeys(new Map([['lastName', 'Last42']]))
+      const indexedResults = await adapter.findByBlockingKeys(
+        new Map([['lastName', 'Last42']])
+      )
       const allRecords = await adapter.findAll()
       const fullScanResults = allRecords.filter((r) => r.lastName === 'Last42')
 
@@ -382,7 +411,9 @@ describe('Performance: Database Adapters', () => {
 
       for (let i = 0; i < 100; i++) {
         const start = Date.now()
-        await adapter.findByBlockingKeys(new Map([['lastName', `Last${i % 50}`]]))
+        await adapter.findByBlockingKeys(
+          new Map([['lastName', `Last${i % 50}`]])
+        )
         queryTimes.push(Date.now() - start)
       }
 

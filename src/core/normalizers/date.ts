@@ -174,9 +174,7 @@ export function parseDateComponents(
   }
 
   // Try natural format: "January 30, 2024" or "Jan 30 2024" or "30 January 2024"
-  const naturalMatch1 = str.match(
-    /^([a-z]+)\s+(\d{1,2}),?\s+(\d{4})$/i
-  )
+  const naturalMatch1 = str.match(/^([a-z]+)\s+(\d{1,2}),?\s+(\d{4})$/i)
   if (naturalMatch1) {
     const monthName = naturalMatch1[1].toLowerCase()
     month = MONTH_NAMES[monthName]
@@ -397,7 +395,9 @@ export const normalizeDate: NormalizerFunction<DateNormalizerOptions> = (
   }
 
   // Return based on output format
-  return opts.outputFormat === 'components' ? components : components.iso || null
+  return opts.outputFormat === 'components'
+    ? components
+    : components.iso || null
 }
 
 // Auto-register the date normalizer

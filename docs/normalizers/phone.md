@@ -42,10 +42,10 @@ interface PhoneNormalizerOptions {
 
 ```typescript
 interface PhoneComponents {
-  countryCode?: string   // E.164 country code (e.g., "1" for US)
+  countryCode?: string // E.164 country code (e.g., "1" for US)
   nationalNumber: string // National number without country code
-  extension?: string     // Extension number if present
-  e164: string          // Full E.164 format: +15551234567
+  extension?: string // Extension number if present
+  e164: string // Full E.164 format: +15551234567
 }
 ```
 
@@ -68,14 +68,12 @@ E.164 is the international standard for phone numbers:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('phone')
-      .type('phone')
-      .normalizer('phone', {
-        defaultCountry: 'US',
-        validate: true,
-        extractExtension: true
-      })
+  .schema((s) =>
+    s.field('phone').type('phone').normalizer('phone', {
+      defaultCountry: 'US',
+      validate: true,
+      extractExtension: true,
+    })
   )
   .matching(/* ... */)
   .build()
@@ -146,7 +144,7 @@ normalizePhone('+86 10 1234 5678')
 normalizePhone('555-1234 ext. 567', {
   defaultCountry: 'US',
   extractExtension: true,
-  outputFormat: 'components'
+  outputFormat: 'components',
 })
 // → {
 //   countryCode: '1',
@@ -158,7 +156,7 @@ normalizePhone('555-1234 ext. 567', {
 // Extension with "x"
 normalizePhone('(555) 123-4567 x890', {
   defaultCountry: 'US',
-  extractExtension: true
+  extractExtension: true,
 })
 // → '+15551234567' (extension extracted but not in E.164)
 ```
@@ -167,7 +165,7 @@ normalizePhone('(555) 123-4567 x890', {
 
 ```typescript
 normalizePhone('+1 (555) 123-4567', {
-  outputFormat: 'components'
+  outputFormat: 'components',
 })
 // → {
 //   countryCode: '1',
@@ -180,16 +178,16 @@ normalizePhone('+1 (555) 123-4567', {
 
 The normalizer uses the `libphonenumber-js` library, which supports all international country codes:
 
-| Country | Code | Example | Normalized |
-|---------|------|---------|------------|
-| US/Canada | +1 | (555) 123-4567 | +15551234567 |
-| UK | +44 | 020 7123 4567 | +442071234567 |
-| Germany | +49 | 030 123456 | +4930123456 |
-| France | +33 | 01 23 45 67 89 | +33123456789 |
-| India | +91 | 98765 43210 | +919876543210 |
-| China | +86 | 10 1234 5678 | +86101234567 |
-| Australia | +61 | (02) 1234 5678 | +61212345678 |
-| Japan | +81 | 03-1234-5678 | +81312345678 |
+| Country   | Code | Example        | Normalized    |
+| --------- | ---- | -------------- | ------------- |
+| US/Canada | +1   | (555) 123-4567 | +15551234567  |
+| UK        | +44  | 020 7123 4567  | +442071234567 |
+| Germany   | +49  | 030 123456     | +4930123456   |
+| France    | +33  | 01 23 45 67 89 | +33123456789  |
+| India     | +91  | 98765 43210    | +919876543210 |
+| China     | +86  | 10 1234 5678   | +86101234567  |
+| Australia | +61  | (02) 1234 5678 | +61212345678  |
+| Japan     | +81  | 03-1234-5678   | +81312345678  |
 
 ## Default Country
 
@@ -219,27 +217,27 @@ When `validate: true` (default), the normalizer validates phone number format an
 // Valid US number
 normalizePhone('555-123-4567', {
   defaultCountry: 'US',
-  validate: true
+  validate: true,
 })
 // → '+15551234567'
 
 // Too short
 normalizePhone('123', {
   defaultCountry: 'US',
-  validate: true
+  validate: true,
 })
 // → null
 
 // Non-numeric
 normalizePhone('not-a-phone', {
   defaultCountry: 'US',
-  validate: true
+  validate: true,
 })
 // → null
 
 // Skip validation
 normalizePhone('123', {
-  validate: false
+  validate: false,
 })
 // → Attempts to format (may succeed or fail)
 ```
@@ -349,16 +347,10 @@ Extensions are not part of E.164 format. If you need to match on extensions, sto
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('phone')
-      .type('phone')
-      .normalizer('phone', { defaultCountry: 'US' })
+  .schema((s) =>
+    s.field('phone').type('phone').normalizer('phone', { defaultCountry: 'US' })
   )
-  .matching(m => m
-    .field('phone')
-      .strategy('exact')
-      .weight(100)
-  )
+  .matching((m) => m.field('phone').strategy('exact').weight(100))
   .build()
 ```
 
@@ -387,23 +379,25 @@ interface Contact {
 }
 
 const resolver = HaveWeMet.create<Contact>()
-  .schema(s => s
-    .field('name')
+  .schema((s) =>
+    s
+      .field('name')
       .type('name')
       .normalizer('name')
-    .field('phone')
+      .field('phone')
       .type('phone')
       .normalizer('phone', {
         defaultCountry: 'US',
         validate: true,
-        extractExtension: false
+        extractExtension: false,
       })
   )
-  .matching(m => m
-    .field('name')
+  .matching((m) =>
+    m
+      .field('name')
       .strategy('jaro-winkler')
       .weight(40)
-    .field('phone')
+      .field('phone')
       .strategy('exact')
       .weight(60)
   )
@@ -414,15 +408,15 @@ const resolver = HaveWeMet.create<Contact>()
 const input = {
   id: 'in',
   name: 'John Smith',
-  phone: '(555) 123-4567'
+  phone: '(555) 123-4567',
 }
 
 const candidates = [
   {
     id: 'c1',
     name: 'John Smith',
-    phone: '+1-555-123-4567'
-  }
+    phone: '+1-555-123-4567',
+  },
 ]
 
 const result = resolver.resolve(input, candidates)
@@ -470,19 +464,15 @@ Support multiple countries with region detection:
 ```typescript
 // For US/Canada numbers
 const usResolver = HaveWeMet.create<Business>()
-  .schema(s => s
-    .field('phone')
-      .type('phone')
-      .normalizer('phone', { defaultCountry: 'US' })
+  .schema((s) =>
+    s.field('phone').type('phone').normalizer('phone', { defaultCountry: 'US' })
   )
   .build()
 
 // For UK numbers
 const ukResolver = HaveWeMet.create<Business>()
-  .schema(s => s
-    .field('phone')
-      .type('phone')
-      .normalizer('phone', { defaultCountry: 'GB' })
+  .schema((s) =>
+    s.field('phone').type('phone').normalizer('phone', { defaultCountry: 'GB' })
   )
   .build()
 ```

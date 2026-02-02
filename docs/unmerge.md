@@ -7,6 +7,7 @@ Unmerging reverses a golden record merge, restoring the original source records.
 ### When to Unmerge
 
 Unmerge when:
+
 - A merge was a **false positive** (records were different entities)
 - Data quality issues require starting over
 - Business rules change and records should be separate
@@ -15,6 +16,7 @@ Unmerge when:
 ### Prerequisites
 
 Unmerge requires:
+
 1. **Provenance**: The merge must have been tracked
 2. **Archived source records**: Original records preserved during merge
 3. **Unmerge executor**: Configured with provenance store and archive
@@ -117,6 +119,7 @@ const result = await unmergeExecutor.unmerge(
 ```
 
 **What happens:**
+
 1. All source records restored to active state
 2. Golden record deleted
 3. Provenance marked as unmerged
@@ -131,13 +134,14 @@ const result = await unmergeExecutor.unmerge(
   { goldenRecordId, unmergedBy: 'admin', reason: 'Split off one record' },
   {
     mode: 'partial',
-    sourceRecordIdsToRestore: ['rec-002'],  // Only restore this one
-    deleteGoldenRecord: false               // Keep the golden record
+    sourceRecordIdsToRestore: ['rec-002'], // Only restore this one
+    deleteGoldenRecord: false, // Keep the golden record
   }
 )
 ```
 
 **Use cases:**
+
 - One source was incorrectly merged, others are correct
 - Need to separate specific records while maintaining the merge
 
@@ -225,23 +229,38 @@ For production, implement archive using your database:
 class DatabaseSourceRecordArchive<T> implements SourceRecordArchive<T> {
   constructor(private db: Database) {}
 
-  async archive(records: SourceRecord<T>[], goldenRecordId: string): Promise<void> {
+  async archive(
+    records: SourceRecord<T>[],
+    goldenRecordId: string
+  ): Promise<void> {
     for (const record of records) {
-      await this.db.execute(`
+      await this.db.execute(
+        `
         INSERT INTO source_record_archive (id, golden_record_id, record_data, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5)
-      `, [record.id, goldenRecordId, JSON.stringify(record.record), record.createdAt, record.updatedAt])
+      `,
+        [
+          record.id,
+          goldenRecordId,
+          JSON.stringify(record.record),
+          record.createdAt,
+          record.updatedAt,
+        ]
+      )
     }
   }
 
   async get(recordIds: string[]): Promise<SourceRecord<T>[]> {
-    const rows = await this.db.query(`
+    const rows = await this.db.query(
+      `
       SELECT id, record_data, created_at, updated_at
       FROM source_record_archive
       WHERE id = ANY($1)
-    `, [recordIds])
+    `,
+      [recordIds]
+    )
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       record: JSON.parse(row.record_data),
       createdAt: row.created_at,
@@ -250,17 +269,23 @@ class DatabaseSourceRecordArchive<T> implements SourceRecordArchive<T> {
   }
 
   async remove(recordIds: string[]): Promise<void> {
-    await this.db.execute(`
+    await this.db.execute(
+      `
       DELETE FROM source_record_archive WHERE id = ANY($1)
-    `, [recordIds])
+    `,
+      [recordIds]
+    )
   }
 
   async exists(recordIds: string[]): Promise<Map<string, boolean>> {
-    const rows = await this.db.query(`
+    const rows = await this.db.query(
+      `
       SELECT id FROM source_record_archive WHERE id = ANY($1)
-    `, [recordIds])
+    `,
+      [recordIds]
+    )
 
-    const existingIds = new Set(rows.map(r => r.id))
+    const existingIds = new Set(rows.map((r) => r.id))
     const result = new Map<string, boolean>()
     for (const id of recordIds) {
       result.set(id, existingIds.has(id))
@@ -278,7 +303,7 @@ interface UnmergeResult<T> {
     id: string
     record: T
   }>
-  originalProvenance: Provenance  // For audit
+  originalProvenance: Provenance // For audit
   goldenRecordDeleted: boolean
 }
 ```
@@ -316,14 +341,14 @@ Unmerge operations are tracked in provenance:
 // After unmerge, provenance is marked but not deleted
 const provenance = await provenanceStore.get(goldenRecordId)
 
-console.log('Unmerged:', provenance.unmerged)        // true
+console.log('Unmerged:', provenance.unmerged) // true
 console.log('Unmerged At:', provenance.unmergedAt)
 console.log('Unmerged By:', provenance.unmergedBy)
 console.log('Unmerge Reason:', provenance.unmergeReason)
 
 // Query historical unmerges
 const timeline = await provenanceStore.getMergeTimeline({
-  includeUnmerged: true
+  includeUnmerged: true,
 })
 
 for (const entry of timeline) {
@@ -399,7 +424,8 @@ Always provide meaningful reasons:
 await unmergeExecutor.unmerge({
   goldenRecordId,
   unmergedBy: 'admin@example.com',
-  reason: 'Bob Williams and Robert Williams are different employees - Bob is in Engineering (E1001), Robert is new hire in Product (E2001)',
+  reason:
+    'Bob Williams and Robert Williams are different employees - Bob is in Engineering (E1001), Robert is new hire in Product (E2001)',
 })
 ```
 
@@ -413,8 +439,8 @@ await unmergeExecutor.unmerge({ goldenRecordId, unmergedBy: 'admin' })
 
 // Second attempt fails
 const canUnmerge = await unmergeExecutor.canUnmerge(goldenRecordId)
-console.log(canUnmerge.canUnmerge)  // false
-console.log(canUnmerge.reason)      // "Record has already been unmerged"
+console.log(canUnmerge.canUnmerge) // false
+console.log(canUnmerge.reason) // "Record has already been unmerged"
 ```
 
 ### 5. Consider Re-Matching After Unmerge
@@ -433,12 +459,12 @@ const result = await unmergeExecutor.unmerge({
 for (const restored of result.restoredRecords) {
   const matches = await resolver.resolveWithDatabase(restored.record)
 
-  if (matches.some(m => m.outcome === 'potential-match')) {
+  if (matches.some((m) => m.outcome === 'potential-match')) {
     // Add to review queue for human decision
     await resolver.queue.add({
       candidateRecord: restored.record,
       potentialMatches: matches,
-      context: { source: 'post-unmerge-review' }
+      context: { source: 'post-unmerge-review' },
     })
   }
 }
@@ -452,11 +478,15 @@ Two customer records were merged but are different people.
 
 ```typescript
 // Full unmerge - restore both, delete golden record
-await unmergeExecutor.unmerge({
-  goldenRecordId: 'golden-cust-001',
-  unmergedBy: 'admin',
-  reason: 'John Smith (marketing) and John Smith (engineering) are different employees',
-}, { mode: 'full' })
+await unmergeExecutor.unmerge(
+  {
+    goldenRecordId: 'golden-cust-001',
+    unmergedBy: 'admin',
+    reason:
+      'John Smith (marketing) and John Smith (engineering) are different employees',
+  },
+  { mode: 'full' }
+)
 ```
 
 ### Scenario 2: Partial Merge Correction
@@ -465,15 +495,18 @@ Three records were merged, but one shouldn't have been included.
 
 ```typescript
 // Partial unmerge - restore one record, keep the golden record
-await unmergeExecutor.unmerge({
-  goldenRecordId: 'golden-cust-001',
-  unmergedBy: 'admin',
-  reason: 'Third record was a different person',
-}, {
-  mode: 'partial',
-  sourceRecordIdsToRestore: ['rec-003'],
-  deleteGoldenRecord: false,
-})
+await unmergeExecutor.unmerge(
+  {
+    goldenRecordId: 'golden-cust-001',
+    unmergedBy: 'admin',
+    reason: 'Third record was a different person',
+  },
+  {
+    mode: 'partial',
+    sourceRecordIdsToRestore: ['rec-003'],
+    deleteGoldenRecord: false,
+  }
+)
 ```
 
 ### Scenario 3: Split and Re-Merge
@@ -482,11 +515,14 @@ Records need to be reorganized into different groups.
 
 ```typescript
 // Step 1: Unmerge to restore all records
-await unmergeExecutor.unmerge({
-  goldenRecordId: 'golden-001',
-  unmergedBy: 'admin',
-  reason: 'Reorganizing customer groups',
-}, { mode: 'full' })
+await unmergeExecutor.unmerge(
+  {
+    goldenRecordId: 'golden-001',
+    unmergedBy: 'admin',
+    reason: 'Reorganizing customer groups',
+  },
+  { mode: 'full' }
+)
 
 // Step 2: Retrieve restored records
 const restored = await database.findByIds(['rec-001', 'rec-002', 'rec-003'])

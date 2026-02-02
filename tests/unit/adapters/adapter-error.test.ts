@@ -114,7 +114,10 @@ describe('AdapterError', () => {
         config: { primaryKey: 'id' },
         missing: ['tableName'],
       }
-      const error = new ValidationError('Missing required field: tableName', context)
+      const error = new ValidationError(
+        'Missing required field: tableName',
+        context
+      )
       expect(error.context).toEqual(context)
     })
   })

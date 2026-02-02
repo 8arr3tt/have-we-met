@@ -9,9 +9,9 @@ import { mergeQueueOptions } from '../builder/queue-options.js'
  *
  * @typeParam T - The record type being stored in queue items
  */
-export abstract class BaseQueueAdapter<T extends Record<string, unknown>>
-  implements QueueAdapter<T>
-{
+export abstract class BaseQueueAdapter<
+  T extends Record<string, unknown>,
+> implements QueueAdapter<T> {
   protected readonly options: Required<QueueOptions>
 
   constructor(options?: QueueOptions) {
@@ -59,15 +59,23 @@ export abstract class BaseQueueAdapter<T extends Record<string, unknown>>
     return {
       id: row.id as string,
       candidateRecord: this.parseJson(row.candidateRecord, 'candidateRecord'),
-      potentialMatches: this.parseJson(row.potentialMatches, 'potentialMatches'),
+      potentialMatches: this.parseJson(
+        row.potentialMatches,
+        'potentialMatches'
+      ),
       status: row.status as QueueItem<T>['status'],
       createdAt: this.parseDate(row.createdAt, 'createdAt'),
       updatedAt: this.parseDate(row.updatedAt, 'updatedAt'),
-      decidedAt: row.decidedAt ? this.parseDate(row.decidedAt, 'decidedAt') : undefined,
+      decidedAt: row.decidedAt
+        ? this.parseDate(row.decidedAt, 'decidedAt')
+        : undefined,
       decidedBy: row.decidedBy ? (row.decidedBy as string) : undefined,
-      decision: row.decision ? this.parseJson(row.decision, 'decision') : undefined,
+      decision: row.decision
+        ? this.parseJson(row.decision, 'decision')
+        : undefined,
       context: row.context ? this.parseJson(row.context, 'context') : undefined,
-      priority: row.priority !== undefined ? (row.priority as number) : undefined,
+      priority:
+        row.priority !== undefined ? (row.priority as number) : undefined,
       tags: row.tags ? (row.tags as string[]) : undefined,
     }
   }
@@ -108,10 +116,13 @@ export abstract class BaseQueueAdapter<T extends Record<string, unknown>>
     if (typeof value === 'string' || typeof value === 'number') {
       const date = new Date(value)
       if (isNaN(date.getTime())) {
-        throw new ValidationError(`Invalid date value for field '${fieldName}'`, {
-          fieldName,
-          value,
-        })
+        throw new ValidationError(
+          `Invalid date value for field '${fieldName}'`,
+          {
+            fieldName,
+            value,
+          }
+        )
       }
       return date
     }
@@ -131,11 +142,23 @@ export abstract class BaseQueueAdapter<T extends Record<string, unknown>>
     if (!item.id) {
       throw new ValidationError('Queue item must have an id', { item })
     }
-    if (!item.candidateRecord || Object.keys(item.candidateRecord).length === 0) {
-      throw new ValidationError('Queue item must have a non-empty candidateRecord', { item })
+    if (
+      !item.candidateRecord ||
+      Object.keys(item.candidateRecord).length === 0
+    ) {
+      throw new ValidationError(
+        'Queue item must have a non-empty candidateRecord',
+        { item }
+      )
     }
-    if (!Array.isArray(item.potentialMatches) || item.potentialMatches.length === 0) {
-      throw new ValidationError('Queue item must have at least one potential match', { item })
+    if (
+      !Array.isArray(item.potentialMatches) ||
+      item.potentialMatches.length === 0
+    ) {
+      throw new ValidationError(
+        'Queue item must have at least one potential match',
+        { item }
+      )
     }
     if (!item.status) {
       throw new ValidationError('Queue item must have a status', { item })
@@ -162,7 +185,7 @@ export abstract class BaseQueueAdapter<T extends Record<string, unknown>>
   abstract insertQueueItem(item: QueueItem<T>): Promise<QueueItem<T>>
   abstract updateQueueItem(
     id: string,
-    updates: Partial<QueueItem<T>>,
+    updates: Partial<QueueItem<T>>
   ): Promise<QueueItem<T>>
   abstract findQueueItems(filter: QueueFilter): Promise<QueueItem<T>[]>
   abstract findQueueItemById(id: string): Promise<QueueItem<T> | null>

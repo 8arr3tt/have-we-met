@@ -64,7 +64,12 @@ export const MERGE_STRATEGIES: MergeStrategy[] = [
 /**
  * Strategies that require numeric field values
  */
-export const NUMERIC_STRATEGIES: MergeStrategy[] = ['average', 'sum', 'min', 'max']
+export const NUMERIC_STRATEGIES: MergeStrategy[] = [
+  'average',
+  'sum',
+  'min',
+  'max',
+]
 
 /**
  * Strategies that operate on arrays
@@ -74,17 +79,25 @@ export const ARRAY_STRATEGIES: MergeStrategy[] = ['concatenate', 'union']
 /**
  * Strategies that require timestamp fields
  */
-export const TEMPORAL_STRATEGIES: MergeStrategy[] = ['preferNewer', 'preferOlder']
+export const TEMPORAL_STRATEGIES: MergeStrategy[] = [
+  'preferNewer',
+  'preferOlder',
+]
 
 /**
  * Strategies that operate on strings
  */
-export const STRING_STRATEGIES: MergeStrategy[] = ['preferLonger', 'preferShorter']
+export const STRING_STRATEGIES: MergeStrategy[] = [
+  'preferLonger',
+  'preferShorter',
+]
 
 /**
  * A source record with metadata used during merge operations
  */
-export interface SourceRecord<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface SourceRecord<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   /** Unique identifier for the source record */
   id: string
 
@@ -121,7 +134,7 @@ export interface FieldMergeOptions {
 export type CustomMergeFunction<T = unknown> = (
   values: T[],
   records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ) => T
 
 /**
@@ -356,7 +369,9 @@ export interface UnmergeResult<T extends Record<string, unknown>> {
 /**
  * Context object for tracking state during merge operations
  */
-export interface MergeContext<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface MergeContext<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   /** The merge configuration being used */
   config: MergeConfig
 
@@ -385,7 +400,7 @@ export interface MergeContext<T extends Record<string, unknown> = Record<string,
 export type StrategyFunction<T = unknown> = (
   values: T[],
   records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ) => T | undefined
 
 /**

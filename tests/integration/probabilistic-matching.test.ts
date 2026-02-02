@@ -608,7 +608,9 @@ describe('Integration: Probabilistic Matching', () => {
         { firstName: 'John', email: 'john@example.com' },
       ]
 
-      const result = resolver.deduplicateBatch(records, { maxPairsPerRecord: 2 })
+      const result = resolver.deduplicateBatch(records, {
+        maxPairsPerRecord: 2,
+      })
 
       for (const dedupResult of result.results) {
         expect(dedupResult.matches.length).toBeLessThanOrEqual(2)
@@ -680,7 +682,9 @@ describe('Integration: Probabilistic Matching', () => {
         { firstName: 'Bob', email: 'bob@example.com' },
       ]
 
-      const result = resolver.deduplicateBatch(records, { includeNoMatches: true })
+      const result = resolver.deduplicateBatch(records, {
+        includeNoMatches: true,
+      })
 
       expect(result.results.length).toBe(3)
 
@@ -822,8 +826,12 @@ describe('Integration: Probabilistic Matching', () => {
 
       const results = resolver.resolve(newContact, existingContacts)
 
-      const definiteMatches = results.filter((r) => r.outcome === 'definite-match')
-      const potentialMatches = results.filter((r) => r.outcome === 'potential-match')
+      const definiteMatches = results.filter(
+        (r) => r.outcome === 'definite-match'
+      )
+      const potentialMatches = results.filter(
+        (r) => r.outcome === 'potential-match'
+      )
 
       expect(definiteMatches.length).toBeGreaterThan(0)
       expect(results[0].candidateRecord).toEqual(existingContacts[0])

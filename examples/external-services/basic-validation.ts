@@ -55,13 +55,13 @@ async function basicValidationExample() {
     .defaultTimeout(5000)
     .caching(true)
     .validate('nhsNumber')
-      .using(nhsNumberValidator)
-      .onInvalid('reject')
-      .required(true)
+    .using(nhsNumberValidator)
+    .onInvalid('reject')
+    .required(true)
     .validate('email')
-      .using(emailValidator)
-      .onInvalid('flag')
-      .required(false)
+    .using(emailValidator)
+    .onInvalid('flag')
+    .required(false)
     .build()
 
   console.log('Service configuration:')
@@ -112,7 +112,10 @@ async function basicValidationExample() {
     console.log(`    Success: ${result.success}`)
     console.log(`    Duration: ${result.timing.durationMs}ms`)
     if (result.data) {
-      const data = result.data as { valid?: boolean; details?: { normalizedValue?: string } }
+      const data = result.data as {
+        valid?: boolean
+        details?: { normalizedValue?: string }
+      }
       console.log(`    Valid: ${data.valid}`)
       if (data.details?.normalizedValue) {
         console.log(`    Normalized value: ${data.details.normalizedValue}`)
@@ -149,7 +152,9 @@ async function basicValidationExample() {
       valid?: boolean
       invalidReason?: string
       suggestions?: string[]
-      details?: { checks?: Array<{ name: string; passed: boolean; message?: string }> }
+      details?: {
+        checks?: Array<{ name: string; passed: boolean; message?: string }>
+      }
     }
     console.log('  NHS Number validation details:')
     console.log(`    Valid: ${data.valid}`)
@@ -160,7 +165,9 @@ async function basicValidationExample() {
     if (data.details?.checks) {
       console.log('    Checks:')
       for (const check of data.details.checks) {
-        console.log(`      - ${check.name}: ${check.passed ? 'PASSED' : 'FAILED'} (${check.message})`)
+        console.log(
+          `      - ${check.name}: ${check.passed ? 'PASSED' : 'FAILED'} (${check.message})`
+        )
       }
     }
   }
@@ -212,13 +219,16 @@ async function basicValidationExample() {
 
   const directResult = await nhsNumberValidator.execute(
     { field: 'nhsNumber', value: '943 476 5919' },
-    context,
+    context
   )
 
   console.log('Direct validation result:')
   console.log(`  Success: ${directResult.success}`)
   if (directResult.data) {
-    const data = directResult.data as { valid?: boolean; details?: { normalizedValue?: string; confidence?: number } }
+    const data = directResult.data as {
+      valid?: boolean
+      details?: { normalizedValue?: string; confidence?: number }
+    }
     console.log(`  Valid: ${data.valid}`)
     console.log(`  Normalized: ${data.details?.normalizedValue}`)
     console.log(`  Confidence: ${data.details?.confidence}`)
@@ -230,11 +240,15 @@ async function basicValidationExample() {
 
   console.log('=== Example Complete ===')
   console.log('\nKey takeaways:')
-  console.log('- NHS number validation checks both format (10 digits) and checksum (modulus 11)')
+  console.log(
+    '- NHS number validation checks both format (10 digits) and checksum (modulus 11)'
+  )
   console.log('- onInvalid="reject" stops processing when validation fails')
   console.log('- onInvalid="flag" allows processing but marks the record')
   console.log('- Normalized values remove spaces and formatting')
-  console.log('- Validation services can be used directly or through the executor')
+  console.log(
+    '- Validation services can be used directly or through the executor'
+  )
 }
 
 // Run the example

@@ -83,7 +83,7 @@ type Customer = {
 }
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
@@ -91,17 +91,28 @@ const resolver = HaveWeMet.create<Customer>()
       .field('phone', { type: 'phone' })
       .field('dobYear', { type: 'number' })
   })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-    .onField('email')
+  .blocking((block) =>
+    block.onField('lastName', { transform: 'soundex' }).onField('email')
   )
-  .matching(match => {
+  .matching((match) => {
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('lastName').strategy('jaro-winkler').weight(10).threshold(0.85)
-      .field('phone').strategy('exact').weight(10)
-      .field('dobYear').strategy('exact').weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
+      .field('phone')
+      .strategy('exact')
+      .weight(10)
+      .field('dobYear')
+      .strategy('exact')
+      .weight(10)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   })
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
@@ -115,7 +126,7 @@ const resolver = HaveWeMet.create<Customer>()
 ```typescript
 const adapter = prismaAdapter(prisma, {
   tableName: 'customers',
-  primaryKey: 'id'  // default: 'id'
+  primaryKey: 'id', // default: 'id'
 })
 ```
 
@@ -130,8 +141,8 @@ const adapter = prismaAdapter(prisma, {
     firstName: 'first_name',
     lastName: 'last_name',
     dobYear: 'dob_year',
-    zipCode: 'zip_code'
-  }
+    zipCode: 'zip_code',
+  },
 })
 ```
 
@@ -166,17 +177,19 @@ const newCustomer = {
   lastName: 'Smith',
   email: 'john.smith@example.com',
   phone: '555-0100',
-  dobYear: 1985
+  dobYear: 1985,
 }
 
 const matches = await resolver.resolveWithDatabase(newCustomer, {
   useBlocking: true,
-  maxFetchSize: 1000
+  maxFetchSize: 1000,
 })
 
 console.log(`Found ${matches.length} potential matches`)
-matches.forEach(match => {
-  console.log(`${match.outcome}: ${match.record.id} (score: ${match.score.totalScore})`)
+matches.forEach((match) => {
+  console.log(
+    `${match.outcome}: ${match.record.id} (score: ${match.score.totalScore})`
+  )
 
   if (match.outcome === 'definite-match') {
     console.log('This is a duplicate!')
@@ -192,7 +205,7 @@ matches.forEach(match => {
 const result = await resolver.deduplicateBatchFromDatabase({
   batchSize: 1000,
   persistResults: false,
-  maxRecords: 10000
+  maxRecords: 10000,
 })
 
 console.log(`Processed: ${result.totalProcessed}`)
@@ -200,7 +213,7 @@ console.log(`Duplicate groups: ${result.duplicateGroupsFound}`)
 console.log(`Total duplicates: ${result.totalDuplicates}`)
 console.log(`Duration: ${result.durationMs}ms`)
 
-result.results.forEach(group => {
+result.results.forEach((group) => {
   console.log(`Master: ${group.masterRecordId}`)
   console.log(`Duplicates: ${group.duplicateIds.join(', ')}`)
 })
@@ -229,8 +242,8 @@ const mergedRecord = await adapter.transaction(async (txAdapter) => {
   const mergedData = {
     ...primary,
     // Take most complete data
-    phone: others.find(r => r.phone)?.phone || primary.phone,
-    address: others.find(r => r.address)?.address || primary.address
+    phone: others.find((r) => r.phone)?.phone || primary.phone,
+    address: others.find((r) => r.address)?.address || primary.address,
   }
 
   // Update primary record
@@ -279,15 +292,15 @@ import { soundex } from 'have-we-met/utils'
 const customer = {
   firstName: 'John',
   lastName: 'Smith',
-  createdAt: new Date('2024-01-15')
+  createdAt: new Date('2024-01-15'),
 }
 
 await prisma.customer.create({
   data: {
     ...customer,
     soundexLastName: soundex(customer.lastName),
-    createdYear: customer.createdAt.getFullYear()
-  }
+    createdYear: customer.createdAt.getFullYear(),
+  },
 })
 ```
 
@@ -314,7 +327,7 @@ Only fetch fields needed for matching:
 ```typescript
 const matches = await resolver.resolveWithDatabase(newCustomer, {
   useBlocking: true,
-  maxFetchSize: 1000
+  maxFetchSize: 1000,
 })
 // Adapter automatically projects only necessary fields
 ```
@@ -325,7 +338,7 @@ Enable Prisma query logging:
 
 ```typescript
 const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error']
+  log: ['query', 'info', 'warn', 'error'],
 })
 ```
 
@@ -333,13 +346,12 @@ Or log slow queries only:
 
 ```typescript
 const prisma = new PrismaClient({
-  log: [
-    { level: 'query', emit: 'event' }
-  ]
+  log: [{ level: 'query', emit: 'event' }],
 })
 
 prisma.$on('query', (e) => {
-  if (e.duration > 100) {  // Log queries > 100ms
+  if (e.duration > 100) {
+    // Log queries > 100ms
     console.log(`Slow query (${e.duration}ms): ${e.query}`)
   }
 })
@@ -357,6 +369,7 @@ datasource db {
 ```
 
 PostgreSQL-specific optimizations:
+
 - Use `GIN` indexes for full-text search: `CREATE INDEX idx_customers_name_gin ON customers USING gin(to_tsvector('english', first_name || ' ' || last_name))`
 - Use `pg_trgm` extension for fuzzy string matching
 - Enable parallel query execution for large tables
@@ -371,6 +384,7 @@ datasource db {
 ```
 
 MySQL-specific considerations:
+
 - InnoDB is recommended for transaction support
 - Use `FULLTEXT` indexes for text search
 - Consider `utf8mb4` collation for Unicode support
@@ -385,6 +399,7 @@ datasource db {
 ```
 
 SQLite-specific considerations:
+
 - No parallel query execution
 - Limited connection pooling (single writer)
 - Good for development and small datasets
@@ -453,7 +468,12 @@ describe('Customer Matching', () => {
 
   it('finds duplicates by email', async () => {
     mockPrisma.customer.findMany.mockResolvedValue([
-      { id: '1', email: 'test@example.com', firstName: 'John', lastName: 'Doe' }
+      {
+        id: '1',
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
     ])
 
     const results = await adapter.findByBlockingKeys(
@@ -491,8 +511,8 @@ describe('Integration: Customer Deduplication', () => {
     await prisma.customer.createMany({
       data: [
         { firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
-        { firstName: 'Jon', lastName: 'Smith', email: 'john@example.com' }
-      ]
+        { firstName: 'Jon', lastName: 'Smith', email: 'john@example.com' },
+      ],
     })
 
     // Run deduplication
@@ -517,15 +537,15 @@ async function dailyDeduplication() {
   // Get new records from last 24 hours
   const newRecords = await prisma.customer.findMany({
     where: {
-      createdAt: { gte: yesterday }
-    }
+      createdAt: { gte: yesterday },
+    },
   })
 
   // Check each against existing database
   for (const record of newRecords) {
     const matches = await resolver.resolveWithDatabase(record)
 
-    if (matches.some(m => m.outcome === 'definite-match')) {
+    if (matches.some((m) => m.outcome === 'definite-match')) {
       console.log(`Duplicate found for ${record.id}`)
       // Handle duplicate (flag, merge, notify)
     }
@@ -540,13 +560,13 @@ async function bulkImportWithDedup(records: Customer[]) {
   const stats = {
     imported: 0,
     duplicates: 0,
-    errors: 0
+    errors: 0,
   }
 
   for (const record of records) {
     try {
       const matches = await resolver.resolveWithDatabase(record)
-      const isDuplicate = matches.some(m => m.outcome === 'definite-match')
+      const isDuplicate = matches.some((m) => m.outcome === 'definite-match')
 
       if (!isDuplicate) {
         await prisma.customer.create({ data: record })
@@ -571,6 +591,7 @@ async function bulkImportWithDedup(records: Customer[]) {
 **Problem:** Queries are taking too long
 
 **Solutions:**
+
 1. Check if indexes exist: `EXPLAIN ANALYZE` in PostgreSQL
 2. Enable Prisma query logging
 3. Add indexes on blocking fields
@@ -582,6 +603,7 @@ async function bulkImportWithDedup(records: Customer[]) {
 **Problem:** "Too many connections" errors
 
 **Solutions:**
+
 1. Configure connection limit in `DATABASE_URL`
 2. Reuse Prisma Client instance (singleton pattern)
 3. Call `prisma.$disconnect()` when done
@@ -592,6 +614,7 @@ async function bulkImportWithDedup(records: Customer[]) {
 **Problem:** Long-running transactions fail
 
 **Solutions:**
+
 1. Break large operations into smaller batches
 2. Increase transaction timeout in database
 3. Use optimistic locking for concurrent updates

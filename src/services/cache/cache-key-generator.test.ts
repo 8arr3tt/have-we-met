@@ -67,7 +67,9 @@ describe('stableStringify', () => {
     })
 
     it('handles bigint', () => {
-      expect(stableStringify(BigInt(12345678901234567890n))).toBe('"12345678901234567890n"')
+      expect(stableStringify(BigInt(12345678901234567890n))).toBe(
+        '"12345678901234567890n"'
+      )
     })
 
     it('handles symbol', () => {
@@ -106,7 +108,9 @@ describe('stableStringify', () => {
     })
 
     it('skips undefined values in objects', () => {
-      expect(stableStringify({ a: 1, b: undefined, c: 3 })).toBe('{"a":1,"c":3}')
+      expect(stableStringify({ a: 1, b: undefined, c: 3 })).toBe(
+        '{"a":1,"c":3}'
+      )
     })
 
     it('skips function values in objects', () => {
@@ -124,11 +128,18 @@ describe('stableStringify', () => {
     })
 
     it('handles mixed array', () => {
-      expect(stableStringify([1, 'two', true, null])).toBe('[1,"two",true,null]')
+      expect(stableStringify([1, 'two', true, null])).toBe(
+        '[1,"two",true,null]'
+      )
     })
 
     it('handles nested arrays', () => {
-      expect(stableStringify([[1, 2], [3, 4]])).toBe('[[1,2],[3,4]]')
+      expect(
+        stableStringify([
+          [1, 2],
+          [3, 4],
+        ])
+      ).toBe('[[1,2],[3,4]]')
     })
   })
 
@@ -156,7 +167,9 @@ describe('stableStringify', () => {
     })
 
     it('handles TypedArrays', () => {
-      expect(stableStringify(new Uint8Array([1, 2, 3]))).toBe('"[TypedArray:Uint8Array]"')
+      expect(stableStringify(new Uint8Array([1, 2, 3]))).toBe(
+        '"[TypedArray:Uint8Array]"'
+      )
     })
   })
 
@@ -227,7 +240,7 @@ describe('generateCacheKey', () => {
     const key = generateCacheKey(
       'email-lookup',
       { email: 'test@example.com', other: 'data' },
-      (input) => (input as { email: string }).email,
+      (input) => (input as { email: string }).email
     )
     expect(key).toBe('email-lookup:test@example.com')
   })
@@ -286,8 +299,10 @@ describe('createCacheKeyGenerator', () => {
 
   it('supports custom key function override', () => {
     const keyGen = createCacheKeyGenerator({ prefix: 'app' })
-    const key = keyGen('service', { email: 'test@test.com' }, (input) =>
-      (input as { email: string }).email,
+    const key = keyGen(
+      'service',
+      { email: 'test@test.com' },
+      (input) => (input as { email: string }).email
     )
     expect(key).toBe('app:service:test@test.com')
   })

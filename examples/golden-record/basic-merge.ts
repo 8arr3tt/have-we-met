@@ -36,12 +36,18 @@ async function basicMergeExample() {
     .timestampField('updatedAt')
     .defaultStrategy('preferNonNull')
     .onConflict('useDefault')
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNonNull')
-    .field('company').strategy('preferNewer')
-    .field('addresses').strategy('union')
+    .field('firstName')
+    .strategy('preferLonger')
+    .field('lastName')
+    .strategy('preferLonger')
+    .field('email')
+    .strategy('preferNewer')
+    .field('phone')
+    .strategy('preferNonNull')
+    .field('company')
+    .strategy('preferNewer')
+    .field('addresses')
+    .strategy('union')
     .build()
 
   console.log('Merge configuration:')
@@ -139,7 +145,9 @@ async function basicMergeExample() {
   console.log(`Conflicts resolved: ${result.stats.conflictsResolved}`)
   console.log(`Conflicts deferred: ${result.stats.conflictsDeferred}`)
   console.log('Fields from each source:')
-  for (const [sourceId, count] of Object.entries(result.stats.fieldsFromEachSource)) {
+  for (const [sourceId, count] of Object.entries(
+    result.stats.fieldsFromEachSource
+  )) {
     console.log(`  ${sourceId}: ${count} fields`)
   }
   console.log()

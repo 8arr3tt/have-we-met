@@ -13,7 +13,9 @@ import type { DatabaseAdapter, QueueAdapter } from '../../src/adapters/types'
 import type { QueueItem } from '../../src/queue/types'
 
 // Simple mock adapter for examples
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   const records: T[] = []
   const queueItems: QueueItem<T>[] = []
 
@@ -24,9 +26,10 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
       records.push(newRecord)
       return newRecord
     },
-    update: async () => ({} as T),
+    update: async () => ({}) as T,
     delete: async () => {},
-    findById: async (id: string) => records.find((r) => (r as any).id === id) || null,
+    findById: async (id: string) =>
+      records.find((r) => (r as any).id === id) || null,
     findAll: async () => records,
     count: async () => records.length,
     batchInsert: async (batch: T[]) => batch,
@@ -46,7 +49,8 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
         return item
       },
       findQueueItems: async () => queueItems,
-      findQueueItemById: async (id: string) => queueItems.find((i) => i.id === id) || null,
+      findQueueItemById: async (id: string) =>
+        queueItems.find((i) => i.id === id) || null,
       deleteQueueItem: async (id: string) => {
         const index = queueItems.findIndex((i) => i.id === id)
         if (index >= 0) queueItems.splice(index, 1)
@@ -148,11 +152,16 @@ async function queueUIIntegrationExample() {
     .blocking((block) => block.exact('email').phonetic('lastName'))
     .matching((match) =>
       match
-        .field('firstName').using('jaro-winkler', { weight: 1.0 })
-        .field('lastName').using('jaro-winkler', { weight: 1.5 })
-        .field('email').using('exact', { weight: 2.0 })
-        .field('phone').using('exact', { weight: 1.0 })
-        .field('company').using('levenshtein', { weight: 0.5 })
+        .field('firstName')
+        .using('jaro-winkler', { weight: 1.0 })
+        .field('lastName')
+        .using('jaro-winkler', { weight: 1.5 })
+        .field('email')
+        .using('exact', { weight: 2.0 })
+        .field('phone')
+        .using('exact', { weight: 1.0 })
+        .field('company')
+        .using('levenshtein', { weight: 0.5 })
     )
     .thresholds({ noMatch: 20, definiteMatch: 50 })
     .adapter(adapter)
@@ -168,7 +177,9 @@ async function queueUIIntegrationExample() {
     address: '123 Main Street, New York, NY',
   }
 
-  const result = await resolver.resolveWithDatabase(candidate, { autoQueue: true })
+  const result = await resolver.resolveWithDatabase(candidate, {
+    autoQueue: true,
+  })
   console.log('Added item to queue\n')
 
   // Step 1: Fetch queue items for UI
@@ -210,25 +221,41 @@ async function queueUIIntegrationExample() {
     for (let i = 0; i < item.potentialMatches.length; i++) {
       const match = item.potentialMatches[i]
       console.log(`\n  Match ${i + 1}:`)
-      console.log(`  Score: ${match.score.toFixed(2)} (${match.confidence} confidence)`)
+      console.log(
+        `  Score: ${match.score.toFixed(2)} (${match.confidence} confidence)`
+      )
       console.log(`  Record ID: ${match.matchId}`)
       console.log()
 
       console.log('  Field-by-Field Comparison:')
-      console.log('  ┌─────────────────┬──────────────────────────────┬──────────────────────────────┬────────────┐')
-      console.log('  │ Field           │ Candidate                    │ Existing                     │ Match      │')
-      console.log('  ├─────────────────┼──────────────────────────────┼──────────────────────────────┼────────────┤')
+      console.log(
+        '  ┌─────────────────┬──────────────────────────────┬──────────────────────────────┬────────────┐'
+      )
+      console.log(
+        '  │ Field           │ Candidate                    │ Existing                     │ Match      │'
+      )
+      console.log(
+        '  ├─────────────────┼──────────────────────────────┼──────────────────────────────┼────────────┤'
+      )
 
       for (const field of match.fieldComparisons) {
         const highlight = getHighlightSymbol(field.highlightLevel)
-        const candidateStr = String(field.candidateValue || '').padEnd(28).substring(0, 28)
-        const matchStr = String(field.matchValue || '').padEnd(28).substring(0, 28)
+        const candidateStr = String(field.candidateValue || '')
+          .padEnd(28)
+          .substring(0, 28)
+        const matchStr = String(field.matchValue || '')
+          .padEnd(28)
+          .substring(0, 28)
         const fieldNameStr = field.fieldName.padEnd(15).substring(0, 15)
 
-        console.log(`  │ ${fieldNameStr} │ ${candidateStr} │ ${matchStr} │ ${highlight.padEnd(10)} │`)
+        console.log(
+          `  │ ${fieldNameStr} │ ${candidateStr} │ ${matchStr} │ ${highlight.padEnd(10)} │`
+        )
       }
 
-      console.log('  └─────────────────┴──────────────────────────────┴──────────────────────────────┴────────────┘')
+      console.log(
+        '  └─────────────────┴──────────────────────────────┴──────────────────────────────┴────────────┘'
+      )
     }
     console.log()
   }
@@ -395,7 +422,9 @@ export function DecisionForm({ itemId, onDecide }: DecisionFormProps) {
  * Format queue item for UI display
  */
 function formatQueueItemForUI(item: QueueItem<Customer>): QueueItemForUI {
-  const ageInMinutes = Math.floor((Date.now() - item.createdAt.getTime()) / 60000)
+  const ageInMinutes = Math.floor(
+    (Date.now() - item.createdAt.getTime()) / 60000
+  )
 
   return {
     id: item.id,
@@ -409,7 +438,11 @@ function formatQueueItemForUI(item: QueueItem<Customer>): QueueItemForUI {
       score: match.score,
       confidence: getConfidenceLevel(match.score),
       record: match.record,
-      fieldComparisons: createFieldComparisons(item.candidateRecord, match.record, match.explanation),
+      fieldComparisons: createFieldComparisons(
+        item.candidateRecord,
+        match.record,
+        match.explanation
+      ),
     })),
     context: {
       source: item.context?.source,
@@ -429,13 +462,22 @@ function createFieldComparisons(
   match: Customer,
   explanation: any
 ): FieldComparison[] {
-  const fields: (keyof Customer)[] = ['firstName', 'lastName', 'email', 'phone', 'company', 'address']
+  const fields: (keyof Customer)[] = [
+    'firstName',
+    'lastName',
+    'email',
+    'phone',
+    'company',
+    'address',
+  ]
 
   return fields.map((fieldName) => {
     const candidateValue = candidate[fieldName]
     const matchValue = match[fieldName]
 
-    const fieldScore = explanation.fieldScores?.find((fs: any) => fs.field === fieldName)
+    const fieldScore = explanation.fieldScores?.find(
+      (fs: any) => fs.field === fieldName
+    )
     const similarity = fieldScore?.score || 0
 
     const isDifferent = candidateValue !== matchValue

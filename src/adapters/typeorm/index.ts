@@ -15,7 +15,9 @@ type Repository<T> = {
   insert: (entities: unknown) => Promise<unknown>
   manager: {
     connection: {
-      transaction: <R>(callback: (manager: EntityManager) => Promise<R>) => Promise<R>
+      transaction: <R>(
+        callback: (manager: EntityManager) => Promise<R>
+      ) => Promise<R>
     }
   }
 }

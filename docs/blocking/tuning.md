@@ -29,6 +29,7 @@ Reduction: ((without - with) / without) × 100%
 ```
 
 **Targets:**
+
 - ✅ Excellent: >99%
 - ✅ Good: 95-99%
 - ⚠️ Fair: 90-95%
@@ -39,11 +40,13 @@ Reduction: ((without - with) / without) × 100%
 Total number of unique blocks created:
 
 **Guidelines:**
+
 - Too few blocks (<10): Blocking not effective
 - Optimal: 0.5% - 5% of record count
 - Too many blocks (>50% of records): Overhead without benefit
 
 **Example:**
+
 ```
 100,000 records:
 - Good: 500 - 5,000 blocks
@@ -62,11 +65,13 @@ Std deviation: Measure of balance
 ```
 
 **Healthy distribution:**
+
 - Average: 50-500 records per block
 - Max: <5x average
 - Std deviation: <2x average
 
 **Problem signs:**
+
 - Max: >10x average (skewed)
 - Many blocks with 1-2 records (over-blocking)
 
@@ -81,6 +86,7 @@ Recall = True matches found / Total true matches
 **Measuring recall requires ground truth data (known matches).**
 
 **Targets:**
+
 - ✅ Excellent: >95%
 - ✅ Good: 90-95%
 - ⚠️ Fair: 85-90%
@@ -107,13 +113,13 @@ import { StandardBlockingStrategy } from 'have-we-met'
 
 const strategy = new StandardBlockingStrategy({
   field: 'lastName',
-  transform: 'soundex'
+  transform: 'soundex',
 })
 
 const blocks = strategy.generateBlocks(records)
 
 // Analyze blocks
-const blockSizes = Array.from(blocks.values()).map(b => b.length)
+const blockSizes = Array.from(blocks.values()).map((b) => b.length)
 const totalBlocks = blocks.size
 const avgBlockSize = blockSizes.reduce((a, b) => a + b, 0) / totalBlocks
 const maxBlockSize = Math.max(...blockSizes)
@@ -132,7 +138,8 @@ const comparisonsWith = blockSizes.reduce(
   (sum, size) => sum + (size * (size - 1)) / 2,
   0
 )
-const reduction = ((comparisonsWithout - comparisonsWith) / comparisonsWithout) * 100
+const reduction =
+  ((comparisonsWithout - comparisonsWith) / comparisonsWithout) * 100
 
 console.log(`Comparison reduction: ${reduction.toFixed(2)}%`)
 ```
@@ -151,7 +158,7 @@ function analyzeStrategy(strategy, name) {
   const blocks = strategy.generateBlocks(records)
   const endTime = performance.now()
 
-  const blockSizes = Array.from(blocks.values()).map(b => b.length)
+  const blockSizes = Array.from(blocks.values()).map((b) => b.length)
   const totalBlocks = blocks.size
   const avgBlockSize = blockSizes.reduce((a, b) => a + b, 0) / totalBlocks
   const maxBlockSize = Math.max(...blockSizes)
@@ -163,7 +170,8 @@ function analyzeStrategy(strategy, name) {
     (sum, size) => sum + (size * (size - 1)) / 2,
     0
   )
-  const reduction = ((comparisonsWithout - comparisonsWith) / comparisonsWithout) * 100
+  const reduction =
+    ((comparisonsWithout - comparisonsWith) / comparisonsWithout) * 100
 
   console.log(`\n${name}:`)
   console.log(`  Generation time: ${(endTime - startTime).toFixed(2)}ms`)
@@ -192,6 +200,7 @@ analyzeStrategy(
 ### Problem 1: Low Comparison Reduction (<90%)
 
 **Symptoms:**
+
 - Blocking doesn't significantly reduce comparisons
 - Matching still takes too long
 - Many large blocks
@@ -207,10 +216,14 @@ analyzeStrategy(
    - Field has few unique values
 
 **Diagnosis:**
+
 ```typescript
 const blocks = strategy.generateBlocks(records)
 console.log('Total blocks:', blocks.size)
-console.log('Block distribution:', Array.from(blocks.values()).map(b => b.length))
+console.log(
+  'Block distribution:',
+  Array.from(blocks.values()).map((b) => b.length)
+)
 
 // Look for:
 // - Total blocks < 10 (too few)
@@ -220,6 +233,7 @@ console.log('Block distribution:', Array.from(blocks.values()).map(b => b.length
 **Solutions:**
 
 ✅ **Use more specific transform:**
+
 ```typescript
 // Before: Too broad
 .onField('lastName', { transform: 'firstLetter' })  // 26 blocks
@@ -229,6 +243,7 @@ console.log('Block distribution:', Array.from(blocks.values()).map(b => b.length
 ```
 
 ✅ **Add more fields (multi-field blocking):**
+
 ```typescript
 // Before: Single field
 .onField('lastName', { transform: 'soundex' })
@@ -240,6 +255,7 @@ console.log('Block distribution:', Array.from(blocks.values()).map(b => b.length
 ```
 
 ✅ **Switch to sorted neighbourhood:**
+
 ```typescript
 .sortedNeighbourhood('lastName', {
   windowSize: 10,
@@ -250,6 +266,7 @@ console.log('Block distribution:', Array.from(blocks.values()).map(b => b.length
 ### Problem 2: Poor Recall (<85%)
 
 **Symptoms:**
+
 - Missing known matches
 - True duplicates not being found
 - Users report missed matches
@@ -265,18 +282,19 @@ console.log('Block distribution:', Array.from(blocks.values()).map(b => b.length
    - Exact matching fails
 
 **Diagnosis:**
+
 ```typescript
 // Test with known duplicate pairs
 const duplicates = [
   { id: 1, lastName: 'Smith' },
-  { id: 2, lastName: 'Smyth' }  // Same person, typo
+  { id: 2, lastName: 'Smyth' }, // Same person, typo
 ]
 
 const blocks = strategy.generateBlocks(duplicates)
 
 // Check if they're in the same block
 for (const [key, records] of blocks) {
-  const ids = records.map(r => r.id)
+  const ids = records.map((r) => r.id)
   console.log(`Block ${key}:`, ids)
 }
 
@@ -286,6 +304,7 @@ for (const [key, records] of blocks) {
 **Solutions:**
 
 ✅ **Use more forgiving transform:**
+
 ```typescript
 // Before: Too specific (exact match)
 .onField('lastName', { transform: 'identity' })
@@ -295,6 +314,7 @@ for (const [key, records] of blocks) {
 ```
 
 ✅ **Switch to sorted neighbourhood:**
+
 ```typescript
 // Handles typos better than standard blocking
 .sortedNeighbourhood('lastName', {
@@ -304,6 +324,7 @@ for (const [key, records] of blocks) {
 ```
 
 ✅ **Add composite blocking with multiple fields:**
+
 ```typescript
 // Union mode: Match on ANY field
 .composite('union', comp => comp
@@ -314,6 +335,7 @@ for (const [key, records] of blocks) {
 ```
 
 ✅ **Increase window size (sorted neighbourhood):**
+
 ```typescript
 // Before: Small window
 .sortedNeighbourhood('lastName', { windowSize: 5 })
@@ -325,6 +347,7 @@ for (const [key, records] of blocks) {
 ### Problem 3: Slow Performance
 
 **Symptoms:**
+
 - Block generation takes too long
 - Blocking phase is bottleneck
 - Performance worse than expected
@@ -344,6 +367,7 @@ for (const [key, records] of blocks) {
    - Creates too many overlapping blocks
 
 **Diagnosis:**
+
 ```typescript
 const strategies = [
   { name: 'FirstLetter', strategy: new StandardBlockingStrategy(...) },
@@ -362,6 +386,7 @@ strategies.forEach(({ name, strategy }) => {
 **Solutions:**
 
 ✅ **Use simpler transform:**
+
 ```typescript
 // Before: Slower
 .onField('lastName', { transform: 'metaphone' })  // ~44ms
@@ -374,6 +399,7 @@ strategies.forEach(({ name, strategy }) => {
 ```
 
 ✅ **Reduce composite strategies:**
+
 ```typescript
 // Before: Too many strategies
 .composite('union', comp => comp
@@ -391,6 +417,7 @@ strategies.forEach(({ name, strategy }) => {
 ```
 
 ✅ **Reduce window size:**
+
 ```typescript
 // Before: Large window
 .sortedNeighbourhood('lastName', { windowSize: 50 })
@@ -400,6 +427,7 @@ strategies.forEach(({ name, strategy }) => {
 ```
 
 ✅ **Switch from sorted neighbourhood to standard:**
+
 ```typescript
 // Before: Sorted (slower)
 .sortedNeighbourhood('lastName', { windowSize: 10 })
@@ -411,11 +439,13 @@ strategies.forEach(({ name, strategy }) => {
 ### Problem 4: Skewed Block Distribution
 
 **Symptoms:**
+
 - One or few blocks contain most records
 - Other blocks have very few records
 - Inefficient comparison reduction
 
 **Example:**
+
 ```
 Block "S": 15,000 records  ⚠️
 Block "M": 8,000 records   ⚠️
@@ -434,13 +464,17 @@ Block "Z": 30 records
    - firstLetter on names (letter frequency varies)
 
 **Diagnosis:**
+
 ```typescript
 const blocks = strategy.generateBlocks(records)
-const blockSizes = Array.from(blocks.values()).map(b => b.length)
-blockSizes.sort((a, b) => b - a)  // Sort descending
+const blockSizes = Array.from(blocks.values()).map((b) => b.length)
+blockSizes.sort((a, b) => b - a) // Sort descending
 
 console.log('Top 10 largest blocks:', blockSizes.slice(0, 10))
-console.log('Average block size:', blockSizes.reduce((a, b) => a + b) / blockSizes.length)
+console.log(
+  'Average block size:',
+  blockSizes.reduce((a, b) => a + b) / blockSizes.length
+)
 
 // If top blocks are 5x+ larger than average, distribution is skewed
 ```
@@ -448,6 +482,7 @@ console.log('Average block size:', blockSizes.reduce((a, b) => a + b) / blockSiz
 **Solutions:**
 
 ✅ **Use better-distributed transform:**
+
 ```typescript
 // Before: Unbalanced (firstLetter)
 .onField('lastName', { transform: 'firstLetter' })
@@ -459,6 +494,7 @@ console.log('Average block size:', blockSizes.reduce((a, b) => a + b) / blockSiz
 ```
 
 ✅ **Add secondary field:**
+
 ```typescript
 // Combine with another field to split large blocks
 .onFields(['lastName', 'birthYear'], {
@@ -468,6 +504,7 @@ console.log('Average block size:', blockSizes.reduce((a, b) => a + b) / blockSiz
 ```
 
 ✅ **Switch to sorted neighbourhood:**
+
 ```typescript
 // Uniform distribution by design
 .sortedNeighbourhood('lastName', { windowSize: 10 })
@@ -507,6 +544,7 @@ Follow this process to optimize your blocking strategy:
 **Priority:** Minimize block generation time
 
 **Strategy:**
+
 ```typescript
 // Fastest: firstLetter
 .onField('lastName', { transform: 'firstLetter' })
@@ -527,6 +565,7 @@ Follow this process to optimize your blocking strategy:
 **Priority:** Find all true matches
 
 **Strategy:**
+
 ```typescript
 // Best: Composite union with multiple strategies
 .composite('union', comp => comp
@@ -550,6 +589,7 @@ Follow this process to optimize your blocking strategy:
 **Priority:** Good recall with reasonable speed
 
 **Strategy:**
+
 ```typescript
 // Recommended: Standard soundex
 .onField('lastName', { transform: 'soundex' })
@@ -570,6 +610,7 @@ Follow this process to optimize your blocking strategy:
 ### Scenario 1: Large Dataset (100k+ records), Speed Critical
 
 **Starting point:**
+
 ```typescript
 .onField('lastName', { transform: 'soundex' })
 ```
@@ -577,6 +618,7 @@ Follow this process to optimize your blocking strategy:
 **Problem:** Still too slow (38ms × large dataset)
 
 **Tuning:**
+
 ```typescript
 // Step 1: Try simpler transform
 .onField('lastName', { transform: 'firstLetter' })
@@ -593,6 +635,7 @@ Follow this process to optimize your blocking strategy:
 ### Scenario 2: Noisy Data, Missing Matches
 
 **Starting point:**
+
 ```typescript
 .onField('lastName', { transform: 'soundex' })
 ```
@@ -600,6 +643,7 @@ Follow this process to optimize your blocking strategy:
 **Problem:** Missing matches due to typos: "Smith" vs "Smoth"
 
 **Tuning:**
+
 ```typescript
 // Step 1: Try sorted neighbourhood
 .sortedNeighbourhood('lastName', {
@@ -626,6 +670,7 @@ Follow this process to optimize your blocking strategy:
 ### Scenario 3: Multiple Important Fields
 
 **Starting point:**
+
 ```typescript
 .onField('lastName', { transform: 'soundex' })
 ```
@@ -633,6 +678,7 @@ Follow this process to optimize your blocking strategy:
 **Problem:** Matches missed when lastName is wrong but email is similar
 
 **Tuning:**
+
 ```typescript
 // Step 1: Add composite with key fields
 .composite('union', comp => comp
@@ -655,6 +701,7 @@ Follow this process to optimize your blocking strategy:
 ### Scenario 4: Unbalanced Block Distribution
 
 **Starting point:**
+
 ```typescript
 .onField('lastName', { transform: 'firstLetter' })
 ```
@@ -662,6 +709,7 @@ Follow this process to optimize your blocking strategy:
 **Problem:** Block "S" has 15,000 records (too large)
 
 **Tuning:**
+
 ```typescript
 // Step 1: Use better-distributed transform
 .onField('lastName', { transform: 'soundex' })
@@ -690,19 +738,19 @@ function createStrategy(records) {
     // Small dataset: simple blocking
     return new StandardBlockingStrategy({
       field: 'lastName',
-      transform: 'firstLetter'
+      transform: 'firstLetter',
     })
   } else if (size < 100000) {
     // Medium dataset: soundex
     return new StandardBlockingStrategy({
       field: 'lastName',
-      transform: 'soundex'
+      transform: 'soundex',
     })
   } else {
     // Large dataset: multi-field
     return new StandardBlockingStrategy({
       fields: ['lastName', 'country'],
-      transforms: ['soundex', 'identity']
+      transforms: ['soundex', 'identity'],
     })
   }
 }
@@ -720,9 +768,10 @@ function calculateWindowSize(recordCount) {
   return 20
 }
 
-const windowSize = calculateWindowSize(records.length)
-
-.sortedNeighbourhood('lastName', { windowSize })
+const windowSize = calculateWindowSize(records.length).sortedNeighbourhood(
+  'lastName',
+  { windowSize }
+)
 ```
 
 ### A/B Testing Blocking Strategies
@@ -733,15 +782,15 @@ Compare strategies empirically:
 const strategies = {
   baseline: new StandardBlockingStrategy({
     field: 'lastName',
-    transform: 'soundex'
+    transform: 'soundex',
   }),
   candidate: new CompositeBlockingStrategy({
     strategies: [
       new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-      new StandardBlockingStrategy({ field: 'dateOfBirth', transform: 'year' })
+      new StandardBlockingStrategy({ field: 'dateOfBirth', transform: 'year' }),
     ],
-    mode: 'union'
-  })
+    mode: 'union',
+  }),
 }
 
 // Test both
@@ -803,13 +852,13 @@ class BlockingMonitor {
 
 ### Common Adjustments
 
-| Problem | Solution |
-|---------|----------|
-| Low reduction | Use more specific transform or add fields |
-| Poor recall | Use phonetic transform or sorted neighbourhood |
-| Too slow | Use simpler transform (firstLetter) |
-| Skewed blocks | Use soundex instead of firstLetter |
-| Missing typo matches | Switch to sorted neighbourhood |
+| Problem              | Solution                                       |
+| -------------------- | ---------------------------------------------- |
+| Low reduction        | Use more specific transform or add fields      |
+| Poor recall          | Use phonetic transform or sorted neighbourhood |
+| Too slow             | Use simpler transform (firstLetter)            |
+| Skewed blocks        | Use soundex instead of firstLetter             |
+| Missing typo matches | Switch to sorted neighbourhood                 |
 
 ### Next Steps
 

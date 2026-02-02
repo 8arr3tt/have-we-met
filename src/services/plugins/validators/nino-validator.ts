@@ -49,7 +49,8 @@ const VALID_SUFFIX_LETTERS = new Set(['A', 'B', 'C', 'D'])
  * NINO format regex: Two letters, six digits, one letter (optional spaces)
  * Format: AB 12 34 56 C or AB123456C
  */
-const NINO_FORMAT_REGEX = /^([A-Za-z]{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*([A-Za-z])$/
+const NINO_FORMAT_REGEX =
+  /^([A-Za-z]{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*([A-Za-z])$/
 
 /**
  * Normalizes a NINO by removing spaces and converting to uppercase
@@ -87,9 +88,9 @@ export function parseNINO(nino: string): {
     return null
   }
 
-  const prefix = (match[1]).toUpperCase()
+  const prefix = match[1].toUpperCase()
   const numbers = match[2] + match[3] + match[4]
-  const suffix = (match[5]).toUpperCase()
+  const suffix = match[5].toUpperCase()
 
   return {
     prefix,
@@ -144,7 +145,7 @@ export function isAdministrativeNINO(prefix: string): boolean {
 function createSuccessResult(
   data: ValidationOutput,
   startedAt: Date,
-  cached: boolean = false,
+  cached: boolean = false
 ): ServiceResult<ValidationOutput> {
   const completedAt = new Date()
   return {
@@ -179,7 +180,9 @@ export interface NINOValidatorOptions {
 /**
  * Default NINO validator options
  */
-const DEFAULT_OPTIONS: Required<Omit<NINOValidatorOptions, 'name' | 'description'>> = {
+const DEFAULT_OPTIONS: Required<
+  Omit<NINOValidatorOptions, 'name' | 'description'>
+> = {
   allowTemporary: false,
   allowAdministrative: false,
 }
@@ -204,7 +207,7 @@ const DEFAULT_OPTIONS: Required<Omit<NINOValidatorOptions, 'name' | 'description
  * ```
  */
 export function createNINOValidator(
-  options: NINOValidatorOptions = {},
+  options: NINOValidatorOptions = {}
 ): ValidationService {
   const {
     name = 'nino-validator',
@@ -220,7 +223,7 @@ export function createNINOValidator(
 
     async execute(
       input: ValidationInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<ValidationOutput>> {
       const startedAt = new Date()
       const { value } = input
@@ -235,15 +238,18 @@ export function createNINOValidator(
           message: 'National Insurance Number is required',
         })
 
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'National Insurance Number is required',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'National Insurance Number is required',
+          },
+          startedAt
+        )
       }
 
       // Parse the NINO
-      const parsed = parseNINO(value)
+      const parsed = parseNINO(normalized)
       if (!parsed) {
         checks.push({
           name: 'format',
@@ -251,15 +257,18 @@ export function createNINOValidator(
           message: 'Invalid NINO format (expected: AA 11 22 33 B)',
         })
 
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Invalid NINO format',
-          suggestions: [
-            'Format should be two letters, six digits, one letter',
-            'Example: AB 12 34 56 C or AB123456C',
-          ],
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Invalid NINO format',
+            suggestions: [
+              'Format should be two letters, six digits, one letter',
+              'Example: AB 12 34 56 C or AB123456C',
+            ],
+          },
+          startedAt
+        )
       }
 
       checks.push({
@@ -285,15 +294,18 @@ export function createNINOValidator(
         })
 
         if (!allowed) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: normalized,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: normalized,
+              },
+              invalidReason: `Prefix '${parsed.prefix}' is for administrative use only`,
+              suggestions: ['This prefix is not assigned to individuals'],
             },
-            invalidReason: `Prefix '${parsed.prefix}' is for administrative use only`,
-            suggestions: ['This prefix is not assigned to individuals'],
-          }, startedAt)
+            startedAt
+          )
         }
       } else if (isTempPrefix) {
         const allowed = allowTemporary
@@ -306,17 +318,20 @@ export function createNINOValidator(
         })
 
         if (!allowed) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: normalized,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: normalized,
+              },
+              invalidReason: `Prefix '${parsed.prefix}' is reserved and not valid for personal NINOs`,
+              suggestions: [
+                `Prefixes BG, GB, KN, NK, NT, TN, ZZ are not valid`,
+              ],
             },
-            invalidReason: `Prefix '${parsed.prefix}' is reserved and not valid for personal NINOs`,
-            suggestions: [
-              `Prefixes BG, GB, KN, NK, NT, TN, ZZ are not valid`,
-            ],
-          }, startedAt)
+            startedAt
+          )
         }
       } else {
         // Standard prefix - validate individual letters
@@ -331,15 +346,18 @@ export function createNINOValidator(
         })
 
         if (!firstLetterValid) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: normalized,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: normalized,
+              },
+              invalidReason: `First letter '${parsed.firstLetter}' is not valid`,
+              suggestions: ['The first letter cannot be D, F, I, Q, U, or V'],
             },
-            invalidReason: `First letter '${parsed.firstLetter}' is not valid`,
-            suggestions: ['The first letter cannot be D, F, I, Q, U, or V'],
-          }, startedAt)
+            startedAt
+          )
         }
 
         // Second letter validation
@@ -353,15 +371,20 @@ export function createNINOValidator(
         })
 
         if (!secondLetterValid) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: normalized,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: normalized,
+              },
+              invalidReason: `Second letter '${parsed.secondLetter}' is not valid`,
+              suggestions: [
+                'The second letter cannot be D, F, I, O, Q, U, or V',
+              ],
             },
-            invalidReason: `Second letter '${parsed.secondLetter}' is not valid`,
-            suggestions: ['The second letter cannot be D, F, I, O, Q, U, or V'],
-          }, startedAt)
+            startedAt
+          )
         }
 
         // Prefix combination is valid
@@ -383,26 +406,32 @@ export function createNINOValidator(
       })
 
       if (!suffixValid) {
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: normalized,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: normalized,
+            },
+            invalidReason: `Suffix '${parsed.suffix}' is not valid`,
+            suggestions: ['The suffix must be A, B, C, or D'],
           },
-          invalidReason: `Suffix '${parsed.suffix}' is not valid`,
-          suggestions: ['The suffix must be A, B, C, or D'],
-        }, startedAt)
+          startedAt
+        )
       }
 
       // All checks passed
-      return createSuccessResult({
-        valid: true,
-        details: {
-          checks,
-          normalizedValue: normalized,
-          confidence: 1.0,
+      return createSuccessResult(
+        {
+          valid: true,
+          details: {
+            checks,
+            normalizedValue: normalized,
+            confidence: 1.0,
+          },
         },
-      }, startedAt)
+        startedAt
+      )
     },
 
     async healthCheck(): Promise<HealthCheckResult> {
@@ -430,8 +459,12 @@ export function createNINOValidator(
           checkedAt: completedAt,
           details: {
             validNINOTestPassed: validParsed !== null,
-            invalidPrefixTestPassed: invalidPrefixParsed !== null && !hasValidPrefix(invalidPrefixParsed.prefix),
-            invalidSuffixTestPassed: invalidSuffixParsed !== null && !hasValidSuffix(invalidSuffixParsed.suffix),
+            invalidPrefixTestPassed:
+              invalidPrefixParsed !== null &&
+              !hasValidPrefix(invalidPrefixParsed.prefix),
+            invalidSuffixTestPassed:
+              invalidSuffixParsed !== null &&
+              !hasValidSuffix(invalidSuffixParsed.suffix),
             allowTemporary,
             allowAdministrative,
           },

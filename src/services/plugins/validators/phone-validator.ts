@@ -123,7 +123,7 @@ function createSuccessResult(
   data: ValidationOutput,
   startedAt: Date,
   cached: boolean = false,
-  metadata?: PhoneValidationMetadata,
+  metadata?: PhoneValidationMetadata
 ): ServiceResult<ValidationOutput> {
   const completedAt = new Date()
   return {
@@ -165,7 +165,12 @@ export interface PhoneValidatorOptions {
 /**
  * Default phone validator options
  */
-const DEFAULT_OPTIONS: Required<Omit<PhoneValidatorOptions, 'name' | 'description' | 'allowedCountries' | 'defaultCountry'>> = {
+const DEFAULT_OPTIONS: Required<
+  Omit<
+    PhoneValidatorOptions,
+    'name' | 'description' | 'allowedCountries' | 'defaultCountry'
+  >
+> = {
   mobileOnly: false,
   landlineOnly: false,
 }
@@ -196,7 +201,7 @@ const DEFAULT_OPTIONS: Required<Omit<PhoneValidatorOptions, 'name' | 'descriptio
  * ```
  */
 export function createPhoneValidator(
-  options: PhoneValidatorOptions = {},
+  options: PhoneValidatorOptions = {}
 ): ValidationService {
   const {
     name = 'phone-validator',
@@ -213,9 +218,7 @@ export function createPhoneValidator(
   }
 
   // Convert allowed countries to a Set for faster lookup
-  const allowedCountrySet = allowedCountries
-    ? new Set(allowedCountries)
-    : null
+  const allowedCountrySet = allowedCountries ? new Set(allowedCountries) : null
 
   return {
     name,
@@ -224,7 +227,7 @@ export function createPhoneValidator(
 
     async execute(
       input: ValidationInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<ValidationOutput>> {
       const startedAt = new Date()
       const { value, context: inputContext } = input
@@ -239,21 +242,29 @@ export function createPhoneValidator(
           message: 'Phone number is required',
         })
 
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Phone number is required',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Phone number is required',
+          },
+          startedAt
+        )
       }
 
       // Determine country code from context or default
-      const countryFromContext = inputContext?.country as CountryCode | undefined
+      const countryFromContext = inputContext?.country as
+        | CountryCode
+        | undefined
       const effectiveDefaultCountry = countryFromContext ?? defaultCountry
 
       // Try to parse the phone number
       let phoneNumber: PhoneNumber | undefined
       try {
-        phoneNumber = parsePhoneNumberFromString(rawValue, effectiveDefaultCountry)
+        phoneNumber = parsePhoneNumberFromString(
+          rawValue,
+          effectiveDefaultCountry
+        )
       } catch {
         // Parsing failed, will be handled below
       }
@@ -268,17 +279,20 @@ export function createPhoneValidator(
           : 'Cannot parse as a phone number',
       })
 
-      if (!canParse) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Invalid phone number format',
-          suggestions: [
-            'Include the country code (e.g., +1 for US)',
-            'Remove any letters or invalid characters',
-            'Check that the number has the correct number of digits',
-          ],
-        }, startedAt)
+      if (!canParse || !phoneNumber) {
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Invalid phone number format',
+            suggestions: [
+              'Include the country code (e.g., +1 for US)',
+              'Remove any letters or invalid characters',
+              'Check that the number has the correct number of digits',
+            ],
+          },
+          startedAt
+        )
       }
 
       // Validity check - is this a valid phone number?
@@ -293,25 +307,32 @@ export function createPhoneValidator(
 
       if (!isValid) {
         const metadata = extractMetadata(phoneNumber)
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: rawValue,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: rawValue,
+            },
+            invalidReason: `Phone number is not valid${metadata.countryCode ? ` for ${metadata.countryCode}` : ''}`,
+            suggestions: [
+              'Check that all digits are correct',
+              'Verify the country code is correct',
+            ],
           },
-          invalidReason: `Phone number is not valid${metadata.countryCode ? ` for ${metadata.countryCode}` : ''}`,
-          suggestions: [
-            'Check that all digits are correct',
-            'Verify the country code is correct',
-          ],
-        }, startedAt, false, metadata)
+          startedAt,
+          false,
+          metadata
+        )
       }
 
       const metadata = extractMetadata(phoneNumber)
 
       // Country restriction check
       if (allowedCountrySet && metadata.countryCode) {
-        const countryAllowed = allowedCountrySet.has(metadata.countryCode as CountryCode)
+        const countryAllowed = allowedCountrySet.has(
+          metadata.countryCode as CountryCode
+        )
         checks.push({
           name: 'country',
           passed: countryAllowed,
@@ -321,21 +342,29 @@ export function createPhoneValidator(
         })
 
         if (!countryAllowed) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: metadata.e164Format ?? rawValue,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: metadata.e164Format ?? rawValue,
+              },
+              invalidReason: `Phone numbers from ${metadata.countryCode} are not accepted`,
+              suggestions: [
+                `Please provide a phone number from: ${Array.from(allowedCountrySet).join(', ')}`,
+              ],
             },
-            invalidReason: `Phone numbers from ${metadata.countryCode} are not accepted`,
-            suggestions: [`Please provide a phone number from: ${Array.from(allowedCountrySet).join(', ')}`],
-          }, startedAt, false, metadata)
+            startedAt,
+            false,
+            metadata
+          )
         }
       }
 
       // Number type check (mobile/landline)
       if (mobileOnly) {
-        const isMobile = metadata.isPossibleMobile && metadata.numberType !== 'FIXED_LINE'
+        const isMobile =
+          metadata.isPossibleMobile && metadata.numberType !== 'FIXED_LINE'
         checks.push({
           name: 'type',
           passed: !!isMobile,
@@ -345,20 +374,26 @@ export function createPhoneValidator(
         })
 
         if (!isMobile) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: metadata.e164Format ?? rawValue,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: metadata.e164Format ?? rawValue,
+              },
+              invalidReason: 'Only mobile phone numbers are accepted',
+              suggestions: ['Please provide a mobile phone number'],
             },
-            invalidReason: 'Only mobile phone numbers are accepted',
-            suggestions: ['Please provide a mobile phone number'],
-          }, startedAt, false, metadata)
+            startedAt,
+            false,
+            metadata
+          )
         }
       }
 
       if (landlineOnly) {
-        const isLandline = metadata.isPossibleLandline && metadata.numberType !== 'MOBILE'
+        const isLandline =
+          metadata.isPossibleLandline && metadata.numberType !== 'MOBILE'
         checks.push({
           name: 'type',
           passed: !!isLandline,
@@ -368,27 +403,37 @@ export function createPhoneValidator(
         })
 
         if (!isLandline) {
-          return createSuccessResult({
-            valid: false,
-            details: {
-              checks,
-              normalizedValue: metadata.e164Format ?? rawValue,
+          return createSuccessResult(
+            {
+              valid: false,
+              details: {
+                checks,
+                normalizedValue: metadata.e164Format ?? rawValue,
+              },
+              invalidReason: 'Only landline phone numbers are accepted',
+              suggestions: ['Please provide a landline phone number'],
             },
-            invalidReason: 'Only landline phone numbers are accepted',
-            suggestions: ['Please provide a landline phone number'],
-          }, startedAt, false, metadata)
+            startedAt,
+            false,
+            metadata
+          )
         }
       }
 
       // All checks passed
-      return createSuccessResult({
-        valid: true,
-        details: {
-          checks,
-          normalizedValue: metadata.e164Format ?? rawValue,
-          confidence: 1.0,
+      return createSuccessResult(
+        {
+          valid: true,
+          details: {
+            checks,
+            normalizedValue: metadata.e164Format ?? rawValue,
+            confidence: 1.0,
+          },
         },
-      }, startedAt, false, metadata)
+        startedAt,
+        false,
+        metadata
+      )
     },
 
     async healthCheck(): Promise<HealthCheckResult> {

@@ -23,7 +23,13 @@ export type PhoneCarrierProvider = 'twilio' | 'plivo' | 'numverify' | 'custom'
 /**
  * Phone number line type
  */
-export type PhoneLineType = 'mobile' | 'landline' | 'voip' | 'toll_free' | 'premium' | 'unknown'
+export type PhoneLineType =
+  | 'mobile'
+  | 'landline'
+  | 'voip'
+  | 'toll_free'
+  | 'premium'
+  | 'unknown'
 
 /**
  * Phone number portability status
@@ -126,7 +132,7 @@ export interface CarrierLookupResponse {
  */
 export type CustomCarrierProvider = (
   phoneNumber: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => Promise<CarrierLookupResponse>
 
 /**
@@ -178,8 +184,18 @@ export const DEFAULT_CARRIER_CONFIG: Partial<PhoneCarrierLookupConfig> = {
 /**
  * Extract phone number from key fields
  */
-export function extractPhoneNumber(keyFields: Record<string, unknown>): string | undefined {
-  const phoneFields = ['phone', 'phoneNumber', 'mobile', 'telephone', 'tel', 'cell', 'primaryPhone']
+export function extractPhoneNumber(
+  keyFields: Record<string, unknown>
+): string | undefined {
+  const phoneFields = [
+    'phone',
+    'phoneNumber',
+    'mobile',
+    'telephone',
+    'tel',
+    'cell',
+    'primaryPhone',
+  ]
 
   for (const field of phoneFields) {
     const value = keyFields[field]
@@ -209,7 +225,9 @@ export function normalizePhoneNumber(phone: string): string {
 /**
  * Flatten carrier lookup data for field mapping
  */
-export function flattenCarrierData(data: CarrierLookupData): Record<string, unknown> {
+export function flattenCarrierData(
+  data: CarrierLookupData
+): Record<string, unknown> {
   const flat: Record<string, unknown> = {}
 
   if (data.phoneNumber) flat.phoneNumber = data.phoneNumber
@@ -242,7 +260,7 @@ export function flattenCarrierData(data: CarrierLookupData): Record<string, unkn
 
   // Remove undefined values
   return Object.fromEntries(
-    Object.entries(flat).filter(([_, v]) => v !== undefined),
+    Object.entries(flat).filter(([_, v]) => v !== undefined)
   )
 }
 
@@ -251,7 +269,7 @@ export function flattenCarrierData(data: CarrierLookupData): Record<string, unkn
  */
 export function mapCarrierFields(
   data: CarrierLookupData,
-  fieldMapping: Record<string, string>,
+  fieldMapping: Record<string, string>
 ): Record<string, unknown> {
   const flat = flattenCarrierData(data)
   const result: Record<string, unknown> = {}
@@ -283,7 +301,7 @@ function createSuccessResult(
   data: LookupOutput,
   startedAt: Date,
   cached: boolean = false,
-  metadata?: Record<string, unknown>,
+  metadata?: Record<string, unknown>
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -304,7 +322,7 @@ function createSuccessResult(
  */
 function createFailureResult(
   error: Error,
-  startedAt: Date,
+  startedAt: Date
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -327,18 +345,19 @@ function createFailureResult(
 /**
  * Mock carrier data for common US carriers
  */
-const MOCK_US_CARRIERS: Record<string, { name: string; type: PhoneLineType }> = {
-  '1200': { name: 'Verizon Wireless', type: 'mobile' },
-  '1201': { name: 'AT&T Mobility', type: 'mobile' },
-  '1202': { name: 'T-Mobile US', type: 'mobile' },
-  '1203': { name: 'US Cellular', type: 'mobile' },
-  '1204': { name: 'Comcast', type: 'landline' },
-  '1205': { name: 'Google Voice', type: 'voip' },
-  '1800': { name: 'Toll Free', type: 'toll_free' },
-  '1888': { name: 'Toll Free', type: 'toll_free' },
-  '1877': { name: 'Toll Free', type: 'toll_free' },
-  '1866': { name: 'Toll Free', type: 'toll_free' },
-}
+const MOCK_US_CARRIERS: Record<string, { name: string; type: PhoneLineType }> =
+  {
+    '1200': { name: 'Verizon Wireless', type: 'mobile' },
+    '1201': { name: 'AT&T Mobility', type: 'mobile' },
+    '1202': { name: 'T-Mobile US', type: 'mobile' },
+    '1203': { name: 'US Cellular', type: 'mobile' },
+    '1204': { name: 'Comcast', type: 'landline' },
+    '1205': { name: 'Google Voice', type: 'voip' },
+    '1800': { name: 'Toll Free', type: 'toll_free' },
+    '1888': { name: 'Toll Free', type: 'toll_free' },
+    '1877': { name: 'Toll Free', type: 'toll_free' },
+    '1866': { name: 'Toll Free', type: 'toll_free' },
+  }
 
 /**
  * Mock provider for testing and development
@@ -364,7 +383,9 @@ export function createMockCarrierProvider(): CustomCarrierProvider {
       return {
         found: true,
         data: {
-          phoneNumber: normalized.startsWith('+') ? normalized : `+1${normalized}`,
+          phoneNumber: normalized.startsWith('+')
+            ? normalized
+            : `+1${normalized}`,
           carrier: {
             name: 'Toll Free',
             type: 'toll_free',
@@ -388,7 +409,7 @@ export function createMockCarrierProvider(): CustomCarrierProvider {
     // Simulate carrier based on prefix hash
     const prefixNum = parseInt(prefix, 10) || 0
     const carrierKeys = Object.keys(MOCK_US_CARRIERS).filter(
-      (k) => MOCK_US_CARRIERS[k].type !== 'toll_free',
+      (k) => MOCK_US_CARRIERS[k].type !== 'toll_free'
     )
     const carrierKey = carrierKeys[prefixNum % carrierKeys.length]
     const carrier = MOCK_US_CARRIERS[carrierKey]
@@ -450,7 +471,9 @@ export function createMockCarrierProvider(): CustomCarrierProvider {
  * }, context)
  * ```
  */
-export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): LookupService {
+export function createPhoneCarrierLookup(
+  config: PhoneCarrierLookupConfig
+): LookupService {
   const mergedConfig = { ...DEFAULT_CARRIER_CONFIG, ...config }
   const serviceName = `phone-carrier-lookup-${mergedConfig.provider}`
 
@@ -465,7 +488,7 @@ export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): Look
 
   const executeProvider = async (
     phoneNumber: string,
-    signal?: AbortSignal,
+    signal?: AbortSignal
   ): Promise<CarrierLookupResponse> => {
     switch (mergedConfig.provider) {
       case 'custom':
@@ -477,7 +500,7 @@ export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): Look
         // For now, these providers require custom implementation
         throw new ServiceNetworkError(
           serviceName,
-          `Provider '${mergedConfig.provider}' requires custom implementation. Use 'custom' provider with customProvider function.`,
+          `Provider '${mergedConfig.provider}' requires custom implementation. Use 'custom' provider with customProvider function.`
         )
 
       default:
@@ -492,7 +515,7 @@ export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): Look
 
     async execute(
       input: LookupInput,
-      context: ServiceContext,
+      context: ServiceContext
     ): Promise<ServiceResult<LookupOutput>> {
       const startedAt = new Date()
 
@@ -504,7 +527,7 @@ export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): Look
             {
               found: false,
             },
-            startedAt,
+            startedAt
           )
         }
 
@@ -515,7 +538,7 @@ export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): Look
             {
               found: false,
             },
-            startedAt,
+            startedAt
           )
         }
 
@@ -550,19 +573,22 @@ export function createPhoneCarrierLookup(config: PhoneCarrierLookupConfig): Look
           },
           startedAt,
           false,
-          response.cost !== undefined ? { cost: response.cost } : undefined,
+          response.cost !== undefined ? { cost: response.cost } : undefined
         )
       } catch (error) {
-        if (error instanceof ServiceNetworkError || error instanceof ServiceServerError) {
+        if (
+          error instanceof ServiceNetworkError ||
+          error instanceof ServiceServerError
+        ) {
           return createFailureResult(error, startedAt)
         }
 
         return createFailureResult(
           new ServiceNetworkError(
             serviceName,
-            error instanceof Error ? error.message : String(error),
+            error instanceof Error ? error.message : String(error)
           ),
-          startedAt,
+          startedAt
         )
       }
     },

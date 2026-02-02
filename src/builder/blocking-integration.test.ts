@@ -20,7 +20,9 @@ describe('BlockingBuilder Integration', () => {
             .field('lastName', { type: 'name' })
             .field('email', { type: 'email' })
         )
-        .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+        .blocking((block) =>
+          block.onField('lastName', { transform: 'soundex' })
+        )
         .matching((match) =>
           match
             .field('firstName')
@@ -80,14 +82,10 @@ describe('BlockingBuilder Integration', () => {
           })
         )
         .matching((match) =>
-          match
-            .field('lastName')
-            .strategy('exact')
-            .weight(1)
-            .thresholds({
-              noMatch: 10,
-              definiteMatch: 50,
-            })
+          match.field('lastName').strategy('exact').weight(1).thresholds({
+            noMatch: 10,
+            definiteMatch: 50,
+          })
         )
         .build()
 
@@ -168,14 +166,10 @@ describe('BlockingBuilder Integration', () => {
             .sortedNeighbourhood('email', { windowSize: 5 })
         )
         .matching((match) =>
-          match
-            .field('lastName')
-            .strategy('exact')
-            .weight(1)
-            .thresholds({
-              noMatch: 20,
-              definiteMatch: 80,
-            })
+          match.field('lastName').strategy('exact').weight(1).thresholds({
+            noMatch: 20,
+            definiteMatch: 80,
+          })
         )
         .build()
 
@@ -220,7 +214,11 @@ describe('BlockingBuilder Integration', () => {
       const resolver = HaveWeMet.create<Person>()
         .schema((schema) => schema.field('lastName', { type: 'name' }))
         .matching((match) =>
-          match.field('lastName').strategy('exact').weight(1).thresholds({ noMatch: 20, definiteMatch: 80 })
+          match
+            .field('lastName')
+            .strategy('exact')
+            .weight(1)
+            .thresholds({ noMatch: 20, definiteMatch: 80 })
         )
         .blocking((block) => block.onField('lastName'))
         .build()
@@ -237,9 +235,7 @@ describe('BlockingBuilder Integration', () => {
             .field('firstName', { type: 'name' })
             .field('lastName', { type: 'name' })
         )
-        .blocking((block) =>
-          block.onField('firstName').onField('lastName')
-        )
+        .blocking((block) => block.onField('firstName').onField('lastName'))
         .matching((match) =>
           match
             .field('firstName')

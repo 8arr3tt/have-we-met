@@ -113,7 +113,9 @@ async function contactMergingExample() {
     if (matches.length === 0) {
       console.log('No duplicates found - safe to add contact')
     } else {
-      const definiteMatches = matches.filter((m) => m.outcome === 'definiteMatch')
+      const definiteMatches = matches.filter(
+        (m) => m.outcome === 'definiteMatch'
+      )
       if (definiteMatches.length > 0) {
         console.log('Definite match found - contact likely already exists')
       } else {
@@ -122,7 +124,9 @@ async function contactMergingExample() {
     }
   } catch (error) {
     console.log('Note: This example requires a configured TypeORM repository')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -135,9 +139,13 @@ async function contactMergingExample() {
     })
 
     console.log('Batch Processing Results:')
-    console.log(`  Total contacts processed: ${deduplicationResult.totalRecords}`)
+    console.log(
+      `  Total contacts processed: ${deduplicationResult.totalRecords}`
+    )
     console.log(`  Definite duplicates: ${deduplicationResult.definiteMatches}`)
-    console.log(`  Potential duplicates: ${deduplicationResult.potentialMatches}`)
+    console.log(
+      `  Potential duplicates: ${deduplicationResult.potentialMatches}`
+    )
     console.log(`  Unique contacts: ${deduplicationResult.noMatches}`)
 
     const totalDuplicates =
@@ -148,7 +156,9 @@ async function contactMergingExample() {
     console.log(`  Database cleanup opportunity: ${cleanupOpportunity}%`)
   } catch (error) {
     console.log('Note: This example requires a configured TypeORM repository')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -168,7 +178,9 @@ async function contactMergingExample() {
         )
         const [oldest, ...newer] = sortedByDate
 
-        console.log(`Primary (oldest) contact: ${oldest.id} (${oldest.createdAt})`)
+        console.log(
+          `Primary (oldest) contact: ${oldest.id} (${oldest.createdAt})`
+        )
         console.log(`Merging into it: ${newer.map((r) => r.id).join(', ')}`)
 
         const mergedContact: Contact = {
@@ -200,7 +212,9 @@ async function contactMergingExample() {
     })
   } catch (error) {
     console.log('Note: This example requires a configured TypeORM repository')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -287,7 +301,9 @@ const adapter = new TypeORMAdapter(repository, {
   console.log('\n---\n')
   console.log('Scenario 5: Recommended database indexes\n')
 
-  console.log('For optimal performance, create these indexes on your contacts table:')
+  console.log(
+    'For optimal performance, create these indexes on your contacts table:'
+  )
   console.log('')
   console.log('-- Index for lastName blocking')
   console.log('CREATE INDEX idx_contacts_lastname ON contacts(last_name);')
@@ -303,10 +319,14 @@ const adapter = new TypeORMAdapter(repository, {
   console.log('')
   console.log('-- Index for Soundex blocking (requires pre-computed column)')
   console.log('ALTER TABLE contacts ADD COLUMN soundex_lastname VARCHAR(4);')
-  console.log('CREATE INDEX idx_contacts_soundex_lastname ON contacts(soundex_lastname);')
+  console.log(
+    'CREATE INDEX idx_contacts_soundex_lastname ON contacts(soundex_lastname);'
+  )
   console.log('')
   console.log('-- Composite index for combined blocking')
-  console.log('CREATE INDEX idx_contacts_lastname_company ON contacts(last_name, company);')
+  console.log(
+    'CREATE INDEX idx_contacts_lastname_company ON contacts(last_name, company);'
+  )
 
   console.log('\n=== Example Complete ===')
 }

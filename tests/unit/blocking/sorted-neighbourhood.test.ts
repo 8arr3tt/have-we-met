@@ -45,10 +45,7 @@ describe('SortedNeighbourhoodStrategy', () => {
 
     it('sorts records by multiple fields', () => {
       const strategy = new SortedNeighbourhoodStrategy<Person>({
-        sortBy: [
-          { field: 'lastName' },
-          { field: 'firstName' },
-        ],
+        sortBy: [{ field: 'lastName' }, { field: 'firstName' }],
         windowSize: 2,
       })
 
@@ -417,7 +414,9 @@ describe('SortedNeighbourhoodStrategy', () => {
         windowSize: 5,
       })
 
-      const records: Person[] = [{ id: '1', firstName: 'John', lastName: 'Smith' }]
+      const records: Person[] = [
+        { id: '1', firstName: 'John', lastName: 'Smith' },
+      ]
 
       const blocks = strategy.generateBlocks(records)
 
@@ -485,9 +484,24 @@ describe('SortedNeighbourhoodStrategy', () => {
       })
 
       const records: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', dateOfBirth: new Date('1995-06-15') },
-        { id: '2', firstName: 'Jane', lastName: 'Doe', dateOfBirth: new Date('1985-03-20') },
-        { id: '3', firstName: 'Bob', lastName: 'Jones', dateOfBirth: new Date('1990-11-30') },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          dateOfBirth: new Date('1995-06-15'),
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          dateOfBirth: new Date('1985-03-20'),
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          dateOfBirth: new Date('1990-11-30'),
+        },
       ]
 
       const blocks = strategy.generateBlocks(records)
@@ -535,7 +549,12 @@ describe('SortedNeighbourhoodStrategy', () => {
       })
 
       const records: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@zzz.com' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@zzz.com',
+        },
         { id: '2', firstName: 'Jane', lastName: 'Doe', email: 'jane@aaa.com' },
         { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@mmm.com' },
       ]
@@ -561,10 +580,7 @@ describe('SortedNeighbourhoodStrategy', () => {
 
     it('generates name for multiple fields', () => {
       const strategy = new SortedNeighbourhoodStrategy<Person>({
-        sortBy: [
-          { field: 'lastName' },
-          { field: 'firstName' },
-        ],
+        sortBy: [{ field: 'lastName' }, { field: 'firstName' }],
         windowSize: 20,
       })
 

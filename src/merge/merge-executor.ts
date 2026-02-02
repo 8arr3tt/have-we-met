@@ -38,7 +38,10 @@ import type { SchemaDefinition } from '../types/schema.js'
 /**
  * Generates a unique ID for the golden record
  */
-function generateGoldenRecordId(targetRecordId?: string, sourceRecords?: SourceRecord[]): string {
+function generateGoldenRecordId(
+  targetRecordId?: string,
+  sourceRecords?: SourceRecord[]
+): string {
   if (targetRecordId) {
     return targetRecordId
   }
@@ -53,7 +56,7 @@ function generateGoldenRecordId(targetRecordId?: string, sourceRecords?: SourceR
  */
 function collectFieldPaths<T extends Record<string, unknown>>(
   sourceRecords: SourceRecord<T>[],
-  schema?: SchemaDefinition<T>,
+  schema?: SchemaDefinition<T>
 ): string[] {
   const fieldSet = new Set<string>()
 
@@ -78,7 +81,7 @@ function collectFieldPaths<T extends Record<string, unknown>>(
 function collectFieldPathsFromObject(
   obj: Record<string, unknown>,
   prefix: string,
-  fieldSet: Set<string>,
+  fieldSet: Set<string>
 ): void {
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${key}` : key
@@ -86,7 +89,11 @@ function collectFieldPathsFromObject(
 
     // Only recurse into plain objects, not arrays or other types
     if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      collectFieldPathsFromObject(value as Record<string, unknown>, path, fieldSet)
+      collectFieldPathsFromObject(
+        value as Record<string, unknown>,
+        path,
+        fieldSet
+      )
     }
   }
 }
@@ -96,7 +103,7 @@ function collectFieldPathsFromObject(
  */
 function getFieldStrategy(
   field: string,
-  config: MergeConfig,
+  config: MergeConfig
 ): { strategy: MergeStrategy; fieldConfig?: FieldMergeConfig } {
   // Check for explicit field configuration
   const fieldConfig = config.fieldStrategies.find((fs) => fs.field === field)
@@ -108,7 +115,9 @@ function getFieldStrategy(
   const parts = field.split('.')
   for (let i = parts.length - 1; i > 0; i--) {
     const parentPath = parts.slice(0, i).join('.')
-    const parentConfig = config.fieldStrategies.find((fs) => fs.field === parentPath)
+    const parentConfig = config.fieldStrategies.find(
+      (fs) => fs.field === parentPath
+    )
     if (parentConfig) {
       return { strategy: parentConfig.strategy, fieldConfig: parentConfig }
     }
@@ -123,13 +132,16 @@ function getFieldStrategy(
  */
 function extractFieldValues<T extends Record<string, unknown>>(
   sourceRecords: SourceRecord<T>[],
-  field: string,
+  field: string
 ): { values: unknown[]; valueByRecordId: Map<string, unknown> } {
   const values: unknown[] = []
   const valueByRecordId = new Map<string, unknown>()
 
   for (const sourceRecord of sourceRecords) {
-    const value = getNestedValue(sourceRecord.record as Record<string, unknown>, field)
+    const value = getNestedValue(
+      sourceRecord.record as Record<string, unknown>,
+      field
+    )
     values.push(value)
     valueByRecordId.set(sourceRecord.id, value)
   }
@@ -142,7 +154,7 @@ function extractFieldValues<T extends Record<string, unknown>>(
  */
 function findSourceRecordForValue(
   value: unknown,
-  valueByRecordId: Map<string, unknown>,
+  valueByRecordId: Map<string, unknown>
 ): string | undefined {
   // Handle undefined case - no source contributed
   if (value === undefined) {
@@ -181,8 +193,8 @@ function valuesEqual(a: unknown, b: unknown): boolean {
     return aKeys.every((key) =>
       valuesEqual(
         (a as Record<string, unknown>)[key],
-        (b as Record<string, unknown>)[key],
-      ),
+        (b as Record<string, unknown>)[key]
+      )
     )
   }
 
@@ -238,7 +250,7 @@ export class MergeExecutor<T extends Record<string, unknown>> {
    */
   constructor(
     config: Partial<MergeConfig> & { fieldStrategies?: FieldMergeConfig[] },
-    schema?: SchemaDefinition<T>,
+    schema?: SchemaDefinition<T>
   ) {
     this.config = {
       ...DEFAULT_MERGE_CONFIG,
@@ -262,7 +274,13 @@ export class MergeExecutor<T extends Record<string, unknown>> {
    * @throws {MergeConflictError} If conflict occurs and conflictResolution is 'error'
    */
   async merge(request: MergeRequest<T>): Promise<MergeResult<T>> {
-    const { sourceRecords, targetRecordId, configOverrides, mergedBy, queueItemId } = request
+    const {
+      sourceRecords,
+      targetRecordId,
+      configOverrides,
+      mergedBy,
+      queueItemId,
+    } = request
 
     // Validate source records
     validateSourceRecords(sourceRecords)
@@ -322,9 +340,12 @@ export class MergeExecutor<T extends Record<string, unknown>> {
   private async processField(
     field: string,
     context: MergeContext<T>,
-    goldenRecord: Record<string, unknown>,
+    goldenRecord: Record<string, unknown>
   ): Promise<void> {
-    const { values, valueByRecordId } = extractFieldValues(context.sourceRecords, field)
+    const { values, valueByRecordId } = extractFieldValues(
+      context.sourceRecords,
+      field
+    )
 
     // Get strategy for this field
     const { strategy, fieldConfig } = getFieldStrategy(field, context.config)
@@ -339,14 +360,18 @@ export class MergeExecutor<T extends Record<string, unknown>> {
     try {
       if (strategy === 'custom' && fieldConfig?.customMerge) {
         // Use custom merge function
-        resultValue = fieldConfig.customMerge(values, context.sourceRecords, fieldConfig.options)
+        resultValue = fieldConfig.customMerge(
+          values,
+          context.sourceRecords,
+          fieldConfig.options
+        )
       } else {
         // Use registered strategy
         resultValue = this.applyStrategy(
           strategy,
           values,
           context.sourceRecords,
-          fieldConfig?.options,
+          fieldConfig?.options
         )
       }
 
@@ -357,10 +382,12 @@ export class MergeExecutor<T extends Record<string, unknown>> {
       if (hasConflict && context.config.conflictResolution === 'error') {
         const conflict: MergeConflict = {
           field,
-          values: Array.from(valueByRecordId.entries()).map(([recordId, value]) => ({
-            recordId,
-            value,
-          })),
+          values: Array.from(valueByRecordId.entries()).map(
+            ([recordId, value]) => ({
+              recordId,
+              value,
+            })
+          ),
           resolution: 'deferred',
         }
         throw new MergeConflictError(conflict)
@@ -376,7 +403,7 @@ export class MergeExecutor<T extends Record<string, unknown>> {
         valueByRecordId,
         resultValue,
         strategy,
-        context,
+        context
       )
 
       if (conflict) {
@@ -401,10 +428,12 @@ export class MergeExecutor<T extends Record<string, unknown>> {
       const fieldProvenance: FieldProvenance = {
         sourceRecordId: sourceRecordId ?? context.sourceRecords[0].id,
         strategyApplied: strategy,
-        allValues: Array.from(valueByRecordId.entries()).map(([recordId, value]) => ({
-          recordId,
-          value,
-        })),
+        allValues: Array.from(valueByRecordId.entries()).map(
+          ([recordId, value]) => ({
+            recordId,
+            value,
+          })
+        ),
         hadConflict: hasConflict,
         conflictResolution: hasConflict
           ? context.conflicts.find((c) => c.field === field)?.resolutionReason
@@ -421,7 +450,7 @@ export class MergeExecutor<T extends Record<string, unknown>> {
     strategyName: MergeStrategy,
     values: unknown[],
     records: SourceRecord[],
-    options?: FieldMergeOptions,
+    options?: FieldMergeOptions
   ): unknown {
     if (!hasStrategy(strategyName)) {
       throw new InvalidStrategyError(strategyName)
@@ -440,12 +469,14 @@ export class MergeExecutor<T extends Record<string, unknown>> {
     valueByRecordId: Map<string, unknown>,
     resolvedValue: unknown,
     strategy: MergeStrategy,
-    context: MergeContext<T>,
+    context: MergeContext<T>
   ): MergeConflict | null {
-    const conflictValues = Array.from(valueByRecordId.entries()).map(([recordId, value]) => ({
-      recordId,
-      value,
-    }))
+    const conflictValues = Array.from(valueByRecordId.entries()).map(
+      ([recordId, value]) => ({
+        recordId,
+        value,
+      })
+    )
 
     switch (context.config.conflictResolution) {
       case 'error':

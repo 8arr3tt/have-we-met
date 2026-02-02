@@ -235,7 +235,9 @@ describe('TypeORMProvenanceAdapter', () => {
 
       const result = await adapter.count()
 
-      expect(mockRepository.count).toHaveBeenCalledWith({ where: { unmerged: false } })
+      expect(mockRepository.count).toHaveBeenCalledWith({
+        where: { unmerged: false },
+      })
       expect(result).toBe(10)
     })
 
@@ -256,7 +258,9 @@ describe('TypeORMMergeAdapter', () => {
 
   beforeEach(() => {
     mockRepository = createMockRepository()
-    adapter = new TypeORMMergeAdapter<TestRecord>(mockRepository as unknown as any)
+    adapter = new TypeORMMergeAdapter<TestRecord>(
+      mockRepository as unknown as any
+    )
   })
 
   describe('constructor', () => {
@@ -272,7 +276,9 @@ describe('TypeORMMergeAdapter', () => {
         {},
         provenanceRepo as unknown as any
       )
-      expect(adapterWithProvenance.provenance).toBeInstanceOf(TypeORMProvenanceAdapter)
+      expect(adapterWithProvenance.provenance).toBeInstanceOf(
+        TypeORMProvenanceAdapter
+      )
     })
   })
 
@@ -331,14 +337,11 @@ describe('TypeORMMergeAdapter', () => {
 
       const result = await adapter.restore(['rec-1', 'rec-2'])
 
-      expect(mockRepository.update).toHaveBeenCalledWith(
-        expect.anything(),
-        {
-          archivedAt: null,
-          archivedReason: null,
-          mergedIntoId: null,
-        }
-      )
+      expect(mockRepository.update).toHaveBeenCalledWith(expect.anything(), {
+        archivedAt: null,
+        archivedReason: null,
+        mergedIntoId: null,
+      })
       expect(result).toEqual(records)
     })
 
@@ -474,13 +477,17 @@ describe('TypeORMMergeAdapter', () => {
 describe('factory functions', () => {
   it('createTypeORMMergeAdapter creates adapter', () => {
     const mockRepository = createMockRepository()
-    const adapter = createTypeORMMergeAdapter<TestRecord>(mockRepository as unknown as any)
+    const adapter = createTypeORMMergeAdapter<TestRecord>(
+      mockRepository as unknown as any
+    )
     expect(adapter).toBeInstanceOf(TypeORMMergeAdapter)
   })
 
   it('createTypeORMProvenanceAdapter creates adapter', () => {
     const mockRepository = createMockRepository()
-    const adapter = createTypeORMProvenanceAdapter(mockRepository as unknown as any)
+    const adapter = createTypeORMProvenanceAdapter(
+      mockRepository as unknown as any
+    )
     expect(adapter).toBeInstanceOf(TypeORMProvenanceAdapter)
   })
 })

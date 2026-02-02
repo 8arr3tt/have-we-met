@@ -11,7 +11,9 @@ type PrismaClient = {
  * Prisma implementation of the queue adapter.
  * Persists review queue items using Prisma ORM.
  */
-export class PrismaQueueAdapter<T extends Record<string, unknown>> extends BaseQueueAdapter<T> {
+export class PrismaQueueAdapter<
+  T extends Record<string, unknown>,
+> extends BaseQueueAdapter<T> {
   private readonly prisma: PrismaClient
   private readonly queueTableName: string
 
@@ -28,9 +30,12 @@ export class PrismaQueueAdapter<T extends Record<string, unknown>> extends BaseQ
   private getQueueModel() {
     const model = (this.prisma as Record<string, unknown>)[this.queueTableName]
     if (!model || typeof model !== 'object') {
-      throw new QueryError(`Queue model '${this.queueTableName}' not found in Prisma client`, {
-        queueTableName: this.queueTableName,
-      })
+      throw new QueryError(
+        `Queue model '${this.queueTableName}' not found in Prisma client`,
+        {
+          queueTableName: this.queueTableName,
+        }
+      )
     }
     return model as Record<string, CallableFunction>
   }
@@ -98,7 +103,7 @@ export class PrismaQueueAdapter<T extends Record<string, unknown>> extends BaseQ
 
   async updateQueueItem(
     id: string,
-    updates: Partial<QueueItem<T>>,
+    updates: Partial<QueueItem<T>>
   ): Promise<QueueItem<T>> {
     try {
       const model = this.getQueueModel()
@@ -108,10 +113,14 @@ export class PrismaQueueAdapter<T extends Record<string, unknown>> extends BaseQ
         serializedUpdates.status = updates.status
       }
       if (updates.candidateRecord !== undefined) {
-        serializedUpdates.candidateRecord = JSON.stringify(updates.candidateRecord)
+        serializedUpdates.candidateRecord = JSON.stringify(
+          updates.candidateRecord
+        )
       }
       if (updates.potentialMatches !== undefined) {
-        serializedUpdates.potentialMatches = JSON.stringify(updates.potentialMatches)
+        serializedUpdates.potentialMatches = JSON.stringify(
+          updates.potentialMatches
+        )
       }
       if (updates.decidedAt !== undefined) {
         serializedUpdates.decidedAt = updates.decidedAt
@@ -173,7 +182,10 @@ export class PrismaQueueAdapter<T extends Record<string, unknown>> extends BaseQ
         }
       }
 
-      const results = (await model.findMany(queryOptions)) as Record<string, unknown>[]
+      const results = (await model.findMany(queryOptions)) as Record<
+        string,
+        unknown
+      >[]
       return results.map((row) => this.deserializeQueueItem(row))
     } catch (error) {
       throw new QueryError('Failed to find queue items', {

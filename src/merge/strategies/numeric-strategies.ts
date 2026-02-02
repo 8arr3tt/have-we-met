@@ -3,7 +3,11 @@
  * @module merge/strategies/numeric-strategies
  */
 
-import type { StrategyFunction, SourceRecord, FieldMergeOptions } from '../types.js'
+import type {
+  StrategyFunction,
+  SourceRecord,
+  FieldMergeOptions,
+} from '../types.js'
 
 /**
  * Converts a value to a number if possible.
@@ -58,7 +62,7 @@ function extractNumbers(values: unknown[]): number[] {
 export const mostFrequent: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
 
@@ -73,14 +77,16 @@ export const mostFrequent: StrategyFunction = (
     const value = validValues[i]
     // For primitive values, use them directly as keys
     // For objects, convert to JSON for comparison
-    const key =
-      typeof value === 'object' ? JSON.stringify(value) : value
+    const key = typeof value === 'object' ? JSON.stringify(value) : value
 
     if (!frequencies.has(key)) {
       frequencies.set(key, { count: 1, firstIndex: i })
     } else {
       const existing = frequencies.get(key)!
-      frequencies.set(key, { count: existing.count + 1, firstIndex: existing.firstIndex })
+      frequencies.set(key, {
+        count: existing.count + 1,
+        firstIndex: existing.firstIndex,
+      })
     }
   }
 
@@ -90,7 +96,10 @@ export const mostFrequent: StrategyFunction = (
   let result: unknown = undefined
 
   for (const [, { count, firstIndex }] of frequencies) {
-    if (count > maxCount || (count === maxCount && firstIndex < maxFirstIndex)) {
+    if (
+      count > maxCount ||
+      (count === maxCount && firstIndex < maxFirstIndex)
+    ) {
       maxCount = count
       maxFirstIndex = firstIndex
       result = validValues[firstIndex]
@@ -121,7 +130,7 @@ export const mostFrequent: StrategyFunction = (
 export const average: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): number | undefined => {
   if (!values || values.length === 0) return undefined
 
@@ -153,7 +162,7 @@ export const average: StrategyFunction = (
 export const sum: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): number | undefined => {
   if (!values || values.length === 0) return undefined
 
@@ -185,7 +194,7 @@ export const sum: StrategyFunction = (
 export const min: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): number | undefined => {
   if (!values || values.length === 0) return undefined
 
@@ -217,7 +226,7 @@ export const min: StrategyFunction = (
 export const max: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): number | undefined => {
   if (!values || values.length === 0) return undefined
 

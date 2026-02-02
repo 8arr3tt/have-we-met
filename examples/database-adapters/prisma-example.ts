@@ -95,7 +95,9 @@ async function customerDeduplicationExample() {
     }
   } catch (error) {
     console.log('Note: This example requires a configured Prisma client')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
@@ -108,19 +110,25 @@ async function customerDeduplicationExample() {
     })
 
     console.log('Deduplication Results:')
-    console.log(`  Total records processed: ${deduplicationResult.totalRecords}`)
+    console.log(
+      `  Total records processed: ${deduplicationResult.totalRecords}`
+    )
     console.log(`  Definite matches: ${deduplicationResult.definiteMatches}`)
     console.log(`  Potential matches: ${deduplicationResult.potentialMatches}`)
     console.log(`  No matches: ${deduplicationResult.noMatches}`)
   } catch (error) {
     console.log('Note: This example requires a configured Prisma client')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n---\n')
   console.log('Scenario 3: Recommended database indexes\n')
 
-  console.log('For optimal performance, create these indexes on your customers table:')
+  console.log(
+    'For optimal performance, create these indexes on your customers table:'
+  )
   console.log('')
   console.log('-- Index for lastName blocking')
   console.log('CREATE INDEX idx_customers_lastname ON customers(last_name);')
@@ -139,7 +147,9 @@ async function customerDeduplicationExample() {
   console.log('')
   console.log('-- Index for year-based blocking')
   console.log('ALTER TABLE customers ADD COLUMN created_year INT;')
-  console.log('CREATE INDEX idx_customers_created_year ON customers(created_year);')
+  console.log(
+    'CREATE INDEX idx_customers_created_year ON customers(created_year);'
+  )
   console.log('')
   console.log('-- Composite index for combined blocking')
   console.log(
@@ -174,7 +184,9 @@ async function customerDeduplicationExample() {
     })
   } catch (error) {
     console.log('Note: This example requires a configured Prisma client')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
+    console.log(
+      `Error: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 
   console.log('\n=== Example Complete ===')

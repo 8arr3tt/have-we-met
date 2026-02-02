@@ -65,9 +65,7 @@ const preferCompleteContact: StrategyFunction = (values, records) => {
  * Also normalizes the values (trim, lowercase for comparison)
  */
 const mergeUniqueMedicalList: StrategyFunction = (values) => {
-  const allItems = values
-    .filter((v): v is string[] => Array.isArray(v))
-    .flat()
+  const allItems = values.filter((v): v is string[] => Array.isArray(v)).flat()
 
   // Deduplicate while preserving case of first occurrence
   const seen = new Map<string, string>()
@@ -140,13 +138,19 @@ async function customStrategiesExample() {
     .defaultStrategy('preferNonNull')
     .onConflict('useDefault')
     // Standard strategies for basic fields
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('dateOfBirth').strategy('preferFirst')
-    .field('insuranceId').strategy('preferNewer')
-    .field('primaryPhysician').strategy('preferNonNull')
+    .field('firstName')
+    .strategy('preferLonger')
+    .field('lastName')
+    .strategy('preferLonger')
+    .field('dateOfBirth')
+    .strategy('preferFirst')
+    .field('insuranceId')
+    .strategy('preferNewer')
+    .field('primaryPhysician')
+    .strategy('preferNonNull')
     // Use inline custom merge function for MRN
-    .field('mrn').custom<string>((values, records) => {
+    .field('mrn')
+    .custom<string>((values, records) => {
       // Custom inline logic: prefer MRN from record with most recent visit
       const recordsWithVisits = records
         .filter((r) => r.record.lastVisit instanceof Date)
@@ -162,9 +166,12 @@ async function customStrategiesExample() {
       return values.find((v) => v !== null && v !== undefined) as string
     })
     // Use registered custom strategies for complex fields
-    .field('allergies').custom<string[]>((values) => {
+    .field('allergies')
+    .custom<string[]>((values) => {
       // Combine and deduplicate
-      const allItems = values.filter((v): v is string[] => Array.isArray(v)).flat()
+      const allItems = values
+        .filter((v): v is string[] => Array.isArray(v))
+        .flat()
       const seen = new Map<string, string>()
       for (const item of allItems) {
         const normalized = item.trim().toLowerCase()
@@ -174,9 +181,12 @@ async function customStrategiesExample() {
       }
       return Array.from(seen.values()).sort()
     })
-    .field('medications').custom<string[]>((values) => {
+    .field('medications')
+    .custom<string[]>((values) => {
       // Same logic for medications
-      const allItems = values.filter((v): v is string[] => Array.isArray(v)).flat()
+      const allItems = values
+        .filter((v): v is string[] => Array.isArray(v))
+        .flat()
       const seen = new Map<string, string>()
       for (const item of allItems) {
         const normalized = item.trim().toLowerCase()
@@ -186,7 +196,8 @@ async function customStrategiesExample() {
       }
       return Array.from(seen.values()).sort()
     })
-    .field('emergencyContact').custom<Patient['emergencyContact']>((values) => {
+    .field('emergencyContact')
+    .custom<Patient['emergencyContact']>((values) => {
       const contacts = values.filter(
         (v) => v !== null && v !== undefined
       ) as Patient['emergencyContact'][]
@@ -206,7 +217,8 @@ async function customStrategiesExample() {
       scored.sort((a, b) => b.score - a.score || a.index - b.index)
       return scored[0].contact
     })
-    .field('lastVisit').custom<Date>((values) => {
+    .field('lastVisit')
+    .custom<Date>((values) => {
       const validDates = values
         .filter((v): v is Date => v instanceof Date && !isNaN(v.getTime()))
         .sort((a, b) => b.getTime() - a.getTime())
@@ -238,7 +250,7 @@ async function customStrategiesExample() {
         medications: ['Lisinopril', 'Metformin'],
         emergencyContact: {
           name: 'Sarah Johnson',
-          phone: '',  // Missing phone
+          phone: '', // Missing phone
           relationship: 'spouse',
         },
         lastVisit: lastMonth,
@@ -256,8 +268,8 @@ async function customStrategiesExample() {
         mrn: 'MRN12345',
         insuranceId: 'INS-NEW-002',
         primaryPhysician: undefined,
-        allergies: ['penicillin', 'Latex'],  // Note: different case for penicillin
-        medications: ['Lisinopril', 'Atorvastatin'],  // Different med list
+        allergies: ['penicillin', 'Latex'], // Note: different case for penicillin
+        medications: ['Lisinopril', 'Atorvastatin'], // Different med list
         emergencyContact: {
           name: 'Sarah Johnson',
           phone: '+1-555-0199',
@@ -272,14 +284,22 @@ async function customStrategiesExample() {
   ]
 
   console.log('Source Record 1 (older):')
-  console.log(`  Name: ${sourceRecords[0].record.firstName} ${sourceRecords[0].record.lastName}`)
+  console.log(
+    `  Name: ${sourceRecords[0].record.firstName} ${sourceRecords[0].record.lastName}`
+  )
   console.log(`  Allergies: ${sourceRecords[0].record.allergies.join(', ')}`)
-  console.log(`  Emergency contact phone: "${sourceRecords[0].record.emergencyContact?.phone}"`)
+  console.log(
+    `  Emergency contact phone: "${sourceRecords[0].record.emergencyContact?.phone}"`
+  )
 
   console.log('\nSource Record 2 (newer):')
-  console.log(`  Name: ${sourceRecords[1].record.firstName} ${sourceRecords[1].record.lastName}`)
+  console.log(
+    `  Name: ${sourceRecords[1].record.firstName} ${sourceRecords[1].record.lastName}`
+  )
   console.log(`  Allergies: ${sourceRecords[1].record.allergies.join(', ')}`)
-  console.log(`  Emergency contact phone: "${sourceRecords[1].record.emergencyContact?.phone}"`)
+  console.log(
+    `  Emergency contact phone: "${sourceRecords[1].record.emergencyContact?.phone}"`
+  )
   console.log()
 
   // Step 5: Execute the merge
@@ -292,7 +312,9 @@ async function customStrategiesExample() {
   // Step 6: Display results
   console.log('\nStep 5: Examining the golden record...')
   console.log('Golden Record:')
-  console.log(`  Name: ${result.goldenRecord.firstName} ${result.goldenRecord.lastName}`)
+  console.log(
+    `  Name: ${result.goldenRecord.firstName} ${result.goldenRecord.lastName}`
+  )
   console.log(`  DOB: ${result.goldenRecord.dateOfBirth}`)
   console.log(`  MRN: ${result.goldenRecord.mrn}`)
   console.log(`  Insurance ID: ${result.goldenRecord.insuranceId}`)
@@ -307,7 +329,9 @@ async function customStrategiesExample() {
   console.log('Emergency Contact (preferCompleteContact strategy):')
   console.log(`  Name: ${result.goldenRecord.emergencyContact?.name}`)
   console.log(`  Phone: ${result.goldenRecord.emergencyContact?.phone}`)
-  console.log(`  Relationship: ${result.goldenRecord.emergencyContact?.relationship}`)
+  console.log(
+    `  Relationship: ${result.goldenRecord.emergencyContact?.relationship}`
+  )
   console.log()
 
   console.log('Visit History:')
@@ -323,7 +347,9 @@ async function customStrategiesExample() {
   console.log()
   console.log('2. mergeUniqueMedicalList for allergies:')
   console.log('   - Combined: Penicillin, Sulfa + penicillin, Latex')
-  console.log(`   - Deduplicated (case-insensitive): ${result.goldenRecord.allergies.join(', ')}`)
+  console.log(
+    `   - Deduplicated (case-insensitive): ${result.goldenRecord.allergies.join(', ')}`
+  )
   console.log()
   console.log('3. preferCompleteContact for emergency contact:')
   console.log('   - Record 1 contact was missing phone')

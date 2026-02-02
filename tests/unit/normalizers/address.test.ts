@@ -97,7 +97,9 @@ describe('parseAddressComponents', () => {
   })
 
   it('should parse address with unit number', () => {
-    const result = parseAddressComponents('456 Oak Ave Apt 4B, Springfield, IL 62701')
+    const result = parseAddressComponents(
+      '456 Oak Ave Apt 4B, Springfield, IL 62701'
+    )
     expect(result.streetNumber).toBe('456')
     expect(result.streetName).toBe('Oak')
     expect(result.street).toBe('456 Oak Ave')
@@ -117,7 +119,9 @@ describe('parseAddressComponents', () => {
   })
 
   it('should parse address with suite', () => {
-    const result = parseAddressComponents('100 Business Blvd Suite 200, Austin, TX 78701')
+    const result = parseAddressComponents(
+      '100 Business Blvd Suite 200, Austin, TX 78701'
+    )
     expect(result.street).toBe('100 Business Blvd')
     expect(result.unit).toBe('200')
     expect(result.city).toBe('Austin')
@@ -142,7 +146,9 @@ describe('parseAddressComponents', () => {
   })
 
   it('should parse address with extended ZIP+4', () => {
-    const result = parseAddressComponents('777 Park Ave, New York, NY 10021-5555')
+    const result = parseAddressComponents(
+      '777 Park Ave, New York, NY 10021-5555'
+    )
     expect(result.street).toBe('777 Park Ave')
     expect(result.city).toBe('New York')
     expect(result.state).toBe('NY')
@@ -158,7 +164,9 @@ describe('parseAddressComponents', () => {
   })
 
   it('should parse address with multiple newlines', () => {
-    const result = parseAddressComponents('456 Oak Ave\nApt 4B\nSpringfield, IL 62701')
+    const result = parseAddressComponents(
+      '456 Oak Ave\nApt 4B\nSpringfield, IL 62701'
+    )
     expect(result.street).toBe('456 Oak Ave')
     expect(result.unit).toBe('4B')
     expect(result.city).toBe('Springfield')
@@ -167,7 +175,9 @@ describe('parseAddressComponents', () => {
   })
 
   it('should handle extra whitespace', () => {
-    const result = parseAddressComponents('  123   Main   St  ,  Anytown  ,  CA   90210  ')
+    const result = parseAddressComponents(
+      '  123   Main   St  ,  Anytown  ,  CA   90210  '
+    )
     expect(result.street).toBe('123 Main St')
     expect(result.city).toBe('Anytown')
     expect(result.state).toBe('CA')
@@ -212,12 +222,16 @@ describe('parseAddressComponents', () => {
 
 describe('normalizeAddress', () => {
   it('should normalize simple address', () => {
-    const result = normalizeAddress('123 main street, anytown, california 90210')
+    const result = normalizeAddress(
+      '123 main street, anytown, california 90210'
+    )
     expect(result).toBe('123 Main St, Anytown, CA 90210')
   })
 
   it('should abbreviate street types by default', () => {
-    const result = normalizeAddress('456 oak avenue, springfield, illinois 62701')
+    const result = normalizeAddress(
+      '456 oak avenue, springfield, illinois 62701'
+    )
     expect(result).toBe('456 Oak Ave, Springfield, IL 62701')
   })
 
@@ -253,12 +267,16 @@ describe('normalizeAddress', () => {
   })
 
   it('should handle address with apartment', () => {
-    const result = normalizeAddress('456 oak avenue apt 4b, springfield, il 62701')
+    const result = normalizeAddress(
+      '456 oak avenue apt 4b, springfield, il 62701'
+    )
     expect(result).toBe('456 Oak Ave #4b, Springfield, IL 62701')
   })
 
   it('should handle address with suite', () => {
-    const result = normalizeAddress('100 business blvd suite 200, austin, tx 78701')
+    const result = normalizeAddress(
+      '100 business blvd suite 200, austin, tx 78701'
+    )
     expect(result).toBe('100 Business Blvd #200, Austin, TX 78701')
   })
 
@@ -305,9 +323,12 @@ describe('normalizeAddress', () => {
   })
 
   it('should return components with unit when requested', () => {
-    const result = normalizeAddress('456 Oak Ave Apt 4B, Springfield, IL 62701', {
-      outputFormat: 'components',
-    }) as AddressComponents
+    const result = normalizeAddress(
+      '456 Oak Ave Apt 4B, Springfield, IL 62701',
+      {
+        outputFormat: 'components',
+      }
+    ) as AddressComponents
 
     expect(result.street).toBe('456 Oak Ave')
     expect(result.unit).toBe('4B')
@@ -381,11 +402,21 @@ describe('normalizeAddress', () => {
   })
 
   it('should handle various unit type formats', () => {
-    expect(normalizeAddress('123 Main St Apartment 5, Anytown, CA 90210')).toContain('#5')
-    expect(normalizeAddress('123 Main St Unit 5, Anytown, CA 90210')).toContain('#5')
-    expect(normalizeAddress('123 Main St Building 5, Anytown, CA 90210')).toContain('#5')
-    expect(normalizeAddress('123 Main St Floor 5, Anytown, CA 90210')).toContain('#5')
-    expect(normalizeAddress('123 Main St Room 5, Anytown, CA 90210')).toContain('#5')
+    expect(
+      normalizeAddress('123 Main St Apartment 5, Anytown, CA 90210')
+    ).toContain('#5')
+    expect(normalizeAddress('123 Main St Unit 5, Anytown, CA 90210')).toContain(
+      '#5'
+    )
+    expect(
+      normalizeAddress('123 Main St Building 5, Anytown, CA 90210')
+    ).toContain('#5')
+    expect(
+      normalizeAddress('123 Main St Floor 5, Anytown, CA 90210')
+    ).toContain('#5')
+    expect(normalizeAddress('123 Main St Room 5, Anytown, CA 90210')).toContain(
+      '#5'
+    )
   })
 
   it('should be idempotent (normalizing twice gives same result)', () => {
@@ -468,7 +499,9 @@ describe('UK Address Support', () => {
 
   describe('parseAddressComponents with UK addresses', () => {
     it('should parse simple UK address with postcode', () => {
-      const result = parseAddressComponents('10 Downing Street, London, SW1A 2AA')
+      const result = parseAddressComponents(
+        '10 Downing Street, London, SW1A 2AA'
+      )
       expect(result.streetNumber).toBe('10')
       expect(result.streetName).toBe('Downing')
       expect(result.city).toBe('London')
@@ -477,7 +510,9 @@ describe('UK Address Support', () => {
     })
 
     it('should parse UK address with county', () => {
-      const result = parseAddressComponents('123 High Street, Cambridge, Cambridgeshire, CB1 2AA')
+      const result = parseAddressComponents(
+        '123 High Street, Cambridge, Cambridgeshire, CB1 2AA'
+      )
       expect(result.streetNumber).toBe('123')
       expect(result.city).toBe('Cambridgeshire')
       expect(result.state).toBe('Cambridge')
@@ -486,7 +521,9 @@ describe('UK Address Support', () => {
     })
 
     it('should parse UK address with Flat', () => {
-      const result = parseAddressComponents('Flat 2, 45 Baker Street, London, NW1 6XE')
+      const result = parseAddressComponents(
+        'Flat 2, 45 Baker Street, London, NW1 6XE'
+      )
       expect(result.unit).toBe('2')
       expect(result.streetNumber).toBe('45')
       expect(result.streetName).toBe('Baker')
@@ -496,11 +533,21 @@ describe('UK Address Support', () => {
     })
 
     it('should handle various UK postcode formats', () => {
-      expect(parseAddressComponents('10 Main St, London, W1A 0AX').postalCode).toBe('W1A 0AX')
-      expect(parseAddressComponents('10 Main St, London, M1 1AA').postalCode).toBe('M1 1AA')
-      expect(parseAddressComponents('10 Main St, London, B33 8TH').postalCode).toBe('B33 8TH')
-      expect(parseAddressComponents('10 Main St, London, CR2 6XH').postalCode).toBe('CR2 6XH')
-      expect(parseAddressComponents('10 Main St, London, DN55 1PT').postalCode).toBe('DN55 1PT')
+      expect(
+        parseAddressComponents('10 Main St, London, W1A 0AX').postalCode
+      ).toBe('W1A 0AX')
+      expect(
+        parseAddressComponents('10 Main St, London, M1 1AA').postalCode
+      ).toBe('M1 1AA')
+      expect(
+        parseAddressComponents('10 Main St, London, B33 8TH').postalCode
+      ).toBe('B33 8TH')
+      expect(
+        parseAddressComponents('10 Main St, London, CR2 6XH').postalCode
+      ).toBe('CR2 6XH')
+      expect(
+        parseAddressComponents('10 Main St, London, DN55 1PT').postalCode
+      ).toBe('DN55 1PT')
     })
 
     it('should handle UK postcodes without spaces', () => {
@@ -532,22 +579,35 @@ describe('UK Address Support', () => {
     })
 
     it('should normalize UK address with county', () => {
-      const result = normalizeAddress('123 high street, oxford, oxfordshire, ox1 1aa')
+      const result = normalizeAddress(
+        '123 high street, oxford, oxfordshire, ox1 1aa'
+      )
       expect(result).toContain('123 High St')
       expect(result).toContain('OX1 1AA')
     })
 
     it('should handle UK-specific street types', () => {
-      expect(normalizeAddress('10 Abbey Road, London, NW8 9AY')).toContain('Abbey Rd')
-      expect(normalizeAddress('10 Park Lane, London, W1K 7AA')).toContain('Park Ln')
-      expect(normalizeAddress('10 Kings Close, London, W1A 1AA')).toContain('Kings Cl')
-      expect(normalizeAddress('10 Victoria Crescent, London, W1A 1AA')).toContain('Victoria Cres')
+      expect(normalizeAddress('10 Abbey Road, London, NW8 9AY')).toContain(
+        'Abbey Rd'
+      )
+      expect(normalizeAddress('10 Park Lane, London, W1K 7AA')).toContain(
+        'Park Ln'
+      )
+      expect(normalizeAddress('10 Kings Close, London, W1A 1AA')).toContain(
+        'Kings Cl'
+      )
+      expect(
+        normalizeAddress('10 Victoria Crescent, London, W1A 1AA')
+      ).toContain('Victoria Cres')
     })
 
     it('should abbreviate UK county names in addresses', () => {
-      const result = normalizeAddress('123 Main St, Reading, Berkshire, RG1 1AA', {
-        abbreviateStates: true,
-      })
+      const result = normalizeAddress(
+        '123 Main St, Reading, Berkshire, RG1 1AA',
+        {
+          abbreviateStates: true,
+        }
+      )
       expect(result).toContain('Berks')
     })
 
@@ -580,7 +640,9 @@ describe('UK Address Support', () => {
     })
 
     it('should handle UK address with multiple commas', () => {
-      const result = normalizeAddress('10 Downing Street, Westminster, London, Greater London, SW1A 2AA')
+      const result = normalizeAddress(
+        '10 Downing Street, Westminster, London, Greater London, SW1A 2AA'
+      )
       expect(result).toContain('10 Downing St')
       expect(result).toContain('SW1A 2AA')
     })

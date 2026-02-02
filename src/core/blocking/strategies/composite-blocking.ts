@@ -42,14 +42,18 @@ export interface CompositeBlockingConfig<T = unknown> {
  * })
  * ```
  */
-export class CompositeBlockingStrategy<T = unknown> implements BlockingStrategy<T> {
+export class CompositeBlockingStrategy<
+  T = unknown,
+> implements BlockingStrategy<T> {
   readonly name: string
   private strategies: Array<BlockingStrategy<T>>
   private mode: CompositeMode
 
   constructor(config: CompositeBlockingConfig<T>) {
     if (!config.strategies || config.strategies.length === 0) {
-      throw new Error('CompositeBlockingStrategy requires at least one strategy')
+      throw new Error(
+        'CompositeBlockingStrategy requires at least one strategy'
+      )
     }
 
     this.strategies = config.strategies
@@ -75,7 +79,9 @@ export class CompositeBlockingStrategy<T = unknown> implements BlockingStrategy<
     }
 
     // Generate blocks using each strategy
-    const allBlockSets = this.strategies.map((strategy) => strategy.generateBlocks(records))
+    const allBlockSets = this.strategies.map((strategy) =>
+      strategy.generateBlocks(records)
+    )
 
     // Combine based on mode
     if (this.mode === 'union') {
@@ -98,7 +104,11 @@ export class CompositeBlockingStrategy<T = unknown> implements BlockingStrategy<
     const unionBlocks = new Map<BlockKey, Array<T>>()
 
     // Process each strategy's blocks
-    for (let strategyIndex = 0; strategyIndex < blockSets.length; strategyIndex++) {
+    for (
+      let strategyIndex = 0;
+      strategyIndex < blockSets.length;
+      strategyIndex++
+    ) {
       const blockSet = blockSets[strategyIndex]
 
       for (const [blockKey, records] of blockSet.entries()) {

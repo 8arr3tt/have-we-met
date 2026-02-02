@@ -4,7 +4,7 @@ import type { QueueItem } from '../../../src/queue/types.js'
 
 describe('QueueMetrics', () => {
   const createMockItem = (
-    overrides: Partial<QueueItem<Record<string, unknown>>> = {},
+    overrides: Partial<QueueItem<Record<string, unknown>>> = {}
   ): QueueItem<Record<string, unknown>> => {
     const now = new Date()
     return {
@@ -175,7 +175,10 @@ describe('QueueMetrics', () => {
         createMockItem(), // No decision
       ]
 
-      const result = QueueMetrics.calculateThroughput(items, 24 * 60 * 60 * 1000)
+      const result = QueueMetrics.calculateThroughput(
+        items,
+        24 * 60 * 60 * 1000
+      )
 
       expect(result).toBe(2)
     })
@@ -192,7 +195,10 @@ describe('QueueMetrics', () => {
 
       const items = [createMockItem({ decidedAt: twoDaysAgo })]
 
-      const result = QueueMetrics.calculateThroughput(items, 24 * 60 * 60 * 1000)
+      const result = QueueMetrics.calculateThroughput(
+        items,
+        24 * 60 * 60 * 1000
+      )
 
       expect(result).toBe(0)
     })

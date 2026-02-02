@@ -230,7 +230,9 @@ describe('DrizzleProvenanceAdapter', () => {
       mockDb.update.mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([{ goldenRecordId: 'golden-1' }]),
+            returning: vi
+              .fn()
+              .mockResolvedValue([{ goldenRecordId: 'golden-1' }]),
           }),
         }),
       })
@@ -356,7 +358,9 @@ describe('DrizzleMergeAdapter', () => {
         {},
         provenanceTable as unknown as any
       )
-      expect(adapterWithProvenance.provenance).toBeInstanceOf(DrizzleProvenanceAdapter)
+      expect(adapterWithProvenance.provenance).toBeInstanceOf(
+        DrizzleProvenanceAdapter
+      )
     })
   })
 

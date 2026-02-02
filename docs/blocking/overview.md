@@ -9,7 +9,7 @@ Blocking is an optimization technique that dramatically reduces the computationa
 Without blocking, matching n records requires O(n²) comparisons. This becomes impractical very quickly:
 
 | Records | Comparisons (n×(n-1)/2) | Time at 1ms/comparison |
-|---------|-------------------------|------------------------|
+| ------- | ----------------------- | ---------------------- |
 | 100     | 4,950                   | ~5 seconds             |
 | 1,000   | 499,500                 | ~8 minutes             |
 | 10,000  | 49,995,000              | ~14 hours              |
@@ -30,6 +30,7 @@ Blocking reduces the comparison space by:
 Instead of comparing every person in a database to every other person:
 
 **Without blocking:**
+
 ```
 Compare: John Smith vs Mary Johnson
 Compare: John Smith vs Jane Smith
@@ -39,6 +40,7 @@ Total: 5 billion comparisons for 100k records
 ```
 
 **With blocking (first letter of last name):**
+
 ```
 Block "S":
   - John Smith
@@ -60,23 +62,23 @@ Total: ~190 million comparisons (96% reduction)
 
 ### Dataset Size Thresholds
 
-| Records | Recommendation |
-|---------|----------------|
-| < 1,000 | Blocking optional, may add unnecessary complexity |
-| 1,000 - 10,000 | Blocking recommended for improved performance |
-| 10,000+ | **Blocking essential** - required for practical performance |
-| 100,000+ | **Blocking critical** - must use effective strategy |
+| Records        | Recommendation                                              |
+| -------------- | ----------------------------------------------------------- |
+| < 1,000        | Blocking optional, may add unnecessary complexity           |
+| 1,000 - 10,000 | Blocking recommended for improved performance               |
+| 10,000+        | **Blocking essential** - required for practical performance |
+| 100,000+       | **Blocking critical** - must use effective strategy         |
 
 ### Performance Impact
 
 Based on our benchmarks with 100,000 records:
 
-| Approach | Comparisons | Generation Time | Total Time |
-|----------|-------------|-----------------|------------|
-| No blocking | 5 billion | 0ms | Days to weeks |
-| Standard (firstLetter) | ~190 million | 17ms | Hours |
-| Standard (soundex) | ~50 million | 38ms | Minutes |
-| Sorted neighbourhood | ~1 million | 53ms | Seconds |
+| Approach               | Comparisons  | Generation Time | Total Time    |
+| ---------------------- | ------------ | --------------- | ------------- |
+| No blocking            | 5 billion    | 0ms             | Days to weeks |
+| Standard (firstLetter) | ~190 million | 17ms            | Hours         |
+| Standard (soundex)     | ~50 million  | 38ms            | Minutes       |
+| Sorted neighbourhood   | ~1 million   | 53ms            | Seconds       |
 
 ## Key Concepts
 
@@ -86,9 +88,9 @@ A string identifier for a block. Records with the same block key are grouped tog
 
 ```typescript
 // Example block keys:
-"lastName:S"                    // First letter of last name
-"lastName:S500"                 // Soundex of last name
-"lastName:S|birthYear:1990"     // Composite key
+'lastName:S' // First letter of last name
+'lastName:S500' // Soundex of last name
+'lastName:S|birthYear:1990' // Composite key
 ```
 
 ### Block Transform
@@ -118,6 +120,7 @@ The goal is to balance recall and precision for your use case.
 Groups records by exact field values (optionally transformed).
 
 **Best for:**
+
 - High-quality, consistent data
 - Fields with natural groupings (postcodes, countries, years)
 - Speed-critical applications
@@ -133,6 +136,7 @@ Groups records by exact field values (optionally transformed).
 Sorts records and compares within a sliding window.
 
 **Best for:**
+
 - Noisy data with typos
 - Fields where standard blocking misses matches
 - When recall is more important than speed
@@ -148,6 +152,7 @@ Sorts records and compares within a sliding window.
 Combines multiple blocking strategies.
 
 **Best for:**
+
 - Maximum recall across multiple fields
 - Complex matching scenarios
 - When a single strategy is insufficient
@@ -168,10 +173,12 @@ Combines multiple blocking strategies.
 **Scenario**: Match people across databases with potential name variations and typos.
 
 **Without blocking:**
+
 - 100,000 records = 5 billion comparisons
 - Estimated time: Weeks
 
 **With soundex blocking:**
+
 ```typescript
 .blocking(block => block
   .onField('lastName', { transform: 'soundex' })
@@ -183,6 +190,7 @@ Combines multiple blocking strategies.
 - Estimated time: Minutes
 
 **With composite blocking (maximum recall):**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -230,11 +238,11 @@ Block "S532": 91 records
 
 Blocking requires storing block keys and indexes:
 
-| Records | Memory Overhead |
-|---------|----------------|
-| 10,000  | ~1MB           |
-| 100,000 | ~8MB           |
-| 1,000,000 | ~80MB        |
+| Records   | Memory Overhead |
+| --------- | --------------- |
+| 10,000    | ~1MB            |
+| 100,000   | ~8MB            |
+| 1,000,000 | ~80MB           |
 
 Memory overhead is minimal compared to the performance gains.
 
@@ -244,12 +252,12 @@ From our benchmark results:
 
 ### Block Generation Time (100k records)
 
-| Strategy | Time | Target | Status |
-|----------|------|--------|--------|
-| Standard (firstLetter) | 17ms | <50ms | ✅ 2.9x better |
-| Standard (soundex) | 38ms | <100ms | ✅ 2.6x better |
-| Sorted neighbourhood | 53ms | <500ms | ✅ 9.4x better |
-| Composite (union) | 60ms | <200ms | ✅ 3.3x better |
+| Strategy               | Time | Target | Status         |
+| ---------------------- | ---- | ------ | -------------- |
+| Standard (firstLetter) | 17ms | <50ms  | ✅ 2.9x better |
+| Standard (soundex)     | 38ms | <100ms | ✅ 2.6x better |
+| Sorted neighbourhood   | 53ms | <500ms | ✅ 9.4x better |
+| Composite (union)      | 60ms | <200ms | ✅ 3.3x better |
 
 ### Comparison Reduction
 
@@ -267,19 +275,17 @@ All strategies achieve **95-99%+ reduction** in comparisons compared to exhausti
 ```typescript
 import { HaveWeMet } from 'have-we-met'
 
-const resolver = HaveWeMet
-  .schema<Person>({
-    firstName: { type: 'string' },
-    lastName: { type: 'string' },
-    dateOfBirth: { type: 'date' }
-  })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-  )
-  .matching(match => match
-    .compare('firstName', { algorithm: 'jaro-winkler', weight: 3 })
-    .compare('lastName', { algorithm: 'jaro-winkler', weight: 5 })
-    .compare('dateOfBirth', { algorithm: 'exact', weight: 4 })
+const resolver = HaveWeMet.schema<Person>({
+  firstName: { type: 'string' },
+  lastName: { type: 'string' },
+  dateOfBirth: { type: 'date' },
+})
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+  .matching((match) =>
+    match
+      .compare('firstName', { algorithm: 'jaro-winkler', weight: 3 })
+      .compare('lastName', { algorithm: 'jaro-winkler', weight: 5 })
+      .compare('dateOfBirth', { algorithm: 'exact', weight: 4 })
   )
   .thresholds({ noMatch: 20, definiteMatch: 45 })
   .build()

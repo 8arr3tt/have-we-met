@@ -77,8 +77,10 @@ export function mergeQueueOptions(
   }
 
   return {
-    autoExpireAfter: options.autoExpireAfter ?? DEFAULT_QUEUE_OPTIONS.autoExpireAfter,
-    defaultPriority: options.defaultPriority ?? DEFAULT_QUEUE_OPTIONS.defaultPriority,
+    autoExpireAfter:
+      options.autoExpireAfter ?? DEFAULT_QUEUE_OPTIONS.autoExpireAfter,
+    defaultPriority:
+      options.defaultPriority ?? DEFAULT_QUEUE_OPTIONS.defaultPriority,
     enableMetrics: options.enableMetrics ?? DEFAULT_QUEUE_OPTIONS.enableMetrics,
     alertThresholds: {
       maxQueueSize:

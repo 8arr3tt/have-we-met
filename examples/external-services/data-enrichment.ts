@@ -69,55 +69,67 @@ async function dataEnrichmentExample() {
   // Mock address standardization provider
   const addressProvider = createMockAddressProvider({
     responses: new Map([
-      ['123 main street, new york, ny, 10001, usa', {
-        success: true,
-        standardized: {
-          street: '123 Main Street',
-          city: 'New York',
-          state: 'NY',
-          postalCode: '10001-0001',
-          country: 'US',
+      [
+        '123 main street, new york, ny, 10001, usa',
+        {
+          success: true,
+          standardized: {
+            street: '123 Main Street',
+            city: 'New York',
+            state: 'NY',
+            postalCode: '10001-0001',
+            country: 'US',
+          },
+          confidence: 0.95,
+          metadata: { addressType: 'residential' },
         },
-        confidence: 0.95,
-        metadata: { addressType: 'residential' },
-      }],
-      ['456 oak ave, los angeles, ca, 90001, usa', {
-        success: true,
-        standardized: {
-          street: '456 Oak Avenue',
-          city: 'Los Angeles',
-          state: 'CA',
-          postalCode: '90001-0002',
-          country: 'US',
+      ],
+      [
+        '456 oak ave, los angeles, ca, 90001, usa',
+        {
+          success: true,
+          standardized: {
+            street: '456 Oak Avenue',
+            city: 'Los Angeles',
+            state: 'CA',
+            postalCode: '90001-0002',
+            country: 'US',
+          },
+          confidence: 0.92,
+          metadata: { addressType: 'commercial' },
         },
-        confidence: 0.92,
-        metadata: { addressType: 'commercial' },
-      }],
+      ],
     ]),
   })
 
   // Mock email enrichment provider
   const emailEnrichProvider = createMockEmailEnrichmentProvider({
     responses: new Map([
-      ['john.smith@techcorp.com', {
-        success: true,
-        data: {
-          name: { first: 'John', last: 'Smith', full: 'John Smith' },
-          company: { name: 'TechCorp Inc', domain: 'techcorp.com' },
-          title: 'Senior Engineer',
-          socialProfiles: { linkedin: 'https://linkedin.com/in/johnsmith' },
+      [
+        'john.smith@techcorp.com',
+        {
+          success: true,
+          data: {
+            name: { first: 'John', last: 'Smith', full: 'John Smith' },
+            company: { name: 'TechCorp Inc', domain: 'techcorp.com' },
+            title: 'Senior Engineer',
+            socialProfiles: { linkedin: 'https://linkedin.com/in/johnsmith' },
+          },
+          confidence: 0.88,
         },
-        confidence: 0.88,
-      }],
-      ['jane.doe@startup.io', {
-        success: true,
-        data: {
-          name: { first: 'Jane', last: 'Doe', full: 'Jane Doe' },
-          company: { name: 'Startup Inc', domain: 'startup.io' },
-          title: 'Product Manager',
+      ],
+      [
+        'jane.doe@startup.io',
+        {
+          success: true,
+          data: {
+            name: { first: 'Jane', last: 'Doe', full: 'Jane Doe' },
+            company: { name: 'Startup Inc', domain: 'startup.io' },
+            title: 'Product Manager',
+          },
+          confidence: 0.85,
         },
-        confidence: 0.85,
-      }],
+      ],
     ]),
   })
 
@@ -154,27 +166,27 @@ async function dataEnrichmentExample() {
     .defaultTimeout(5000)
     .caching(true)
     .lookup('street')
-      .using(addressStandardization)
-      .withFields('city', 'state', 'postalCode', 'country')
-      .mapFields({
-        street: 'street',
-        city: 'city',
-        state: 'state',
-        postalCode: 'postalCode',
-        country: 'country',
-      })
-      .onNotFound('continue')
-      .onFailure('continue')
+    .using(addressStandardization)
+    .withFields('city', 'state', 'postalCode', 'country')
+    .mapFields({
+      street: 'street',
+      city: 'city',
+      state: 'state',
+      postalCode: 'postalCode',
+      country: 'country',
+    })
+    .onNotFound('continue')
+    .onFailure('continue')
     .lookup('email')
-      .using(emailEnrichment)
-      .mapFields({
-        'name.first': 'firstName',
-        'name.last': 'lastName',
-        'company.name': 'company',
-        title: 'title',
-      })
-      .onNotFound('flag')
-      .onFailure('continue')
+    .using(emailEnrichment)
+    .mapFields({
+      'name.first': 'firstName',
+      'name.last': 'lastName',
+      'company.name': 'company',
+      title: 'title',
+    })
+    .onNotFound('flag')
+    .onFailure('continue')
     .build()
 
   console.log('Service configuration:')
@@ -302,7 +314,7 @@ async function dataEnrichmentExample() {
 
   const mockResult = await mockLookup.execute(
     { keyFields: { email: 'test@company.com' } },
-    mockContext,
+    mockContext
   )
 
   console.log('Mock lookup result:')
@@ -317,8 +329,12 @@ async function dataEnrichmentExample() {
   console.log('=== Example Complete ===')
   console.log('\nKey takeaways:')
   console.log('- Lookup services enrich records with external data')
-  console.log('- Field mapping translates external field names to schema fields')
-  console.log('- onNotFound="continue" allows processing even without enrichment')
+  console.log(
+    '- Field mapping translates external field names to schema fields'
+  )
+  console.log(
+    '- onNotFound="continue" allows processing even without enrichment'
+  )
   console.log('- onNotFound="flag" marks records that could not be enriched')
   console.log('- Enriched data is available in result.enrichedData')
   console.log('- Mock lookup services are useful for testing')

@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { PrismaAdapter, prismaAdapter } from '../../../src/adapters/prisma'
-import { QueryError, TransactionError, NotFoundError } from '../../../src/adapters/adapter-error'
+import {
+  QueryError,
+  TransactionError,
+  NotFoundError,
+} from '../../../src/adapters/adapter-error'
 import type { AdapterConfig } from '../../../src/adapters/types'
 
 type TestRecord = {
@@ -33,7 +37,10 @@ describe('PrismaAdapter', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient()
-    adapter = new PrismaAdapter<TestRecord>(mockPrisma as unknown as any, config)
+    adapter = new PrismaAdapter<TestRecord>(
+      mockPrisma as unknown as any,
+      config
+    )
   })
 
   describe('constructor', () => {
@@ -48,17 +55,27 @@ describe('PrismaAdapter', () => {
         { tableName: 'invalidModel' }
       )
 
-      await expect(
-        invalidAdapter.findAll()
-      ).rejects.toThrow(QueryError)
+      await expect(invalidAdapter.findAll()).rejects.toThrow(QueryError)
     })
   })
 
   describe('findByBlockingKeys', () => {
     it('finds records by single blocking key', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
       mockPrisma.testRecords.findMany.mockResolvedValue(mockRecords)
 
@@ -75,7 +92,13 @@ describe('PrismaAdapter', () => {
 
     it('finds records by multiple blocking keys', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
       mockPrisma.testRecords.findMany.mockResolvedValue(mockRecords)
 
@@ -148,18 +171,34 @@ describe('PrismaAdapter', () => {
     })
 
     it('handles database errors', async () => {
-      mockPrisma.testRecords.findMany.mockRejectedValue(new Error('Database error'))
+      mockPrisma.testRecords.findMany.mockRejectedValue(
+        new Error('Database error')
+      )
 
       const blockingKeys = new Map([['lastName', 'Smith']])
-      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(QueryError)
+      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(
+        QueryError
+      )
     })
   })
 
   describe('findByIds', () => {
     it('finds multiple records by ID', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Doe', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
       mockPrisma.testRecords.findMany.mockResolvedValue(mockRecords)
 
@@ -191,7 +230,13 @@ describe('PrismaAdapter', () => {
   describe('findAll', () => {
     it('retrieves all records with default options', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
       mockPrisma.testRecords.findMany.mockResolvedValue(mockRecords)
 
@@ -248,7 +293,9 @@ describe('PrismaAdapter', () => {
 
       const result = await adapter.count()
 
-      expect(mockPrisma.testRecords.count).toHaveBeenCalledWith({ where: undefined })
+      expect(mockPrisma.testRecords.count).toHaveBeenCalledWith({
+        where: undefined,
+      })
       expect(result).toBe(42)
     })
 
@@ -297,7 +344,9 @@ describe('PrismaAdapter', () => {
     })
 
     it('handles database errors during insert', async () => {
-      mockPrisma.testRecords.create.mockRejectedValue(new Error('Unique constraint failed'))
+      mockPrisma.testRecords.create.mockRejectedValue(
+        new Error('Unique constraint failed')
+      )
 
       const newRecord = {
         id: '1',
@@ -322,7 +371,10 @@ describe('PrismaAdapter', () => {
       }
       mockPrisma.testRecords.update.mockResolvedValue(updatedRecord)
 
-      const result = await adapter.update('1', { email: 'john.smith@test.com', age: 31 })
+      const result = await adapter.update('1', {
+        email: 'john.smith@test.com',
+        age: 31,
+      })
 
       expect(mockPrisma.testRecords.update).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -336,17 +388,19 @@ describe('PrismaAdapter', () => {
         new Error('Record to update not found')
       )
 
-      await expect(adapter.update('999', { email: 'new@test.com' })).rejects.toThrow(
-        NotFoundError
-      )
+      await expect(
+        adapter.update('999', { email: 'new@test.com' })
+      ).rejects.toThrow(NotFoundError)
     })
 
     it('handles other database errors', async () => {
-      mockPrisma.testRecords.update.mockRejectedValue(new Error('Constraint violation'))
-
-      await expect(adapter.update('1', { email: 'new@test.com' })).rejects.toThrow(
-        QueryError
+      mockPrisma.testRecords.update.mockRejectedValue(
+        new Error('Constraint violation')
       )
+
+      await expect(
+        adapter.update('1', { email: 'new@test.com' })
+      ).rejects.toThrow(QueryError)
     })
   })
 
@@ -456,8 +510,20 @@ describe('PrismaAdapter', () => {
   describe('batchInsert', () => {
     it('inserts multiple records efficiently', async () => {
       const records = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
       mockPrisma.testRecords.createMany.mockResolvedValue({ count: 2 })
@@ -478,13 +544,37 @@ describe('PrismaAdapter', () => {
 
     it('handles records without pre-assigned IDs', async () => {
       const records = [
-        { id: undefined, firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: undefined, firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: undefined,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: undefined,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ] as any
 
       const insertedRecords = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
       mockPrisma.testRecords.createMany.mockResolvedValue({ count: 2 })
@@ -501,7 +591,13 @@ describe('PrismaAdapter', () => {
       )
 
       const records = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
 
       await expect(adapter.batchInsert(records)).rejects.toThrow(QueryError)
@@ -551,7 +647,9 @@ describe('PrismaAdapter', () => {
     })
 
     it('handles errors during batch update', async () => {
-      mockPrisma.$transaction.mockRejectedValue(new Error('Batch update failed'))
+      mockPrisma.$transaction.mockRejectedValue(
+        new Error('Batch update failed')
+      )
 
       const updates = [{ id: '1', updates: { email: 'new@test.com' } }]
 
@@ -644,7 +742,10 @@ describe('PrismaAdapter', () => {
 
   describe('factory function', () => {
     it('creates adapter via factory function', () => {
-      const factoryAdapter = prismaAdapter<TestRecord>(mockPrisma as unknown as any, config)
+      const factoryAdapter = prismaAdapter<TestRecord>(
+        mockPrisma as unknown as any,
+        config
+      )
 
       expect(factoryAdapter).toBeInstanceOf(PrismaAdapter)
     })

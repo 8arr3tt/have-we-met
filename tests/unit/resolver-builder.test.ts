@@ -432,7 +432,9 @@ describe('ResolverBuilder', () => {
         })
         .matching((match) => {
           match
-            .field('email').strategy('exact').weight(100)
+            .field('email')
+            .strategy('exact')
+            .weight(100)
             .thresholds({ noMatch: 20, definiteMatch: 45 })
         })
         .adapter(mockAdapter)
@@ -503,7 +505,9 @@ describe('ResolverBuilder', () => {
         .adapter(mockAdapter)
         .matching((match) => {
           match
-            .field('email').strategy('exact').weight(100)
+            .field('email')
+            .strategy('exact')
+            .weight(100)
             .thresholds({ noMatch: 20, definiteMatch: 45 })
         })
 

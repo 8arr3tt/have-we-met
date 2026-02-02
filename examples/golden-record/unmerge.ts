@@ -44,12 +44,18 @@ async function unmergeExample() {
     .timestampField('updatedAt')
     .defaultStrategy('preferNonNull')
     .onConflict('useDefault')
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
-    .field('department').strategy('preferNewer')
-    .field('employeeId').strategy('preferFirst')
-    .field('hireDate').strategy('preferOlder')
+    .field('firstName')
+    .strategy('preferLonger')
+    .field('lastName')
+    .strategy('preferLonger')
+    .field('email')
+    .strategy('preferNewer')
+    .field('department')
+    .strategy('preferNewer')
+    .field('employeeId')
+    .strategy('preferFirst')
+    .field('hireDate')
+    .strategy('preferOlder')
     .build()
 
   const mergeExecutor = new MergeExecutor<Employee>(mergeConfig)
@@ -119,14 +125,18 @@ async function unmergeExample() {
 
   console.log('Source Record 1 (Bob):')
   console.log(`  ID: ${sourceRecords[0].id}`)
-  console.log(`  Name: ${sourceRecords[0].record.firstName} ${sourceRecords[0].record.lastName}`)
+  console.log(
+    `  Name: ${sourceRecords[0].record.firstName} ${sourceRecords[0].record.lastName}`
+  )
   console.log(`  Email: ${sourceRecords[0].record.email}`)
   console.log(`  Department: ${sourceRecords[0].record.department}`)
   console.log(`  Employee ID: ${sourceRecords[0].record.employeeId}`)
 
   console.log('\nSource Record 2 (Robert):')
   console.log(`  ID: ${sourceRecords[1].id}`)
-  console.log(`  Name: ${sourceRecords[1].record.firstName} ${sourceRecords[1].record.lastName}`)
+  console.log(
+    `  Name: ${sourceRecords[1].record.firstName} ${sourceRecords[1].record.lastName}`
+  )
   console.log(`  Email: ${sourceRecords[1].record.email}`)
   console.log(`  Department: ${sourceRecords[1].record.department}`)
   console.log(`  Employee ID: ${sourceRecords[1].record.employeeId}`)
@@ -152,7 +162,9 @@ async function unmergeExample() {
   console.log('Merge completed!')
   console.log('Golden Record:')
   console.log(`  ID: ${mergeResult.goldenRecordId}`)
-  console.log(`  Name: ${mergeResult.goldenRecord.firstName} ${mergeResult.goldenRecord.lastName}`)
+  console.log(
+    `  Name: ${mergeResult.goldenRecord.firstName} ${mergeResult.goldenRecord.lastName}`
+  )
   console.log(`  Email: ${mergeResult.goldenRecord.email}`)
   console.log(`  Department: ${mergeResult.goldenRecord.department}`)
   console.log(`  Employee ID: ${mergeResult.goldenRecord.employeeId}`)
@@ -178,14 +190,18 @@ async function unmergeExample() {
 
   // Step 5: Check if we can unmerge
   console.log('Step 5: Checking if unmerge is possible...')
-  const canUnmerge = await unmergeExecutor.canUnmerge(mergeResult.goldenRecordId)
+  const canUnmerge = await unmergeExecutor.canUnmerge(
+    mergeResult.goldenRecordId
+  )
   console.log(`  Can unmerge: ${canUnmerge.canUnmerge}`)
   if (!canUnmerge.canUnmerge) {
     console.log(`  Reason: ${canUnmerge.reason}`)
     return
   }
   console.log(`  Provenance found: Yes`)
-  console.log(`  Source records in archive: ${canUnmerge.provenance?.sourceRecordIds.length}`)
+  console.log(
+    `  Source records in archive: ${canUnmerge.provenance?.sourceRecordIds.length}`
+  )
   console.log()
 
   // Step 6: Execute the unmerge
@@ -194,7 +210,8 @@ async function unmergeExample() {
     {
       goldenRecordId: mergeResult.goldenRecordId,
       unmergedBy: 'admin-review',
-      reason: 'False positive - Bob Williams and Robert Williams are different employees',
+      reason:
+        'False positive - Bob Williams and Robert Williams are different employees',
     },
     { mode: 'full' }
   )
@@ -210,7 +227,9 @@ async function unmergeExample() {
   for (const restored of unmergeResult.restoredRecords) {
     console.log(`\nRestored Record:`)
     console.log(`  ID: ${restored.id}`)
-    console.log(`  Name: ${restored.record.firstName} ${restored.record.lastName}`)
+    console.log(
+      `  Name: ${restored.record.firstName} ${restored.record.lastName}`
+    )
     console.log(`  Email: ${restored.record.email}`)
     console.log(`  Department: ${restored.record.department}`)
     console.log(`  Employee ID: ${restored.record.employeeId}`)
@@ -225,7 +244,9 @@ async function unmergeExample() {
 
   // Step 9: Verify provenance was updated
   console.log('Step 9: Verifying provenance audit trail...')
-  const updatedProvenance = await provenanceStore.get(mergeResult.goldenRecordId)
+  const updatedProvenance = await provenanceStore.get(
+    mergeResult.goldenRecordId
+  )
   if (updatedProvenance) {
     console.log('Provenance record (marked as unmerged):')
     console.log(`  Golden Record ID: ${updatedProvenance.goldenRecordId}`)
@@ -240,7 +261,9 @@ async function unmergeExample() {
 
   // Step 10: Demonstrate that unmerging again would fail
   console.log('Step 10: Verifying unmerge can only happen once...')
-  const canUnmergeAgain = await unmergeExecutor.canUnmerge(mergeResult.goldenRecordId)
+  const canUnmergeAgain = await unmergeExecutor.canUnmerge(
+    mergeResult.goldenRecordId
+  )
   console.log(`  Can unmerge again: ${canUnmergeAgain.canUnmerge}`)
   console.log(`  Reason: ${canUnmergeAgain.reason}`)
   console.log()

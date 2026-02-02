@@ -21,12 +21,13 @@ All blocking strategies met or exceeded their performance targets:
 ### Standard Blocking
 
 | Dataset Size | firstLetter(lastName) | soundex(lastName) | Multi-field (lastName + birthYear) |
-|--------------|----------------------|-------------------|-------------------------------------|
-| 1k records   | 0.14ms               | 0.35ms            | -                                   |
-| 10k records  | 1.43ms               | 3.36ms            | -                                   |
-| 100k records | **17.06ms**          | **37.73ms**       | **35.98ms**                         |
+| ------------ | --------------------- | ----------------- | ---------------------------------- |
+| 1k records   | 0.14ms                | 0.35ms            | -                                  |
+| 10k records  | 1.43ms                | 3.36ms            | -                                  |
+| 100k records | **17.06ms**           | **37.73ms**       | **35.98ms**                        |
 
 **Analysis**:
+
 - `firstLetter` transform is fastest: 17ms for 100k records (3.4x faster than target)
 - `soundex` transform adds computational cost but better groups similar names
 - Multi-field blocking (composite keys) performs similarly to single-field soundex
@@ -35,12 +36,13 @@ All blocking strategies met or exceeded their performance targets:
 ### Sorted Neighbourhood
 
 | Dataset Size | Window = 5 | Window = 10 | Window = 20 | Multi-field Sort |
-|--------------|-----------|-------------|-------------|------------------|
-| 1k records   | -         | 0.29ms      | -           | -                |
-| 10k records  | 3.47ms    | 3.61ms      | 4.03ms      | -                |
-| 100k records | -         | **57.63ms** | **71.21ms** | **141.68ms**     |
+| ------------ | ---------- | ----------- | ----------- | ---------------- |
+| 1k records   | -          | 0.29ms      | -           | -                |
+| 10k records  | 3.47ms     | 3.61ms      | 4.03ms      | -                |
+| 100k records | -          | **57.63ms** | **71.21ms** | **141.68ms**     |
 
 **Analysis**:
+
 - Window size has minimal impact on small datasets
 - Larger windows increase generation time but improve recall
 - Multi-field sorting adds significant overhead due to double transformation
@@ -48,13 +50,14 @@ All blocking strategies met or exceeded their performance targets:
 
 ### Composite Blocking
 
-| Dataset Size | Union Mode | Intersection Mode |
-|--------------|-----------|-------------------|
-| 1k records   | 0.52ms    | -                 |
-| 10k records  | 4.69ms    | -                 |
-| 100k records | **60.26ms** | **2,376.93ms**  |
+| Dataset Size | Union Mode  | Intersection Mode |
+| ------------ | ----------- | ----------------- |
+| 1k records   | 0.52ms      | -                 |
+| 10k records  | 4.69ms      | -                 |
+| 100k records | **60.26ms** | **2,376.93ms**    |
 
 **Analysis**:
+
 - Union mode is efficient: 60ms for 100k records
 - Intersection mode is much slower (2.4 seconds) due to record-to-block mapping
 - Intersection mode should be avoided for large datasets or optimized further
@@ -68,11 +71,11 @@ All blocking strategies met or exceeded their performance targets:
 
 For 100k records:
 
-| Strategy                  | Comparisons Without | Comparisons With | Reduction % |
-|---------------------------|---------------------|------------------|-------------|
-| No blocking               | 4,999,950,000       | 4,999,950,000    | 0%          |
-| firstLetter(lastName)     | 4,999,950,000       | ~190,000,000     | **96.2%**   |
-| soundex(lastName)         | 4,999,950,000       | ~50,000,000      | **99.0%**   |
+| Strategy              | Comparisons Without | Comparisons With | Reduction % |
+| --------------------- | ------------------- | ---------------- | ----------- |
+| No blocking           | 4,999,950,000       | 4,999,950,000    | 0%          |
+| firstLetter(lastName) | 4,999,950,000       | ~190,000,000     | **96.2%**   |
+| soundex(lastName)     | 4,999,950,000       | ~50,000,000      | **99.0%**   |
 
 **Finding**: Even simple `firstLetter` blocking achieves 96%+ reduction, while phonetic encoders push reduction to 99%+.
 
@@ -91,7 +94,7 @@ For 100k records with window size 10:
 Testing on 10k records:
 
 | Window Size | Generation Time | Comparisons | Reduction % |
-|-------------|-----------------|-------------|-------------|
+| ----------- | --------------- | ----------- | ----------- |
 | 5           | 3.47ms          | ~50,000     | 99.9%       |
 | 10          | 3.71ms          | ~100,000    | 99.8%       |
 | 20          | 4.03ms          | ~200,000    | 99.6%       |
@@ -105,15 +108,16 @@ Testing on 10k records:
 
 All scenarios tested on 100k records:
 
-| Scenario                                           | Generation Time | Strategy Used                                  |
-|----------------------------------------------------|-----------------|------------------------------------------------|
-| Person matching (soundex + birthYear)              | 63ms            | Standard multi-field                           |
-| Person matching (lastName OR birthYear)            | 52ms            | Composite union                                |
-| Address matching (postcode + firstLetter)          | 71ms            | Standard multi-field                           |
-| Email matching (domain extraction)                 | 40ms            | Standard with custom transform                 |
-| Multi-strategy (standard + sorted neighbourhood)   | 188ms           | Composite union with sorted neighbourhood fallback |
+| Scenario                                         | Generation Time | Strategy Used                                      |
+| ------------------------------------------------ | --------------- | -------------------------------------------------- |
+| Person matching (soundex + birthYear)            | 63ms            | Standard multi-field                               |
+| Person matching (lastName OR birthYear)          | 52ms            | Composite union                                    |
+| Address matching (postcode + firstLetter)        | 71ms            | Standard multi-field                               |
+| Email matching (domain extraction)               | 40ms            | Standard with custom transform                     |
+| Multi-strategy (standard + sorted neighbourhood) | 188ms           | Composite union with sorted neighbourhood fallback |
 
 **Analysis**:
+
 - Simple person matching (soundex + birthYear): **63ms** - Excellent for most use cases
 - Composite union strategies: **52ms** - Higher recall with minimal performance cost
 - Address matching: **71ms** - Efficient for location-based deduplication
@@ -124,17 +128,18 @@ All scenarios tested on 100k records:
 
 ## Strategy Comparison (100k Records)
 
-| Strategy                | Generation Time | Relative Speed | Best Use Case                           |
-|-------------------------|-----------------|----------------|-----------------------------------------|
-| Standard: firstLetter   | 15.25ms         | 1.0x (fastest) | Large datasets, speed critical          |
-| Standard: soundex       | 37.98ms         | 2.49x          | Name matching with typo tolerance       |
-| Standard: metaphone     | 43.53ms         | 2.85x          | Name matching with phonetic variations  |
-| Sorted neighbourhood: w=10 | 51.92ms      | 3.40x          | Catching near-misses in sorted data     |
-| Composite: union        | 52.28ms         | 3.43x          | Maximum recall across multiple fields   |
-| Sorted neighbourhood: w=20 | 80.01ms      | 5.25x          | Broader matching window for noisy data  |
-| Composite: intersection | 2,389.66ms      | 156.65x (slowest) | Very large datasets, precision critical |
+| Strategy                   | Generation Time | Relative Speed    | Best Use Case                           |
+| -------------------------- | --------------- | ----------------- | --------------------------------------- |
+| Standard: firstLetter      | 15.25ms         | 1.0x (fastest)    | Large datasets, speed critical          |
+| Standard: soundex          | 37.98ms         | 2.49x             | Name matching with typo tolerance       |
+| Standard: metaphone        | 43.53ms         | 2.85x             | Name matching with phonetic variations  |
+| Sorted neighbourhood: w=10 | 51.92ms         | 3.40x             | Catching near-misses in sorted data     |
+| Composite: union           | 52.28ms         | 3.43x             | Maximum recall across multiple fields   |
+| Sorted neighbourhood: w=20 | 80.01ms         | 5.25x             | Broader matching window for noisy data  |
+| Composite: intersection    | 2,389.66ms      | 156.65x (slowest) | Very large datasets, precision critical |
 
 **Recommendations**:
+
 1. **Default choice**: `firstLetter` for speed, `soundex` for quality
 2. **Person matching**: Soundex(lastName) + birthYear composite
 3. **Maximum recall**: Union of standard + sorted neighbourhood
@@ -242,4 +247,4 @@ npm run bench -- benchmarks/blocking.bench.ts -t "Real-World Scenarios"
 
 ---
 
-*These benchmarks validate Phase 4 blocking implementation and guide strategy selection for production use.*
+_These benchmarks validate Phase 4 blocking implementation and guide strategy selection for production use._

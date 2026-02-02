@@ -262,7 +262,11 @@ describe('ScoreCalculator', () => {
       ]
 
       expect(() => {
-        calculator.calculateScore({ name: 'test' }, { name: 'test' }, comparisons)
+        calculator.calculateScore(
+          { name: 'test' },
+          { name: 'test' },
+          comparisons
+        )
       }).toThrow('Unknown comparison strategy: invalid-strategy')
     })
   })

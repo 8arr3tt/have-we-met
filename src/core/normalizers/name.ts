@@ -100,7 +100,17 @@ const SUFFIXES = [
 /**
  * Particles that should remain lowercase in names (unless at start).
  */
-const LOWERCASE_PARTICLES = ['von', 'van', 'de', 'del', 'della', 'di', 'da', 'le', 'la']
+const LOWERCASE_PARTICLES = [
+  'von',
+  'van',
+  'de',
+  'del',
+  'della',
+  'di',
+  'da',
+  'le',
+  'la',
+]
 
 /**
  * Applies title case to a word with special handling for certain patterns.
@@ -169,9 +179,24 @@ function formatTitle(title: string): string {
   const normalized = title.toLowerCase().replace(/\.$/, '')
 
   // Full words don't typically get periods
-  if (['professor', 'reverend', 'honorable', 'captain', 'lieutenant',
-       'colonel', 'general', 'sergeant', 'major', 'sir', 'dame',
-       'lord', 'lady', 'esquire'].includes(normalized)) {
+  if (
+    [
+      'professor',
+      'reverend',
+      'honorable',
+      'captain',
+      'lieutenant',
+      'colonel',
+      'general',
+      'sergeant',
+      'major',
+      'sir',
+      'dame',
+      'lord',
+      'lady',
+      'esquire',
+    ].includes(normalized)
+  ) {
     return toTitleCase(normalized)
   }
 
@@ -191,8 +216,24 @@ function formatSuffix(suffix: string): string {
   }
 
   // Academic degrees stay uppercase without periods
-  if (['phd', 'md', 'dds', 'dmd', 'jd', 'mba', 'ma', 'ms', 'bs', 'ba',
-       'cpa', 'pe', 'rn', 'lpn'].includes(normalized)) {
+  if (
+    [
+      'phd',
+      'md',
+      'dds',
+      'dmd',
+      'jd',
+      'mba',
+      'ma',
+      'ms',
+      'bs',
+      'ba',
+      'cpa',
+      'pe',
+      'rn',
+      'lpn',
+    ].includes(normalized)
+  ) {
     return normalized.toUpperCase()
   }
 
@@ -315,7 +356,9 @@ export const normalizeName: NormalizerFunction<NameNormalizerOptions> = (
   }
 
   // Normalize whitespace if enabled
-  const normalized = opts.normalizeWhitespace ? normalizeWhitespaceInString(str) : str
+  const normalized = opts.normalizeWhitespace
+    ? normalizeWhitespaceInString(str)
+    : str
 
   // Parse components
   const components = parseNameComponents(normalized)
@@ -337,13 +380,15 @@ export const normalizeName: NormalizerFunction<NameNormalizerOptions> = (
     if (components.last) {
       // Handle compound last names with particles
       const lastParts = components.last.split(/\s+/)
-      components.last = lastParts.map((part, idx) => {
-        // Particles in last names stay lowercase unless first
-        if (idx > 0 && LOWERCASE_PARTICLES.includes(part.toLowerCase())) {
-          return part.toLowerCase()
-        }
-        return toTitleCase(part)
-      }).join(' ')
+      components.last = lastParts
+        .map((part, idx) => {
+          // Particles in last names stay lowercase unless first
+          if (idx > 0 && LOWERCASE_PARTICLES.includes(part.toLowerCase())) {
+            return part.toLowerCase()
+          }
+          return toTitleCase(part)
+        })
+        .join(' ')
     }
   }
 

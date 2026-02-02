@@ -15,7 +15,11 @@ export class MergeError extends Error {
   /** Additional error context */
   public readonly context?: Record<string, unknown>
 
-  constructor(message: string, code: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code: string,
+    context?: Record<string, unknown>
+  ) {
     super(message)
     this.name = 'MergeError'
     this.code = code
@@ -34,12 +38,20 @@ export class MergeError extends Error {
  * Error thrown when merge configuration is invalid
  */
 export class MergeValidationError extends MergeError {
-  constructor(field: string, reason: string, context?: Record<string, unknown>) {
-    super(`Merge validation failed for '${field}': ${reason}`, 'MERGE_VALIDATION_ERROR', {
-      field,
-      reason,
-      ...context,
-    })
+  constructor(
+    field: string,
+    reason: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Merge validation failed for '${field}': ${reason}`,
+      'MERGE_VALIDATION_ERROR',
+      {
+        field,
+        reason,
+        ...context,
+      }
+    )
     this.name = 'MergeValidationError'
   }
 }
@@ -55,7 +67,7 @@ export class MergeConflictError extends MergeError {
     super(
       `Unresolvable merge conflict for field '${conflict.field}': ${conflict.values.length} conflicting values`,
       'MERGE_CONFLICT_ERROR',
-      { conflict },
+      { conflict }
     )
     this.name = 'MergeConflictError'
     this.conflict = conflict
@@ -66,12 +78,20 @@ export class MergeConflictError extends MergeError {
  * Error thrown when provenance tracking fails
  */
 export class MergeProvenanceError extends MergeError {
-  constructor(operation: string, reason: string, context?: Record<string, unknown>) {
-    super(`Provenance tracking failed during '${operation}': ${reason}`, 'MERGE_PROVENANCE_ERROR', {
-      operation,
-      reason,
-      ...context,
-    })
+  constructor(
+    operation: string,
+    reason: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Provenance tracking failed during '${operation}': ${reason}`,
+      'MERGE_PROVENANCE_ERROR',
+      {
+        operation,
+        reason,
+        ...context,
+      }
+    )
     this.name = 'MergeProvenanceError'
   }
 }
@@ -80,12 +100,20 @@ export class MergeProvenanceError extends MergeError {
  * Error thrown when unmerge operation fails
  */
 export class UnmergeError extends MergeError {
-  constructor(goldenRecordId: string, reason: string, context?: Record<string, unknown>) {
-    super(`Cannot unmerge record '${goldenRecordId}': ${reason}`, 'UNMERGE_ERROR', {
-      goldenRecordId,
-      reason,
-      ...context,
-    })
+  constructor(
+    goldenRecordId: string,
+    reason: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Cannot unmerge record '${goldenRecordId}': ${reason}`,
+      'UNMERGE_ERROR',
+      {
+        goldenRecordId,
+        reason,
+        ...context,
+      }
+    )
     this.name = 'UnmergeError'
   }
 }
@@ -145,7 +173,7 @@ export class StrategyTypeMismatchError extends MergeError {
     field: string,
     expectedType: string,
     actualType: string,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(
       `Strategy '${strategy}' cannot be applied to field '${field}': expected ${expectedType}, got ${actualType}`,
@@ -156,7 +184,7 @@ export class StrategyTypeMismatchError extends MergeError {
         expectedType,
         actualType,
         ...context,
-      },
+      }
     )
     this.name = 'StrategyTypeMismatchError'
     this.strategy = strategy
@@ -180,7 +208,7 @@ export class CustomStrategyMissingError extends MergeError {
       {
         field,
         ...context,
-      },
+      }
     )
     this.name = 'CustomStrategyMissingError'
     this.field = field
@@ -201,7 +229,7 @@ export class ProvenanceNotFoundError extends MergeError {
       {
         goldenRecordId,
         ...context,
-      },
+      }
     )
     this.name = 'ProvenanceNotFoundError'
     this.goldenRecordId = goldenRecordId
@@ -222,7 +250,7 @@ export class InsufficientSourceRecordsError extends MergeError {
       {
         recordCount,
         ...context,
-      },
+      }
     )
     this.name = 'InsufficientSourceRecordsError'
     this.recordCount = recordCount

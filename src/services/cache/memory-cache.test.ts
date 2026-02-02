@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { MemoryCache, createMemoryCache, createNoOpCache } from './memory-cache.js'
+import {
+  MemoryCache,
+  createMemoryCache,
+  createNoOpCache,
+} from './memory-cache.js'
 
 describe('MemoryCache', () => {
   let cache: MemoryCache
@@ -116,7 +120,10 @@ describe('MemoryCache', () => {
     })
 
     it('supports stale entries', async () => {
-      cache = new MemoryCache({ defaultStaleWindowSeconds: 30, pruneIntervalMs: 0 })
+      cache = new MemoryCache({
+        defaultStaleWindowSeconds: 30,
+        pruneIntervalMs: 0,
+      })
 
       await cache.set('key1', 'value1', 5)
 
@@ -125,7 +132,9 @@ describe('MemoryCache', () => {
       const entry = await cache.get('key1')
       expect(entry).toBeNull()
 
-      const staleEntry = await cache.getWithOptions<string>('key1', { allowStale: true })
+      const staleEntry = await cache.getWithOptions<string>('key1', {
+        allowStale: true,
+      })
       expect(staleEntry).not.toBeNull()
       expect(staleEntry?.value).toBe('value1')
       expect(staleEntry?.isStale).toBe(true)
@@ -134,20 +143,28 @@ describe('MemoryCache', () => {
     })
 
     it('removes entries beyond stale window', async () => {
-      cache = new MemoryCache({ defaultStaleWindowSeconds: 10, pruneIntervalMs: 0 })
+      cache = new MemoryCache({
+        defaultStaleWindowSeconds: 10,
+        pruneIntervalMs: 0,
+      })
 
       await cache.set('key1', 'value1', 5)
 
       vi.advanceTimersByTime(16000)
 
-      const entry = await cache.getWithOptions<string>('key1', { allowStale: true })
+      const entry = await cache.getWithOptions<string>('key1', {
+        allowStale: true,
+      })
       expect(entry).toBeNull()
 
       cache.dispose()
     })
 
     it('prunes expired entries', async () => {
-      cache = new MemoryCache({ defaultStaleWindowSeconds: 5, pruneIntervalMs: 0 })
+      cache = new MemoryCache({
+        defaultStaleWindowSeconds: 5,
+        pruneIntervalMs: 0,
+      })
 
       await cache.set('key1', 'value1', 5)
       await cache.set('key2', 'value2', 60)
@@ -215,7 +232,11 @@ describe('MemoryCache', () => {
 
     it('calls onEviction for expired entries', async () => {
       const onEviction = vi.fn()
-      cache = new MemoryCache({ onEviction, defaultStaleWindowSeconds: 0, pruneIntervalMs: 0 })
+      cache = new MemoryCache({
+        onEviction,
+        defaultStaleWindowSeconds: 0,
+        pruneIntervalMs: 0,
+      })
 
       await cache.set('key1', 'value1', 1)
 
@@ -291,7 +312,10 @@ describe('MemoryCache', () => {
     })
 
     it('tracks expirations in extended stats', async () => {
-      cache = new MemoryCache({ defaultStaleWindowSeconds: 0, pruneIntervalMs: 0 })
+      cache = new MemoryCache({
+        defaultStaleWindowSeconds: 0,
+        pruneIntervalMs: 0,
+      })
 
       await cache.set('key1', 'value1', 1)
 
@@ -346,11 +370,16 @@ describe('MemoryCache', () => {
     })
 
     it('supports custom stale window per entry', async () => {
-      await cache.setWithOptions('key1', 'value1', { ttlSeconds: 5, staleWindowSeconds: 30 })
+      await cache.setWithOptions('key1', 'value1', {
+        ttlSeconds: 5,
+        staleWindowSeconds: 30,
+      })
 
       vi.advanceTimersByTime(6000)
 
-      const entry = await cache.getWithOptions<string>('key1', { allowStale: true })
+      const entry = await cache.getWithOptions<string>('key1', {
+        allowStale: true,
+      })
       expect(entry?.isStale).toBe(true)
       expect(entry?.value).toBe('value1')
     })
@@ -372,8 +401,14 @@ describe('MemoryCache', () => {
     it('tracks total bytes when enabled', async () => {
       cache = new MemoryCache({ trackSize: true, pruneIntervalMs: 0 })
 
-      await cache.setWithOptions('key1', 'value1', { ttlSeconds: 60, sizeBytes: 100 })
-      await cache.setWithOptions('key2', 'value2', { ttlSeconds: 60, sizeBytes: 200 })
+      await cache.setWithOptions('key1', 'value1', {
+        ttlSeconds: 60,
+        sizeBytes: 100,
+      })
+      await cache.setWithOptions('key2', 'value2', {
+        ttlSeconds: 60,
+        sizeBytes: 200,
+      })
 
       const stats = cache.getExtendedStats()
       expect(stats.totalBytes).toBe(300)
@@ -384,8 +419,14 @@ describe('MemoryCache', () => {
     it('updates total bytes on overwrite', async () => {
       cache = new MemoryCache({ trackSize: true, pruneIntervalMs: 0 })
 
-      await cache.setWithOptions('key1', 'value1', { ttlSeconds: 60, sizeBytes: 100 })
-      await cache.setWithOptions('key1', 'value2', { ttlSeconds: 60, sizeBytes: 200 })
+      await cache.setWithOptions('key1', 'value1', {
+        ttlSeconds: 60,
+        sizeBytes: 100,
+      })
+      await cache.setWithOptions('key1', 'value2', {
+        ttlSeconds: 60,
+        sizeBytes: 200,
+      })
 
       const stats = cache.getExtendedStats()
       expect(stats.totalBytes).toBe(200)
@@ -401,9 +442,18 @@ describe('MemoryCache', () => {
         pruneIntervalMs: 0,
       })
 
-      await cache.setWithOptions('key1', 'value1', { ttlSeconds: 60, sizeBytes: 100 })
-      await cache.setWithOptions('key2', 'value2', { ttlSeconds: 60, sizeBytes: 100 })
-      await cache.setWithOptions('key3', 'value3', { ttlSeconds: 60, sizeBytes: 100 })
+      await cache.setWithOptions('key1', 'value1', {
+        ttlSeconds: 60,
+        sizeBytes: 100,
+      })
+      await cache.setWithOptions('key2', 'value2', {
+        ttlSeconds: 60,
+        sizeBytes: 100,
+      })
+      await cache.setWithOptions('key3', 'value3', {
+        ttlSeconds: 60,
+        sizeBytes: 100,
+      })
 
       expect(await cache.get('key1')).toBeNull()
       expect(await cache.get('key2')).not.toBeNull()

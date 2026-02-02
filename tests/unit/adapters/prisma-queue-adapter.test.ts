@@ -15,7 +15,11 @@ describe('PrismaQueueAdapter', () => {
 
   const createMockQueueItem = (): QueueItem<TestRecord> => ({
     id: 'queue-1',
-    candidateRecord: { id: 'rec-1', name: 'John Doe', email: 'john@example.com' },
+    candidateRecord: {
+      id: 'rec-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+    },
     potentialMatches: [
       {
         record: { id: 'rec-2', name: 'Jon Doe', email: 'jon@example.com' },
@@ -23,7 +27,9 @@ describe('PrismaQueueAdapter', () => {
         outcome: 'potential-match' as const,
         explanation: {
           totalScore: 35,
-          fieldScores: [{ field: 'name', score: 20, method: 'levenshtein', details: {} }],
+          fieldScores: [
+            { field: 'name', score: 20, method: 'levenshtein', details: {} },
+          ],
           outcome: 'potential-match' as const,
         },
       },
@@ -91,7 +97,9 @@ describe('PrismaQueueAdapter', () => {
 
       const call = mockPrisma.reviewQueue.create.mock.calls[0][0]
       expect(typeof call.data.candidateRecord).toBe('string')
-      expect(JSON.parse(call.data.candidateRecord)).toEqual(item.candidateRecord)
+      expect(JSON.parse(call.data.candidateRecord)).toEqual(
+        item.candidateRecord
+      )
     })
 
     it('validates queue item before insertion', async () => {
@@ -123,17 +131,22 @@ describe('PrismaQueueAdapter', () => {
 
       expect(mockPrisma.reviewQueue.update).toHaveBeenCalledWith({
         where: { id: 'queue-1' },
-        data: expect.objectContaining({ status: 'confirmed', updatedAt: expect.any(Date) }),
+        data: expect.objectContaining({
+          status: 'confirmed',
+          updatedAt: expect.any(Date),
+        }),
       })
       expect(result.status).toBe('confirmed')
     })
 
     it('throws NotFoundError if item not found', async () => {
-      mockPrisma.reviewQueue.update.mockRejectedValue(new Error('Record to update not found'))
-
-      await expect(adapter.updateQueueItem('nonexistent', { status: 'confirmed' })).rejects.toThrow(
-        NotFoundError
+      mockPrisma.reviewQueue.update.mockRejectedValue(
+        new Error('Record to update not found')
       )
+
+      await expect(
+        adapter.updateQueueItem('nonexistent', { status: 'confirmed' })
+      ).rejects.toThrow(NotFoundError)
     })
   })
 
@@ -210,7 +223,9 @@ describe('PrismaQueueAdapter', () => {
     })
 
     it('orders by field and direction', async () => {
-      const filter: QueueFilter = { orderBy: { field: 'createdAt', direction: 'desc' } }
+      const filter: QueueFilter = {
+        orderBy: { field: 'createdAt', direction: 'desc' },
+      }
       mockPrisma.reviewQueue.findMany.mockResolvedValue([])
 
       await adapter.findQueueItems(filter)
@@ -272,7 +287,9 @@ describe('PrismaQueueAdapter', () => {
         new Error('Record to delete does not exist')
       )
 
-      await expect(adapter.deleteQueueItem('nonexistent')).rejects.toThrow(NotFoundError)
+      await expect(adapter.deleteQueueItem('nonexistent')).rejects.toThrow(
+        NotFoundError
+      )
     })
   })
 
@@ -283,7 +300,9 @@ describe('PrismaQueueAdapter', () => {
       const count = await adapter.countQueueItems()
 
       expect(count).toBe(42)
-      expect(mockPrisma.reviewQueue.count).toHaveBeenCalledWith({ where: undefined })
+      expect(mockPrisma.reviewQueue.count).toHaveBeenCalledWith({
+        where: undefined,
+      })
     })
 
     it('counts items by status', async () => {
@@ -301,7 +320,10 @@ describe('PrismaQueueAdapter', () => {
 
   describe('batchInsertQueueItems', () => {
     it('inserts multiple items efficiently', async () => {
-      const items = [createMockQueueItem(), { ...createMockQueueItem(), id: 'queue-2' }]
+      const items = [
+        createMockQueueItem(),
+        { ...createMockQueueItem(), id: 'queue-2' },
+      ]
       mockPrisma.reviewQueue.createMany.mockResolvedValue({ count: 2 })
       mockPrisma.reviewQueue.findMany.mockResolvedValue(
         items.map((item) => ({

@@ -3,7 +3,11 @@
  * @module services/resilience/circuit-breaker
  */
 
-import type { CircuitBreakerConfig, CircuitState, CircuitBreakerStatus } from '../types.js'
+import type {
+  CircuitBreakerConfig,
+  CircuitState,
+  CircuitBreakerStatus,
+} from '../types.js'
 import { ServiceUnavailableError } from '../service-error.js'
 
 /**
@@ -21,10 +25,18 @@ export const DEFAULT_CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
  */
 export interface ExtendedCircuitBreakerConfig extends CircuitBreakerConfig {
   /** Callback when circuit state changes */
-  onStateChange?: (from: CircuitState, to: CircuitState, breaker: CircuitBreaker) => void
+  onStateChange?: (
+    from: CircuitState,
+    to: CircuitState,
+    breaker: CircuitBreaker
+  ) => void
 
   /** Callback when a failure is recorded */
-  onFailure?: (error: Error, failureCount: number, breaker: CircuitBreaker) => void
+  onFailure?: (
+    error: Error,
+    failureCount: number,
+    breaker: CircuitBreaker
+  ) => void
 
   /** Callback when a success is recorded */
   onSuccess?: (successCount: number, breaker: CircuitBreaker) => void
@@ -179,7 +191,9 @@ export class CircuitBreaker {
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     // Check if circuit allows execution
     if (!this.canExecute()) {
-      const resetAt = new Date(this._lastStateChange.getTime() + this.config.resetTimeoutMs)
+      const resetAt = new Date(
+        this._lastStateChange.getTime() + this.config.resetTimeoutMs
+      )
       throw new ServiceUnavailableError(this.serviceName, 'open', resetAt)
     }
 
@@ -188,7 +202,9 @@ export class CircuitBreaker {
       this.recordSuccess()
       return result
     } catch (error) {
-      this.recordFailure(error instanceof Error ? error : new Error(String(error)))
+      this.recordFailure(
+        error instanceof Error ? error : new Error(String(error))
+      )
       throw error
     }
   }
@@ -210,12 +226,18 @@ export class CircuitBreaker {
    */
   async executeWithFallback<T>(
     fn: () => Promise<T>,
-    fallback: (error?: Error) => Promise<T> | T,
+    fallback: (error?: Error) => Promise<T> | T
   ): Promise<T> {
     // Check if circuit allows execution
     if (!this.canExecute()) {
-      const resetAt = new Date(this._lastStateChange.getTime() + this.config.resetTimeoutMs)
-      const error = new ServiceUnavailableError(this.serviceName, 'open', resetAt)
+      const resetAt = new Date(
+        this._lastStateChange.getTime() + this.config.resetTimeoutMs
+      )
+      const error = new ServiceUnavailableError(
+        this.serviceName,
+        'open',
+        resetAt
+      )
       return fallback(error)
     }
 
@@ -356,7 +378,7 @@ export class CircuitBreaker {
   private cleanupOldFailures(): void {
     const windowStart = Date.now() - this.config.failureWindowMs
     this.failureRecords = this.failureRecords.filter(
-      record => record.timestamp.getTime() > windowStart,
+      (record) => record.timestamp.getTime() > windowStart
     )
   }
 }
@@ -377,7 +399,7 @@ export class CircuitBreaker {
  * ```
  */
 export function createCircuitBreaker(
-  config: CircuitBreakerInput = {},
+  config: CircuitBreakerInput = {}
 ): CircuitBreaker {
   return new CircuitBreaker(config)
 }
@@ -400,7 +422,7 @@ export function createCircuitBreaker(
  */
 export function withCircuitBreaker<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
-  config: CircuitBreakerInput = {},
+  config: CircuitBreakerInput = {}
 ): {
   (...args: TArgs): Promise<TResult>
   breaker: CircuitBreaker
@@ -517,7 +539,7 @@ export class CircuitBreakerRegistry {
  * @returns A new registry instance
  */
 export function createCircuitBreakerRegistry(
-  defaultConfig: CircuitBreakerInput = {},
+  defaultConfig: CircuitBreakerInput = {}
 ): CircuitBreakerRegistry {
   return new CircuitBreakerRegistry(defaultConfig)
 }

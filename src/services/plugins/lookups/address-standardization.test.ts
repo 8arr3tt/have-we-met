@@ -2,8 +2,8 @@
  * Tests for Address Standardization Lookup Service
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import type { ServiceContext, LookupOutput } from '../../types.js'
+import { describe, it, expect, vi } from 'vitest'
+import type { ServiceContext } from '../../types.js'
 import type { ResolverConfig } from '../../../types/config.js'
 import {
   createAddressStandardization,
@@ -12,11 +12,12 @@ import {
   mapAddressFields,
   determineMatchQuality,
   createMockAddressProvider,
-  type AddressProviderResponse,
   type StandardizedAddress,
 } from './address-standardization.js'
 
-function createMockContext(keyFields: Record<string, unknown> = {}): ServiceContext {
+function createMockContext(
+  keyFields: Record<string, unknown> = {}
+): ServiceContext {
   return {
     record: keyFields,
     config: {} as ResolverConfig,
@@ -248,7 +249,7 @@ describe('Address Standardization Lookup Service', () => {
       expect(() =>
         createAddressStandardization({
           provider: 'custom',
-        }),
+        })
       ).toThrow('Custom provider requires customProvider function')
     })
 
@@ -256,7 +257,7 @@ describe('Address Standardization Lookup Service', () => {
       expect(() =>
         createAddressStandardization({
           provider: 'usps',
-        }),
+        })
       ).toThrow("Provider 'usps' requires apiKey")
     })
 
@@ -288,7 +289,7 @@ describe('Address Standardization Lookup Service', () => {
               state: 'IL',
             },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -308,7 +309,7 @@ describe('Address Standardization Lookup Service', () => {
           {
             keyFields: {},
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -330,7 +331,7 @@ describe('Address Standardization Lookup Service', () => {
           {
             keyFields: { street: 'Invalid Address' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -362,7 +363,7 @@ describe('Address Standardization Lookup Service', () => {
           {
             keyFields: { street: '123 Main' },
           },
-          context,
+          context
         )
 
         expect(result.data?.data).toEqual({
@@ -382,7 +383,7 @@ describe('Address Standardization Lookup Service', () => {
           {
             keyFields: { street: '123 Main St' },
           },
-          context,
+          context
         )
 
         expect(result.timing).toBeDefined()
@@ -408,7 +409,7 @@ describe('Address Standardization Lookup Service', () => {
           {
             keyFields: { street: '123 Main' },
           },
-          context,
+          context
         )
 
         expect(result.data?.source?.system).toBe('custom')
@@ -416,7 +417,9 @@ describe('Address Standardization Lookup Service', () => {
       })
 
       it('handles provider errors gracefully', async () => {
-        const mockProvider = vi.fn().mockRejectedValue(new Error('Network error'))
+        const mockProvider = vi
+          .fn()
+          .mockRejectedValue(new Error('Network error'))
 
         const service = createAddressStandardization({
           provider: 'custom',
@@ -428,7 +431,7 @@ describe('Address Standardization Lookup Service', () => {
           {
             keyFields: { street: '123 Main St' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(false)
@@ -457,7 +460,9 @@ describe('Address Standardization Lookup Service', () => {
       })
 
       it('returns unhealthy when provider fails', async () => {
-        const mockProvider = vi.fn().mockRejectedValue(new Error('Connection failed'))
+        const mockProvider = vi
+          .fn()
+          .mockRejectedValue(new Error('Connection failed'))
 
         const service = createAddressStandardization({
           provider: 'custom',
@@ -474,7 +479,9 @@ describe('Address Standardization Lookup Service', () => {
 
   describe('mockAddressStandardization', () => {
     it('is a pre-configured mock service', () => {
-      expect(mockAddressStandardization.name).toBe('address-standardization-custom')
+      expect(mockAddressStandardization.name).toBe(
+        'address-standardization-custom'
+      )
       expect(mockAddressStandardization.type).toBe('lookup')
     })
 
@@ -484,7 +491,7 @@ describe('Address Standardization Lookup Service', () => {
         {
           keyFields: { street: '123 Main St', city: 'Denver' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -504,7 +511,7 @@ describe('Address Standardization Lookup Service', () => {
         {
           keyFields: { street: '123 Main' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)
@@ -522,7 +529,7 @@ describe('Address Standardization Lookup Service', () => {
         {
           keyFields: { street: '123 Main' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)
@@ -539,7 +546,7 @@ describe('Address Standardization Lookup Service', () => {
         {
           keyFields: { street: '123 Main' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)

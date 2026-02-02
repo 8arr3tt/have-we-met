@@ -16,6 +16,7 @@ This document provides complete, real-world examples of probabilistic matching c
 **Use Case:** E-commerce platform needs to identify and merge duplicate customer accounts.
 
 **Characteristics:**
+
 - Email is the primary identifier
 - Names may have typos or variations
 - Phone numbers and addresses change frequently
@@ -42,7 +43,7 @@ interface Customer {
 
 ```typescript
 const resolver = HaveWeMet.create<Customer>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('email', { type: 'email' })
       .field('phone', { type: 'phone' })
@@ -53,32 +54,32 @@ const resolver = HaveWeMet.create<Customer>()
       .field('billingZip', { type: 'string' })
       .field('accountCreated', { type: 'date' })
   })
-  .blocking(block => block
-    .onField('email', { transform: 'domain' })  // Block by email domain
+  .blocking(
+    (block) => block.onField('email', { transform: 'domain' }) // Block by email domain
   )
-  .matching(match => {
+  .matching((match) => {
     match
       .field('email')
-        .strategy('exact')
-        .weight(25)
+      .strategy('exact')
+      .weight(25)
       .field('phone')
-        .strategy('exact')
-        .weight(10)
+      .strategy('exact')
+      .weight(10)
       .field('firstName')
-        .strategy('jaro-winkler')
-        .weight(8)
-        .threshold(0.90)
+      .strategy('jaro-winkler')
+      .weight(8)
+      .threshold(0.9)
       .field('lastName')
-        .strategy('jaro-winkler')
-        .weight(8)
-        .threshold(0.90)
+      .strategy('jaro-winkler')
+      .weight(8)
+      .threshold(0.9)
       .field('billingZip')
-        .strategy('exact')
-        .weight(7)
+      .strategy('exact')
+      .weight(7)
       .field('billingCity')
-        .strategy('jaro-winkler')
-        .weight(4)
-        .threshold(0.85)
+      .strategy('jaro-winkler')
+      .weight(4)
+      .threshold(0.85)
       .thresholds({ noMatch: 20, definiteMatch: 50 })
   })
   .build()
@@ -102,7 +103,7 @@ const customer1 = {
   phone: '+1-555-0100',
   firstName: 'John',
   lastName: 'Smith',
-  billingZip: '10001'
+  billingZip: '10001',
 }
 
 const customer2 = {
@@ -110,7 +111,7 @@ const customer2 = {
   phone: '+1-555-0100',
   firstName: 'John',
   lastName: 'Smith',
-  billingZip: '10001'
+  billingZip: '10001',
 }
 // → Email + Phone + Names + ZIP all match → Auto-merge
 
@@ -120,15 +121,15 @@ const customer3 = {
   phone: '+1-555-0100',
   firstName: 'John',
   lastName: 'Smith',
-  billingZip: '10001'
+  billingZip: '10001',
 }
 
 const customer4 = {
   email: 'john.smith@example.com',
-  phone: '+1-555-0200',  // Different phone
-  firstName: 'Jon',       // Slight name variation
-  lastName: 'Smyth',      // Slight name variation
-  billingZip: '10002'     // Different ZIP
+  phone: '+1-555-0200', // Different phone
+  firstName: 'Jon', // Slight name variation
+  lastName: 'Smyth', // Slight name variation
+  billingZip: '10002', // Different ZIP
 }
 // → Email matches but other signals mixed → Manual review
 ```
@@ -138,6 +139,7 @@ const customer4 = {
 **Use Case:** Healthcare system needs to match patient records across facilities with high accuracy.
 
 **Characteristics:**
+
 - HIPAA compliance requires high precision
 - Multiple strong identifiers (MRN, SSN)
 - Names and dates of birth are critical
@@ -147,8 +149,8 @@ const customer4 = {
 
 ```typescript
 interface Patient {
-  mrn?: string           // Medical Record Number
-  ssn?: string           // Social Security Number
+  mrn?: string // Medical Record Number
+  ssn?: string // Social Security Number
   firstName: string
   lastName: string
   dateOfBirth: string
@@ -163,7 +165,7 @@ interface Patient {
 
 ```typescript
 const resolver = HaveWeMet.create<Patient>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('mrn', { type: 'string' })
       .field('ssn', { type: 'string' })
@@ -175,38 +177,38 @@ const resolver = HaveWeMet.create<Patient>()
       .field('address', { type: 'address' })
       .field('phone', { type: 'phone' })
   })
-  .blocking(block => block
-    .onFields(['lastName', 'dateOfBirth'], { strategy: 'composite' })
+  .blocking((block) =>
+    block.onFields(['lastName', 'dateOfBirth'], { strategy: 'composite' })
   )
-  .matching(match => {
+  .matching((match) => {
     match
       .field('mrn')
-        .strategy('exact')
-        .weight(30)
+      .strategy('exact')
+      .weight(30)
       .field('ssn')
-        .strategy('exact')
-        .weight(30)
+      .strategy('exact')
+      .weight(30)
       .field('lastName')
-        .strategy('jaro-winkler')
-        .weight(12)
-        .threshold(0.92)
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.92)
       .field('firstName')
-        .strategy('jaro-winkler')
-        .weight(12)
-        .threshold(0.92)
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.92)
       .field('dateOfBirth')
-        .strategy('exact')
-        .weight(15)
+      .strategy('exact')
+      .weight(15)
       .field('gender')
-        .strategy('exact')
-        .weight(5)
+      .strategy('exact')
+      .weight(5)
       .field('motherMaidenName')
-        .strategy('jaro-winkler')
-        .weight(8)
-        .threshold(0.90)
+      .strategy('jaro-winkler')
+      .weight(8)
+      .threshold(0.9)
       .field('phone')
-        .strategy('exact')
-        .weight(6)
+      .strategy('exact')
+      .weight(6)
       .thresholds({ noMatch: 30, definiteMatch: 70 })
   })
   .build()
@@ -230,7 +232,7 @@ const patient1 = {
   firstName: 'Jane',
   lastName: 'Doe',
   dateOfBirth: '1990-05-15',
-  gender: 'F'
+  gender: 'F',
 }
 
 const patient2 = {
@@ -238,7 +240,7 @@ const patient2 = {
   firstName: 'Jane',
   lastName: 'Doe',
   dateOfBirth: '1990-05-15',
-  gender: 'F'
+  gender: 'F',
 }
 // → SSN + Name + DOB + Gender all match → High confidence match
 
@@ -248,7 +250,7 @@ const patient3 = {
   lastName: 'Doe',
   dateOfBirth: '1990-05-15',
   gender: 'F',
-  phone: '+1-555-0100'
+  phone: '+1-555-0100',
 }
 
 const patient4 = {
@@ -256,7 +258,7 @@ const patient4 = {
   lastName: 'Doe',
   dateOfBirth: '1990-05-15',
   gender: 'F',
-  phone: '+1-555-0200'  // Different phone
+  phone: '+1-555-0200', // Different phone
 }
 // → Name + DOB + Gender match, but no SSN/MRN → Manual verification needed
 ```
@@ -266,6 +268,7 @@ const patient4 = {
 **Use Case:** Merging contact lists from multiple sources (CRM, email, social media).
 
 **Characteristics:**
+
 - No single reliable identifier
 - Data quality varies by source
 - Names may use nicknames or different formats
@@ -290,7 +293,7 @@ interface Contact {
 
 ```typescript
 const resolver = HaveWeMet.create<Contact>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('email', { type: 'email' })
       .field('phone', { type: 'phone' })
@@ -301,35 +304,33 @@ const resolver = HaveWeMet.create<Contact>()
       .field('city', { type: 'string' })
       .field('country', { type: 'string' })
   })
-  .blocking(block => block
-    .onField('company', { transform: 'lowercase' })
-  )
-  .matching(match => {
+  .blocking((block) => block.onField('company', { transform: 'lowercase' }))
+  .matching((match) => {
     match
       .field('email')
-        .strategy('exact')
-        .weight(18)
+      .strategy('exact')
+      .weight(18)
       .field('phone')
-        .strategy('exact')
-        .weight(15)
+      .strategy('exact')
+      .weight(15)
       .field('firstName')
-        .strategy('jaro-winkler')
-        .weight(12)
-        .threshold(0.85)
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.85)
       .field('lastName')
-        .strategy('jaro-winkler')
-        .weight(12)
-        .threshold(0.85)
+      .strategy('jaro-winkler')
+      .weight(12)
+      .threshold(0.85)
       .field('company')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.80)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.8)
       .field('city')
-        .strategy('jaro-winkler')
-        .weight(5)
+      .strategy('jaro-winkler')
+      .weight(5)
       .field('country')
-        .strategy('exact')
-        .weight(3)
+      .strategy('exact')
+      .weight(3)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   })
   .build()
@@ -354,7 +355,7 @@ const contact1 = {
   firstName: 'John',
   lastName: 'Smith',
   company: 'Acme Corp',
-  city: 'New York'
+  city: 'New York',
 }
 
 const contact2 = {
@@ -362,8 +363,8 @@ const contact2 = {
   phone: '+1-555-0100',
   firstName: 'John',
   lastName: 'Smith',
-  company: 'Acme Corporation',  // Slight variation
-  city: 'NYC'
+  company: 'Acme Corporation', // Slight variation
+  city: 'NYC',
 }
 // → Email + Phone + Name + Company (fuzzy) → Strong match
 
@@ -372,14 +373,14 @@ const contact3 = {
   email: 'jsmith@acme.com',
   firstName: 'John',
   lastName: 'Smith',
-  company: 'Acme Corp'
+  company: 'Acme Corp',
 }
 
 const contact4 = {
-  email: 'john.smith@acme.com',  // Different email
-  firstName: 'Johnny',            // Nickname
+  email: 'john.smith@acme.com', // Different email
+  firstName: 'Johnny', // Nickname
   lastName: 'Smith',
-  company: 'Acme Corp'
+  company: 'Acme Corp',
 }
 // → Names + Company match but different emails → Review needed
 ```
@@ -389,6 +390,7 @@ const contact4 = {
 **Use Case:** HR system needs to match employee records across acquisitions and system migrations.
 
 **Characteristics:**
+
 - Employee ID is reliable when present
 - Email changes with company transitions
 - SSN is reliable but privacy-sensitive
@@ -414,7 +416,7 @@ interface Employee {
 
 ```typescript
 const resolver = HaveWeMet.create<Employee>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('employeeId', { type: 'string' })
       .field('ssn', { type: 'string' })
@@ -426,38 +428,36 @@ const resolver = HaveWeMet.create<Employee>()
       .field('department', { type: 'string' })
       .field('previousLastName', { type: 'name', component: 'last' })
   })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-  )
-  .matching(match => {
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+  .matching((match) => {
     match
       .field('employeeId')
-        .strategy('exact')
-        .weight(30)
+      .strategy('exact')
+      .weight(30)
       .field('ssn')
-        .strategy('exact')
-        .weight(28)
+      .strategy('exact')
+      .weight(28)
       .field('firstName')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.88)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.88)
       .field('lastName')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.88)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.88)
       .field('previousLastName')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.88)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.88)
       .field('dateOfBirth')
-        .strategy('exact')
-        .weight(15)
+      .strategy('exact')
+      .weight(15)
       .field('email')
-        .strategy('exact')
-        .weight(8)
+      .strategy('exact')
+      .weight(8)
       .field('hireDate')
-        .strategy('exact')
-        .weight(6)
+      .strategy('exact')
+      .weight(6)
       .thresholds({ noMatch: 25, definiteMatch: 60 })
   })
   .build()
@@ -482,7 +482,7 @@ const employee1 = {
   firstName: 'Jane',
   lastName: 'Smith',
   dateOfBirth: '1985-03-15',
-  hireDate: '2015-06-01'
+  hireDate: '2015-06-01',
 }
 
 const employee2 = {
@@ -490,7 +490,7 @@ const employee2 = {
   firstName: 'Jane',
   lastName: 'Smith',
   dateOfBirth: '1985-03-15',
-  hireDate: '2015-06-01'
+  hireDate: '2015-06-01',
 }
 // → ID + Name + DOB + Hire Date match → Same employee
 
@@ -500,14 +500,14 @@ const employee3 = {
   lastName: 'Smith',
   previousLastName: 'Johnson',
   dateOfBirth: '1985-03-15',
-  hireDate: '2015-06-01'
+  hireDate: '2015-06-01',
 }
 
 const employee4 = {
   firstName: 'Jane',
   lastName: 'Johnson',
   dateOfBirth: '1985-03-15',
-  hireDate: '2015-06-01'
+  hireDate: '2015-06-01',
 }
 // → Name matches previousLastName + DOB + Hire Date → Likely name change
 ```
@@ -517,6 +517,7 @@ const employee4 = {
 **Use Case:** Marketing automation platform needs to deduplicate leads to avoid contacting the same person multiple times.
 
 **Characteristics:**
+
 - Email is primary identifier
 - Names often incomplete or informal
 - Want high recall (prefer false positives over duplicate contacts)
@@ -541,7 +542,7 @@ interface Lead {
 
 ```typescript
 const resolver = HaveWeMet.create<Lead>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('email', { type: 'email' })
       .field('phone', { type: 'phone' })
@@ -551,32 +552,30 @@ const resolver = HaveWeMet.create<Lead>()
       .field('jobTitle', { type: 'string' })
       .field('website', { type: 'string' })
   })
-  .blocking(block => block
-    .onField('email', { transform: 'domain' })
-  )
-  .matching(match => {
+  .blocking((block) => block.onField('email', { transform: 'domain' }))
+  .matching((match) => {
     match
       .field('email')
-        .strategy('exact')
-        .weight(25)
+      .strategy('exact')
+      .weight(25)
       .field('phone')
-        .strategy('exact')
-        .weight(12)
+      .strategy('exact')
+      .weight(12)
       .field('firstName')
-        .strategy('jaro-winkler')
-        .weight(8)
-        .threshold(0.80)
+      .strategy('jaro-winkler')
+      .weight(8)
+      .threshold(0.8)
       .field('lastName')
-        .strategy('jaro-winkler')
-        .weight(8)
-        .threshold(0.80)
+      .strategy('jaro-winkler')
+      .weight(8)
+      .threshold(0.8)
       .field('company')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.85)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.85)
       .field('website')
-        .strategy('exact')
-        .weight(7)
+      .strategy('exact')
+      .weight(7)
       .thresholds({ noMatch: 15, definiteMatch: 40 })
   })
   .build()
@@ -600,7 +599,7 @@ const lead1 = {
   firstName: 'John',
   lastName: 'Smith',
   company: 'Acme Corp',
-  jobTitle: 'CTO'
+  jobTitle: 'CTO',
 }
 
 const lead2 = {
@@ -608,7 +607,7 @@ const lead2 = {
   firstName: 'John',
   lastName: 'Smith',
   company: 'Acme Corporation',
-  jobTitle: 'Chief Technology Officer'
+  jobTitle: 'Chief Technology Officer',
 }
 // → Email + Name + Company (fuzzy) → Same lead
 
@@ -617,14 +616,14 @@ const lead3 = {
   email: 'john@acme.com',
   firstName: 'John',
   lastName: 'Smith',
-  company: 'Acme Corp'
+  company: 'Acme Corp',
 }
 
 const lead4 = {
-  email: 'jsmith@acme.com',  // Different email
+  email: 'jsmith@acme.com', // Different email
   firstName: 'John',
   lastName: 'Smith',
-  company: 'Acme Corp'
+  company: 'Acme Corp',
 }
 // → Same person, different email format? → Review
 ```
@@ -634,6 +633,7 @@ const lead4 = {
 **Use Case:** Financial institution needs to consolidate accounts after a merger.
 
 **Characteristics:**
+
 - Account numbers are unique but may not overlap
 - SSN is highly reliable
 - Names and addresses must match closely
@@ -660,7 +660,7 @@ interface Account {
 
 ```typescript
 const resolver = HaveWeMet.create<Account>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('accountNumber', { type: 'string' })
       .field('ssn', { type: 'string' })
@@ -673,35 +673,33 @@ const resolver = HaveWeMet.create<Account>()
       .field('zipCode', { type: 'string' })
       .field('phone', { type: 'phone' })
   })
-  .blocking(block => block
-    .onField('ssn')
-  )
-  .matching(match => {
+  .blocking((block) => block.onField('ssn'))
+  .matching((match) => {
     match
       .field('ssn')
-        .strategy('exact')
-        .weight(35)
+      .strategy('exact')
+      .weight(35)
       .field('firstName')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.95)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.95)
       .field('lastName')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.95)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.95)
       .field('dateOfBirth')
-        .strategy('exact')
-        .weight(15)
+      .strategy('exact')
+      .weight(15)
       .field('address')
-        .strategy('jaro-winkler')
-        .weight(10)
-        .threshold(0.90)
+      .strategy('jaro-winkler')
+      .weight(10)
+      .threshold(0.9)
       .field('zipCode')
-        .strategy('exact')
-        .weight(8)
+      .strategy('exact')
+      .weight(8)
       .field('phone')
-        .strategy('exact')
-        .weight(7)
+      .strategy('exact')
+      .weight(7)
       .thresholds({ noMatch: 30, definiteMatch: 70 })
   })
   .build()
@@ -729,18 +727,18 @@ const account1 = {
   dateOfBirth: '1975-08-22',
   address: '123 Main Street',
   zipCode: '10001',
-  phone: '+1-555-0100'
+  phone: '+1-555-0100',
 }
 
 const account2 = {
-  accountNumber: 'ACC-67890',  // Different account number
+  accountNumber: 'ACC-67890', // Different account number
   ssn: '123-45-6789',
   firstName: 'Robert',
   lastName: 'Johnson',
   dateOfBirth: '1975-08-22',
-  address: '123 Main St',      // Slight variation
+  address: '123 Main St', // Slight variation
   zipCode: '10001',
-  phone: '+1-555-0100'
+  phone: '+1-555-0100',
 }
 // → SSN + Name + DOB + Location + Phone → Same person, consolidate accounts
 ```
@@ -748,6 +746,7 @@ const account2 = {
 ## Summary
 
 Each example demonstrates:
+
 1. **Domain-specific weight assignment** based on field reliability and uniqueness
 2. **Appropriate threshold selection** based on precision/recall requirements
 3. **Field threshold usage** to filter low-quality contributions
@@ -755,6 +754,7 @@ Each example demonstrates:
 5. **Normalizers** to improve data quality
 
 Adapt these patterns to your specific use case by:
+
 - Analyzing your data characteristics
 - Adjusting weights based on field importance in your domain
 - Tuning thresholds based on your tolerance for false positives vs false negatives

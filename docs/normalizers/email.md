@@ -43,10 +43,10 @@ interface EmailNormalizerOptions {
 
 ```typescript
 interface EmailComponents {
-  localPart: string      // Part before @
-  domain: string         // Domain name
-  full: string           // Complete normalized email
-  baseName?: string      // Local part without plus-addressing
+  localPart: string // Part before @
+  domain: string // Domain name
+  full: string // Complete normalized email
+  baseName?: string // Local part without plus-addressing
 }
 ```
 
@@ -56,14 +56,12 @@ interface EmailComponents {
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('email')
-      .type('email')
-      .normalizer('email', {
-        removePlusAddressing: true,
-        normalizeGmailDots: false,
-        validate: true
-      })
+  .schema((s) =>
+    s.field('email').type('email').normalizer('email', {
+      removePlusAddressing: true,
+      normalizeGmailDots: false,
+      validate: true,
+    })
   )
   .matching(/* ... */)
   .build()
@@ -117,7 +115,7 @@ normalizeEmail('user+newsletter@domain.com')
 
 // Keep plus-addressing
 normalizeEmail('john+work@example.com', {
-  removePlusAddressing: false
+  removePlusAddressing: false,
 })
 // → 'john+work@example.com'
 ```
@@ -129,18 +127,18 @@ Gmail ignores dots in the local part of email addresses. When enabled, the norma
 ```typescript
 // Gmail dot normalization (opt-in)
 normalizeEmail('john.smith@gmail.com', {
-  normalizeGmailDots: true
+  normalizeGmailDots: true,
 })
 // → 'johnsmith@gmail.com'
 
 normalizeEmail('j.o.h.n@gmail.com', {
-  normalizeGmailDots: true
+  normalizeGmailDots: true,
 })
 // → 'john@gmail.com'
 
 // Only for Gmail domains
 normalizeEmail('john.smith@example.com', {
-  normalizeGmailDots: true
+  normalizeGmailDots: true,
 })
 // → 'john.smith@example.com' (not Gmail, dots preserved)
 ```
@@ -149,7 +147,7 @@ normalizeEmail('john.smith@example.com', {
 
 ```typescript
 normalizeEmail('John+Work@Example.COM', {
-  outputFormat: 'components'
+  outputFormat: 'components',
 })
 // → {
 //   localPart: 'john',
@@ -184,12 +182,14 @@ normalizeEmail('invalid', { validate: false })
 When `validate: true` (default), the normalizer performs basic RFC 5322 validation:
 
 ✅ **Valid formats:**
+
 - `user@domain.com`
 - `first.last@example.co.uk`
 - `user+tag@subdomain.example.com`
 - `user_name@example-site.com`
 
 ❌ **Invalid formats:**
+
 - `notanemail` (no @ symbol)
 - `user@` (missing domain)
 - `@domain.com` (missing local part)
@@ -245,7 +245,7 @@ While Gmail, Outlook, and many modern email providers support plus-addressing, n
 ```typescript
 // Safe default: remove plus-addressing for matching
 normalizeEmail('user+tag@example.com', {
-  removePlusAddressing: true  // default
+  removePlusAddressing: true, // default
 })
 ```
 
@@ -256,7 +256,7 @@ Gmail's dot-ignoring behavior is Gmail-specific. Other providers treat dots as s
 ```typescript
 // Only enable for Gmail if needed
 normalizeEmail('john.smith@outlook.com', {
-  normalizeGmailDots: true
+  normalizeGmailDots: true,
 })
 // → 'john.smith@outlook.com' (correctly preserves dots for non-Gmail)
 ```
@@ -290,16 +290,13 @@ Once normalized, emails should be compared with exact matching:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('email')
+  .schema((s) =>
+    s
+      .field('email')
       .type('email')
       .normalizer('email', { removePlusAddressing: true })
   )
-  .matching(m => m
-    .field('email')
-      .strategy('exact')
-      .weight(100)
-  )
+  .matching((m) => m.field('email').strategy('exact').weight(100))
   .build()
 ```
 
@@ -327,28 +324,20 @@ interface Customer {
 }
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(s => s
-    .field('email')
-      .type('email')
-      .normalizer('email', {
-        removePlusAddressing: true,
-        normalizeGmailDots: false,
-        validate: true
-      })
+  .schema((s) =>
+    s.field('email').type('email').normalizer('email', {
+      removePlusAddressing: true,
+      normalizeGmailDots: false,
+      validate: true,
+    })
   )
-  .matching(m => m
-    .field('email')
-      .strategy('exact')
-      .weight(100)
-  )
+  .matching((m) => m.field('email').strategy('exact').weight(100))
   .thresholds({ noMatch: 20, definiteMatch: 80 })
   .build()
 
 // These will match after normalization:
 const input = { id: 'in', email: 'John+work@Example.COM' }
-const candidates = [
-  { id: 'c1', email: 'john@example.com' }
-]
+const candidates = [{ id: 'c1', email: 'john@example.com' }]
 
 const result = resolver.resolve(input, candidates)
 // result.outcome → 'match'

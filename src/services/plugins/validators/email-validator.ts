@@ -52,7 +52,8 @@ const DISPOSABLE_EMAIL_DOMAINS = new Set([
  * - @ symbol
  * - Domain: letters, numbers, hyphens, with valid TLD
  */
-const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+const EMAIL_REGEX =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
 /**
  * Minimum TLD length (e.g., 'io', 'uk')
@@ -87,7 +88,10 @@ export function validateEmailFormat(email: string): {
   }
 
   if (trimmed.length > MAX_EMAIL_LENGTH) {
-    return { valid: false, reason: `Email exceeds maximum length of ${MAX_EMAIL_LENGTH} characters` }
+    return {
+      valid: false,
+      reason: `Email exceeds maximum length of ${MAX_EMAIL_LENGTH} characters`,
+    }
   }
 
   if (!EMAIL_REGEX.test(trimmed)) {
@@ -97,7 +101,10 @@ export function validateEmailFormat(email: string): {
   const [localPart, domain] = trimmed.split('@')
 
   if (localPart.length > MAX_LOCAL_LENGTH) {
-    return { valid: false, reason: `Local part exceeds maximum length of ${MAX_LOCAL_LENGTH} characters` }
+    return {
+      valid: false,
+      reason: `Local part exceeds maximum length of ${MAX_LOCAL_LENGTH} characters`,
+    }
   }
 
   // Check for valid TLD
@@ -155,7 +162,7 @@ export function isDisposableDomain(domain: string): boolean {
 function createSuccessResult(
   data: ValidationOutput,
   startedAt: Date,
-  cached: boolean = false,
+  cached: boolean = false
 ): ServiceResult<ValidationOutput> {
   const completedAt = new Date()
   return {
@@ -193,7 +200,12 @@ export interface EmailValidatorOptions {
 /**
  * Default email validator options
  */
-const DEFAULT_OPTIONS: Required<Omit<EmailValidatorOptions, 'name' | 'description' | 'additionalDisposableDomains'>> = {
+const DEFAULT_OPTIONS: Required<
+  Omit<
+    EmailValidatorOptions,
+    'name' | 'description' | 'additionalDisposableDomains'
+  >
+> = {
   checkMx: false,
   rejectDisposable: false,
 }
@@ -220,7 +232,7 @@ const DEFAULT_OPTIONS: Required<Omit<EmailValidatorOptions, 'name' | 'descriptio
  * ```
  */
 export function createEmailValidator(
-  options: EmailValidatorOptions = {},
+  options: EmailValidatorOptions = {}
 ): ValidationService {
   const {
     name = 'email-validator',
@@ -233,7 +245,7 @@ export function createEmailValidator(
   // Create combined disposable domains set
   const disposableDomains = new Set([
     ...DISPOSABLE_EMAIL_DOMAINS,
-    ...additionalDisposableDomains.map(d => d.toLowerCase()),
+    ...additionalDisposableDomains.map((d) => d.toLowerCase()),
   ])
 
   return {
@@ -243,7 +255,7 @@ export function createEmailValidator(
 
     async execute(
       input: ValidationInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<ValidationOutput>> {
       const startedAt = new Date()
       const { value } = input
@@ -258,11 +270,14 @@ export function createEmailValidator(
           message: 'Email address is required',
         })
 
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Email address is required',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Email address is required',
+          },
+          startedAt
+        )
       }
 
       // Format validation
@@ -272,20 +287,23 @@ export function createEmailValidator(
         passed: formatResult.valid,
         message: formatResult.valid
           ? 'Valid email format'
-          : formatResult.reason ?? 'Invalid email format',
+          : (formatResult.reason ?? 'Invalid email format'),
       })
 
       if (!formatResult.valid) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: formatResult.reason ?? 'Invalid email format',
-          suggestions: [
-            'Check for typos in the email address',
-            'Ensure the email contains exactly one @ symbol',
-            'Verify the domain name is correct',
-          ],
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: formatResult.reason ?? 'Invalid email format',
+            suggestions: [
+              'Check for typos in the email address',
+              'Ensure the email contains exactly one @ symbol',
+              'Verify the domain name is correct',
+            ],
+          },
+          startedAt
+        )
       }
 
       const domain = extractDomain(normalized)
@@ -298,15 +316,18 @@ export function createEmailValidator(
           message: 'Disposable email addresses are not allowed',
         })
 
-        return createSuccessResult({
-          valid: false,
-          details: {
-            checks,
-            normalizedValue: normalized,
+        return createSuccessResult(
+          {
+            valid: false,
+            details: {
+              checks,
+              normalizedValue: normalized,
+            },
+            invalidReason: 'Disposable email addresses are not allowed',
+            suggestions: ['Please use a permanent email address'],
           },
-          invalidReason: 'Disposable email addresses are not allowed',
-          suggestions: ['Please use a permanent email address'],
-        }, startedAt)
+          startedAt
+        )
       }
 
       if (rejectDisposable) {
@@ -330,14 +351,17 @@ export function createEmailValidator(
       }
 
       // All checks passed
-      return createSuccessResult({
-        valid: true,
-        details: {
-          checks,
-          normalizedValue: normalized,
-          confidence: 1.0,
+      return createSuccessResult(
+        {
+          valid: true,
+          details: {
+            checks,
+            normalizedValue: normalized,
+            confidence: 1.0,
+          },
         },
-      }, startedAt)
+        startedAt
+      )
     },
 
     async healthCheck(): Promise<HealthCheckResult> {

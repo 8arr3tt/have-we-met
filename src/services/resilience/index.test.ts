@@ -90,7 +90,7 @@ describe('Combined Resilience', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       // Advance through retries
       await vi.advanceTimersByTimeAsync(500)
@@ -125,9 +125,12 @@ describe('Combined Resilience', () => {
     })
 
     it('works with only timeout', async () => {
-      const fn = vi.fn().mockImplementation(() =>
-        new Promise(resolve => setTimeout(() => resolve('success'), 50))
-      )
+      const fn = vi
+        .fn()
+        .mockImplementation(
+          () =>
+            new Promise((resolve) => setTimeout(() => resolve('success'), 50))
+        )
 
       const resultPromise = withResilience(fn, {
         timeout: { timeoutMs: 100 },
@@ -140,7 +143,8 @@ describe('Combined Resilience', () => {
     })
 
     it('works with only retry', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new ServiceNetworkError('test', 'fail'))
         .mockResolvedValue('success')
 
@@ -203,7 +207,8 @@ describe('Combined Resilience', () => {
     })
 
     it('tracks attempts correctly', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new ServiceTimeoutError('test', 100))
         .mockResolvedValue('success')
 
@@ -248,10 +253,14 @@ describe('Combined Resilience', () => {
       const fn2 = vi.fn().mockResolvedValue('success')
 
       // Need to advance time to allow half-open
-      await vi.advanceTimersByTimeAsync(breaker.getStatus().lastStateChange.getTime() + 30001)
+      await vi.advanceTimersByTimeAsync(
+        breaker.getStatus().lastStateChange.getTime() + 30001
+      )
 
       try {
-        const result = await withResilienceDetailed(fn2, { circuitBreaker: breaker })
+        const result = await withResilienceDetailed(fn2, {
+          circuitBreaker: breaker,
+        })
         expect(result.circuitState).toBeDefined()
       } catch {
         // Circuit might still be open
@@ -371,7 +380,7 @@ describe('Combined Resilience', () => {
       const resultPromise = executeWithAbortableTimeout(fn, 100, 'test-service')
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(200)
 
@@ -383,7 +392,7 @@ describe('Combined Resilience', () => {
       const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
       const fn = vi.fn().mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50))
+        await new Promise((resolve) => setTimeout(resolve, 50))
         return 'success'
       })
 
@@ -399,20 +408,20 @@ describe('Combined Resilience', () => {
       const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
       const fn = vi.fn().mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50))
+        await new Promise((resolve) => setTimeout(resolve, 50))
         throw new Error('custom error')
       })
 
       const resultPromise = executeWithAbortableTimeout(fn, 1000, 'test')
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(50)
 
       const error = await errorPromise
       expect(error).toBeInstanceOf(Error)
-      expect(error.message).toBe('custom error')
+      expect((error as Error).message).toBe('custom error')
       expect(clearTimeoutSpy).toHaveBeenCalled()
     })
 
@@ -421,7 +430,7 @@ describe('Combined Resilience', () => {
       const fn = vi.fn().mockRejectedValue(customError)
 
       await expect(
-        executeWithAbortableTimeout(fn, 1000, 'test'),
+        executeWithAbortableTimeout(fn, 1000, 'test')
       ).rejects.toThrow(customError)
     })
   })

@@ -12,7 +12,11 @@ import {
   RetryTracker,
   DEFAULT_RETRY_CONFIG,
 } from './retry.js'
-import { ServiceTimeoutError, ServiceNetworkError, ServiceError } from '../service-error.js'
+import {
+  ServiceTimeoutError,
+  ServiceNetworkError,
+  ServiceError,
+} from '../service-error.js'
 
 describe('Retry', () => {
   beforeEach(() => {
@@ -81,38 +85,70 @@ describe('Retry', () => {
   describe('shouldRetryError', () => {
     it('retries timeout errors when configured', () => {
       const error = new ServiceTimeoutError('test', 1000)
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['timeout'] })).toBe(true)
+      expect(
+        shouldRetryError(error, {
+          ...DEFAULT_RETRY_CONFIG,
+          retryOn: ['timeout'],
+        })
+      ).toBe(true)
     })
 
     it('retries network errors when configured', () => {
       const error = new ServiceNetworkError('test', 'connection failed')
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['network'] })).toBe(true)
+      expect(
+        shouldRetryError(error, {
+          ...DEFAULT_RETRY_CONFIG,
+          retryOn: ['network'],
+        })
+      ).toBe(true)
     })
 
     it('retries server errors when configured', () => {
       const error = new ServiceError('Server error', 'ERR', 'unknown', true)
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['server'] })).toBe(true)
+      expect(
+        shouldRetryError(error, {
+          ...DEFAULT_RETRY_CONFIG,
+          retryOn: ['server'],
+        })
+      ).toBe(true)
     })
 
     it('retries all errors when configured with "all"', () => {
       const error = new Error('any error')
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['all'] })).toBe(true)
+      expect(
+        shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['all'] })
+      ).toBe(true)
     })
 
     it('does not retry errors marked as not retryable', () => {
       const error = new ServiceError('Non-retryable', 'ERR', 'timeout', false)
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['timeout'] })).toBe(false)
+      expect(
+        shouldRetryError(error, {
+          ...DEFAULT_RETRY_CONFIG,
+          retryOn: ['timeout'],
+        })
+      ).toBe(false)
     })
 
     it('does not retry unknown error types when not in retryOn', () => {
       const error = new Error('unknown error')
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['timeout'] })).toBe(false)
+      expect(
+        shouldRetryError(error, {
+          ...DEFAULT_RETRY_CONFIG,
+          retryOn: ['timeout'],
+        })
+      ).toBe(false)
     })
 
     it('uses retryable flag when error type not matched', () => {
       const error = new ServiceError('Custom', 'ERR', 'validation', true)
       // Not in retryOn but marked retryable
-      expect(shouldRetryError(error, { ...DEFAULT_RETRY_CONFIG, retryOn: ['timeout'] })).toBe(true)
+      expect(
+        shouldRetryError(error, {
+          ...DEFAULT_RETRY_CONFIG,
+          retryOn: ['timeout'],
+        })
+      ).toBe(true)
     })
   })
 
@@ -127,7 +163,8 @@ describe('Retry', () => {
     })
 
     it('retries on failure up to max attempts', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new ServiceTimeoutError('test', 1000))
         .mockRejectedValueOnce(new ServiceTimeoutError('test', 1000))
         .mockResolvedValue('success')
@@ -138,7 +175,9 @@ describe('Retry', () => {
       })
 
       // First retry delay
-      await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.initialDelayMs * 1.5)
+      await vi.advanceTimersByTimeAsync(
+        DEFAULT_RETRY_CONFIG.initialDelayMs * 1.5
+      )
       // Second retry delay
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.initialDelayMs * 3)
 
@@ -157,7 +196,7 @@ describe('Retry', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       // Advance through all retries
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.maxDelayMs * 3)
@@ -168,7 +207,12 @@ describe('Retry', () => {
     })
 
     it('only retries configured error types', async () => {
-      const validationError = new ServiceError('Invalid', 'ERR', 'validation', false)
+      const validationError = new ServiceError(
+        'Invalid',
+        'ERR',
+        'validation',
+        false
+      )
       const fn = vi.fn().mockRejectedValue(validationError)
 
       await expect(
@@ -176,7 +220,7 @@ describe('Retry', () => {
           ...DEFAULT_RETRY_CONFIG,
           maxAttempts: 3,
           retryOn: ['timeout'],
-        }),
+        })
       ).rejects.toThrow(validationError)
 
       expect(fn).toHaveBeenCalledTimes(1) // No retry
@@ -185,7 +229,8 @@ describe('Retry', () => {
     it('calls onRetry callback before each retry', async () => {
       const onRetry = vi.fn()
       const error = new ServiceTimeoutError('test', 1000)
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('success')
 
@@ -205,7 +250,8 @@ describe('Retry', () => {
 
     it('uses custom shouldRetry function when provided', async () => {
       const customError = new Error('custom')
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(customError)
         .mockResolvedValue('success')
 
@@ -226,7 +272,8 @@ describe('Retry', () => {
 
     it('aborts when signal is aborted', async () => {
       const controller = new AbortController()
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValue(new ServiceTimeoutError('test', 1000))
 
       const resultPromise = withRetry(fn, {
@@ -236,7 +283,7 @@ describe('Retry', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       // Abort after first failure
       await vi.advanceTimersByTimeAsync(1)
@@ -244,7 +291,7 @@ describe('Retry', () => {
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.maxDelayMs)
 
       const error = await errorPromise
-      expect(error.message).toContain('aborted')
+      expect((error as Error).message).toContain('aborted')
     })
 
     it('does not wait between attempts when already aborted', async () => {
@@ -257,7 +304,7 @@ describe('Retry', () => {
         withRetry(fn, {
           ...DEFAULT_RETRY_CONFIG,
           signal: controller.signal,
-        }),
+        })
       ).rejects.toThrow('aborted')
 
       expect(fn).not.toHaveBeenCalled()
@@ -279,7 +326,8 @@ describe('Retry', () => {
     })
 
     it('tracks retry count in metadata', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new ServiceTimeoutError('test', 1000))
         .mockResolvedValue('success')
 
@@ -302,7 +350,8 @@ describe('Retry', () => {
     it('includes delay information in attempt details', async () => {
       vi.spyOn(Math, 'random').mockReturnValue(0.5)
 
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new ServiceTimeoutError('test', 1000))
         .mockResolvedValue('success')
 
@@ -330,7 +379,7 @@ describe('Retry', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(DEFAULT_RETRY_CONFIG.maxDelayMs * 2)
 
@@ -356,7 +405,8 @@ describe('Retry', () => {
     })
 
     it('retries with all arguments preserved', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new ServiceTimeoutError('test', 1000))
         .mockImplementation((a: number, b: number) => Promise.resolve(a + b))
 
@@ -387,7 +437,10 @@ describe('Retry', () => {
     })
 
     it('tracks attempt count', () => {
-      const tracker = new RetryTracker({ ...DEFAULT_RETRY_CONFIG, maxAttempts: 3 })
+      const tracker = new RetryTracker({
+        ...DEFAULT_RETRY_CONFIG,
+        maxAttempts: 3,
+      })
 
       tracker.recordAttempt()
       expect(tracker.attemptCount).toBe(1)
@@ -436,7 +489,10 @@ describe('Retry', () => {
     })
 
     it('returns 0 delay when no more retries', () => {
-      const tracker = new RetryTracker({ ...DEFAULT_RETRY_CONFIG, maxAttempts: 1 })
+      const tracker = new RetryTracker({
+        ...DEFAULT_RETRY_CONFIG,
+        maxAttempts: 1,
+      })
 
       tracker.recordAttempt()
       const delay = tracker.recordFailure(new ServiceTimeoutError('test', 1000))
@@ -453,7 +509,9 @@ describe('Retry', () => {
       })
 
       tracker.recordAttempt()
-      const delay = tracker.recordFailure(new ServiceError('Validation', 'ERR', 'validation', false))
+      const delay = tracker.recordFailure(
+        new ServiceError('Validation', 'ERR', 'validation', false)
+      )
 
       expect(delay).toBe(0)
     })
@@ -480,7 +538,7 @@ describe('Retry', () => {
 
       tracker.recordAttempt()
 
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await new Promise((resolve) => setTimeout(resolve, 50))
 
       expect(tracker.elapsedMs).toBeGreaterThanOrEqual(40)
     })

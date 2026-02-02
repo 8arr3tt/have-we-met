@@ -4,7 +4,10 @@
  */
 
 import type { CacheConfig, ServiceCache, CacheEntry } from '../types.js'
-import type { CacheWrappedResult, ExtendedServiceCache } from './cache-interface.js'
+import type {
+  CacheWrappedResult,
+  ExtendedServiceCache,
+} from './cache-interface.js'
 import { generateCacheKey } from './cache-key-generator.js'
 
 /**
@@ -52,7 +55,7 @@ export async function withCache<T>(
   key: string,
   fn: () => Promise<T>,
   config: CacheConfig,
-  cache: ServiceCache,
+  cache: ServiceCache
 ): Promise<{ result: T; cached: boolean }> {
   if (!config.enabled) {
     const result = await fn()
@@ -71,7 +74,9 @@ export async function withCache<T>(
   if (config.staleOnError) {
     const extendedCache = cache as ExtendedServiceCache
     if (typeof extendedCache.getWithOptions === 'function') {
-      staleEntry = await extendedCache.getWithOptions<T>(key, { allowStale: true })
+      staleEntry = await extendedCache.getWithOptions<T>(key, {
+        allowStale: true,
+      })
     }
   }
 
@@ -97,7 +102,7 @@ export async function withCacheDetailed<T>(
   key: string,
   fn: () => Promise<T>,
   config: CacheConfig,
-  cache: ServiceCache,
+  cache: ServiceCache
 ): Promise<CacheWrappedResult<T>> {
   const startTime = Date.now()
 
@@ -135,7 +140,9 @@ export async function withCacheDetailed<T>(
   if (config.staleOnError) {
     const extendedCache = cache as ExtendedServiceCache
     if (typeof extendedCache.getWithOptions === 'function') {
-      staleEntry = await extendedCache.getWithOptions<T>(key, { allowStale: true })
+      staleEntry = await extendedCache.getWithOptions<T>(key, {
+        allowStale: true,
+      })
     }
   }
 
@@ -192,7 +199,7 @@ export function createCachedFunction<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
   config: CacheConfig,
   cache: ServiceCache,
-  keyFn?: (...args: TArgs) => string,
+  keyFn?: (...args: TArgs) => string
 ): (...args: TArgs) => Promise<{ result: TResult; cached: boolean }> {
   return async (...args: TArgs) => {
     const key = keyFn
@@ -215,7 +222,10 @@ export function createCacheWrapper(options: CacheWrapperOptions) {
     /**
      * Execute with caching using generated key
      */
-    async execute<T>(input: unknown, fn: () => Promise<T>): Promise<{ result: T; cached: boolean }> {
+    async execute<T>(
+      input: unknown,
+      fn: () => Promise<T>
+    ): Promise<{ result: T; cached: boolean }> {
       const key = generateCacheKey(serviceName, input, config.keyFn)
       return withCache(key, fn, config, cache)
     },
@@ -223,7 +233,10 @@ export function createCacheWrapper(options: CacheWrapperOptions) {
     /**
      * Execute with caching using custom key
      */
-    async executeWithKey<T>(key: string, fn: () => Promise<T>): Promise<{ result: T; cached: boolean }> {
+    async executeWithKey<T>(
+      key: string,
+      fn: () => Promise<T>
+    ): Promise<{ result: T; cached: boolean }> {
       const fullKey = `${serviceName}:${key}`
       return withCache(fullKey, fn, config, cache)
     },
@@ -231,7 +244,10 @@ export function createCacheWrapper(options: CacheWrapperOptions) {
     /**
      * Execute with detailed cache information
      */
-    async executeDetailed<T>(input: unknown, fn: () => Promise<T>): Promise<CacheWrappedResult<T>> {
+    async executeDetailed<T>(
+      input: unknown,
+      fn: () => Promise<T>
+    ): Promise<CacheWrappedResult<T>> {
       const key = generateCacheKey(serviceName, input, config.keyFn)
       return withCacheDetailed(key, fn, config, cache)
     },
@@ -304,11 +320,16 @@ export function cacheMethod<TArgs extends unknown[], TResult>(
   cache: ServiceCache,
   config: CacheConfig,
   method: (...args: TArgs) => Promise<TResult>,
-  keyFn: (...args: TArgs) => string,
+  keyFn: (...args: TArgs) => string
 ): (...args: TArgs) => Promise<TResult> {
   return async (...args: TArgs): Promise<TResult> => {
     const key = generateCacheKey(serviceName, keyFn(...args))
-    const { result } = await withCache(key, () => method(...args), config, cache)
+    const { result } = await withCache(
+      key,
+      () => method(...args),
+      config,
+      cache
+    )
     return result
   }
 }
@@ -324,7 +345,7 @@ export async function batchWithCache<K, V>(
   cache: ServiceCache,
   config: CacheConfig,
   keyFn: (key: K) => string,
-  fetchFn: (missingKeys: K[]) => Promise<Map<K, V>>,
+  fetchFn: (missingKeys: K[]) => Promise<Map<K, V>>
 ): Promise<Map<K, { value: V; cached: boolean }>> {
   const results = new Map<K, { value: V; cached: boolean }>()
 
@@ -372,7 +393,7 @@ export async function refreshInBackground<T>(
   key: string,
   fn: () => Promise<T>,
   config: CacheConfig,
-  cache: ServiceCache,
+  cache: ServiceCache
 ): Promise<{ result: T | null; refreshing: boolean }> {
   // First try to get fresh value
   const fresh = await cache.get<T>(key)

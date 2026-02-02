@@ -57,7 +57,9 @@ describe('createRequestMetadata', () => {
     const metadata = createRequestMetadata({})
     const after = new Date()
 
-    expect(metadata.startedAt.getTime()).toBeGreaterThanOrEqual(before.getTime())
+    expect(metadata.startedAt.getTime()).toBeGreaterThanOrEqual(
+      before.getTime()
+    )
     expect(metadata.startedAt.getTime()).toBeLessThanOrEqual(after.getTime())
   })
 
@@ -264,7 +266,9 @@ describe('createPrefixedLogger', () => {
     const prefixedLogger = createPrefixedLogger('my-service', baseLogger)
     prefixedLogger.info('test message', { key: 'value' })
 
-    expect(baseLogger.info).toHaveBeenCalledWith('[my-service] test message', { key: 'value' })
+    expect(baseLogger.info).toHaveBeenCalledWith('[my-service] test message', {
+      key: 'value',
+    })
   })
 
   it('prefixes all log levels', () => {

@@ -11,7 +11,13 @@ import {
   soundex,
   metaphone,
 } from '../comparators'
-import type { ExactMatchOptions, LevenshteinOptions, JaroWinklerOptions, SoundexOptions, MetaphoneOptions } from '../comparators'
+import type {
+  ExactMatchOptions,
+  LevenshteinOptions,
+  JaroWinklerOptions,
+  SoundexOptions,
+  MetaphoneOptions,
+} from '../comparators'
 import type { SchemaDefinition } from '../../types/schema'
 import { applyNormalizer } from '../normalizers/registry'
 
@@ -49,7 +55,9 @@ export class ScoreCalculator {
       // Handle missing fields: if both are undefined, treat as a match by default
       let similarity: number
       if (normalizedLeft === undefined && normalizedRight === undefined) {
-        const options = comparison.options as { nullMatchesNull?: boolean } | undefined
+        const options = comparison.options as
+          | { nullMatchesNull?: boolean }
+          | undefined
         if (options?.nullMatchesNull === false) {
           similarity = 0
         } else {

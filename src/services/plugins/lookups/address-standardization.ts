@@ -83,7 +83,7 @@ export interface AddressProviderResponse {
  */
 export type CustomAddressProvider = (
   address: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => Promise<AddressProviderResponse>
 
 /**
@@ -127,8 +127,20 @@ export const DEFAULT_ADDRESS_CONFIG: Partial<AddressStandardizationConfig> = {
 export function buildAddressString(keyFields: Record<string, unknown>): string {
   const parts: string[] = []
 
-  const streetFields = ['streetAddress', 'street', 'address', 'addressLine1', 'streetAddress1']
-  const street2Fields = ['streetAddress2', 'addressLine2', 'apartment', 'unit', 'suite']
+  const streetFields = [
+    'streetAddress',
+    'street',
+    'address',
+    'addressLine1',
+    'streetAddress1',
+  ]
+  const street2Fields = [
+    'streetAddress2',
+    'addressLine2',
+    'apartment',
+    'unit',
+    'suite',
+  ]
   const cityFields = ['city', 'locality', 'town']
   const stateFields = ['state', 'province', 'region', 'administrativeArea']
   const postalFields = ['postalCode', 'zipCode', 'postcode', 'zip']
@@ -166,7 +178,7 @@ export function buildAddressString(keyFields: Record<string, unknown>): string {
  */
 export function mapAddressFields(
   standardized: StandardizedAddress,
-  fieldMapping: Record<string, string>,
+  fieldMapping: Record<string, string>
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
@@ -196,7 +208,7 @@ export function determineMatchQuality(confidence?: number): LookupMatchQuality {
 function createSuccessResult(
   data: LookupOutput,
   startedAt: Date,
-  cached: boolean = false,
+  cached: boolean = false
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -216,7 +228,7 @@ function createSuccessResult(
  */
 function createFailureResult(
   error: Error,
-  startedAt: Date,
+  startedAt: Date
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -299,7 +311,7 @@ export function createMockAddressProvider(): CustomAddressProvider {
  * ```
  */
 export function createAddressStandardization(
-  config: AddressStandardizationConfig,
+  config: AddressStandardizationConfig
 ): LookupService {
   const mergedConfig = { ...DEFAULT_ADDRESS_CONFIG, ...config }
   const serviceName = `address-standardization-${mergedConfig.provider}`
@@ -315,7 +327,7 @@ export function createAddressStandardization(
 
   const executeProvider = async (
     address: string,
-    signal?: AbortSignal,
+    signal?: AbortSignal
   ): Promise<AddressProviderResponse> => {
     switch (mergedConfig.provider) {
       case 'custom':
@@ -328,7 +340,7 @@ export function createAddressStandardization(
         // The interface is ready for real API integration
         throw new ServiceNetworkError(
           serviceName,
-          `Provider '${mergedConfig.provider}' requires custom implementation. Use 'custom' provider with customProvider function.`,
+          `Provider '${mergedConfig.provider}' requires custom implementation. Use 'custom' provider with customProvider function.`
         )
 
       default:
@@ -343,7 +355,7 @@ export function createAddressStandardization(
 
     async execute(
       input: LookupInput,
-      context: ServiceContext,
+      context: ServiceContext
     ): Promise<ServiceResult<LookupOutput>> {
       const startedAt = new Date()
 
@@ -355,7 +367,7 @@ export function createAddressStandardization(
             {
               found: false,
             },
-            startedAt,
+            startedAt
           )
         }
 
@@ -366,14 +378,17 @@ export function createAddressStandardization(
             {
               found: false,
             },
-            startedAt,
+            startedAt
           )
         }
 
         // Map fields if mapping is provided
         let data: Record<string, unknown>
         if (mergedConfig.fieldMapping) {
-          data = mapAddressFields(response.standardized, mergedConfig.fieldMapping)
+          data = mapAddressFields(
+            response.standardized,
+            mergedConfig.fieldMapping
+          )
         } else {
           // Return raw standardized address
           data = response.standardized as Record<string, unknown>
@@ -389,19 +404,22 @@ export function createAddressStandardization(
               recordId: response.id,
             },
           },
-          startedAt,
+          startedAt
         )
       } catch (error) {
-        if (error instanceof ServiceNetworkError || error instanceof ServiceServerError) {
+        if (
+          error instanceof ServiceNetworkError ||
+          error instanceof ServiceServerError
+        ) {
           return createFailureResult(error, startedAt)
         }
 
         return createFailureResult(
           new ServiceNetworkError(
             serviceName,
-            error instanceof Error ? error.message : String(error),
+            error instanceof Error ? error.message : String(error)
           ),
-          startedAt,
+          startedAt
         )
       }
     },

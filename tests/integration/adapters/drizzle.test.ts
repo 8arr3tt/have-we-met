@@ -11,12 +11,36 @@ type TestRecord = {
 }
 
 class MockDrizzleOperators {
-  eq = (column: { name: string }, value: unknown) => ({ type: 'eq', column: column.name, value })
-  ne = (column: { name: string }, value: unknown) => ({ type: 'ne', column: column.name, value })
-  gt = (column: { name: string }, value: unknown) => ({ type: 'gt', column: column.name, value })
-  gte = (column: { name: string }, value: unknown) => ({ type: 'gte', column: column.name, value })
-  lt = (column: { name: string }, value: unknown) => ({ type: 'lt', column: column.name, value })
-  lte = (column: { name: string }, value: unknown) => ({ type: 'lte', column: column.name, value })
+  eq = (column: { name: string }, value: unknown) => ({
+    type: 'eq',
+    column: column.name,
+    value,
+  })
+  ne = (column: { name: string }, value: unknown) => ({
+    type: 'ne',
+    column: column.name,
+    value,
+  })
+  gt = (column: { name: string }, value: unknown) => ({
+    type: 'gt',
+    column: column.name,
+    value,
+  })
+  gte = (column: { name: string }, value: unknown) => ({
+    type: 'gte',
+    column: column.name,
+    value,
+  })
+  lt = (column: { name: string }, value: unknown) => ({
+    type: 'lt',
+    column: column.name,
+    value,
+  })
+  lte = (column: { name: string }, value: unknown) => ({
+    type: 'lte',
+    column: column.name,
+    value,
+  })
   inArray = (column: { name: string }, values: unknown[]) => ({
     type: 'in',
     column: column.name,
@@ -28,8 +52,14 @@ class MockDrizzleOperators {
     pattern,
   })
   and = (...conditions: unknown[]) => ({ type: 'and', conditions })
-  asc = (column: { name: string }) => ({ column: column.name, direction: 'asc' })
-  desc = (column: { name: string }) => ({ column: column.name, direction: 'desc' })
+  asc = (column: { name: string }) => ({
+    column: column.name,
+    direction: 'asc',
+  })
+  desc = (column: { name: string }) => ({
+    column: column.name,
+    direction: 'desc',
+  })
   count = () => ({ type: 'count' })
 }
 
@@ -41,7 +71,10 @@ class MockDrizzleQuery {
   private orderByValue?: { column: string; direction: string }
   private selectFields?: Record<string, unknown>
 
-  constructor(records: Record<string, unknown>[], selectFields?: Record<string, unknown>) {
+  constructor(
+    records: Record<string, unknown>[],
+    selectFields?: Record<string, unknown>
+  ) {
     this.records = records
     this.selectFields = selectFields
   }
@@ -61,14 +94,19 @@ class MockDrizzleQuery {
     return this
   }
 
-  orderBy(...args: Array<{ column: string; direction: string }>): MockDrizzleQuery {
+  orderBy(
+    ...args: Array<{ column: string; direction: string }>
+  ): MockDrizzleQuery {
     if (args.length > 0) {
       this.orderByValue = args[0]
     }
     return this
   }
 
-  private matchesCondition(record: Record<string, unknown>, condition: unknown): boolean {
+  private matchesCondition(
+    record: Record<string, unknown>,
+    condition: unknown
+  ): boolean {
     if (!condition) return true
 
     const cond = condition as {
@@ -115,21 +153,28 @@ class MockDrizzleQuery {
       | ((value: Record<string, unknown>[]) => TResult1 | PromiseLike<TResult1>)
       | null
       | undefined,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null | undefined
+    onrejected?:
+      | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+      | null
+      | undefined
   ): Promise<TResult1 | TResult2> {
     try {
       let results = [...this.records]
 
       if (this.whereCondition) {
-        results = results.filter((record) => this.matchesCondition(record, this.whereCondition))
+        results = results.filter((record) =>
+          this.matchesCondition(record, this.whereCondition)
+        )
       }
 
       if (this.orderByValue) {
         results.sort((a, b) => {
           const aVal = a[this.orderByValue!.column] ?? ''
           const bVal = b[this.orderByValue!.column] ?? ''
-          if (aVal < bVal) return this.orderByValue!.direction === 'asc' ? -1 : 1
-          if (aVal > bVal) return this.orderByValue!.direction === 'asc' ? 1 : -1
+          if (aVal < bVal)
+            return this.orderByValue!.direction === 'asc' ? -1 : 1
+          if (aVal > bVal)
+            return this.orderByValue!.direction === 'asc' ? 1 : -1
           return 0
         })
       }
@@ -144,14 +189,19 @@ class MockDrizzleQuery {
 
       if (this.selectFields && 'count' in this.selectFields) {
         const countResult = [{ count: results.length }]
-        return Promise.resolve(countResult).then(onfulfilled, onrejected) as Promise<
-          TResult1 | TResult2
-        >
+        return Promise.resolve(countResult).then(
+          onfulfilled,
+          onrejected
+        ) as Promise<TResult1 | TResult2>
       }
 
-      return Promise.resolve(results).then(onfulfilled, onrejected) as Promise<TResult1 | TResult2>
+      return Promise.resolve(results).then(onfulfilled, onrejected) as Promise<
+        TResult1 | TResult2
+      >
     } catch (error) {
-      return Promise.reject(error).then(onfulfilled, onrejected) as Promise<TResult1 | TResult2>
+      return Promise.reject(error).then(onfulfilled, onrejected) as Promise<
+        TResult1 | TResult2
+      >
     }
   }
 }
@@ -161,7 +211,8 @@ class MockDrizzleDatabase {
 
   select(fields?: Record<string, unknown>) {
     return {
-      from: () => new MockDrizzleQuery(Array.from(this.records.values()), fields),
+      from: () =>
+        new MockDrizzleQuery(Array.from(this.records.values()), fields),
     }
   }
 
@@ -188,7 +239,11 @@ class MockDrizzleDatabase {
   update() {
     return {
       set: (values: Record<string, unknown>) => ({
-        where: (condition: { type: string; column: string; value: unknown }) => ({
+        where: (condition: {
+          type: string
+          column: string
+          value: unknown
+        }) => ({
           returning: async () => {
             if (condition.type === 'eq') {
               const id = condition.value as string
@@ -209,7 +264,11 @@ class MockDrizzleDatabase {
 
   delete() {
     return {
-      where: async (condition: { type: string; column: string; value: unknown }) => {
+      where: async (condition: {
+        type: string
+        column: string
+        value: unknown
+      }) => {
         if (condition.type === 'eq') {
           const id = condition.value as string
           this.records.delete(id)
@@ -218,7 +277,9 @@ class MockDrizzleDatabase {
     }
   }
 
-  async transaction<R>(callback: (tx: MockDrizzleDatabase) => Promise<R>): Promise<R> {
+  async transaction<R>(
+    callback: (tx: MockDrizzleDatabase) => Promise<R>
+  ): Promise<R> {
     const txDb = new MockDrizzleDatabase()
     txDb.records = new Map(this.records)
 
@@ -264,16 +325,40 @@ describe('Integration: Drizzle Adapter', () => {
     db = new MockDrizzleDatabase()
     operators = new MockDrizzleOperators()
     adapter = new DrizzleAdapter<TestRecord>(
-      db as unknown as Parameters<typeof DrizzleAdapter<TestRecord>['prototype']['constructor']>[0],
-      mockTable as unknown as Parameters<typeof DrizzleAdapter<TestRecord>['prototype']['constructor']>[1],
+      db as unknown as Parameters<
+        (typeof DrizzleAdapter<TestRecord>)['prototype']['constructor']
+      >[0],
+      mockTable as unknown as Parameters<
+        (typeof DrizzleAdapter<TestRecord>)['prototype']['constructor']
+      >[1],
       config,
-      operators as unknown as Parameters<typeof DrizzleAdapter<TestRecord>['prototype']['constructor']>[3]
+      operators as unknown as Parameters<
+        (typeof DrizzleAdapter<TestRecord>)['prototype']['constructor']
+      >[3]
     )
 
     db.seed([
-      { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', dobYear: 1985 },
-      { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', dobYear: 1990 },
-      { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', dobYear: 1985 },
+      {
+        id: '1',
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john@example.com',
+        dobYear: 1985,
+      },
+      {
+        id: '2',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane@example.com',
+        dobYear: 1990,
+      },
+      {
+        id: '3',
+        firstName: 'Bob',
+        lastName: 'Jones',
+        email: 'bob@example.com',
+        dobYear: 1985,
+      },
       {
         id: '4',
         firstName: 'Alice',
@@ -324,7 +409,9 @@ describe('Integration: Drizzle Adapter', () => {
     })
 
     it('updates a record', async () => {
-      const updated = await adapter.update('1', { email: 'newemail@example.com' })
+      const updated = await adapter.update('1', {
+        email: 'newemail@example.com',
+      })
 
       expect(updated.email).toBe('newemail@example.com')
       expect(updated.firstName).toBe('John')
@@ -391,9 +478,24 @@ describe('Integration: Drizzle Adapter', () => {
   describe('batch operations', () => {
     it('batch inserts efficiently', async () => {
       const newRecords: TestRecord[] = [
-        { id: '10', firstName: 'Test1', lastName: 'User', email: 'test1@example.com' },
-        { id: '11', firstName: 'Test2', lastName: 'User', email: 'test2@example.com' },
-        { id: '12', firstName: 'Test3', lastName: 'User', email: 'test3@example.com' },
+        {
+          id: '10',
+          firstName: 'Test1',
+          lastName: 'User',
+          email: 'test1@example.com',
+        },
+        {
+          id: '11',
+          firstName: 'Test2',
+          lastName: 'User',
+          email: 'test2@example.com',
+        },
+        {
+          id: '12',
+          firstName: 'Test3',
+          lastName: 'User',
+          email: 'test3@example.com',
+        },
       ]
 
       const results = await adapter.batchInsert(newRecords)
@@ -438,13 +540,16 @@ describe('Integration: Drizzle Adapter', () => {
 
   describe('batch processes efficiently', () => {
     it('handles large batch inserts', async () => {
-      const largeRecords: TestRecord[] = Array.from({ length: 100 }, (_, i) => ({
-        id: `batch-${i}`,
-        firstName: `First${i}`,
-        lastName: `Last${i}`,
-        email: `user${i}@example.com`,
-        dobYear: 1980 + (i % 40),
-      }))
+      const largeRecords: TestRecord[] = Array.from(
+        { length: 100 },
+        (_, i) => ({
+          id: `batch-${i}`,
+          firstName: `First${i}`,
+          lastName: `Last${i}`,
+          email: `user${i}@example.com`,
+          dobYear: 1980 + (i % 40),
+        })
+      )
 
       const results = await adapter.batchInsert(largeRecords)
 
@@ -472,9 +577,9 @@ describe('Integration: Drizzle Adapter', () => {
 
   describe('error handling', () => {
     it('throws NotFoundError when updating non-existent record', async () => {
-      await expect(adapter.update('999', { email: 'test@example.com' })).rejects.toThrow(
-        'not found'
-      )
+      await expect(
+        adapter.update('999', { email: 'test@example.com' })
+      ).rejects.toThrow('not found')
     })
 
     it('throws QueryError on invalid column name', async () => {
@@ -485,10 +590,16 @@ describe('Integration: Drizzle Adapter', () => {
       }
 
       const badAdapter = new DrizzleAdapter<TestRecord>(
-        db as unknown as Parameters<typeof DrizzleAdapter<TestRecord>['prototype']['constructor']>[0],
-        mockTable as unknown as Parameters<typeof DrizzleAdapter<TestRecord>['prototype']['constructor']>[1],
+        db as unknown as Parameters<
+          (typeof DrizzleAdapter<TestRecord>)['prototype']['constructor']
+        >[0],
+        mockTable as unknown as Parameters<
+          (typeof DrizzleAdapter<TestRecord>)['prototype']['constructor']
+        >[1],
         badConfig,
-        operators as unknown as Parameters<typeof DrizzleAdapter<TestRecord>['prototype']['constructor']>[3]
+        operators as unknown as Parameters<
+          (typeof DrizzleAdapter<TestRecord>)['prototype']['constructor']
+        >[3]
       )
 
       await expect(

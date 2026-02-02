@@ -131,12 +131,26 @@ export {
   createInMemorySourceRecordArchive,
 } from './unmerge.js'
 
-export type { UnmergeMode, UnmergeOptions, SourceRecordArchive } from './unmerge.js'
+export type {
+  UnmergeMode,
+  UnmergeOptions,
+  SourceRecordArchive,
+} from './unmerge.js'
 
 // Queue merge handler
-export { QueueMergeHandler, createQueueMergeHandler } from './queue-merge-handler.js'
+export {
+  QueueMergeHandler,
+  createQueueMergeHandler,
+} from './queue-merge-handler.js'
 
-export type { QueueMergeResult, QueueMergeHandlerOptions } from './queue-merge-handler.js'
+export type {
+  QueueMergeResult,
+  QueueMergeHandlerOptions,
+} from './queue-merge-handler.js'
 
 // Merge builder (re-export from builder module)
-export { MergeBuilder, FieldMergeBuilder, createMergeBuilder } from '../builder/merge-builder.js'
+export {
+  MergeBuilder,
+  FieldMergeBuilder,
+  createMergeBuilder,
+} from '../builder/merge-builder.js'

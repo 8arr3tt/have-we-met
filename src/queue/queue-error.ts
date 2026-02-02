@@ -15,7 +15,11 @@ export class QueueError extends Error {
   /** Additional error context */
   public readonly context?: Record<string, unknown>
 
-  constructor(message: string, code: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code: string,
+    context?: Record<string, unknown>
+  ) {
     super(message)
     this.name = 'QueueError'
     this.code = code
@@ -58,12 +62,20 @@ export class InvalidStatusTransitionError extends QueueError {
  * Error thrown when a queue operation fails
  */
 export class QueueOperationError extends QueueError {
-  constructor(operation: string, reason: string, context?: Record<string, unknown>) {
-    super(`Queue operation '${operation}' failed: ${reason}`, 'QUEUE_OPERATION_FAILED', {
-      operation,
-      reason,
-      ...context,
-    })
+  constructor(
+    operation: string,
+    reason: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Queue operation '${operation}' failed: ${reason}`,
+      'QUEUE_OPERATION_FAILED',
+      {
+        operation,
+        reason,
+        ...context,
+      }
+    )
     this.name = 'QueueOperationError'
   }
 }
@@ -72,12 +84,20 @@ export class QueueOperationError extends QueueError {
  * Error thrown when queue item data is invalid
  */
 export class QueueValidationError extends QueueError {
-  constructor(field: string, reason: string, context?: Record<string, unknown>) {
-    super(`Queue validation failed for '${field}': ${reason}`, 'QUEUE_VALIDATION_ERROR', {
-      field,
-      reason,
-      ...context,
-    })
+  constructor(
+    field: string,
+    reason: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Queue validation failed for '${field}': ${reason}`,
+      'QUEUE_VALIDATION_ERROR',
+      {
+        field,
+        reason,
+        ...context,
+      }
+    )
     this.name = 'QueueValidationError'
   }
 }

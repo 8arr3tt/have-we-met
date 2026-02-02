@@ -56,6 +56,7 @@ pending ──────> expired
 ```
 
 Valid transitions:
+
 - `pending` → `reviewing`, `confirmed`, `rejected`, `merged`, `expired`
 - `reviewing` → `confirmed`, `rejected`, `pending` (reviewer abandons)
 - `confirmed`, `rejected`, `merged`, `expired` are final states (cannot transition)
@@ -64,23 +65,24 @@ Valid transitions:
 
 ```typescript
 interface QueueItem<T> {
-  id: string                    // Unique identifier
-  candidateRecord: T            // Record being evaluated
-  potentialMatches: Array<{     // Possible matches with scores
+  id: string // Unique identifier
+  candidateRecord: T // Record being evaluated
+  potentialMatches: Array<{
+    // Possible matches with scores
     record: T
     score: number
     outcome: 'potential-match'
     explanation: MatchExplanation
   }>
-  status: QueueStatus           // Current lifecycle status
-  createdAt: Date               // When added to queue
-  updatedAt: Date               // When last modified
-  decidedAt?: Date              // When decision was made
-  decidedBy?: string            // Who made the decision
-  decision?: QueueDecision      // The decision details
-  context?: QueueContext        // Additional metadata
-  priority?: number             // Priority level (higher = more urgent)
-  tags?: string[]               // Categorization tags
+  status: QueueStatus // Current lifecycle status
+  createdAt: Date // When added to queue
+  updatedAt: Date // When last modified
+  decidedAt?: Date // When decision was made
+  decidedBy?: string // Who made the decision
+  decision?: QueueDecision // The decision details
+  context?: QueueContext // Additional metadata
+  priority?: number // Priority level (higher = more urgent)
+  tags?: string[] // Categorization tags
 }
 ```
 
@@ -127,8 +129,8 @@ const results = await resolver.resolve(newRecord, {
   autoQueue: true,
   queueContext: {
     source: 'api-import',
-    userId: req.user.id
-  }
+    userId: req.user.id,
+  },
 })
 
 // If outcome is 'review', it's automatically queued
@@ -158,7 +160,7 @@ const pending = await resolver.queue.list({
   status: 'pending',
   limit: 10,
   orderBy: 'createdAt',
-  orderDirection: 'asc'
+  orderDirection: 'asc',
 })
 
 console.log(`${pending.total} pending items, showing ${pending.items.length}`)
@@ -171,14 +173,14 @@ const highPriority = await resolver.queue.list({
   since: new Date('2024-01-01'),
   orderBy: 'priority',
   orderDirection: 'desc',
-  limit: 20
+  limit: 20,
 })
 
 // Pagination
 const page2 = await resolver.queue.list({
   status: 'pending',
   limit: 10,
-  offset: 10
+  offset: 10,
 })
 ```
 
@@ -206,7 +208,7 @@ const confirmed = await resolver.queue.confirm('queue-item-id', {
   selectedMatchId: 'match-record-id',
   notes: 'Same person, verified by email and phone',
   confidence: 0.95,
-  decidedBy: 'reviewer@example.com'
+  decidedBy: 'reviewer@example.com',
 })
 
 console.log('Status:', confirmed.status) // 'confirmed'
@@ -220,7 +222,7 @@ console.log('Decided at:', confirmed.decidedAt)
 const rejected = await resolver.queue.reject('queue-item-id', {
   notes: 'Different person with similar name',
   confidence: 0.9,
-  decidedBy: 'reviewer@example.com'
+  decidedBy: 'reviewer@example.com',
 })
 
 console.log('Status:', rejected.status) // 'rejected'
@@ -275,7 +277,7 @@ await resolver.queue.delete('queue-item-id')
 const removed = await resolver.queue.cleanup({
   olderThan: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
   status: ['confirmed', 'rejected', 'expired'],
-  limit: 1000
+  limit: 1000,
 })
 
 console.log(`Removed ${removed} old items`)
@@ -313,21 +315,25 @@ if (stats.oldestPending) {
 Configure queue behavior when setting up the adapter:
 
 ```typescript
-const resolver = HaveWeMet
-  .schema({ /* ... */ })
+const resolver = HaveWeMet.schema({
+  /* ... */
+})
   .matching(/* ... */)
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'customers',
-    queue: {
-      autoExpireAfter: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
-      defaultPriority: 0,
-      enableMetrics: true
-    }
-  }))
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'customers',
+      queue: {
+        autoExpireAfter: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
+        defaultPriority: 0,
+        enableMetrics: true,
+      },
+    })
+  )
   .build()
 ```
 
 Configuration options:
+
 - `autoExpireAfter`: Automatically expire items older than this duration (milliseconds)
 - `defaultPriority`: Default priority for new queue items (higher = more urgent)
 - `enableMetrics`: Enable detailed metrics tracking
@@ -343,7 +349,7 @@ await resolver.queue.add({
   candidateRecord: vipCustomer,
   potentialMatches: matches,
   priority: 10, // High priority
-  tags: ['vip', 'urgent']
+  tags: ['vip', 'urgent'],
 })
 ```
 
@@ -388,7 +394,7 @@ await resolver.queue.confirm(itemId, {
   selectedMatchId: matchId,
   notes: 'Verified by phone number match and employment history',
   confidence: 0.95,
-  decidedBy: reviewerEmail
+  decidedBy: reviewerEmail,
 })
 ```
 
@@ -404,7 +410,7 @@ async function dailyQueueCleanup() {
   const removed = await resolver.queue.cleanup({
     olderThan: ninetyDaysAgo,
     status: ['confirmed', 'rejected', 'expired'],
-    limit: 10000
+    limit: 10000,
   })
 
   console.log(`Cleaned up ${removed} old queue items`)
@@ -417,7 +423,7 @@ async function dailyQueueCleanup() {
 try {
   await resolver.queue.confirm(itemId, {
     selectedMatchId: matchId,
-    decidedBy: reviewerId
+    decidedBy: reviewerId,
   })
 } catch (error) {
   if (error instanceof QueueItemNotFoundError) {
@@ -453,7 +459,7 @@ const merged = await resolver.queue.merge('queue-item-id', {
 })
 
 // Result includes merge details
-console.log('Queue status:', merged.status)  // 'merged'
+console.log('Queue status:', merged.status) // 'merged'
 console.log('Golden record ID:', merged.decision?.mergeResult?.goldenRecordId)
 ```
 
@@ -463,21 +469,31 @@ Configure merge strategies when setting up the resolver:
 
 ```typescript
 const resolver = HaveWeMet.create<Customer>()
-  .schema(schema => { /* ... */ })
-  .matching(match => { /* ... */ })
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNonNull')
+  .schema((schema) => {
+    /* ... */
+  })
+  .matching((match) => {
+    /* ... */
+  })
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('lastName')
+      .strategy('preferLonger')
+      .field('email')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNonNull')
   )
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
 ```
 
 When a queue merge occurs:
+
 1. Candidate record and selected match are merged using configured strategies
 2. Golden record is created and persisted
 3. Source records are archived

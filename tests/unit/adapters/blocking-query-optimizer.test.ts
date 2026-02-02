@@ -11,7 +11,10 @@ describe('BlockingQueryOptimizer', () => {
         const optimizer = new BlockingQueryOptimizer('postgresql')
         const strategy = new StandardBlockingStrategy({ field: 'lastName' })
 
-        const recommendations = optimizer.recommendIndexes(strategy, 'customers')
+        const recommendations = optimizer.recommendIndexes(
+          strategy,
+          'customers'
+        )
 
         expect(recommendations).toHaveLength(1)
         expect(recommendations[0].fields).toEqual(['lastName'])
@@ -58,7 +61,10 @@ describe('BlockingQueryOptimizer', () => {
           windowSize: 10,
         })
 
-        const recommendations = optimizer.recommendIndexes(strategy, 'customers')
+        const recommendations = optimizer.recommendIndexes(
+          strategy,
+          'customers'
+        )
 
         expect(recommendations).toHaveLength(1)
         expect(recommendations[0].fields).toEqual(['lastName'])
@@ -133,7 +139,10 @@ describe('BlockingQueryOptimizer', () => {
         const optimizer = new BlockingQueryOptimizer('postgresql')
         const strategy = new StandardBlockingStrategy({ field: 'lastName' })
 
-        const recommendations = optimizer.recommendIndexes(strategy, 'customers')
+        const recommendations = optimizer.recommendIndexes(
+          strategy,
+          'customers'
+        )
 
         expect(recommendations[0].sql).toContain('USING btree')
       })
@@ -142,7 +151,10 @@ describe('BlockingQueryOptimizer', () => {
         const optimizer = new BlockingQueryOptimizer('mysql')
         const strategy = new StandardBlockingStrategy({ field: 'lastName' })
 
-        const recommendations = optimizer.recommendIndexes(strategy, 'customers')
+        const recommendations = optimizer.recommendIndexes(
+          strategy,
+          'customers'
+        )
 
         expect(recommendations[0].sql).toContain('USING BTREE')
       })
@@ -151,7 +163,10 @@ describe('BlockingQueryOptimizer', () => {
         const optimizer = new BlockingQueryOptimizer('sqlite')
         const strategy = new StandardBlockingStrategy({ field: 'lastName' })
 
-        const recommendations = optimizer.recommendIndexes(strategy, 'customers')
+        const recommendations = optimizer.recommendIndexes(
+          strategy,
+          'customers'
+        )
 
         expect(recommendations[0].sql).toContain('CREATE INDEX')
         expect(recommendations[0].sql).not.toContain('USING')
@@ -161,7 +176,10 @@ describe('BlockingQueryOptimizer', () => {
         const optimizer = new BlockingQueryOptimizer('generic')
         const strategy = new StandardBlockingStrategy({ field: 'lastName' })
 
-        const recommendations = optimizer.recommendIndexes(strategy, 'customers')
+        const recommendations = optimizer.recommendIndexes(
+          strategy,
+          'customers'
+        )
 
         expect(recommendations[0].sql).toContain('CREATE INDEX')
       })

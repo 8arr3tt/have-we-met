@@ -1,6 +1,9 @@
 import type { BlockingConfig } from '../types'
 import type { BlockTransform, FirstNOptions } from '../core/blocking/transforms'
-import type { SortField, SortOrder } from '../core/blocking/strategies/sorted-neighbourhood'
+import type {
+  SortField,
+  SortOrder,
+} from '../core/blocking/strategies/sorted-neighbourhood'
 import type { NullStrategy } from '../core/blocking/strategies/standard-blocking'
 import {
   StandardBlockingStrategy,
@@ -355,7 +358,9 @@ export class BlockingBuilder<T extends object = object> {
    */
   composite(
     mode: 'union' | 'intersection',
-    configurator: (builder: CompositeBlockingBuilder<T>) => CompositeBlockingBuilder<T> | void
+    configurator: (
+      builder: CompositeBlockingBuilder<T>
+    ) => CompositeBlockingBuilder<T> | void
   ): this {
     const compositeBuilder = new CompositeBlockingBuilder<T>()
     const result = configurator(compositeBuilder)

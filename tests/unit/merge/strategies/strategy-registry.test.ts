@@ -54,7 +54,8 @@ describe('Strategy Registry', () => {
   })
 
   describe('custom strategy registration', () => {
-    const customStrategyName = 'testCustomStrategy_' + Math.random().toString(36).slice(2)
+    const customStrategyName =
+      'testCustomStrategy_' + Math.random().toString(36).slice(2)
 
     afterEach(() => {
       unregisterStrategy(customStrategyName)
@@ -80,7 +81,9 @@ describe('Strategy Registry', () => {
     it('throws when registering empty strategy name', () => {
       const customFn: StrategyFunction = (values) => values[0]
       expect(() => registerStrategy('', customFn)).toThrow(InvalidStrategyError)
-      expect(() => registerStrategy('   ', customFn)).toThrow(InvalidStrategyError)
+      expect(() => registerStrategy('   ', customFn)).toThrow(
+        InvalidStrategyError
+      )
     })
 
     it('unregisters strategies', () => {

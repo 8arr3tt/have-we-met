@@ -1,4 +1,8 @@
-import { parsePhoneNumber, isValidPhoneNumber, type CountryCode } from 'libphonenumber-js'
+import {
+  parsePhoneNumber,
+  isValidPhoneNumber,
+  type CountryCode,
+} from 'libphonenumber-js'
 import { registerNormalizer } from './registry'
 import type { NormalizerFunction } from './types'
 
@@ -103,7 +107,7 @@ export const normalizePhone: NormalizerFunction<PhoneNormalizerOptions> = (
   const opts = {
     defaultCountry: options?.defaultCountry,
     extractExtension: options?.extractExtension ?? true,
-    outputFormat: options?.outputFormat ?? 'e164' as const,
+    outputFormat: options?.outputFormat ?? ('e164' as const),
     validate: options?.validate ?? true,
   }
 

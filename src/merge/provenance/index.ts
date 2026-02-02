@@ -4,7 +4,10 @@
  */
 
 // Provenance tracker
-export { ProvenanceTracker, createProvenanceTracker } from './provenance-tracker.js'
+export {
+  ProvenanceTracker,
+  createProvenanceTracker,
+} from './provenance-tracker.js'
 
 // Provenance store
 export type {
@@ -14,4 +17,7 @@ export type {
   FieldHistoryEntry,
   MergeTimelineEntry,
 } from './provenance-store.js'
-export { InMemoryProvenanceStore, createInMemoryProvenanceStore } from './provenance-store.js'
+export {
+  InMemoryProvenanceStore,
+  createInMemoryProvenanceStore,
+} from './provenance-store.js'

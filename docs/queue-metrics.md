@@ -39,8 +39,12 @@ Measure how long items spend in the queue:
 const stats = await resolver.queue.stats()
 
 console.log('Timing Metrics:')
-console.log(`  Average wait time: ${stats.avgWaitTime}ms (${formatDuration(stats.avgWaitTime)})`)
-console.log(`  Average decision time: ${stats.avgDecisionTime}ms (${formatDuration(stats.avgDecisionTime)})`)
+console.log(
+  `  Average wait time: ${stats.avgWaitTime}ms (${formatDuration(stats.avgWaitTime)})`
+)
+console.log(
+  `  Average decision time: ${stats.avgDecisionTime}ms (${formatDuration(stats.avgDecisionTime)})`
+)
 
 if (stats.oldestPending) {
   const age = Date.now() - stats.oldestPending.getTime()
@@ -88,23 +92,23 @@ async function getDecisionMetrics(resolver: Resolver<Customer>, since: Date) {
   const items = await resolver.queue.list({
     status: ['confirmed', 'rejected'],
     since,
-    limit: 10000
+    limit: 10000,
   })
 
-  const confirmed = items.items.filter(i => i.status === 'confirmed')
-  const rejected = items.items.filter(i => i.status === 'rejected')
+  const confirmed = items.items.filter((i) => i.status === 'confirmed')
+  const rejected = items.items.filter((i) => i.status === 'rejected')
 
   const confirmRate = confirmed.length / items.total
   const rejectRate = rejected.length / items.total
 
   // Average confidence scores
-  const avgConfirmedConfidence = confirmed.reduce((sum, item) =>
-    sum + (item.decision?.confidence ?? 0), 0
-  ) / confirmed.length
+  const avgConfirmedConfidence =
+    confirmed.reduce((sum, item) => sum + (item.decision?.confidence ?? 0), 0) /
+    confirmed.length
 
-  const avgRejectedConfidence = rejected.reduce((sum, item) =>
-    sum + (item.decision?.confidence ?? 0), 0
-  ) / rejected.length
+  const avgRejectedConfidence =
+    rejected.reduce((sum, item) => sum + (item.decision?.confidence ?? 0), 0) /
+    rejected.length
 
   return {
     total: items.total,
@@ -113,7 +117,7 @@ async function getDecisionMetrics(resolver: Resolver<Customer>, since: Date) {
     confirmRate,
     rejectRate,
     avgConfirmedConfidence,
-    avgRejectedConfidence
+    avgRejectedConfidence,
   }
 }
 ```
@@ -180,7 +184,7 @@ async function collectHistoricalMetrics(
     pending: stats.byStatus.pending || 0,
     reviewing: stats.byStatus.reviewing || 0,
     decided: (stats.byStatus.confirmed || 0) + (stats.byStatus.rejected || 0),
-    throughput: stats.throughput?.last24h || 0
+    throughput: stats.throughput?.last24h || 0,
   }
 }
 
@@ -188,19 +192,24 @@ async function collectHistoricalMetrics(
 async function startMetricsCollection(resolver: Resolver<Customer>) {
   const metrics: HistoricalMetric[] = []
 
-  setInterval(async () => {
-    const metric = await collectHistoricalMetrics(resolver)
-    metrics.push(metric)
+  setInterval(
+    async () => {
+      const metric = await collectHistoricalMetrics(resolver)
+      metrics.push(metric)
 
-    // Keep last 30 days of hourly data
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
-    const filtered = metrics.filter(m => m.timestamp.getTime() > thirtyDaysAgo)
-    metrics.length = 0
-    metrics.push(...filtered)
+      // Keep last 30 days of hourly data
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
+      const filtered = metrics.filter(
+        (m) => m.timestamp.getTime() > thirtyDaysAgo
+      )
+      metrics.length = 0
+      metrics.push(...filtered)
 
-    // Store to database or metrics service
-    await storeMetric(metric)
-  }, 60 * 60 * 1000) // Every hour
+      // Store to database or metrics service
+      await storeMetric(metric)
+    },
+    60 * 60 * 1000
+  ) // Every hour
 }
 ```
 
@@ -212,16 +221,16 @@ Understand how long items stay in the queue:
 async function getAgeDistribution(resolver: Resolver<Customer>) {
   const items = await resolver.queue.list({
     status: 'pending',
-    limit: 10000
+    limit: 10000,
   })
 
   const now = Date.now()
   const buckets = {
-    'under_1h': 0,
+    under_1h: 0,
     '1h_to_24h': 0,
     '1d_to_7d': 0,
     '7d_to_30d': 0,
-    'over_30d': 0
+    over_30d: 0,
   }
 
   for (const item of items.items) {
@@ -237,11 +246,21 @@ async function getAgeDistribution(resolver: Resolver<Customer>) {
   }
 
   console.log('Age Distribution:')
-  console.log(`  < 1 hour:    ${buckets.under_1h} (${percentage(buckets.under_1h, items.total)}%)`)
-  console.log(`  1-24 hours:  ${buckets['1h_to_24h']} (${percentage(buckets['1h_to_24h'], items.total)}%)`)
-  console.log(`  1-7 days:    ${buckets['1d_to_7d']} (${percentage(buckets['1d_to_7d'], items.total)}%)`)
-  console.log(`  7-30 days:   ${buckets['7d_to_30d']} (${percentage(buckets['7d_to_30d'], items.total)}%)`)
-  console.log(`  > 30 days:   ${buckets.over_30d} (${percentage(buckets.over_30d, items.total)}%)`)
+  console.log(
+    `  < 1 hour:    ${buckets.under_1h} (${percentage(buckets.under_1h, items.total)}%)`
+  )
+  console.log(
+    `  1-24 hours:  ${buckets['1h_to_24h']} (${percentage(buckets['1h_to_24h'], items.total)}%)`
+  )
+  console.log(
+    `  1-7 days:    ${buckets['1d_to_7d']} (${percentage(buckets['1d_to_7d'], items.total)}%)`
+  )
+  console.log(
+    `  7-30 days:   ${buckets['7d_to_30d']} (${percentage(buckets['7d_to_30d'], items.total)}%)`
+  )
+  console.log(
+    `  > 30 days:   ${buckets.over_30d} (${percentage(buckets.over_30d, items.total)}%)`
+  )
 
   return buckets
 }
@@ -260,7 +279,7 @@ import { QueueMetrics } from 'have-we-met/queue'
 
 async function calculateMetrics(resolver: Resolver<Customer>) {
   const items = await resolver.queue.list({
-    limit: 10000
+    limit: 10000,
   })
 
   const metrics = new QueueMetrics()
@@ -300,33 +319,32 @@ async function calculateCustomMetrics(
     : 0
 
   // Match quality (confirm rate)
-  const decided = (stats.byStatus.confirmed || 0) + (stats.byStatus.rejected || 0)
-  const matchQuality = decided > 0
-    ? (stats.byStatus.confirmed || 0) / decided
-    : 0
+  const decided =
+    (stats.byStatus.confirmed || 0) + (stats.byStatus.rejected || 0)
+  const matchQuality =
+    decided > 0 ? (stats.byStatus.confirmed || 0) / decided : 0
 
   // SLA compliance (items decided within SLA)
   const recentItems = await resolver.queue.list({
     status: ['confirmed', 'rejected'],
     since: oneDayAgo,
-    limit: 1000
+    limit: 1000,
   })
 
-  const withinSla = recentItems.items.filter(item => {
+  const withinSla = recentItems.items.filter((item) => {
     const waitTime = item.decidedAt!.getTime() - item.createdAt.getTime()
     const waitHours = waitTime / (60 * 60 * 1000)
     return waitHours <= slaHours
   }).length
 
-  const slaCompliance = recentItems.total > 0
-    ? withinSla / recentItems.total
-    : 1
+  const slaCompliance =
+    recentItems.total > 0 ? withinSla / recentItems.total : 1
 
   return {
     queueGrowthRate,
     reviewerEfficiency,
     matchQuality,
-    slaCompliance
+    slaCompliance,
   }
 }
 ```
@@ -351,9 +369,12 @@ async function calculateQueueHealth(
 
   // Penalize old items
   if (stats.oldestPending) {
-    const ageHours = (Date.now() - stats.oldestPending.getTime()) / (60 * 60 * 1000)
-    if (ageHours > 168) score -= 30 // > 7 days
-    else if (ageHours > 48) score -= 15 // > 2 days
+    const ageHours =
+      (Date.now() - stats.oldestPending.getTime()) / (60 * 60 * 1000)
+    if (ageHours > 168)
+      score -= 30 // > 7 days
+    else if (ageHours > 48)
+      score -= 15 // > 2 days
     else if (ageHours > 24) score -= 5 // > 1 day
   }
 
@@ -392,17 +413,29 @@ async function displayHealthDashboard(resolver: Resolver<Customer>) {
   console.log('═══════════════════════════════════════')
   console.log('      QUEUE HEALTH DASHBOARD')
   console.log('═══════════════════════════════════════')
-  console.log(`Health Score: ${health.score}/100 (${health.status.toUpperCase()})`)
+  console.log(
+    `Health Score: ${health.score}/100 (${health.status.toUpperCase()})`
+  )
   console.log('')
   console.log(`Pending Items: ${stats.byStatus.pending || 0}`)
-  console.log(`Oldest Item: ${stats.oldestPending ? formatDuration(Date.now() - stats.oldestPending.getTime()) : 'N/A'}`)
+  console.log(
+    `Oldest Item: ${stats.oldestPending ? formatDuration(Date.now() - stats.oldestPending.getTime()) : 'N/A'}`
+  )
   console.log(`Throughput (24h): ${stats.throughput?.last24h || 0} decisions`)
   console.log('')
   console.log('Custom Metrics:')
-  console.log(`  Queue Growth Rate: ${customMetrics.queueGrowthRate.toFixed(2)}`)
-  console.log(`  Reviewer Efficiency: ${customMetrics.reviewerEfficiency.toFixed(1)} decisions/hour`)
-  console.log(`  Match Quality: ${(customMetrics.matchQuality * 100).toFixed(1)}%`)
-  console.log(`  SLA Compliance: ${(customMetrics.slaCompliance * 100).toFixed(1)}%`)
+  console.log(
+    `  Queue Growth Rate: ${customMetrics.queueGrowthRate.toFixed(2)}`
+  )
+  console.log(
+    `  Reviewer Efficiency: ${customMetrics.reviewerEfficiency.toFixed(1)} decisions/hour`
+  )
+  console.log(
+    `  Match Quality: ${(customMetrics.matchQuality * 100).toFixed(1)}%`
+  )
+  console.log(
+    `  SLA Compliance: ${(customMetrics.slaCompliance * 100).toFixed(1)}%`
+  )
   console.log('═══════════════════════════════════════')
 }
 ```
@@ -450,7 +483,9 @@ interface Alert {
   metadata?: any
 }
 
-async function customAlertRules(resolver: Resolver<Customer>): Promise<Alert[]> {
+async function customAlertRules(
+  resolver: Resolver<Customer>
+): Promise<Alert[]> {
   const alerts: Alert[] = []
   const stats = await resolver.queue.stats()
   const pending = stats.byStatus.pending || 0
@@ -462,7 +497,7 @@ async function customAlertRules(resolver: Resolver<Customer>): Promise<Alert[]> 
       type: 'queue_size',
       message: `Queue has ${pending} pending items (critical threshold: 200)`,
       timestamp: new Date(),
-      metadata: { pendingCount: pending }
+      metadata: { pendingCount: pending },
     })
   } else if (pending > 100) {
     alerts.push({
@@ -470,20 +505,22 @@ async function customAlertRules(resolver: Resolver<Customer>): Promise<Alert[]> 
       type: 'queue_size',
       message: `Queue has ${pending} pending items (warning threshold: 100)`,
       timestamp: new Date(),
-      metadata: { pendingCount: pending }
+      metadata: { pendingCount: pending },
     })
   }
 
   // Alert: Items aging beyond SLA
   if (stats.oldestPending) {
-    const ageHours = (Date.now() - stats.oldestPending.getTime()) / (60 * 60 * 1000)
-    if (ageHours > 72) { // 3 days
+    const ageHours =
+      (Date.now() - stats.oldestPending.getTime()) / (60 * 60 * 1000)
+    if (ageHours > 72) {
+      // 3 days
       alerts.push({
         severity: 'critical',
         type: 'item_aging',
         message: `Oldest item is ${ageHours.toFixed(0)} hours old (SLA: 72h)`,
         timestamp: new Date(),
-        metadata: { ageHours }
+        metadata: { ageHours },
       })
     }
   }
@@ -496,7 +533,7 @@ async function customAlertRules(resolver: Resolver<Customer>): Promise<Alert[]> 
       type: 'low_throughput',
       message: `Low throughput: ${hourlyRate.toFixed(1)} decisions/hour`,
       timestamp: new Date(),
-      metadata: { hourlyRate }
+      metadata: { hourlyRate },
     })
   }
 
@@ -508,7 +545,7 @@ async function customAlertRules(resolver: Resolver<Customer>): Promise<Alert[]> 
       type: 'queue_growth',
       message: `Queue growing faster than being processed (rate: ${customMetrics.queueGrowthRate.toFixed(2)})`,
       timestamp: new Date(),
-      metadata: { growthRate: customMetrics.queueGrowthRate }
+      metadata: { growthRate: customMetrics.queueGrowthRate },
     })
   }
 
@@ -528,7 +565,7 @@ async function sendAlertNotifications(alerts: Alert[]) {
       await sendEmail({
         to: 'ops@example.com',
         subject: `[CRITICAL] Queue Alert: ${alert.type}`,
-        body: alert.message
+        body: alert.message,
       })
     }
 
@@ -536,7 +573,7 @@ async function sendAlertNotifications(alerts: Alert[]) {
     await postToSlack({
       channel: '#queue-alerts',
       text: `[${alert.severity.toUpperCase()}] ${alert.message}`,
-      metadata: alert.metadata
+      metadata: alert.metadata,
     })
 
     // Log to monitoring service
@@ -544,7 +581,7 @@ async function sendAlertNotifications(alerts: Alert[]) {
       type: 'queue_alert',
       severity: alert.severity,
       message: alert.message,
-      metadata: alert.metadata
+      metadata: alert.metadata,
     })
   }
 }
@@ -555,7 +592,9 @@ async function sendAlertNotifications(alerts: Alert[]) {
 ### Daily Summary Report
 
 ```typescript
-async function generateDailySummary(resolver: Resolver<Customer>): Promise<string> {
+async function generateDailySummary(
+  resolver: Resolver<Customer>
+): Promise<string> {
   const stats = await resolver.queue.stats()
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
   const decisions = await getDecisionMetrics(resolver, yesterday)
@@ -622,7 +661,7 @@ async function measureQueryPerformance(resolver: Resolver<Customer>) {
   const start = Date.now()
   const result = await resolver.queue.list({
     status: 'pending',
-    limit: 100
+    limit: 100,
   })
   const duration = Date.now() - start
 
@@ -668,7 +707,7 @@ class CachedMetrics {
   async getStats(resolver: Resolver<Customer>): Promise<QueueStats> {
     const now = Date.now()
 
-    if (this.cache && (now - this.lastUpdate) < this.cacheDuration) {
+    if (this.cache && now - this.lastUpdate < this.cacheDuration) {
       return this.cache
     }
 

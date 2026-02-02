@@ -24,7 +24,7 @@ const record1 = {
   lastName: 'Smith',
   email: 'john.doe@example.com',
   phone: '+1-555-0100',
-  dateOfBirth: '1985-03-15'
+  dateOfBirth: '1985-03-15',
 }
 
 const record2 = {
@@ -32,11 +32,12 @@ const record2 = {
   lastName: 'Smyth',
   email: 'john.doe@example.com',
   phone: '+1-555-0200',
-  dateOfBirth: '1985-03-20'
+  dateOfBirth: '1985-03-20',
 }
 ```
 
 Are these the same person? There are signs pointing both ways:
+
 - ✅ Email matches exactly
 - ⚠️ Name is similar but not exact
 - ❌ Phone is different
@@ -59,6 +60,7 @@ Total:                      38 points out of 65 possible
 ```
 
 With thresholds configured as:
+
 - No Match: < 20 points
 - Definite Match: ≥ 45 points
 - Potential Match: 20-44 points
@@ -73,14 +75,14 @@ Each field is assigned a weight representing its discriminating power - how usef
 
 **Recommended starting weights:**
 
-| Field Type | Weight Range | Examples |
-|------------|--------------|----------|
-| Unique identifiers | 20-25 | Email, SSN, government ID |
-| Strong identifiers | 15-20 | Phone number |
-| Names | 10-15 | First name, last name |
-| Dates | 8-12 | Date of birth |
-| Addresses | 8-12 | Street address, ZIP code |
-| Weaker signals | 5-8 | City, gender |
+| Field Type         | Weight Range | Examples                  |
+| ------------------ | ------------ | ------------------------- |
+| Unique identifiers | 20-25        | Email, SSN, government ID |
+| Strong identifiers | 15-20        | Phone number              |
+| Names              | 10-15        | First name, last name     |
+| Dates              | 8-12         | Date of birth             |
+| Addresses          | 8-12         | Street address, ZIP code  |
+| Weaker signals     | 5-8          | City, gender              |
 
 ### Similarity Scores
 
@@ -167,29 +169,36 @@ Result: Overwhelming evidence of match
 ### Setting Thresholds
 
 **Conservative approach (high precision, fewer false positives):**
+
 ```typescript
 .thresholds({ noMatch: 25, definiteMatch: 55 })
 ```
+
 - More records require manual review
 - Fewer automatic merges
 - Lower risk of incorrect matches
 
 **Aggressive approach (high recall, fewer false negatives):**
+
 ```typescript
 .thresholds({ noMatch: 15, definiteMatch: 40 })
 ```
+
 - Fewer records for manual review
 - More automatic merges
 - Higher risk of incorrect matches
 
 **Balanced approach:**
+
 ```typescript
 .thresholds({ noMatch: 20, definiteMatch: 45 })
 ```
+
 - Reasonable manual review workload
 - Good balance of automation and accuracy
 
 **Rule of thumb:**
+
 - `noMatch`: 15-25% of max possible score
 - `definiteMatch`: 60-75% of max possible score
 
@@ -219,6 +228,7 @@ Best for fields with natural variation:
 ```
 
 **Algorithm selection:**
+
 - **Jaro-Winkler**: Names (favors prefix matches)
 - **Levenshtein**: Any text (measures edit distance)
 - **Soundex/Metaphone**: Phonetic matching (e.g., "Smith" vs "Smyth")
@@ -235,6 +245,7 @@ The optional `threshold` parameter filters out low-quality matches:
 ```
 
 With this configuration:
+
 - "Smith" vs "Smith" → similarity 1.00 → contributes 10 points ✓
 - "Smith" vs "Smyth" → similarity 0.88 → contributes 8.8 points ✓
 - "Smith" vs "Jones" → similarity 0.42 → contributes 0 points ✗
@@ -273,6 +284,7 @@ Field Comparisons:
 ```
 
 Use explanations to:
+
 - Understand why matches were classified the way they were
 - Identify patterns in false positives and false negatives
 - Guide weight and threshold tuning
@@ -340,6 +352,7 @@ Names must be highly similar to contribute. City can contribute even with low si
 Problem: "Smith" vs "Jones" (similarity 0.42) contributes 6.3 points of false confidence.
 
 **✅ Better:**
+
 ```typescript
 .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.85)
 ```
@@ -354,6 +367,7 @@ Problem: "Smith" vs "Jones" (similarity 0.42) contributes 6.3 points of false co
 Problem: Soundex has many collisions. "Smith", "Sneed", "Schmitt", and "Snead" all produce the same code (S530).
 
 **✅ Better:**
+
 ```typescript
 .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.85)
 .field('lastName_phonetic').strategy('soundex').weight(5)  // Supporting evidence only
@@ -369,6 +383,7 @@ Problem: Soundex has many collisions. "Smith", "Sneed", "Schmitt", and "Snead" a
 Problem: Only a 5-point range for "potential matches" - almost everything gets auto-classified.
 
 **✅ Better:**
+
 ```typescript
 .thresholds({ noMatch: 20, definiteMatch: 45 })  // 25-point range for review
 ```
@@ -385,6 +400,7 @@ Problem: Only a 5-point range for "potential matches" - almost everything gets a
 Problem: Email is far more discriminating than city. "John" in "New York" is not unique.
 
 **✅ Better:**
+
 ```typescript
 .field('email').strategy('exact').weight(25)
 .field('firstName').strategy('jaro-winkler').weight(10)
@@ -402,6 +418,7 @@ Problem: Email is far more discriminating than city. "John" in "New York" is not
 Problem: "Alice" vs "Alicia" (0.89) is good, but "Alice" vs "Bob" (0.0) should contribute nothing.
 
 **✅ Better:**
+
 ```typescript
 .field('firstName').strategy('jaro-winkler').weight(15).threshold(0.85)
 .field('lastName').strategy('jaro-winkler').weight(15).threshold(0.85)

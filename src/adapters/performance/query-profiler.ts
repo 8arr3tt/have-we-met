@@ -118,7 +118,11 @@ export class QueryProfiler {
     this.addToHistory(stats)
 
     const issues = this.detectIssues(stats, memoryDelta, error)
-    const recommendations = this.generateRecommendations(issues, stats, metadata)
+    const recommendations = this.generateRecommendations(
+      issues,
+      stats,
+      metadata
+    )
     const severity = this.calculateSeverity(issues, stats)
 
     if (error) {
@@ -199,7 +203,10 @@ export class QueryProfiler {
    */
   getAverageExecutionTime(): number {
     if (this.queryHistory.length === 0) return 0
-    const total = this.queryHistory.reduce((sum, stat) => sum + stat.executionTimeMs, 0)
+    const total = this.queryHistory.reduce(
+      (sum, stat) => sum + stat.executionTimeMs,
+      0
+    )
     return total / this.queryHistory.length
   }
 
@@ -217,7 +224,9 @@ export class QueryProfiler {
    */
   getSlowQueries(threshold = 2): QueryStats[] {
     const avgTime = this.getAverageExecutionTime()
-    return this.queryHistory.filter((stat) => stat.executionTimeMs > avgTime * threshold)
+    return this.queryHistory.filter(
+      (stat) => stat.executionTimeMs > avgTime * threshold
+    )
   }
 
   /**
@@ -225,7 +234,9 @@ export class QueryProfiler {
    */
   private getMemoryUsage(): number {
     if (typeof globalThis !== 'undefined' && 'process' in globalThis) {
-      const proc = (globalThis as { process?: { memoryUsage?: () => { heapUsed: number } } }).process
+      const proc = (
+        globalThis as { process?: { memoryUsage?: () => { heapUsed: number } } }
+      ).process
       if (proc?.memoryUsage) {
         return proc.memoryUsage().heapUsed / 1024 / 1024
       }
@@ -262,7 +273,9 @@ export class QueryProfiler {
     }
 
     if (stats.executionTimeMs > 100 && stats.rowsReturned < 10) {
-      issues.push(`Inefficient query: ${stats.executionTimeMs}ms for only ${stats.rowsReturned} rows`)
+      issues.push(
+        `Inefficient query: ${stats.executionTimeMs}ms for only ${stats.rowsReturned} rows`
+      )
     }
 
     if (stats.rowsReturned > 10000) {
@@ -279,7 +292,9 @@ export class QueryProfiler {
 
     const avgTime = this.getAverageExecutionTime()
     if (avgTime > 0 && stats.executionTimeMs > avgTime * 3) {
-      issues.push(`Query is ${(stats.executionTimeMs / avgTime).toFixed(1)}x slower than average`)
+      issues.push(
+        `Query is ${(stats.executionTimeMs / avgTime).toFixed(1)}x slower than average`
+      )
     }
 
     return issues
@@ -296,16 +311,22 @@ export class QueryProfiler {
     const recommendations: string[] = []
 
     if (issues.some((i) => i.includes('Slow query'))) {
-      recommendations.push('Consider adding indexes on frequently queried fields')
+      recommendations.push(
+        'Consider adding indexes on frequently queried fields'
+      )
       if (metadata?.tableName) {
-        recommendations.push(`Review blocking strategy for the ${metadata.tableName} table`)
+        recommendations.push(
+          `Review blocking strategy for the ${metadata.tableName} table`
+        )
       }
     }
 
     if (issues.some((i) => i.includes('No index'))) {
       recommendations.push('Create an index on the filtering fields')
       if (metadata?.queryType === 'blocking') {
-        recommendations.push('Use IndexAnalyzer to get specific index recommendations')
+        recommendations.push(
+          'Use IndexAnalyzer to get specific index recommendations'
+        )
       }
     }
 
@@ -321,7 +342,9 @@ export class QueryProfiler {
     }
 
     if (issues.some((i) => i.includes('Inefficient query'))) {
-      recommendations.push('Review query logic - might be scanning unnecessary rows')
+      recommendations.push(
+        'Review query logic - might be scanning unnecessary rows'
+      )
       recommendations.push('Check if indexes are being utilized')
     }
 

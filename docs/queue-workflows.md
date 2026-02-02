@@ -18,16 +18,21 @@ This guide covers common review queue workflows and patterns for implementing hu
 A typical daily review workflow for processing queue items:
 
 ```typescript
-async function dailyQueueReview(resolver: Resolver<Customer>, reviewerId: string) {
+async function dailyQueueReview(
+  resolver: Resolver<Customer>,
+  reviewerId: string
+) {
   // Get pending items, oldest first
   const result = await resolver.queue.list({
     status: 'pending',
     limit: 50,
     orderBy: 'createdAt',
-    orderDirection: 'asc'
+    orderDirection: 'asc',
   })
 
-  console.log(`Processing ${result.items.length} of ${result.total} pending items`)
+  console.log(
+    `Processing ${result.items.length} of ${result.total} pending items`
+  )
 
   for (const item of result.items) {
     // Mark as reviewing
@@ -42,14 +47,14 @@ async function dailyQueueReview(resolver: Resolver<Customer>, reviewerId: string
         selectedMatchId: decision.matchId,
         notes: decision.notes,
         decidedBy: reviewerId,
-        confidence: decision.confidence
+        confidence: decision.confidence,
       })
       console.log(`✓ Confirmed match for ${item.id}`)
     } else if (decision.action === 'reject') {
       await resolver.queue.reject(item.id, {
         notes: decision.notes,
         decidedBy: reviewerId,
-        confidence: decision.confidence
+        confidence: decision.confidence,
       })
       console.log(`✗ Rejected match for ${item.id}`)
     } else if (decision.action === 'skip') {
@@ -85,7 +90,7 @@ async function timedReviewSession(
       status: 'pending',
       limit: 1,
       orderBy: 'priority',
-      orderDirection: 'desc'
+      orderDirection: 'desc',
     })
 
     if (result.items.length === 0) {
@@ -102,12 +107,12 @@ async function timedReviewSession(
       if (decision.action === 'confirm') {
         await resolver.queue.confirm(item.id, {
           selectedMatchId: decision.matchId,
-          decidedBy: reviewerId
+          decidedBy: reviewerId,
         })
         confirmed++
       } else {
         await resolver.queue.reject(item.id, {
-          decidedBy: reviewerId
+          decidedBy: reviewerId,
         })
         rejected++
       }
@@ -120,7 +125,9 @@ async function timedReviewSession(
     }
   }
 
-  console.log(`Session complete: ${processed} processed (${confirmed} confirmed, ${rejected} rejected)`)
+  console.log(
+    `Session complete: ${processed} processed (${confirmed} confirmed, ${rejected} rejected)`
+  )
   return { processed, confirmed, rejected }
 }
 ```
@@ -142,7 +149,7 @@ async function importCustomersWithReview(
     noMatch: 0,
     definiteMatch: 0,
     queued: 0,
-    errors: 0
+    errors: 0,
   }
 
   for (const customer of customers) {
@@ -155,9 +162,9 @@ async function importCustomersWithReview(
           userId: 'system',
           metadata: {
             importTimestamp: new Date(),
-            batchId: `import-${Date.now()}`
-          }
-        }
+            batchId: `import-${Date.now()}`,
+          },
+        },
       })
 
       stats.processed++
@@ -198,24 +205,24 @@ async function batchResolveWithSelectiveQueue(
   const results = await resolver.resolveBatch(records)
 
   // Filter for high-confidence potential matches
-  const highConfidenceReviews = results.filter(result => {
+  const highConfidenceReviews = results.filter((result) => {
     if (result.outcome !== 'review') return false
 
     // Only queue if highest match score is above threshold
-    const highestScore = Math.max(...result.matches.map(m => m.score))
+    const highestScore = Math.max(...result.matches.map((m) => m.score))
     return highestScore > 30 // Custom threshold
   })
 
   // Queue high-confidence items with priority
-  const queueItems = highConfidenceReviews.map(result => ({
+  const queueItems = highConfidenceReviews.map((result) => ({
     candidateRecord: result.candidateRecord,
     potentialMatches: result.matches,
     priority: calculatePriority(result),
     tags: ['batch-import', 'high-confidence'],
     context: {
       source: 'selective-import',
-      metadata: { batchId: Date.now() }
-    }
+      metadata: { batchId: Date.now() },
+    },
   }))
 
   await resolver.queue.addBatch(queueItems)
@@ -224,7 +231,7 @@ async function batchResolveWithSelectiveQueue(
 }
 
 function calculatePriority(result: any): number {
-  const highestScore = Math.max(...result.matches.map(m => m.score))
+  const highestScore = Math.max(...result.matches.map((m) => m.score))
   // Higher score = higher priority
   return Math.floor(highestScore)
 }
@@ -271,7 +278,7 @@ async function addWithSmartPriority(
   }
 
   // High match scores increase priority
-  const highestScore = Math.max(...potentialMatches.map(m => m.score))
+  const highestScore = Math.max(...potentialMatches.map((m) => m.score))
   if (highestScore > 40) {
     priority += 2
     tags.push('high-confidence')
@@ -284,8 +291,8 @@ async function addWithSmartPriority(
     tags,
     context: {
       source: 'smart-import',
-      metadata: { priorityCalculation: priority }
-    }
+      metadata: { priorityCalculation: priority },
+    },
   })
 
   console.log(`Added with priority ${priority}, tags: ${tags.join(', ')}`)
@@ -306,11 +313,11 @@ async function processHighPriorityItems(
     status: 'pending',
     orderBy: 'priority',
     orderDirection: 'desc',
-    limit: 100
+    limit: 100,
   })
 
-  const highPriorityItems = result.items.filter(item =>
-    (item.priority ?? 0) >= minPriority
+  const highPriorityItems = result.items.filter(
+    (item) => (item.priority ?? 0) >= minPriority
   )
 
   console.log(`Processing ${highPriorityItems.length} high-priority items`)
@@ -338,7 +345,7 @@ async function assignToReviewer(
     status: 'pending',
     limit: count,
     orderBy: 'createdAt',
-    orderDirection: 'asc'
+    orderDirection: 'asc',
   })
 
   for (const item of items.items) {
@@ -371,7 +378,9 @@ async function balanceQueueLoad(
     await assignToReviewer(resolver, reviewerId, itemsPerReviewer)
   }
 
-  console.log(`Balanced ${pendingCount} items across ${reviewers.length} reviewers`)
+  console.log(
+    `Balanced ${pendingCount} items across ${reviewers.length} reviewers`
+  )
 }
 ```
 
@@ -389,23 +398,24 @@ async function getReviewerPerformance(
   const decided = await resolver.queue.list({
     status: ['confirmed', 'rejected'],
     since,
-    limit: 10000
+    limit: 10000,
   })
 
   const reviewerItems = decided.items.filter(
-    item => item.decidedBy === reviewerId
+    (item) => item.decidedBy === reviewerId
   )
 
-  const confirmed = reviewerItems.filter(i => i.status === 'confirmed').length
-  const rejected = reviewerItems.filter(i => i.status === 'rejected').length
+  const confirmed = reviewerItems.filter((i) => i.status === 'confirmed').length
+  const rejected = reviewerItems.filter((i) => i.status === 'rejected').length
   const total = reviewerItems.length
 
-  const avgDecisionTime = reviewerItems.reduce((sum, item) => {
-    if (item.decidedAt && item.createdAt) {
-      return sum + (item.decidedAt.getTime() - item.createdAt.getTime())
-    }
-    return sum
-  }, 0) / total
+  const avgDecisionTime =
+    reviewerItems.reduce((sum, item) => {
+      if (item.decidedAt && item.createdAt) {
+        return sum + (item.decidedAt.getTime() - item.createdAt.getTime())
+      }
+      return sum
+    }, 0) / total
 
   return {
     reviewerId,
@@ -414,7 +424,7 @@ async function getReviewerPerformance(
     rejected,
     confirmRate: confirmed / total,
     avgDecisionTimeMs: avgDecisionTime,
-    avgDecisionTimeMinutes: avgDecisionTime / 1000 / 60
+    avgDecisionTimeMinutes: avgDecisionTime / 1000 / 60,
   }
 }
 ```
@@ -433,7 +443,7 @@ async function dailyCleanup(resolver: Resolver<Customer>) {
   const toArchive = await resolver.queue.list({
     status: ['confirmed', 'rejected', 'expired'],
     until: ninetyDaysAgo,
-    limit: 10000
+    limit: 10000,
   })
 
   if (toArchive.items.length > 0) {
@@ -444,7 +454,7 @@ async function dailyCleanup(resolver: Resolver<Customer>) {
   const removed = await resolver.queue.cleanup({
     olderThan: ninetyDaysAgo,
     status: ['confirmed', 'rejected', 'expired'],
-    limit: 10000
+    limit: 10000,
   })
 
   console.log(`Archived ${toArchive.items.length}, removed ${removed} items`)
@@ -466,7 +476,7 @@ async function expireStaleItems(
   const staleItems = await resolver.queue.list({
     status: 'pending',
     until: cutoffDate,
-    limit: 1000
+    limit: 1000,
   })
 
   let expired = 0
@@ -504,7 +514,7 @@ router.get('/queue/pending', async (req, res) => {
     limit: Number(limit),
     offset: Number(offset),
     orderBy: 'priority',
-    orderDirection: 'desc'
+    orderDirection: 'desc',
   })
 
   res.json(result)
@@ -533,13 +543,13 @@ router.post('/queue/:id/decide', async (req, res) => {
         selectedMatchId: matchId,
         notes,
         confidence,
-        decidedBy: reviewerId
+        decidedBy: reviewerId,
       })
     } else if (action === 'reject') {
       result = await resolver.queue.reject(req.params.id, {
         notes,
         confidence,
-        decidedBy: reviewerId
+        decidedBy: reviewerId,
       })
     } else {
       return res.status(400).json({ error: 'Invalid action' })
@@ -570,7 +580,7 @@ const reviewQueue = new Queue('review-queue')
 
 // Producer: Add job when item needs review
 reviewQueue.add('process-queue-item', {
-  queueItemId: 'item-123'
+  queueItemId: 'item-123',
 })
 
 // Consumer: Process queue items
@@ -605,8 +615,8 @@ async function addWithWebhook(
       event: 'queue.item.added',
       queueItemId: queueItem.id,
       candidateRecord: queueItem.candidateRecord,
-      matchCount: queueItem.potentialMatches.length
-    })
+      matchCount: queueItem.potentialMatches.length,
+    }),
   })
 
   return queueItem
@@ -625,7 +635,7 @@ function setupQueueWebSocket(io: Server, resolver: Resolver<Customer>) {
     console.log('Reviewer connected')
 
     // Send queue stats on connect
-    resolver.queue.stats().then(stats => {
+    resolver.queue.stats().then((stats) => {
       socket.emit('queue:stats', stats)
     })
 
@@ -639,10 +649,13 @@ function setupQueueWebSocket(io: Server, resolver: Resolver<Customer>) {
           result = await resolver.queue.confirm(itemId, {
             selectedMatchId: matchId,
             notes,
-            decidedBy: socket.id
+            decidedBy: socket.id,
           })
         } else {
-          result = await resolver.queue.reject(itemId, { notes, decidedBy: socket.id })
+          result = await resolver.queue.reject(itemId, {
+            notes,
+            decidedBy: socket.id,
+          })
         }
 
         socket.emit('queue:decided', result)

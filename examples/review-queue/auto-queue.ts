@@ -13,7 +13,9 @@ import type { DatabaseAdapter, QueueAdapter } from '../../src/adapters/types'
 import type { QueueItem } from '../../src/queue/types'
 
 // Simple mock adapter for examples
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   const records: T[] = []
   const queueItems: QueueItem<T>[] = []
 
@@ -24,9 +26,10 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
       records.push(newRecord)
       return newRecord
     },
-    update: async () => ({} as T),
+    update: async () => ({}) as T,
     delete: async () => {},
-    findById: async (id: string) => records.find((r) => (r as any).id === id) || null,
+    findById: async (id: string) =>
+      records.find((r) => (r as any).id === id) || null,
     findAll: async () => records,
     count: async () => records.length,
     batchInsert: async (batch: T[]) => batch,
@@ -46,7 +49,8 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
         return item
       },
       findQueueItems: async () => queueItems,
-      findQueueItemById: async (id: string) => queueItems.find((i) => i.id === id) || null,
+      findQueueItemById: async (id: string) =>
+        queueItems.find((i) => i.id === id) || null,
       deleteQueueItem: async (id: string) => {
         const index = queueItems.findIndex((i) => i.id === id)
         if (index >= 0) queueItems.splice(index, 1)
@@ -75,17 +79,49 @@ async function autoQueueExample() {
   // Setup: Add existing customers to database
   const adapter = createMockAdapter<Customer>()
   const existingCustomers: Customer[] = [
-    { id: 'c1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', phone: '+1-555-0100' },
-    { id: 'c2', firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@example.com', phone: '+1-555-0200' },
-    { id: 'c3', firstName: 'Robert', lastName: 'Johnson', email: 'r.johnson@example.com', phone: '+1-555-0300' },
-    { id: 'c4', firstName: 'Mary', lastName: 'Williams', email: 'mary.w@example.com', phone: '+1-555-0400' },
-    { id: 'c5', firstName: 'Michael', lastName: 'Brown', email: 'michael.brown@example.com', phone: '+1-555-0500' },
+    {
+      id: 'c1',
+      firstName: 'John',
+      lastName: 'Smith',
+      email: 'john.smith@example.com',
+      phone: '+1-555-0100',
+    },
+    {
+      id: 'c2',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane.doe@example.com',
+      phone: '+1-555-0200',
+    },
+    {
+      id: 'c3',
+      firstName: 'Robert',
+      lastName: 'Johnson',
+      email: 'r.johnson@example.com',
+      phone: '+1-555-0300',
+    },
+    {
+      id: 'c4',
+      firstName: 'Mary',
+      lastName: 'Williams',
+      email: 'mary.w@example.com',
+      phone: '+1-555-0400',
+    },
+    {
+      id: 'c5',
+      firstName: 'Michael',
+      lastName: 'Brown',
+      email: 'michael.brown@example.com',
+      phone: '+1-555-0500',
+    },
   ]
 
   for (const customer of existingCustomers) {
     await adapter.insert(customer)
   }
-  console.log(`Added ${existingCustomers.length} existing customers to database\n`)
+  console.log(
+    `Added ${existingCustomers.length} existing customers to database\n`
+  )
 
   const resolver = HaveWeMet.schema<Customer>({
     firstName: { type: 'string', weight: 1.0 },
@@ -95,17 +131,18 @@ async function autoQueueExample() {
     company: { type: 'string', weight: 0.5 },
   })
     .blocking((block) =>
-      block
-        .exact('email')
-        .phonetic('lastName')
-        .prefix('lastName', 2)
+      block.exact('email').phonetic('lastName').prefix('lastName', 2)
     )
     .matching((match) =>
       match
-        .field('firstName').using('jaro-winkler', { weight: 1.0 })
-        .field('lastName').using('jaro-winkler', { weight: 1.5 })
-        .field('email').using('exact', { weight: 2.0 })
-        .field('phone').using('exact', { weight: 1.0 })
+        .field('firstName')
+        .using('jaro-winkler', { weight: 1.0 })
+        .field('lastName')
+        .using('jaro-winkler', { weight: 1.5 })
+        .field('email')
+        .using('exact', { weight: 2.0 })
+        .field('phone')
+        .using('exact', { weight: 1.0 })
     )
     .thresholds({ noMatch: 20, definiteMatch: 50 })
     .adapter(adapter)
@@ -164,11 +201,36 @@ async function autoQueueExample() {
   console.log('Step 3: Batch import with automatic queueing...')
 
   const importBatch: Customer[] = [
-    { firstName: 'Jane', lastName: 'Doe', email: 'jane.d@newdomain.com', phone: '+1-555-0200' },
-    { firstName: 'Maria', lastName: 'Williams', email: 'maria.williams@example.com', phone: '+1-555-0401' },
-    { firstName: 'Mike', lastName: 'Brown', email: 'm.brown@example.com', phone: '+1-555-0500' },
-    { firstName: 'Alice', lastName: 'Davis', email: 'alice.davis@example.com', phone: '+1-555-0600' },
-    { firstName: 'Charlie', lastName: 'Wilson', email: 'charlie.w@example.com', phone: '+1-555-0700' },
+    {
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane.d@newdomain.com',
+      phone: '+1-555-0200',
+    },
+    {
+      firstName: 'Maria',
+      lastName: 'Williams',
+      email: 'maria.williams@example.com',
+      phone: '+1-555-0401',
+    },
+    {
+      firstName: 'Mike',
+      lastName: 'Brown',
+      email: 'm.brown@example.com',
+      phone: '+1-555-0500',
+    },
+    {
+      firstName: 'Alice',
+      lastName: 'Davis',
+      email: 'alice.davis@example.com',
+      phone: '+1-555-0600',
+    },
+    {
+      firstName: 'Charlie',
+      lastName: 'Wilson',
+      email: 'charlie.w@example.com',
+      phone: '+1-555-0700',
+    },
   ]
 
   console.log(`Processing batch of ${importBatch.length} records...`)
@@ -184,9 +246,15 @@ async function autoQueueExample() {
 
   console.log('\nBatch Results:')
   console.log(`  Total processed: ${batchResult.results.length}`)
-  console.log(`  No matches: ${batchResult.results.filter(r => r.matches.length === 0).length}`)
-  console.log(`  Definite matches: ${batchResult.results.filter(r => r.matches[0]?.outcome === 'definite-match').length}`)
-  console.log(`  Potential matches: ${batchResult.results.filter(r => r.matches[0]?.outcome === 'potential-match').length}`)
+  console.log(
+    `  No matches: ${batchResult.results.filter((r) => r.matches.length === 0).length}`
+  )
+  console.log(
+    `  Definite matches: ${batchResult.results.filter((r) => r.matches[0]?.outcome === 'definite-match').length}`
+  )
+  console.log(
+    `  Potential matches: ${batchResult.results.filter((r) => r.matches[0]?.outcome === 'potential-match').length}`
+  )
 
   if (batchResult.queuedCount !== undefined) {
     console.log(`  Auto-queued items: ${batchResult.queuedCount}`)
@@ -208,14 +276,18 @@ async function autoQueueExample() {
 
   for (const item of queuedItems.items) {
     console.log(`\n  Item ${item.id}:`)
-    console.log(`    Candidate: ${item.candidateRecord.firstName} ${item.candidateRecord.lastName}`)
+    console.log(
+      `    Candidate: ${item.candidateRecord.firstName} ${item.candidateRecord.lastName}`
+    )
     console.log(`    Email: ${item.candidateRecord.email}`)
     console.log(`    Potential matches: ${item.potentialMatches.length}`)
 
     if (item.potentialMatches.length > 0) {
       const bestMatch = item.potentialMatches[0]
       console.log(`    Best match score: ${bestMatch.score.toFixed(2)}`)
-      console.log(`    Best match: ${bestMatch.record.firstName} ${bestMatch.record.lastName}`)
+      console.log(
+        `    Best match: ${bestMatch.record.firstName} ${bestMatch.record.lastName}`
+      )
     }
 
     if (item.context) {

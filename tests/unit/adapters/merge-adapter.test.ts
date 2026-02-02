@@ -37,7 +37,11 @@ describe('merge-adapter types and utilities', () => {
         },
       ]
 
-      const archivedRecords = toArchivedRecords(sourceRecords, 'golden-1', 'merged')
+      const archivedRecords = toArchivedRecords(
+        sourceRecords,
+        'golden-1',
+        'merged'
+      )
 
       expect(archivedRecords).toHaveLength(2)
       expect(archivedRecords[0]).toMatchObject({

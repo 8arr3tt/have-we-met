@@ -22,11 +22,46 @@ describe('Composite Blocking Integration', () => {
     it('increases recall by combining multiple strategies', () => {
       // Create dataset where different strategies catch different matches
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'Jon', lastName: 'Smith', email: 'jon@example.com', birthYear: 1990, city: 'Boston' },
-        { id: '3', firstName: 'John', lastName: 'Smyth', email: 'john@test.com', birthYear: 1990, city: 'New York' },
-        { id: '4', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', birthYear: 1985, city: 'New York' },
-        { id: '5', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', birthYear: 1990, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'Jon',
+          lastName: 'Smith',
+          email: 'jon@example.com',
+          birthYear: 1990,
+          city: 'Boston',
+        },
+        {
+          id: '3',
+          firstName: 'John',
+          lastName: 'Smyth',
+          email: 'john@test.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '4',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'New York',
+        },
+        {
+          id: '5',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob@example.com',
+          birthYear: 1990,
+          city: 'Chicago',
+        },
       ]
 
       // Single strategy on lastName
@@ -85,7 +120,10 @@ describe('Composite Blocking Integration', () => {
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -103,17 +141,48 @@ describe('Composite Blocking Integration', () => {
     it('catches matches that single strategies would miss', () => {
       const people: Person[] = [
         // Records 1 and 2: Same lastName, different year
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', birthYear: 1985, city: 'Boston' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'Boston',
+        },
         // Records 1 and 3: Different lastName, same year
-        { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', birthYear: 1990, city: 'Chicago' },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob@example.com',
+          birthYear: 1990,
+          city: 'Chicago',
+        },
         // Record 4: Different everything
-        { id: '4', firstName: 'Alice', lastName: 'Brown', email: 'alice@example.com', birthYear: 1975, city: 'Seattle' },
+        {
+          id: '4',
+          firstName: 'Alice',
+          lastName: 'Brown',
+          email: 'alice@example.com',
+          birthYear: 1975,
+          city: 'Seattle',
+        },
       ]
 
       const compositeStrategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -153,7 +222,10 @@ describe('Composite Blocking Integration', () => {
 
       const unionStrategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -161,7 +233,10 @@ describe('Composite Blocking Integration', () => {
 
       const intersectionStrategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -174,7 +249,9 @@ describe('Composite Blocking Integration', () => {
       const intersectionStats = generator.calculateStats(intersectionBlocks)
 
       // Intersection should have higher reduction percentage
-      expect(intersectionStats.reductionPercentage).toBeGreaterThan(unionStats.reductionPercentage)
+      expect(intersectionStats.reductionPercentage).toBeGreaterThan(
+        unionStats.reductionPercentage
+      )
 
       // Intersection should result in fewer comparisons
       expect(intersectionStats.comparisonsWithBlocking).toBeLessThan(
@@ -185,17 +262,48 @@ describe('Composite Blocking Integration', () => {
     it('only compares records matching all strategies', () => {
       const people: Person[] = [
         // Records that match on both strategies
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', email: 'jane@example.com', birthYear: 1990, city: 'Boston' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'Boston',
+        },
         // Record that matches only on lastName
-        { id: '3', firstName: 'Bob', lastName: 'Smith', email: 'bob@example.com', birthYear: 1985, city: 'Chicago' },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Smith',
+          email: 'bob@example.com',
+          birthYear: 1985,
+          city: 'Chicago',
+        },
         // Record that matches only on birthYear
-        { id: '4', firstName: 'Alice', lastName: 'Jones', email: 'alice@example.com', birthYear: 1990, city: 'Seattle' },
+        {
+          id: '4',
+          firstName: 'Alice',
+          lastName: 'Jones',
+          email: 'alice@example.com',
+          birthYear: 1990,
+          city: 'Seattle',
+        },
       ]
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -205,12 +313,17 @@ describe('Composite Blocking Integration', () => {
 
       // Records 1 and 2 should be together (both S and 1990)
       const matchBlock = Array.from(blocks.values()).find(
-        (block) => block.length === 2 && block.includes(people[0]) && block.includes(people[1])
+        (block) =>
+          block.length === 2 &&
+          block.includes(people[0]) &&
+          block.includes(people[1])
       )
       expect(matchBlock).toBeDefined()
 
       // Record 3 should not be with records 1 or 2 (different year)
-      const record3Blocks = Array.from(blocks.values()).filter((block) => block.includes(people[2]))
+      const record3Blocks = Array.from(blocks.values()).filter((block) =>
+        block.includes(people[2])
+      )
       const record3WithOthers = record3Blocks.some(
         (block) => block.includes(people[0]) || block.includes(people[1])
       )
@@ -219,8 +332,18 @@ describe('Composite Blocking Integration', () => {
 
     it('achieves 95%+ reduction on large dataset', () => {
       const people: Person[] = []
-      const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                        'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez']
+      const lastNames = [
+        'Smith',
+        'Johnson',
+        'Williams',
+        'Brown',
+        'Jones',
+        'Garcia',
+        'Miller',
+        'Davis',
+        'Rodriguez',
+        'Martinez',
+      ]
 
       for (let i = 0; i < 1000; i++) {
         people.push({
@@ -235,7 +358,10 @@ describe('Composite Blocking Integration', () => {
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -266,8 +392,14 @@ describe('Composite Blocking Integration', () => {
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
-          new SortedNeighbourhoodStrategy({ sortBy: 'birthYear', windowSize: 5 }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
+          new SortedNeighbourhoodStrategy({
+            sortBy: 'birthYear',
+            windowSize: 5,
+          }),
         ],
         mode: 'union',
       })
@@ -283,15 +415,42 @@ describe('Composite Blocking Integration', () => {
 
     it('handles multiple standard strategies with different transforms', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', email: 'jane@example.com', birthYear: 1990, city: 'Boston' },
-        { id: '3', firstName: 'Bob', lastName: 'Schmidt', email: 'bob@example.com', birthYear: 1990, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'Boston',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Schmidt',
+          email: 'bob@example.com',
+          birthYear: 1990,
+          city: 'Chicago',
+        },
       ]
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'metaphone' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'metaphone',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -330,14 +489,30 @@ describe('Composite Blocking Integration', () => {
       const blocks = strategy.generateBlocks(people)
 
       // Each record should be in its own block (or no blocks)
-      const blockSizes = Array.from(blocks.values()).map((block) => block.length)
+      const blockSizes = Array.from(blocks.values()).map(
+        (block) => block.length
+      )
       expect(blockSizes.every((size) => size === 1)).toBe(true)
     })
 
     it('handles small datasets efficiently', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', birthYear: 1990, city: 'Boston' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'Boston',
+        },
       ]
 
       const strategy = new CompositeBlockingStrategy<Person>({
@@ -382,16 +557,54 @@ describe('Composite Blocking Integration', () => {
   describe('real-world scenarios', () => {
     it('person matching: Soundex last name + birth year', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'Jon', lastName: 'Smith', email: 'jon@example.com', birthYear: 1990, city: 'Boston' },
-        { id: '3', firstName: 'John', lastName: 'Smyth', email: 'john@test.com', birthYear: 1990, city: 'Chicago' },
-        { id: '4', firstName: 'Jane', lastName: 'Jones', email: 'jane@example.com', birthYear: 1985, city: 'Seattle' },
-        { id: '5', firstName: 'Bob', lastName: 'Brown', email: 'bob@example.com', birthYear: 1990, city: 'Miami' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'Jon',
+          lastName: 'Smith',
+          email: 'jon@example.com',
+          birthYear: 1990,
+          city: 'Boston',
+        },
+        {
+          id: '3',
+          firstName: 'John',
+          lastName: 'Smyth',
+          email: 'john@test.com',
+          birthYear: 1990,
+          city: 'Chicago',
+        },
+        {
+          id: '4',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'Seattle',
+        },
+        {
+          id: '5',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob@example.com',
+          birthYear: 1990,
+          city: 'Miami',
+        },
       ]
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -402,7 +615,9 @@ describe('Composite Blocking Integration', () => {
       // Records 1, 2, 3 should all be connected (Smith/Smyth soundex matches)
       const smithBlock = Array.from(blocks.values()).find(
         (block) =>
-          block.includes(people[0]) && block.includes(people[1]) && block.includes(people[2])
+          block.includes(people[0]) &&
+          block.includes(people[1]) &&
+          block.includes(people[2])
       )
       expect(smithBlock).toBeDefined()
 
@@ -415,10 +630,38 @@ describe('Composite Blocking Integration', () => {
 
     it('email matching: domain + name similarity', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', birthYear: 1990, city: 'New York' },
-        { id: '2', firstName: 'John', lastName: 'Smith', email: 'jsmith@example.com', birthYear: 1990, city: 'Boston' },
-        { id: '3', firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com', birthYear: 1985, city: 'Chicago' },
-        { id: '4', firstName: 'Bob', lastName: 'Jones', email: 'bob.jones@other.com', birthYear: 1990, city: 'Seattle' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@example.com',
+          birthYear: 1990,
+          city: 'New York',
+        },
+        {
+          id: '2',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'jsmith@example.com',
+          birthYear: 1990,
+          city: 'Boston',
+        },
+        {
+          id: '3',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+          birthYear: 1985,
+          city: 'Chicago',
+        },
+        {
+          id: '4',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob.jones@other.com',
+          birthYear: 1990,
+          city: 'Seattle',
+        },
       ]
 
       const strategy = new CompositeBlockingStrategy<Person>({
@@ -431,7 +674,10 @@ describe('Composite Blocking Integration', () => {
               return parts.length === 2 ? parts[1] : null
             },
           }),
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
         ],
         mode: 'union',
       })
@@ -440,7 +686,10 @@ describe('Composite Blocking Integration', () => {
 
       // Records 1, 2, 3 should be connected by example.com domain
       const domainBlock = Array.from(blocks.values()).find(
-        (block) => block.includes(people[0]) && block.includes(people[1]) && block.includes(people[2])
+        (block) =>
+          block.includes(people[0]) &&
+          block.includes(people[1]) &&
+          block.includes(people[2])
       )
       expect(domainBlock).toBeDefined()
     })

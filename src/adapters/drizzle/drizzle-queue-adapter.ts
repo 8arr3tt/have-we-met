@@ -52,7 +52,9 @@ type DrizzleOperators = {
  * Drizzle implementation of the queue adapter.
  * Persists review queue items using Drizzle ORM.
  */
-export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends BaseQueueAdapter<T> {
+export class DrizzleQueueAdapter<
+  T extends Record<string, unknown>,
+> extends BaseQueueAdapter<T> {
   private readonly db: DrizzleDatabase
   private readonly queueTable: DrizzleTable
   private readonly operators: DrizzleOperators
@@ -72,10 +74,13 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
   private getColumn(fieldName: string): unknown {
     const column = (this.queueTable as Record<string, unknown>)[fieldName]
     if (!column) {
-      throw new QueryError(`Column '${fieldName}' not found in queue table schema`, {
-        fieldName,
-        availableColumns: Object.keys(this.queueTable),
-      })
+      throw new QueryError(
+        `Column '${fieldName}' not found in queue table schema`,
+        {
+          fieldName,
+          availableColumns: Object.keys(this.queueTable),
+        }
+      )
     }
     return column
   }
@@ -106,12 +111,16 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
 
     if (normalized.priority?.min !== undefined) {
       const priorityColumn = this.getColumn('priority')
-      conditions.push(this.operators.gte(priorityColumn, normalized.priority.min))
+      conditions.push(
+        this.operators.gte(priorityColumn, normalized.priority.min)
+      )
     }
 
     if (normalized.priority?.max !== undefined) {
       const priorityColumn = this.getColumn('priority')
-      conditions.push(this.operators.lte(priorityColumn, normalized.priority.max))
+      conditions.push(
+        this.operators.lte(priorityColumn, normalized.priority.max)
+      )
     }
 
     return conditions.length === 0
@@ -132,7 +141,9 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
         .returning()) as Record<string, unknown>[]
 
       if (result.length === 0) {
-        throw new QueryError('Insert did not return a queue item', { itemId: item.id })
+        throw new QueryError('Insert did not return a queue item', {
+          itemId: item.id,
+        })
       }
 
       return this.deserializeQueueItem(result[0])
@@ -146,7 +157,7 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
 
   async updateQueueItem(
     id: string,
-    updates: Partial<QueueItem<T>>,
+    updates: Partial<QueueItem<T>>
   ): Promise<QueueItem<T>> {
     try {
       const serializedUpdates: Record<string, unknown> = {}
@@ -155,10 +166,14 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
         serializedUpdates.status = updates.status
       }
       if (updates.candidateRecord !== undefined) {
-        serializedUpdates.candidateRecord = JSON.stringify(updates.candidateRecord)
+        serializedUpdates.candidateRecord = JSON.stringify(
+          updates.candidateRecord
+        )
       }
       if (updates.potentialMatches !== undefined) {
-        serializedUpdates.potentialMatches = JSON.stringify(updates.potentialMatches)
+        serializedUpdates.potentialMatches = JSON.stringify(
+          updates.potentialMatches
+        )
       }
       if (updates.decidedAt !== undefined) {
         serializedUpdates.decidedAt = updates.decidedAt
@@ -209,7 +224,9 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
 
   async findQueueItems(filter: QueueFilter): Promise<QueueItem<T>[]> {
     try {
-      let query = this.db.select().from(this.queueTable) as unknown as DrizzleQuery
+      let query = this.db
+        .select()
+        .from(this.queueTable) as unknown as DrizzleQuery
 
       const whereCondition = this.buildWhereConditions(filter)
       if (whereCondition) {
@@ -227,14 +244,15 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
       if (filter.orderBy) {
         const column = this.getColumn(filter.orderBy.field)
         const orderFunc =
-          filter.orderBy.direction === 'asc' ? this.operators.asc : this.operators.desc
+          filter.orderBy.direction === 'asc'
+            ? this.operators.asc
+            : this.operators.desc
         query = query.orderBy(orderFunc(column))
       }
 
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
       return results.map((row) => this.deserializeQueueItem(row))
     } catch (error) {
       throw new QueryError('Failed to find queue items', {
@@ -251,10 +269,9 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
 
       const query = this.db.select().from(this.queueTable).where(whereCondition)
 
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
       if (results.length === 0) {
         return null
@@ -296,7 +313,9 @@ export class DrizzleQueueAdapter<T extends Record<string, unknown>> extends Base
         }
       }
 
-      const result = (await (query as unknown as Promise<Array<{ count: number }>>)) as Array<{
+      const result = (await (query as unknown as Promise<
+        Array<{ count: number }>
+      >)) as Array<{
         count: number
       }>
       return result[0]?.count ?? 0

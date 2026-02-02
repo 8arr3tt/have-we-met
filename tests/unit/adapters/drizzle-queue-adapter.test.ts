@@ -17,7 +17,11 @@ describe('DrizzleQueueAdapter', () => {
 
   const createMockQueueItem = (): QueueItem<TestRecord> => ({
     id: 'queue-1',
-    candidateRecord: { id: 'rec-1', name: 'John Doe', email: 'john@example.com' },
+    candidateRecord: {
+      id: 'rec-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+    },
     potentialMatches: [
       {
         record: { id: 'rec-2', name: 'Jon Doe', email: 'jon@example.com' },
@@ -25,7 +29,9 @@ describe('DrizzleQueueAdapter', () => {
         outcome: 'potential-match' as const,
         explanation: {
           totalScore: 35,
-          fieldScores: [{ field: 'name', score: 20, method: 'levenshtein', details: {} }],
+          fieldScores: [
+            { field: 'name', score: 20, method: 'levenshtein', details: {} },
+          ],
           outcome: 'potential-match' as const,
         },
       },
@@ -86,7 +92,11 @@ describe('DrizzleQueueAdapter', () => {
       })),
     }
 
-    adapter = new DrizzleQueueAdapter<TestRecord>(mockDb, mockTable, mockOperators)
+    adapter = new DrizzleQueueAdapter<TestRecord>(
+      mockDb,
+      mockTable,
+      mockOperators
+    )
   })
 
   describe('insertQueueItem', () => {
@@ -156,9 +166,9 @@ describe('DrizzleQueueAdapter', () => {
     it('throws NotFoundError if no rows updated', async () => {
       mockDb.update().set().where().returning.mockResolvedValue([])
 
-      await expect(adapter.updateQueueItem('nonexistent', { status: 'confirmed' })).rejects.toThrow(
-        NotFoundError
-      )
+      await expect(
+        adapter.updateQueueItem('nonexistent', { status: 'confirmed' })
+      ).rejects.toThrow(NotFoundError)
     })
   })
 
@@ -203,7 +213,10 @@ describe('DrizzleQueueAdapter', () => {
 
   describe('batchInsertQueueItems', () => {
     it('inserts multiple items efficiently', async () => {
-      const items = [createMockQueueItem(), { ...createMockQueueItem(), id: 'queue-2' }]
+      const items = [
+        createMockQueueItem(),
+        { ...createMockQueueItem(), id: 'queue-2' },
+      ]
       const mockReturning = vi.fn().mockResolvedValue(
         items.map((item) => ({
           ...item,

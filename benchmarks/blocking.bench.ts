@@ -187,8 +187,14 @@ describe('Comparison Reduction', () => {
     bench('composite: union of 2 standard strategies', () => {
       const strategy = new CompositeBlockingStrategy<PersonRecord>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new StandardBlockingStrategy({ field: 'birthYear', transform: 'identity' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new StandardBlockingStrategy({
+            field: 'birthYear',
+            transform: 'identity',
+          }),
         ],
         mode: 'union',
       })
@@ -295,24 +301,33 @@ describe('Block Generation Time', () => {
       strategy.generateBlocks(datasets.xlarge)
     })
 
-    bench('100k records: multi-field sort (soundex lastName + birthYear)', () => {
-      const strategy = new SortedNeighbourhoodStrategy<PersonRecord>({
-        sortBy: [
-          { field: 'lastName', transform: 'soundex' },
-          { field: 'birthYear' },
-        ],
-        windowSize: 10,
-      })
-      strategy.generateBlocks(datasets.xlarge)
-    })
+    bench(
+      '100k records: multi-field sort (soundex lastName + birthYear)',
+      () => {
+        const strategy = new SortedNeighbourhoodStrategy<PersonRecord>({
+          sortBy: [
+            { field: 'lastName', transform: 'soundex' },
+            { field: 'birthYear' },
+          ],
+          windowSize: 10,
+        })
+        strategy.generateBlocks(datasets.xlarge)
+      }
+    )
   })
 
   describe('Composite Blocking', () => {
     bench('1k records: union of 2 strategies', () => {
       const strategy = new CompositeBlockingStrategy<PersonRecord>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new StandardBlockingStrategy({ field: 'birthYear', transform: 'identity' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new StandardBlockingStrategy({
+            field: 'birthYear',
+            transform: 'identity',
+          }),
         ],
         mode: 'union',
       })
@@ -322,8 +337,14 @@ describe('Block Generation Time', () => {
     bench('10k records: union of 2 strategies', () => {
       const strategy = new CompositeBlockingStrategy<PersonRecord>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new StandardBlockingStrategy({ field: 'birthYear', transform: 'identity' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new StandardBlockingStrategy({
+            field: 'birthYear',
+            transform: 'identity',
+          }),
         ],
         mode: 'union',
       })
@@ -333,8 +354,14 @@ describe('Block Generation Time', () => {
     bench('100k records: union of 2 strategies', () => {
       const strategy = new CompositeBlockingStrategy<PersonRecord>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new StandardBlockingStrategy({ field: 'birthYear', transform: 'identity' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new StandardBlockingStrategy({
+            field: 'birthYear',
+            transform: 'identity',
+          }),
         ],
         mode: 'union',
       })
@@ -344,8 +371,14 @@ describe('Block Generation Time', () => {
     bench('100k records: intersection of 2 strategies', () => {
       const strategy = new CompositeBlockingStrategy<PersonRecord>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
-          new StandardBlockingStrategy({ field: 'birthYear', transform: 'identity' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
+          new StandardBlockingStrategy({
+            field: 'birthYear',
+            transform: 'identity',
+          }),
         ],
         mode: 'intersection',
       })
@@ -444,8 +477,14 @@ describe('Real-World Scenarios', () => {
   bench('Person matching: composite union (lastName OR birthYear)', () => {
     const strategy = new CompositeBlockingStrategy<PersonRecord>({
       strategies: [
-        new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-        new StandardBlockingStrategy({ field: 'birthYear', transform: 'identity' }),
+        new StandardBlockingStrategy({
+          field: 'lastName',
+          transform: 'soundex',
+        }),
+        new StandardBlockingStrategy({
+          field: 'birthYear',
+          transform: 'identity',
+        }),
       ],
       mode: 'union',
     })
@@ -559,7 +598,10 @@ describe('Strategy Comparison (100k records)', () => {
   bench('composite: union', () => {
     const strategy = new CompositeBlockingStrategy<PersonRecord>({
       strategies: [
-        new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
+        new StandardBlockingStrategy({
+          field: 'lastName',
+          transform: 'soundex',
+        }),
         new StandardBlockingStrategy({ field: 'birthYear' }),
       ],
       mode: 'union',
@@ -570,7 +612,10 @@ describe('Strategy Comparison (100k records)', () => {
   bench('composite: intersection', () => {
     const strategy = new CompositeBlockingStrategy<PersonRecord>({
       strategies: [
-        new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+        new StandardBlockingStrategy({
+          field: 'lastName',
+          transform: 'firstLetter',
+        }),
         new StandardBlockingStrategy({ field: 'birthYear' }),
       ],
       mode: 'intersection',

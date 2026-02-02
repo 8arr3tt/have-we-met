@@ -307,7 +307,7 @@ export const UK_COUNTIES: Record<string, string> = {
   armagh: 'Armagh',
   down: 'Down',
   fermanagh: 'Fermanagh',
-  londonderry: 'L\'derry',
+  londonderry: "L'derry",
   tyrone: 'Tyrone',
 }
 

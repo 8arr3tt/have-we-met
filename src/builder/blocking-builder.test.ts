@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { BlockingBuilder, CompositeBlockingBuilder } from './blocking-builder'
-import { StandardBlockingStrategy, SortedNeighbourhoodStrategy, CompositeBlockingStrategy } from '../core/blocking'
+import {
+  StandardBlockingStrategy,
+  SortedNeighbourhoodStrategy,
+  CompositeBlockingStrategy,
+} from '../core/blocking'
 
 interface TestRecord {
   id: string
@@ -87,7 +91,9 @@ describe('BlockingBuilder', () => {
       for (const transform of transforms) {
         const builder = new BlockingBuilder<TestRecord>()
         const options =
-          transform === 'firstN' ? { transform, transformOptions: { n: 3 } } : { transform }
+          transform === 'firstN'
+            ? { transform, transformOptions: { n: 3 } }
+            : { transform }
 
         builder.onField('lastName', options as never)
 
@@ -191,7 +197,9 @@ describe('BlockingBuilder', () => {
     it('configures composite blocking in union mode', () => {
       const builder = new BlockingBuilder<TestRecord>()
       builder.composite('union', (comp) =>
-        comp.onField('lastName', { transform: 'soundex' }).onField('dateOfBirth', { transform: 'year' })
+        comp
+          .onField('lastName', { transform: 'soundex' })
+          .onField('dateOfBirth', { transform: 'year' })
       )
 
       const config = builder.build()
@@ -204,7 +212,9 @@ describe('BlockingBuilder', () => {
     it('configures composite blocking in intersection mode', () => {
       const builder = new BlockingBuilder<TestRecord>()
       builder.composite('intersection', (comp) =>
-        comp.onField('lastName', { transform: 'firstLetter' }).onField('dateOfBirth', { transform: 'year' })
+        comp
+          .onField('lastName', { transform: 'firstLetter' })
+          .onField('dateOfBirth', { transform: 'year' })
       )
 
       const config = builder.build()
@@ -242,7 +252,9 @@ describe('BlockingBuilder', () => {
   describe('multiple strategies (auto-union)', () => {
     it('automatically uses union mode for multiple strategies', () => {
       const builder = new BlockingBuilder<TestRecord>()
-      builder.onField('lastName', { transform: 'soundex' }).onField('dateOfBirth', { transform: 'year' })
+      builder
+        .onField('lastName', { transform: 'soundex' })
+        .onField('dateOfBirth', { transform: 'year' })
 
       const config = builder.build()
 

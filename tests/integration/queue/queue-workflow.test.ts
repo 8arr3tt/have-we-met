@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { HaveWeMet } from '../../../src/index.js'
-import type { DatabaseAdapter, QueueAdapter } from '../../../src/adapters/types.js'
+import type {
+  DatabaseAdapter,
+  QueueAdapter,
+} from '../../../src/adapters/types.js'
 import type { QueueItem } from '../../../src/queue/types.js'
 
 interface TestRecord {
@@ -78,7 +81,7 @@ function createMockAdapter(): DatabaseAdapter<TestRecord> {
 describe('Integration: Queue Workflow', () => {
   describe('End-to-End Queue Workflow', () => {
     let adapter: ReturnType<typeof createMockAdapter<TestRecord>>
-    let resolver: ReturnType<typeof HaveWeMet.schema<TestRecord>['build']>
+    let resolver: ReturnType<(typeof HaveWeMet.schema<TestRecord>)['build']>
 
     beforeEach(async () => {
       adapter = createMockAdapter<TestRecord>()
@@ -141,7 +144,11 @@ describe('Integration: Queue Workflow', () => {
             record: m.candidateRecord as TestRecord,
             score: m.score.totalScore,
             outcome: 'potential-match' as const,
-            explanation: { totalScore: m.score.totalScore, fieldScores: [], missingFields: [] },
+            explanation: {
+              totalScore: m.score.totalScore,
+              fieldScores: [],
+              missingFields: [],
+            },
           }))
 
         const queueItem = await resolver.queue.add({
@@ -174,7 +181,11 @@ describe('Integration: Queue Workflow', () => {
             record: m.candidateRecord as TestRecord,
             score: m.score.totalScore,
             outcome: 'potential-match' as const,
-            explanation: { totalScore: m.score.totalScore, fieldScores: [], missingFields: [] },
+            explanation: {
+              totalScore: m.score.totalScore,
+              fieldScores: [],
+              missingFields: [],
+            },
           }))
 
         await resolver.queue.add({
@@ -207,7 +218,11 @@ describe('Integration: Queue Workflow', () => {
             record: m.candidateRecord as TestRecord,
             score: m.score.totalScore,
             outcome: 'potential-match' as const,
-            explanation: { totalScore: m.score.totalScore, fieldScores: [], missingFields: [] },
+            explanation: {
+              totalScore: m.score.totalScore,
+              fieldScores: [],
+              missingFields: [],
+            },
           }))
 
         const queueItem = await resolver.queue.add({
@@ -248,7 +263,11 @@ describe('Integration: Queue Workflow', () => {
             record: m.candidateRecord as TestRecord,
             score: m.score.totalScore,
             outcome: 'potential-match' as const,
-            explanation: { totalScore: m.score.totalScore, fieldScores: [], missingFields: [] },
+            explanation: {
+              totalScore: m.score.totalScore,
+              fieldScores: [],
+              missingFields: [],
+            },
           }))
 
         const queueItem = await resolver.queue.add({
@@ -272,22 +291,56 @@ describe('Integration: Queue Workflow', () => {
       // Directly add queue items to test statistics
       const itemsToAdd = [
         {
-          candidateRecord: { firstName: 'Jon', lastName: 'Smith', email: 'jon.smith@test.com', phone: '+1-555-0100' },
-          potentialMatches: [{
-            record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', phone: '+1-555-0100' },
-            score: 30,
-            outcome: 'potential-match' as const,
-            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-          }],
+          candidateRecord: {
+            firstName: 'Jon',
+            lastName: 'Smith',
+            email: 'jon.smith@test.com',
+            phone: '+1-555-0100',
+          },
+          potentialMatches: [
+            {
+              record: {
+                id: 'r1',
+                firstName: 'John',
+                lastName: 'Smith',
+                email: 'john.smith@example.com',
+                phone: '+1-555-0100',
+              },
+              score: 30,
+              outcome: 'potential-match' as const,
+              explanation: {
+                totalScore: 30,
+                fieldScores: [],
+                missingFields: [],
+              },
+            },
+          ],
         },
         {
-          candidateRecord: { firstName: 'Jane', lastName: 'Doe', email: 'jane.d@test.com', phone: '+1-555-0200' },
-          potentialMatches: [{
-            record: { id: 'r2', firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@example.com', phone: '+1-555-0200' },
-            score: 30,
-            outcome: 'potential-match' as const,
-            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-          }],
+          candidateRecord: {
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane.d@test.com',
+            phone: '+1-555-0200',
+          },
+          potentialMatches: [
+            {
+              record: {
+                id: 'r2',
+                firstName: 'Jane',
+                lastName: 'Doe',
+                email: 'jane.doe@example.com',
+                phone: '+1-555-0200',
+              },
+              score: 30,
+              outcome: 'potential-match' as const,
+              explanation: {
+                totalScore: 30,
+                fieldScores: [],
+                missingFields: [],
+              },
+            },
+          ],
         },
       ]
 
@@ -309,12 +362,20 @@ describe('Integration: Queue Workflow', () => {
         phone: '+1-555-0100',
       }
 
-      const potentialMatches = [{
-        record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', phone: '+1-555-0100' } as TestRecord,
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }]
+      const potentialMatches = [
+        {
+          record: {
+            id: 'r1',
+            firstName: 'John',
+            lastName: 'Smith',
+            email: 'john.smith@example.com',
+            phone: '+1-555-0100',
+          } as TestRecord,
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+        },
+      ]
 
       const added = await resolver.queue.add({
         candidateRecord: candidate,
@@ -338,7 +399,7 @@ describe('Integration: Queue Workflow', () => {
 
   describe('Auto-Queue Integration', () => {
     let adapter: ReturnType<typeof createMockAdapter<TestRecord>>
-    let resolver: ReturnType<typeof HaveWeMet.schema<TestRecord>['build']>
+    let resolver: ReturnType<(typeof HaveWeMet.schema<TestRecord>)['build']>
 
     beforeEach(async () => {
       adapter = createMockAdapter<TestRecord>()
@@ -386,12 +447,19 @@ describe('Integration: Queue Workflow', () => {
       // Manually add to queue to test the queue functionality
       await resolver.queue.add({
         candidateRecord: candidate,
-        potentialMatches: [{
-          record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com' },
-          score: 30,
-          outcome: 'potential-match' as const,
-          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-        }],
+        potentialMatches: [
+          {
+            record: {
+              id: 'r1',
+              firstName: 'John',
+              lastName: 'Smith',
+              email: 'john.smith@example.com',
+            },
+            score: 30,
+            outcome: 'potential-match' as const,
+            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+          },
+        ],
         context: { source: 'auto-queue-test' },
       })
 
@@ -438,12 +506,19 @@ describe('Integration: Queue Workflow', () => {
 
       const itemsToAdd = candidates.map((candidate) => ({
         candidateRecord: candidate,
-        potentialMatches: [{
-          record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com' },
-          score: 30,
-          outcome: 'potential-match' as const,
-          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-        }],
+        potentialMatches: [
+          {
+            record: {
+              id: 'r1',
+              firstName: 'John',
+              lastName: 'Smith',
+              email: 'john.smith@example.com',
+            },
+            score: 30,
+            outcome: 'potential-match' as const,
+            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+          },
+        ],
         context: { source: 'batch-test', batchId: 'batch-1' },
       }))
 
@@ -465,7 +540,7 @@ describe('Integration: Queue Workflow', () => {
 
   describe('Batch Operations', () => {
     let adapter: ReturnType<typeof createMockAdapter<TestRecord>>
-    let resolver: ReturnType<typeof HaveWeMet.schema<TestRecord>['build']>
+    let resolver: ReturnType<(typeof HaveWeMet.schema<TestRecord>)['build']>
 
     beforeEach(async () => {
       adapter = createMockAdapter<TestRecord>()
@@ -505,12 +580,19 @@ describe('Integration: Queue Workflow', () => {
           lastName: 'Smith',
           email: `jon.smith${i}@test.com`,
         },
-        potentialMatches: [{
-          record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com' },
-          score: 30,
-          outcome: 'potential-match' as const,
-          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-        }],
+        potentialMatches: [
+          {
+            record: {
+              id: 'r1',
+              firstName: 'John',
+              lastName: 'Smith',
+              email: 'john.smith@example.com',
+            },
+            score: 30,
+            outcome: 'potential-match' as const,
+            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+          },
+        ],
       }))
 
       const added = await resolver.queue.addBatch(itemsToAdd)
@@ -527,12 +609,19 @@ describe('Integration: Queue Workflow', () => {
           lastName: 'Smith',
           email: `jon.smith${i}@test.com`,
         },
-        potentialMatches: [{
-          record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com' },
-          score: 30,
-          outcome: 'potential-match' as const,
-          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-        }],
+        potentialMatches: [
+          {
+            record: {
+              id: 'r1',
+              firstName: 'John',
+              lastName: 'Smith',
+              email: 'john.smith@example.com',
+            },
+            score: 30,
+            outcome: 'potential-match' as const,
+            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+          },
+        ],
       }))
 
       const added = await resolver.queue.addBatch(itemsToAdd)
@@ -565,7 +654,7 @@ describe('Integration: Queue Workflow', () => {
 
   describe('Queue Cleanup', () => {
     let adapter: ReturnType<typeof createMockAdapter<TestRecord>>
-    let resolver: ReturnType<typeof HaveWeMet.schema<TestRecord>['build']>
+    let resolver: ReturnType<(typeof HaveWeMet.schema<TestRecord>)['build']>
 
     beforeEach(async () => {
       adapter = createMockAdapter<TestRecord>()
@@ -598,12 +687,19 @@ describe('Integration: Queue Workflow', () => {
           lastName: 'Smith',
           email: `jon.smith${i}@test.com`,
         },
-        potentialMatches: [{
-          record: { id: 'r1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com' },
-          score: 30,
-          outcome: 'potential-match' as const,
-          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-        }],
+        potentialMatches: [
+          {
+            record: {
+              id: 'r1',
+              firstName: 'John',
+              lastName: 'Smith',
+              email: 'john.smith@example.com',
+            },
+            score: 30,
+            outcome: 'potential-match' as const,
+            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
+          },
+        ],
       }))
 
       const added = await resolver.queue.addBatch(itemsToAdd)

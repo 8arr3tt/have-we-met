@@ -10,7 +10,11 @@ import type {
   UnmergeResult,
 } from './types.js'
 import type { ProvenanceStore } from './provenance/provenance-store.js'
-import { UnmergeError, ProvenanceNotFoundError, SourceRecordNotFoundError } from './merge-error.js'
+import {
+  UnmergeError,
+  ProvenanceNotFoundError,
+  SourceRecordNotFoundError,
+} from './merge-error.js'
 
 /**
  * Unmerge mode options
@@ -37,7 +41,9 @@ export interface UnmergeOptions {
 /**
  * Source record archive interface for storing/retrieving archived source records
  */
-export interface SourceRecordArchive<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface SourceRecordArchive<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   /**
    * Stores source records in archive
    * @param records - Records to archive
@@ -69,12 +75,18 @@ export interface SourceRecordArchive<T extends Record<string, unknown> = Record<
 /**
  * In-memory implementation of source record archive for testing
  */
-export class InMemorySourceRecordArchive<T extends Record<string, unknown> = Record<string, unknown>>
-  implements SourceRecordArchive<T>
-{
-  private readonly store = new Map<string, { record: SourceRecord<T>; goldenRecordId: string }>()
+export class InMemorySourceRecordArchive<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> implements SourceRecordArchive<T> {
+  private readonly store = new Map<
+    string,
+    { record: SourceRecord<T>; goldenRecordId: string }
+  >()
 
-  async archive(records: SourceRecord<T>[], goldenRecordId: string): Promise<void> {
+  async archive(
+    records: SourceRecord<T>[],
+    goldenRecordId: string
+  ): Promise<void> {
     for (const record of records) {
       this.store.set(record.id, { record: { ...record }, goldenRecordId })
     }
@@ -152,11 +164,15 @@ export function createInMemorySourceRecordArchive<
  * })
  * ```
  */
-export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, unknown>> {
+export class UnmergeExecutor<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   private readonly provenanceStore: ProvenanceStore
   private readonly sourceRecordArchive: SourceRecordArchive<T>
   private readonly onRecordRestore?: (record: SourceRecord<T>) => Promise<void>
-  private readonly onGoldenRecordDelete?: (goldenRecordId: string) => Promise<void>
+  private readonly onGoldenRecordDelete?: (
+    goldenRecordId: string
+  ) => Promise<void>
 
   constructor(options: {
     provenanceStore: ProvenanceStore
@@ -180,7 +196,10 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
    * @throws {SourceRecordNotFoundError} If archived source records cannot be found
    * @throws {UnmergeError} If the golden record has already been unmerged
    */
-  async unmerge(request: UnmergeRequest, options?: UnmergeOptions): Promise<UnmergeResult<T>> {
+  async unmerge(
+    request: UnmergeRequest,
+    options?: UnmergeOptions
+  ): Promise<UnmergeResult<T>> {
     const { goldenRecordId, unmergedBy, reason } = request
     const mode = options?.mode ?? 'full'
 
@@ -198,7 +217,7 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
         {
           unmergedAt: provenance.unmergedAt,
           unmergedBy: provenance.unmergedBy,
-        },
+        }
       )
     }
 
@@ -206,12 +225,16 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
     const sourceRecordIdsToRestore = this.getSourceRecordIdsToRestore(
       provenance,
       mode,
-      options?.sourceRecordIdsToRestore,
+      options?.sourceRecordIdsToRestore
     )
 
     // 3. Verify all source records exist in archive
-    const existenceMap = await this.sourceRecordArchive.exists(sourceRecordIdsToRestore)
-    const missingRecords = sourceRecordIdsToRestore.filter((id) => !existenceMap.get(id))
+    const existenceMap = await this.sourceRecordArchive.exists(
+      sourceRecordIdsToRestore
+    )
+    const missingRecords = sourceRecordIdsToRestore.filter(
+      (id) => !existenceMap.get(id)
+    )
     if (missingRecords.length > 0) {
       throw new SourceRecordNotFoundError(missingRecords[0], {
         allMissing: missingRecords,
@@ -220,7 +243,9 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
     }
 
     // 4. Retrieve archived source records
-    const archivedRecords = await this.sourceRecordArchive.get(sourceRecordIdsToRestore)
+    const archivedRecords = await this.sourceRecordArchive.get(
+      sourceRecordIdsToRestore
+    )
 
     // 5. Restore source records
     const restoredRecords: Array<{ id: string; record: T }> = []
@@ -235,7 +260,10 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
     }
 
     // 6. Handle golden record based on mode
-    const shouldDeleteGoldenRecord = this.shouldDeleteGoldenRecord(mode, options?.deleteGoldenRecord)
+    const shouldDeleteGoldenRecord = this.shouldDeleteGoldenRecord(
+      mode,
+      options?.deleteGoldenRecord
+    )
     if (shouldDeleteGoldenRecord && this.onGoldenRecordDelete) {
       await this.onGoldenRecordDelete(goldenRecordId)
     }
@@ -285,8 +313,12 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
       }
     }
 
-    const existenceMap = await this.sourceRecordArchive.exists(provenance.sourceRecordIds)
-    const missingRecords = provenance.sourceRecordIds.filter((id) => !existenceMap.get(id))
+    const existenceMap = await this.sourceRecordArchive.exists(
+      provenance.sourceRecordIds
+    )
+    const missingRecords = provenance.sourceRecordIds.filter(
+      (id) => !existenceMap.get(id)
+    )
 
     if (missingRecords.length > 0) {
       return {
@@ -322,7 +354,7 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
   private getSourceRecordIdsToRestore(
     provenance: Provenance,
     mode: UnmergeMode,
-    specifiedIds?: string[],
+    specifiedIds?: string[]
   ): string[] {
     switch (mode) {
       case 'full':
@@ -333,15 +365,17 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
         if (!specifiedIds || specifiedIds.length === 0) {
           throw new UnmergeError(
             provenance.goldenRecordId,
-            `${mode} mode requires sourceRecordIdsToRestore to be specified`,
+            `${mode} mode requires sourceRecordIdsToRestore to be specified`
           )
         }
         // Validate specified IDs are in the provenance
-        const invalidIds = specifiedIds.filter((id) => !provenance.sourceRecordIds.includes(id))
+        const invalidIds = specifiedIds.filter(
+          (id) => !provenance.sourceRecordIds.includes(id)
+        )
         if (invalidIds.length > 0) {
           throw new UnmergeError(
             provenance.goldenRecordId,
-            `Source record IDs not found in provenance: ${invalidIds.join(', ')}`,
+            `Source record IDs not found in provenance: ${invalidIds.join(', ')}`
           )
         }
         return specifiedIds
@@ -355,7 +389,10 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
   /**
    * Determines if the golden record should be deleted
    */
-  private shouldDeleteGoldenRecord(mode: UnmergeMode, explicitDelete?: boolean): boolean {
+  private shouldDeleteGoldenRecord(
+    mode: UnmergeMode,
+    explicitDelete?: boolean
+  ): boolean {
     if (explicitDelete !== undefined) {
       return explicitDelete
     }
@@ -375,13 +412,13 @@ export class UnmergeExecutor<T extends Record<string, unknown> = Record<string, 
 /**
  * Creates a new UnmergeExecutor instance
  */
-export function createUnmergeExecutor<T extends Record<string, unknown> = Record<string, unknown>>(
-  options: {
-    provenanceStore: ProvenanceStore
-    sourceRecordArchive: SourceRecordArchive<T>
-    onRecordRestore?: (record: SourceRecord<T>) => Promise<void>
-    onGoldenRecordDelete?: (goldenRecordId: string) => Promise<void>
-  },
-): UnmergeExecutor<T> {
+export function createUnmergeExecutor<
+  T extends Record<string, unknown> = Record<string, unknown>,
+>(options: {
+  provenanceStore: ProvenanceStore
+  sourceRecordArchive: SourceRecordArchive<T>
+  onRecordRestore?: (record: SourceRecord<T>) => Promise<void>
+  onGoldenRecordDelete?: (goldenRecordId: string) => Promise<void>
+}): UnmergeExecutor<T> {
   return new UnmergeExecutor<T>(options)
 }

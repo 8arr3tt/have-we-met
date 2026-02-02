@@ -85,7 +85,11 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
         clearTimeout(timeoutId)
         reject(new Error('Sleep aborted'))
       }
-      ;(signal as unknown as EventTarget).addEventListener('abort', abortHandler, { once: true })
+      ;(signal as unknown as EventTarget).addEventListener(
+        'abort',
+        abortHandler,
+        { once: true }
+      )
     }
   })
 }
@@ -97,9 +101,13 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
  * @param config - Retry configuration
  * @returns Delay in milliseconds
  */
-export function calculateRetryDelay(attempt: number, config: RetryConfig): number {
+export function calculateRetryDelay(
+  attempt: number,
+  config: RetryConfig
+): number {
   // Calculate base delay with exponential backoff
-  let delay = config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1)
+  let delay =
+    config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1)
 
   // Cap at maximum delay
   delay = Math.min(delay, config.maxDelayMs)
@@ -169,7 +177,7 @@ export function shouldRetryError(error: Error, config: RetryConfig): boolean {
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  config: ExtendedRetryConfig,
+  config: ExtendedRetryConfig
 ): Promise<T> {
   let lastError: Error | undefined
   let delay = config.initialDelayMs
@@ -237,7 +245,7 @@ export async function withRetry<T>(
  */
 export async function withRetryDetailed<T>(
   fn: () => Promise<T>,
-  config: ExtendedRetryConfig,
+  config: ExtendedRetryConfig
 ): Promise<RetryResult<T>> {
   const startTime = Date.now()
   const attemptDetails: AttemptDetail[] = []
@@ -276,14 +284,16 @@ export async function withRetryDetailed<T>(
       const isLastAttempt = attempt === config.maxAttempts
 
       // Determine if we should retry
-      const shouldRetry = !isLastAttempt && (
-        config.shouldRetry
+      const shouldRetry =
+        !isLastAttempt &&
+        (config.shouldRetry
           ? config.shouldRetry(lastError, attempt)
-          : shouldRetryError(lastError, config)
-      )
+          : shouldRetryError(lastError, config))
 
       // Calculate delay
-      const delayBeforeNextMs = shouldRetry ? calculateRetryDelay(attempt, config) : 0
+      const delayBeforeNextMs = shouldRetry
+        ? calculateRetryDelay(attempt, config)
+        : 0
 
       attemptDetails.push({
         attempt,
@@ -335,7 +345,7 @@ export async function withRetryDetailed<T>(
  */
 export function createRetryable<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
-  config: ExtendedRetryConfig,
+  config: ExtendedRetryConfig
 ): (...args: TArgs) => Promise<TResult> {
   return (...args: TArgs) => withRetry(() => fn(...args), config)
 }

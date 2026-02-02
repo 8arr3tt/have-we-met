@@ -25,7 +25,9 @@ type Repository<T> = {
   createQueryBuilder: (alias?: string) => QueryBuilder
   manager: {
     connection: {
-      transaction: <R>(callback: (manager: EntityManager) => Promise<R>) => Promise<R>
+      transaction: <R>(
+        callback: (manager: EntityManager) => Promise<R>
+      ) => Promise<R>
     }
   }
 }
@@ -113,7 +115,9 @@ export class TypeORMProvenanceAdapter implements ProvenanceAdapter {
     try {
       const results = await this.repository
         .createQueryBuilder('p')
-        .where('p.sourceRecordIds LIKE :sourceId', { sourceId: `%${sourceId}%` })
+        .where('p.sourceRecordIds LIKE :sourceId', {
+          sourceId: `%${sourceId}%`,
+        })
         .getMany()
 
       return (results as Record<string, unknown>[])
@@ -141,9 +145,12 @@ export class TypeORMProvenanceAdapter implements ProvenanceAdapter {
 
       const affected = (result as { affected?: number }).affected
       if (affected === 0) {
-        throw new NotFoundError(`Provenance not found for golden record: ${goldenRecordId}`, {
-          goldenRecordId,
-        })
+        throw new NotFoundError(
+          `Provenance not found for golden record: ${goldenRecordId}`,
+          {
+            goldenRecordId,
+          }
+        )
       }
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -213,7 +220,9 @@ export class TypeORMProvenanceAdapter implements ProvenanceAdapter {
           ? JSON.parse(record.strategyUsed)
           : record.strategyUsed,
       unmerged: record.unmerged as boolean | undefined,
-      unmergedAt: record.unmergedAt ? new Date(record.unmergedAt as string | Date) : undefined,
+      unmergedAt: record.unmergedAt
+        ? new Date(record.unmergedAt as string | Date)
+        : undefined,
       unmergedBy: record.unmergedBy as string | undefined,
       unmergeReason: record.unmergeReason as string | undefined,
     }
@@ -223,7 +232,9 @@ export class TypeORMProvenanceAdapter implements ProvenanceAdapter {
 /**
  * TypeORM implementation of the merge adapter for archive/restore operations
  */
-export class TypeORMMergeAdapter<T extends Record<string, unknown>> implements MergeAdapter<T> {
+export class TypeORMMergeAdapter<
+  T extends Record<string, unknown>,
+> implements MergeAdapter<T> {
   private readonly repository: Repository<T>
   private readonly primaryKey: string
   private readonly config: Required<MergeAdapterConfig>
@@ -311,7 +322,9 @@ export class TypeORMMergeAdapter<T extends Record<string, unknown>> implements M
         },
       })
 
-      return (results as Record<string, unknown>[]).map((r) => this.mapToArchivedRecord(r))
+      return (results as Record<string, unknown>[]).map((r) =>
+        this.mapToArchivedRecord(r)
+      )
     } catch (error) {
       throw new QueryError('Failed to get archived records', {
         ids,
@@ -333,7 +346,9 @@ export class TypeORMMergeAdapter<T extends Record<string, unknown>> implements M
         .getMany()
 
       const archivedIds = new Set(
-        (archived as Record<string, unknown>[]).map((r) => r[this.primaryKey] as string)
+        (archived as Record<string, unknown>[]).map(
+          (r) => r[this.primaryKey] as string
+        )
       )
 
       for (const id of ids) {
@@ -349,7 +364,9 @@ export class TypeORMMergeAdapter<T extends Record<string, unknown>> implements M
     }
   }
 
-  async getArchivedByGoldenRecord(goldenRecordId: string): Promise<ArchivedRecord<T>[]> {
+  async getArchivedByGoldenRecord(
+    goldenRecordId: string
+  ): Promise<ArchivedRecord<T>[]> {
     try {
       const results = await this.repository.find({
         where: {
@@ -358,7 +375,9 @@ export class TypeORMMergeAdapter<T extends Record<string, unknown>> implements M
         },
       })
 
-      return (results as Record<string, unknown>[]).map((r) => this.mapToArchivedRecord(r))
+      return (results as Record<string, unknown>[]).map((r) =>
+        this.mapToArchivedRecord(r)
+      )
     } catch (error) {
       throw new QueryError('Failed to get archived records by golden record', {
         goldenRecordId,
@@ -408,8 +427,17 @@ export class TypeORMMergeAdapter<T extends Record<string, unknown>> implements M
     }
   }
 
-  private mapToArchivedRecord(record: Record<string, unknown>): ArchivedRecord<T> {
-    const { [this.config.archivedAtField]: archivedAt, [this.config.archivedReasonField]: archivedReason, [this.config.mergedIntoIdField]: mergedIntoId, createdAt, updatedAt, ...rest } = record
+  private mapToArchivedRecord(
+    record: Record<string, unknown>
+  ): ArchivedRecord<T> {
+    const {
+      [this.config.archivedAtField]: archivedAt,
+      [this.config.archivedReasonField]: archivedReason,
+      [this.config.mergedIntoIdField]: mergedIntoId,
+      createdAt,
+      updatedAt,
+      ...rest
+    } = record
 
     return {
       id: record[this.primaryKey] as string,
@@ -438,7 +466,12 @@ export function createTypeORMMergeAdapter<T extends Record<string, unknown>>(
   config?: MergeAdapterConfig,
   provenanceRepository?: Repository<Record<string, unknown>>
 ): TypeORMMergeAdapter<T> {
-  return new TypeORMMergeAdapter<T>(repository, primaryKey, config, provenanceRepository)
+  return new TypeORMMergeAdapter<T>(
+    repository,
+    primaryKey,
+    config,
+    provenanceRepository
+  )
 }
 
 /**

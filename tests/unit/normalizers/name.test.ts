@@ -190,7 +190,9 @@ describe('Name Normalizer', () => {
       it('should handle names with titles', () => {
         expect(normalizeName('dr. jane doe')).toBe('Dr. Jane Doe')
         expect(normalizeName('MR. JOHN SMITH')).toBe('Mr. John Smith')
-        expect(normalizeName('professor alice johnson')).toBe('Professor Alice Johnson')
+        expect(normalizeName('professor alice johnson')).toBe(
+          'Professor Alice Johnson'
+        )
       })
 
       it('should handle names with suffixes', () => {
@@ -238,12 +240,16 @@ describe('Name Normalizer', () => {
       })
 
       it('should handle hyphenated names', () => {
-        expect(normalizeName('jean-claude van damme')).toBe('Jean-Claude van Damme')
+        expect(normalizeName('jean-claude van damme')).toBe(
+          'Jean-Claude van Damme'
+        )
         expect(normalizeName('MARY-KATE OLSEN')).toBe('Mary-Kate Olsen')
       })
 
       it('should handle particles in names', () => {
-        expect(normalizeName('ludwig van beethoven')).toBe('Ludwig van Beethoven')
+        expect(normalizeName('ludwig van beethoven')).toBe(
+          'Ludwig van Beethoven'
+        )
         expect(normalizeName('LEONARDO DA VINCI')).toBe('Leonardo da Vinci')
         expect(normalizeName('vincent van gogh')).toBe('Vincent van Gogh')
       })
@@ -255,7 +261,9 @@ describe('Name Normalizer', () => {
 
       it('should handle particles in compound last names', () => {
         // Particle is treated as middle name in three-word names
-        const result = normalizeName('maria von habsburg', { outputFormat: 'components' }) as NameComponents
+        const result = normalizeName('maria von habsburg', {
+          outputFormat: 'components',
+        }) as NameComponents
         expect(result.first).toBe('Maria')
         expect(result.middle).toEqual(['von'])
         expect(result.last).toBe('Habsburg')
@@ -270,9 +278,15 @@ describe('Name Normalizer', () => {
 
     describe('options: preserveCase', () => {
       it('should preserve original casing when preserveCase is true', () => {
-        expect(normalizeName('JOHN SMITH', { preserveCase: true })).toBe('JOHN SMITH')
-        expect(normalizeName('john smith', { preserveCase: true })).toBe('john smith')
-        expect(normalizeName('JoHn SmItH', { preserveCase: true })).toBe('JoHn SmItH')
+        expect(normalizeName('JOHN SMITH', { preserveCase: true })).toBe(
+          'JOHN SMITH'
+        )
+        expect(normalizeName('john smith', { preserveCase: true })).toBe(
+          'john smith'
+        )
+        expect(normalizeName('JoHn SmItH', { preserveCase: true })).toBe(
+          'JoHn SmItH'
+        )
       })
     })
 
@@ -282,8 +296,12 @@ describe('Name Normalizer', () => {
       })
 
       it('should exclude titles when extractTitles is false', () => {
-        expect(normalizeName('dr. john smith', { extractTitles: false })).toBe('John Smith')
-        expect(normalizeName('mr. robert jones', { extractTitles: false })).toBe('Robert Jones')
+        expect(normalizeName('dr. john smith', { extractTitles: false })).toBe(
+          'John Smith'
+        )
+        expect(
+          normalizeName('mr. robert jones', { extractTitles: false })
+        ).toBe('Robert Jones')
       })
     })
 
@@ -293,8 +311,12 @@ describe('Name Normalizer', () => {
       })
 
       it('should exclude suffixes when extractSuffixes is false', () => {
-        expect(normalizeName('john smith jr.', { extractSuffixes: false })).toBe('John Smith')
-        expect(normalizeName('jane doe phd', { extractSuffixes: false })).toBe('Jane Doe')
+        expect(
+          normalizeName('john smith jr.', { extractSuffixes: false })
+        ).toBe('John Smith')
+        expect(normalizeName('jane doe phd', { extractSuffixes: false })).toBe(
+          'Jane Doe'
+        )
       })
     })
 
@@ -304,7 +326,9 @@ describe('Name Normalizer', () => {
       })
 
       it('should preserve whitespace when normalizeWhitespace is false', () => {
-        const result = normalizeName('john    smith', { normalizeWhitespace: false })
+        const result = normalizeName('john    smith', {
+          normalizeWhitespace: false,
+        })
         // Should still parse correctly but may have extra spaces
         expect(result).toBeTruthy()
       })
@@ -360,28 +384,33 @@ describe('Name Normalizer', () => {
 
     describe('complex real-world names', () => {
       it('should handle full formal names', () => {
-        expect(normalizeName('Dr. Martin Luther King Jr.'))
-          .toBe('Dr. Martin Luther King Jr.')
+        expect(normalizeName('Dr. Martin Luther King Jr.')).toBe(
+          'Dr. Martin Luther King Jr.'
+        )
       })
 
       it('should handle academic titles', () => {
-        expect(normalizeName('professor john doe phd'))
-          .toBe('Professor John Doe PHD')
+        expect(normalizeName('professor john doe phd')).toBe(
+          'Professor John Doe PHD'
+        )
       })
 
       it('should handle military titles', () => {
-        expect(normalizeName('captain james t. kirk'))
-          .toBe('Captain James T. Kirk')
+        expect(normalizeName('captain james t. kirk')).toBe(
+          'Captain James T. Kirk'
+        )
       })
 
       it('should handle multiple middle names', () => {
-        expect(normalizeName('john fitzgerald kennedy'))
-          .toBe('John Fitzgerald Kennedy')
+        expect(normalizeName('john fitzgerald kennedy')).toBe(
+          'John Fitzgerald Kennedy'
+        )
       })
 
       it('should handle names with mixed formatting', () => {
-        expect(normalizeName('  DR.   john   QUINCY   smith   JR.  '))
-          .toBe('Dr. John Quincy Smith Jr.')
+        expect(normalizeName('  DR.   john   QUINCY   smith   JR.  ')).toBe(
+          'Dr. John Quincy Smith Jr.'
+        )
       })
     })
 
@@ -407,7 +436,8 @@ describe('Name Normalizer', () => {
       })
 
       it('should handle very long names', () => {
-        const longName = 'pablo diego josé francisco de paula juan nepomuceno maría de los remedios cipriano de la santísima trinidad ruiz picasso'
+        const longName =
+          'pablo diego josé francisco de paula juan nepomuceno maría de los remedios cipriano de la santísima trinidad ruiz picasso'
         const result = normalizeName(longName)
         expect(result).toBeTruthy()
         expect(typeof result).toBe('string')
@@ -423,7 +453,9 @@ describe('Name Normalizer', () => {
 
       it('should work with registry options', () => {
         const normalizer = getNormalizer('name')
-        const result = normalizer?.('dr. john smith', { outputFormat: 'components' }) as NameComponents
+        const result = normalizer?.('dr. john smith', {
+          outputFormat: 'components',
+        }) as NameComponents
         expect(result).toHaveProperty('first')
         expect(result).toHaveProperty('last')
       })

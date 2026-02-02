@@ -1,4 +1,10 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria, QueueAdapter } from '../types'
+import type {
+  DatabaseAdapter,
+  AdapterConfig,
+  QueryOptions,
+  FilterCriteria,
+  QueueAdapter,
+} from '../types'
 import { BaseAdapter } from '../base-adapter'
 import { QueryError, TransactionError, NotFoundError } from '../adapter-error'
 import { DrizzleQueueAdapter } from './drizzle-queue-adapter'
@@ -96,7 +102,11 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
     for (const [field, condition] of Object.entries(filter)) {
       const column = this.getColumn(field)
 
-      if (typeof condition === 'object' && condition !== null && 'operator' in condition) {
+      if (
+        typeof condition === 'object' &&
+        condition !== null &&
+        'operator' in condition
+      ) {
         const operatorCondition = condition as {
           operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'like'
           value: unknown
@@ -123,7 +133,9 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
             break
           case 'in':
             if (Array.isArray(operatorCondition.value)) {
-              conditions.push(this.operators.inArray(column, operatorCondition.value))
+              conditions.push(
+                this.operators.inArray(column, operatorCondition.value)
+              )
             } else {
               throw new QueryError('IN operator requires array value', {
                 field,
@@ -132,7 +144,9 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
             }
             break
           case 'like':
-            conditions.push(this.operators.like(column, operatorCondition.value))
+            conditions.push(
+              this.operators.like(column, operatorCondition.value)
+            )
             break
         }
       } else {
@@ -140,10 +154,14 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
       }
     }
 
-    return conditions.length === 1 ? conditions[0] : this.operators.and(...conditions)
+    return conditions.length === 1
+      ? conditions[0]
+      : this.operators.and(...conditions)
   }
 
-  private buildSelectQuery(options?: QueryOptions): Promise<Record<string, unknown>[]> {
+  private buildSelectQuery(
+    options?: QueryOptions
+  ): Promise<Record<string, unknown>[]> {
     let query = this.db.select().from(this.table) as unknown as DrizzleQuery
 
     const normalized = this.normalizeQueryOptions(options)
@@ -159,7 +177,9 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
     if (normalized.orderBy) {
       const column = this.getColumn(normalized.orderBy.field)
       const orderFunc =
-        normalized.orderBy.direction === 'asc' ? this.operators.asc : this.operators.desc
+        normalized.orderBy.direction === 'asc'
+          ? this.operators.asc
+          : this.operators.desc
       query = query.orderBy(orderFunc(column))
     }
 
@@ -190,14 +210,15 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
       if (normalized.orderBy) {
         const column = this.getColumn(normalized.orderBy.field)
         const orderFunc =
-          normalized.orderBy.direction === 'asc' ? this.operators.asc : this.operators.desc
+          normalized.orderBy.direction === 'asc'
+            ? this.operators.asc
+            : this.operators.desc
         query = query.orderBy(orderFunc(column))
       }
 
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
       return results.map((record) => this.mapRecordFromDatabase(record))
     } catch (error) {
       throw new QueryError('Failed to find records by blocking keys', {
@@ -216,10 +237,9 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
 
       const query = this.db.select().from(this.table).where(whereCondition)
 
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
       return results.map((record) => this.mapRecordFromDatabase(record))
     } catch (error) {
       throw new QueryError('Failed to find records by IDs', {
@@ -242,14 +262,18 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
 
   async count(filter?: FilterCriteria): Promise<number> {
     try {
-      let query = this.db.select({ count: this.operators.count() }).from(this.table) as unknown as DrizzleQuery
+      let query = this.db
+        .select({ count: this.operators.count() })
+        .from(this.table) as unknown as DrizzleQuery
 
       if (filter) {
         const whereCondition = this.buildWhereConditions(filter)
         query = query.where(whereCondition)
       }
 
-      const result = (await (query as unknown as Promise<Array<{ count: number }>>)) as Array<{
+      const result = (await (query as unknown as Promise<
+        Array<{ count: number }>
+      >)) as Array<{
         count: number
       }>
       return result[0]?.count ?? 0
@@ -326,16 +350,23 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async transaction<R>(callback: (adapter: DatabaseAdapter<T>) => Promise<R>): Promise<R> {
+  async transaction<R>(
+    callback: (adapter: DatabaseAdapter<T>) => Promise<R>
+  ): Promise<R> {
     try {
       return await this.db.transaction(async (tx: DrizzleDatabase) => {
-        const txAdapter = new DrizzleAdapter<T>(tx, this.table, {
-          tableName: this.config.tableName,
-          primaryKey: this.config.primaryKey,
-          fieldMapping: this.config.fieldMapping,
-          usePreparedStatements: this.config.usePreparedStatements,
-          poolConfig: this.config.poolConfig,
-        }, this.operators)
+        const txAdapter = new DrizzleAdapter<T>(
+          tx,
+          this.table,
+          {
+            tableName: this.config.tableName,
+            primaryKey: this.config.primaryKey,
+            fieldMapping: this.config.fieldMapping,
+            usePreparedStatements: this.config.usePreparedStatements,
+            poolConfig: this.config.poolConfig,
+          },
+          this.operators
+        )
         return await callback(txAdapter)
       })
     } catch (error) {
@@ -364,7 +395,9 @@ export class DrizzleAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async batchUpdate(updates: Array<{ id: string; updates: Partial<T> }>): Promise<T[]> {
+  async batchUpdate(
+    updates: Array<{ id: string; updates: Partial<T> }>
+  ): Promise<T[]> {
     if (updates.length === 0) {
       return []
     }

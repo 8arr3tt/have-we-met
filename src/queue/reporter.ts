@@ -152,7 +152,8 @@ export class QueueReporter<T extends Record<string, unknown>> {
     const totalDecisions = reviewerItems.length
     const avgDecisionTime =
       totalDecisions > 0 ? totalDecisionTime / totalDecisions : 0
-    const confirmRatio = confirmed + rejected > 0 ? confirmed / (confirmed + rejected) : 0
+    const confirmRatio =
+      confirmed + rejected > 0 ? confirmed / (confirmed + rejected) : 0
 
     return {
       reviewerId,
@@ -173,7 +174,14 @@ export class QueueReporter<T extends Record<string, unknown>> {
       return 'id,status,createdAt,decidedAt,decidedBy,priority\n'
     }
 
-    const headers = ['id', 'status', 'createdAt', 'decidedAt', 'decidedBy', 'priority']
+    const headers = [
+      'id',
+      'status',
+      'createdAt',
+      'decidedAt',
+      'decidedBy',
+      'priority',
+    ]
     const rows = items.map((item) => {
       return [
         item.id,

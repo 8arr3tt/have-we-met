@@ -45,7 +45,10 @@ describe('PrismaProvenanceAdapter', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient()
-    adapter = new PrismaProvenanceAdapter(mockPrisma as unknown as any, 'provenance')
+    adapter = new PrismaProvenanceAdapter(
+      mockPrisma as unknown as any,
+      'provenance'
+    )
   })
 
   const createTestProvenance = (): Provenance => ({
@@ -97,7 +100,9 @@ describe('PrismaProvenanceAdapter', () => {
 
     it('handles database errors', async () => {
       const provenance = createTestProvenance()
-      mockPrisma.provenance.upsert.mockRejectedValue(new Error('Database error'))
+      mockPrisma.provenance.upsert.mockRejectedValue(
+        new Error('Database error')
+      )
 
       await expect(adapter.save(provenance)).rejects.toThrow(QueryError)
     })
@@ -260,7 +265,10 @@ describe('PrismaMergeAdapter', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient()
-    adapter = new PrismaMergeAdapter<TestRecord>(mockPrisma as unknown as any, 'testRecords')
+    adapter = new PrismaMergeAdapter<TestRecord>(
+      mockPrisma as unknown as any,
+      'testRecords'
+    )
   })
 
   describe('constructor', () => {
@@ -318,7 +326,9 @@ describe('PrismaMergeAdapter', () => {
     })
 
     it('handles database errors', async () => {
-      mockPrisma.testRecords.updateMany.mockRejectedValue(new Error('Database error'))
+      mockPrisma.testRecords.updateMany.mockRejectedValue(
+        new Error('Database error')
+      )
 
       await expect(adapter.archive(['rec-1'])).rejects.toThrow(QueryError)
     })

@@ -21,12 +21,14 @@ Golden records provide:
 ### When to Merge vs. Keep Separate
 
 **Merge when:**
+
 - You need a unified view for downstream systems
 - Source records represent the same entity with complementary data
 - You want to reduce data redundancy
 - Your workflow benefits from consolidated records
 
 **Keep separate when:**
+
 - Regulatory requirements mandate preserving original records
 - Different systems need to maintain their own records
 - Match confidence is not high enough
@@ -41,7 +43,7 @@ import { HaveWeMet } from 'have-we-met'
 import { prismaAdapter } from 'have-we-met/adapters/prisma'
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
@@ -51,25 +53,35 @@ const resolver = HaveWeMet.create<Customer>()
       .field('createdAt', { type: 'date' })
       .field('updatedAt', { type: 'date' })
   })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-  )
-  .matching(match => {
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+  .matching((match) => {
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10)
-      .field('lastName').strategy('jaro-winkler').weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   })
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
-    .onConflict('useDefault')
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNonNull')
-    .field('addresses').strategy('union')
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
+      .onConflict('useDefault')
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('lastName')
+      .strategy('preferLonger')
+      .field('email')
+      .strategy('preferNewer')
+      .field('phone')
+      .strategy('preferNonNull')
+      .field('addresses')
+      .strategy('union')
   )
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
@@ -157,6 +169,7 @@ Sets the default strategy for fields without explicit configuration.
 ```
 
 Available strategies:
+
 - `preferFirst`, `preferLast`
 - `preferNewer`, `preferOlder`
 - `preferNonNull`
@@ -179,6 +192,7 @@ Determines how conflicts are handled when a strategy cannot decide.
 ```
 
 Modes:
+
 - `'useDefault'` - Apply the default strategy to resolve
 - `'error'` - Throw an error when conflict cannot be resolved
 - `'markConflict'` - Mark the conflict without resolving
@@ -245,6 +259,7 @@ Sets options for the merge strategy.
 ```
 
 Available options:
+
 - `separator?: string` - Separator for concatenate strategy
 - `dateField?: string` - Date field for temporal strategies
 - `nullHandling?: 'skip' | 'include' | 'preferNull'` - How to handle null values
@@ -256,12 +271,12 @@ The merge operation returns a comprehensive result:
 
 ```typescript
 interface MergeResult<T> {
-  goldenRecord: T              // The merged record
-  goldenRecordId: string       // ID of the golden record
-  provenance: Provenance       // Field-level attribution
-  sourceRecords: SourceRecord<T>[]  // Original records
-  conflicts: MergeConflict[]   // Any conflicts encountered
-  stats: MergeStats            // Merge statistics
+  goldenRecord: T // The merged record
+  goldenRecordId: string // ID of the golden record
+  provenance: Provenance // Field-level attribution
+  sourceRecords: SourceRecord<T>[] // Original records
+  conflicts: MergeConflict[] // Any conflicts encountered
+  stats: MergeStats // Merge statistics
 }
 ```
 
@@ -271,8 +286,12 @@ interface MergeResult<T> {
 const result = await executor.merge({ sourceRecords, mergedBy: 'admin' })
 
 // Which source contributed each field?
-for (const [field, attribution] of Object.entries(result.provenance.fieldSources)) {
-  console.log(`${field}: from ${attribution.sourceRecordId} (${attribution.strategyApplied})`)
+for (const [field, attribution] of Object.entries(
+  result.provenance.fieldSources
+)) {
+  console.log(
+    `${field}: from ${attribution.sourceRecordId} (${attribution.strategyApplied})`
+  )
 }
 
 // Output:
@@ -301,14 +320,14 @@ if (result.conflicts.length > 0) {
 
 Match strategies to your data semantics:
 
-| Field Type | Recommended Strategy | Reason |
-|------------|---------------------|--------|
-| Names | `preferLonger` | "Jonathan" is more complete than "Jon" |
-| Email | `preferNewer` | Most recent email is likely current |
-| Phone | `preferNonNull` | Any phone is better than none |
-| Addresses | `union` | Keep all known addresses |
-| Dates | `preferOlder` for birth dates | Original date is correct |
-| Counts | `max` or `sum` | Depends on semantics |
+| Field Type | Recommended Strategy          | Reason                                 |
+| ---------- | ----------------------------- | -------------------------------------- |
+| Names      | `preferLonger`                | "Jonathan" is more complete than "Jon" |
+| Email      | `preferNewer`                 | Most recent email is likely current    |
+| Phone      | `preferNonNull`               | Any phone is better than none          |
+| Addresses  | `union`                       | Keep all known addresses               |
+| Dates      | `preferOlder` for birth dates | Original date is correct               |
+| Counts     | `max` or `sum`                | Depends on semantics                   |
 
 ### 2. Configure Timestamp Field
 
@@ -349,9 +368,9 @@ Validate merge results match expectations:
 // In tests
 const result = await executor.merge({ sourceRecords, mergedBy: 'test' })
 
-expect(result.goldenRecord.firstName).toBe('Jonathan')  // preferLonger
-expect(result.goldenRecord.phone).toBe('+1-555-0100')   // preferNonNull
-expect(result.goldenRecord.addresses).toHaveLength(2)   // union
+expect(result.goldenRecord.firstName).toBe('Jonathan') // preferLonger
+expect(result.goldenRecord.phone).toBe('+1-555-0100') // preferNonNull
+expect(result.goldenRecord.addresses).toHaveLength(2) // union
 ```
 
 ## Integration with Review Queue
@@ -363,7 +382,7 @@ Merges can be triggered from review queue decisions:
 await resolver.queue.merge('queue-item-id', {
   selectedMatchId: 'match-record-id',
   notes: 'Confirmed duplicate, merging records',
-  decidedBy: 'reviewer@example.com'
+  decidedBy: 'reviewer@example.com',
 })
 
 // The queue merge handler executes the merge using configured strategies
@@ -378,7 +397,7 @@ See [Review Queue](./review-queue.md) for complete queue integration details.
 import {
   MergeValidationError,
   MergeConflictError,
-  SourceRecordNotFoundError
+  SourceRecordNotFoundError,
 } from 'have-we-met/merge'
 
 try {

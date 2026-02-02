@@ -13,7 +13,11 @@ export class AdapterError extends Error {
    */
   readonly context?: Record<string, unknown>
 
-  constructor(message: string, code: string, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code: string,
+    context?: Record<string, unknown>
+  ) {
     super(message)
     this.name = 'AdapterError'
     this.code = code

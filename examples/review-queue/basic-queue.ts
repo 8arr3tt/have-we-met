@@ -22,7 +22,9 @@ interface Customer {
 }
 
 // Simple mock adapter for examples
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   const records: T[] = []
   const queueItems: QueueItem<T>[] = []
 
@@ -33,9 +35,10 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
       records.push(newRecord)
       return newRecord
     },
-    update: async () => ({} as T),
+    update: async () => ({}) as T,
     delete: async () => {},
-    findById: async (id: string) => records.find((r) => (r as any).id === id) || null,
+    findById: async (id: string) =>
+      records.find((r) => (r as any).id === id) || null,
     findAll: async () => records,
     count: async () => records.length,
     batchInsert: async (batch: T[]) => batch,
@@ -55,7 +58,8 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
         return item
       },
       findQueueItems: async () => queueItems,
-      findQueueItemById: async (id: string) => queueItems.find((i) => i.id === id) || null,
+      findQueueItemById: async (id: string) =>
+        queueItems.find((i) => i.id === id) || null,
       deleteQueueItem: async (id: string) => {
         const index = queueItems.findIndex((i) => i.id === id)
         if (index >= 0) queueItems.splice(index, 1)
@@ -82,18 +86,20 @@ async function basicQueueExample() {
     company: { type: 'string', weight: 0.5 },
   })
     .blocking((block) =>
-      block
-        .exact('email')
-        .phonetic('lastName')
-        .prefix('lastName', 2)
+      block.exact('email').phonetic('lastName').prefix('lastName', 2)
     )
     .matching((match) =>
       match
-        .field('firstName').using('jaro-winkler', { weight: 1.0 })
-        .field('lastName').using('jaro-winkler', { weight: 1.5 })
-        .field('email').using('exact', { weight: 2.0 })
-        .field('phone').using('exact', { weight: 1.0 })
-        .field('company').using('levenshtein', { weight: 0.5 })
+        .field('firstName')
+        .using('jaro-winkler', { weight: 1.0 })
+        .field('lastName')
+        .using('jaro-winkler', { weight: 1.5 })
+        .field('email')
+        .using('exact', { weight: 2.0 })
+        .field('phone')
+        .using('exact', { weight: 1.0 })
+        .field('company')
+        .using('levenshtein', { weight: 0.5 })
     )
     .thresholds({ noMatch: 20, definiteMatch: 50 })
     .adapter(adapter)
@@ -128,18 +134,21 @@ async function basicQueueExample() {
   // Step 2: Resolve a new candidate that produces potential matches
   console.log('Step 2: Resolving new candidate record...')
   const candidateRecord: Customer = {
-    firstName: 'Jon',  // Similar to "John"
+    firstName: 'Jon', // Similar to "John"
     lastName: 'Smith',
-    email: 'jon.smith@example.com',  // Different email
-    phone: '+1-555-0100',  // Same phone
-    company: 'Acme Corporation',  // Similar company
+    email: 'jon.smith@example.com', // Different email
+    phone: '+1-555-0100', // Same phone
+    company: 'Acme Corporation', // Similar company
   }
 
   const result = await resolver.resolveWithDatabase(candidateRecord)
   console.log(`Found ${result.matches.length} matches`)
   console.log(`Outcome: ${result.matches[0]?.outcome || 'no-match'}\n`)
 
-  if (result.matches.length === 0 || result.matches[0].outcome !== 'potential-match') {
+  if (
+    result.matches.length === 0 ||
+    result.matches[0].outcome !== 'potential-match'
+  ) {
     console.log('No potential matches to queue')
     return
   }

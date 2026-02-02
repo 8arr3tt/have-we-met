@@ -31,7 +31,7 @@ const pending = await resolver.queue.list({
   status: 'pending',
   limit: 10,
   orderBy: 'priority',
-  orderDirection: 'desc'
+  orderDirection: 'desc',
 })
 
 // Display to user for review
@@ -744,7 +744,7 @@ async function cliReviewQueue(resolver: Resolver<Customer>) {
       status: 'pending',
       limit: 1,
       orderBy: 'priority',
-      orderDirection: 'desc'
+      orderDirection: 'desc',
     })
 
     if (result.items.length === 0) {
@@ -765,7 +765,9 @@ async function cliReviewQueue(resolver: Resolver<Customer>) {
     console.table(item.candidateRecord)
     console.log()
 
-    console.log(chalk.bold(`Potential Matches (${item.potentialMatches.length}):`))
+    console.log(
+      chalk.bold(`Potential Matches (${item.potentialMatches.length}):`)
+    )
     item.potentialMatches.forEach((match, idx) => {
       console.log(chalk.yellow(`\nMatch ${idx + 1} - Score: ${match.score}%`))
       console.table(match.record)
@@ -778,8 +780,8 @@ async function cliReviewQueue(resolver: Resolver<Customer>) {
       choices: [
         { title: '✓ Confirm Match', value: 'confirm' },
         { title: '✗ Reject Match', value: 'reject' },
-        { title: '→ Skip', value: 'skip' }
-      ]
+        { title: '→ Skip', value: 'skip' },
+      ],
     })
 
     if (action === 'confirm') {
@@ -788,20 +790,20 @@ async function cliReviewQueue(resolver: Resolver<Customer>) {
         name: 'matchIndex',
         message: 'Which match? (1-' + item.potentialMatches.length + ')',
         min: 1,
-        max: item.potentialMatches.length
+        max: item.potentialMatches.length,
       })
 
       const { notes } = await prompts({
         type: 'text',
         name: 'notes',
-        message: 'Notes (optional):'
+        message: 'Notes (optional):',
       })
 
       const selectedMatch = item.potentialMatches[matchIndex - 1]
       await resolver.queue.confirm(item.id, {
         selectedMatchId: selectedMatch.record.id,
         notes,
-        decidedBy: 'cli-reviewer'
+        decidedBy: 'cli-reviewer',
       })
 
       console.log(chalk.green('✓ Match confirmed'))
@@ -809,12 +811,12 @@ async function cliReviewQueue(resolver: Resolver<Customer>) {
       const { notes } = await prompts({
         type: 'text',
         name: 'notes',
-        message: 'Notes (optional):'
+        message: 'Notes (optional):',
       })
 
       await resolver.queue.reject(item.id, {
         notes,
-        decidedBy: 'cli-reviewer'
+        decidedBy: 'cli-reviewer',
       })
 
       console.log(chalk.red('✗ Match rejected'))
@@ -823,7 +825,7 @@ async function cliReviewQueue(resolver: Resolver<Customer>) {
       break
     }
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
   }
 }
 ```

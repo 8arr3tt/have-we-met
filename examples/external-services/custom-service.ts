@@ -72,7 +72,7 @@ function createFraudDetectionService(): CustomService {
 
     // Check IP address
     const ipAddress = String(record.ipAddress ?? '')
-    if (suspiciousIpRanges.some(range => ipAddress.startsWith(range))) {
+    if (suspiciousIpRanges.some((range) => ipAddress.startsWith(range))) {
       score += 0.2
       factors.push('suspicious_ip_range')
     }
@@ -107,13 +107,13 @@ function createFraudDetectionService(): CustomService {
 
     async execute(
       input: CustomInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<CustomOutput>> {
       const startedAt = new Date()
       const { record, params } = input
 
       // Simulate some processing time
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 10))
 
       const threshold = (params?.riskThreshold as number) ?? 0.7
       const { score, factors } = calculateRiskScore(record)
@@ -186,12 +186,12 @@ function createDuplicateDetectorService(): CustomService {
 
     async execute(
       input: CustomInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<CustomOutput>> {
       const startedAt = new Date()
       const { record } = input
 
-      await new Promise(resolve => setTimeout(resolve, 5))
+      await new Promise((resolve) => setTimeout(resolve, 5))
 
       const email = String(record.email ?? '').toLowerCase()
       const potentialDuplicates: string[] = []
@@ -200,13 +200,12 @@ function createDuplicateDetectorService(): CustomService {
       for (const [primary, aliases] of knownDuplicates) {
         if (email === primary || aliases.includes(email)) {
           potentialDuplicates.push(primary)
-          potentialDuplicates.push(...aliases.filter(a => a !== email))
+          potentialDuplicates.push(...aliases.filter((a) => a !== email))
         }
       }
 
-      const flags = potentialDuplicates.length > 0
-        ? ['potential_duplicate']
-        : undefined
+      const flags =
+        potentialDuplicates.length > 0 ? ['potential_duplicate'] : undefined
 
       const completedAt = new Date()
       return {
@@ -264,18 +263,18 @@ async function customServiceExample() {
   const servicesConfig = createServiceBuilder<PersonRecord>()
     .defaultTimeout(5000)
     .custom('fraudCheck')
-      .using(fraudService)
-      .params({ riskThreshold: 0.7 })
-      .executeAt('pre-match')
-      .onResult((result: CustomOutput) => {
-        const riskScore = (result.result as { riskScore: number }).riskScore
-        return riskScore < 0.7 // Only proceed if risk score is below threshold
-      })
-      .required(true)
+    .using(fraudService)
+    .params({ riskThreshold: 0.7 })
+    .executeAt('pre-match')
+    .onResult((result: CustomOutput) => {
+      const riskScore = (result.result as { riskScore: number }).riskScore
+      return riskScore < 0.7 // Only proceed if risk score is below threshold
+    })
+    .required(true)
     .custom('duplicateCheck')
-      .using(duplicateService)
-      .executeAt('post-match')
-      .onFailure('continue')
+    .using(duplicateService)
+    .executeAt('post-match')
+    .onFailure('continue')
     .build()
 
   console.log('Service configuration:')
@@ -318,15 +317,23 @@ async function customServiceExample() {
   console.log('Pre-match result:')
   console.log(`  Proceed: ${lowRiskResult.proceed}`)
   console.log(`  Flags: ${lowRiskResult.flags?.join(', ') ?? 'none'}`)
-  console.log(`  Score adjustments: ${lowRiskResult.scoreAdjustments?.join(', ') ?? 'none'}`)
+  console.log(
+    `  Score adjustments: ${lowRiskResult.scoreAdjustments?.join(', ') ?? 'none'}`
+  )
 
   const fraudResult = lowRiskResult.results['fraud-detection']
   if (fraudResult?.data) {
     const data = fraudResult.data as CustomOutput
-    const result = data.result as { riskScore: number; riskLevel: string; factors: string[] }
+    const result = data.result as {
+      riskScore: number
+      riskLevel: string
+      factors: string[]
+    }
     console.log(`  Fraud risk score: ${result.riskScore}`)
     console.log(`  Risk level: ${result.riskLevel}`)
-    console.log(`  Risk factors: ${result.factors.length > 0 ? result.factors.join(', ') : 'none'}`)
+    console.log(
+      `  Risk factors: ${result.factors.length > 0 ? result.factors.join(', ') : 'none'}`
+    )
   }
   console.log()
 
@@ -355,7 +362,11 @@ async function customServiceExample() {
   const highFraudResult = highRiskResult.results['fraud-detection']
   if (highFraudResult?.data) {
     const data = highFraudResult.data as CustomOutput
-    const result = data.result as { riskScore: number; riskLevel: string; factors: string[] }
+    const result = data.result as {
+      riskScore: number
+      riskLevel: string
+      factors: string[]
+    }
     console.log(`  Fraud risk score: ${result.riskScore}`)
     console.log(`  Risk level: ${result.riskLevel}`)
     console.log(`  Risk factors: ${result.factors.join(', ')}`)
@@ -393,7 +404,7 @@ async function customServiceExample() {
 
   const postMatchResult = await executor.executePostMatch(
     potentialDuplicateRecord,
-    mockMatchResult,
+    mockMatchResult
   )
 
   console.log('Post-match result:')
@@ -403,10 +414,15 @@ async function customServiceExample() {
   const dupResult = postMatchResult.results['duplicate-detector']
   if (dupResult?.data) {
     const data = dupResult.data as CustomOutput
-    const result = data.result as { hasPotentialDuplicates: boolean; potentialDuplicateEmails: string[] }
+    const result = data.result as {
+      hasPotentialDuplicates: boolean
+      potentialDuplicateEmails: string[]
+    }
     console.log(`  Has potential duplicates: ${result.hasPotentialDuplicates}`)
     if (result.potentialDuplicateEmails.length > 0) {
-      console.log(`  Potential duplicate emails: ${result.potentialDuplicateEmails.join(', ')}`)
+      console.log(
+        `  Potential duplicate emails: ${result.potentialDuplicateEmails.join(', ')}`
+      )
     }
   }
   console.log()
@@ -420,12 +436,15 @@ async function customServiceExample() {
 
   const directResult = await fraudService.execute(
     { record: { email: 'test@example.com', transactionAmount: 5000 } },
-    context,
+    context
   )
 
   console.log('Direct fraud check result:')
   if (directResult.data) {
-    const result = directResult.data.result as { riskScore: number; riskLevel: string }
+    const result = directResult.data.result as {
+      riskScore: number
+      riskLevel: string
+    }
     console.log(`  Risk score: ${result.riskScore}`)
     console.log(`  Risk level: ${result.riskLevel}`)
     console.log(`  Proceed: ${directResult.data.proceed}`)
@@ -450,11 +469,19 @@ async function customServiceExample() {
   console.log('=== Example Complete ===')
   console.log('\nKey takeaways:')
   console.log('- Custom services implement the CustomService interface')
-  console.log('- executeAt controls when the service runs (pre-match or post-match)')
-  console.log('- onResult predicates can prevent processing based on service output')
-  console.log('- Score adjustments from custom services can boost or penalize match scores')
+  console.log(
+    '- executeAt controls when the service runs (pre-match or post-match)'
+  )
+  console.log(
+    '- onResult predicates can prevent processing based on service output'
+  )
+  console.log(
+    '- Score adjustments from custom services can boost or penalize match scores'
+  )
   console.log('- Flags help identify records needing special attention')
-  console.log('- Custom parameters allow runtime configuration of service behavior')
+  console.log(
+    '- Custom parameters allow runtime configuration of service behavior'
+  )
 }
 
 // Run the example

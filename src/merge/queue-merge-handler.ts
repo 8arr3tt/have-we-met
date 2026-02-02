@@ -3,10 +3,7 @@
  * @module merge/queue-merge-handler
  */
 
-import type {
-  SourceRecord,
-  MergeResult,
-} from './types.js'
+import type { SourceRecord, MergeResult } from './types.js'
 import type { MergeExecutor } from './merge-executor.js'
 import type { ProvenanceStore } from './provenance/provenance-store.js'
 import type { SourceRecordArchive } from './unmerge.js'
@@ -16,7 +13,9 @@ import { MergeValidationError } from './merge-error.js'
 /**
  * Result of a queue merge operation
  */
-export interface QueueMergeResult<T extends Record<string, unknown>> extends MergeResult<T> {
+export interface QueueMergeResult<
+  T extends Record<string, unknown>,
+> extends MergeResult<T> {
   /** The queue item that triggered this merge */
   queueItemId: string
 
@@ -102,8 +101,13 @@ export class QueueMergeHandler<T extends Record<string, unknown>> {
   private readonly provenanceStore: ProvenanceStore
   private readonly sourceRecordArchive: SourceRecordArchive<T>
   private readonly queueAdapter: QueueAdapter<T>
-  private readonly onGoldenRecordCreate?: (record: T, id: string) => Promise<void>
-  private readonly onSourceRecordsArchive?: (recordIds: string[]) => Promise<void>
+  private readonly onGoldenRecordCreate?: (
+    record: T,
+    id: string
+  ) => Promise<void>
+  private readonly onSourceRecordsArchive?: (
+    recordIds: string[]
+  ) => Promise<void>
 
   constructor(options: QueueMergeHandlerOptions<T>) {
     this.mergeExecutor = options.mergeExecutor
@@ -129,7 +133,10 @@ export class QueueMergeHandler<T extends Record<string, unknown>> {
   ): Promise<QueueMergeResult<T>> {
     // 1. Validate the decision
     if (!decision.selectedMatchId) {
-      throw new MergeValidationError('selectedMatchId', 'must be specified in merge decision')
+      throw new MergeValidationError(
+        'selectedMatchId',
+        'must be specified in merge decision'
+      )
     }
 
     // 2. Extract source records from queue item
@@ -144,7 +151,9 @@ export class QueueMergeHandler<T extends Record<string, unknown>> {
         `'${decision.selectedMatchId}' not found in queue item potential matches`,
         {
           queueItemId: queueItem.id,
-          availableMatchIds: queueItem.potentialMatches.map((m) => getRecordId(m.record)),
+          availableMatchIds: queueItem.potentialMatches.map((m) =>
+            getRecordId(m.record)
+          ),
         }
       )
     }
@@ -175,11 +184,17 @@ export class QueueMergeHandler<T extends Record<string, unknown>> {
     })
 
     // 5. Archive source records in memory store for potential unmerge
-    await this.sourceRecordArchive.archive(sourceRecords, mergeResult.goldenRecordId)
+    await this.sourceRecordArchive.archive(
+      sourceRecords,
+      mergeResult.goldenRecordId
+    )
 
     // 6. Persist the golden record if callback provided
     if (this.onGoldenRecordCreate) {
-      await this.onGoldenRecordCreate(mergeResult.goldenRecord, mergeResult.goldenRecordId)
+      await this.onGoldenRecordCreate(
+        mergeResult.goldenRecord,
+        mergeResult.goldenRecordId
+      )
     }
 
     // 7. Archive source records in database if callback provided

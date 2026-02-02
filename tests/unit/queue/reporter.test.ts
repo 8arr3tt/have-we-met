@@ -1,13 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { QueueReporter } from '../../../src/queue/reporter.js'
-import type { ReviewQueue, QueueItem, QueueStats } from '../../../src/queue/types.js'
+import type {
+  ReviewQueue,
+  QueueItem,
+  QueueStats,
+} from '../../../src/queue/types.js'
 
 describe('QueueReporter', () => {
   let mockQueue: ReviewQueue<Record<string, unknown>>
   let reporter: QueueReporter<Record<string, unknown>>
 
   const createMockItem = (
-    overrides: Partial<QueueItem<Record<string, unknown>>> = {},
+    overrides: Partial<QueueItem<Record<string, unknown>>> = {}
   ): QueueItem<Record<string, unknown>> => {
     const now = new Date()
     return {
@@ -279,9 +283,13 @@ describe('QueueReporter', () => {
 
       const result = reporter.exportToCsv(items)
 
-      expect(result).toContain('id,status,createdAt,decidedAt,decidedBy,priority')
+      expect(result).toContain(
+        'id,status,createdAt,decidedAt,decidedBy,priority'
+      )
       expect(result).toContain('item1,pending,2024-01-01T10:00:00.000Z,,,5')
-      expect(result).toContain('item2,confirmed,2024-01-01T11:00:00.000Z,2024-01-01T12:00:00.000Z,reviewer1,10')
+      expect(result).toContain(
+        'item2,confirmed,2024-01-01T11:00:00.000Z,2024-01-01T12:00:00.000Z,reviewer1,10'
+      )
     })
 
     it('handles empty array', () => {

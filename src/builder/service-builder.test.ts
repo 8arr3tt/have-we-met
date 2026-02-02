@@ -32,7 +32,9 @@ function createTiming() {
 }
 
 // Mock validation service
-function createMockValidationService(name = 'test-validator'): ValidationService {
+function createMockValidationService(
+  name = 'test-validator'
+): ValidationService {
   return {
     name,
     type: 'validation',
@@ -77,7 +79,11 @@ function createMockCustomService(name = 'test-custom'): CustomService {
 }
 
 describe('ServiceBuilder', () => {
-  let builder: ServiceBuilder<{ email: string; nhsNumber: string; address: string }>
+  let builder: ServiceBuilder<{
+    email: string
+    nhsNumber: string
+    address: string
+  }>
 
   beforeEach(() => {
     builder = new ServiceBuilder()
@@ -92,7 +98,9 @@ describe('ServiceBuilder', () => {
 
     it('rejects negative timeout', () => {
       expect(() => builder.defaultTimeout(-1)).toThrow(ServiceBuilderError)
-      expect(() => builder.defaultTimeout(-1)).toThrow('Default timeout must be positive')
+      expect(() => builder.defaultTimeout(-1)).toThrow(
+        'Default timeout must be positive'
+      )
     })
 
     it('rejects zero timeout', () => {
@@ -120,7 +128,7 @@ describe('ServiceBuilder', () => {
           initialDelayMs: 100,
           backoffMultiplier: 2,
           maxDelayMs: 1000,
-        }),
+        })
       ).toThrow('maxAttempts must be at least 1')
     })
 
@@ -131,7 +139,7 @@ describe('ServiceBuilder', () => {
           initialDelayMs: -1,
           backoffMultiplier: 2,
           maxDelayMs: 1000,
-        }),
+        })
       ).toThrow('initialDelayMs must be non-negative')
     })
 
@@ -142,7 +150,7 @@ describe('ServiceBuilder', () => {
           initialDelayMs: 100,
           backoffMultiplier: 0.5,
           maxDelayMs: 1000,
-        }),
+        })
       ).toThrow('backoffMultiplier must be at least 1')
     })
 
@@ -153,7 +161,7 @@ describe('ServiceBuilder', () => {
           initialDelayMs: 1000,
           backoffMultiplier: 2,
           maxDelayMs: 100,
-        }),
+        })
       ).toThrow('maxDelayMs must be greater than or equal to initialDelayMs')
     })
   })
@@ -175,7 +183,7 @@ describe('ServiceBuilder', () => {
         builder.defaultCache({
           enabled: true,
           ttlSeconds: -1,
-        }),
+        })
       ).toThrow('ttlSeconds must be non-negative')
     })
   })
@@ -320,10 +328,12 @@ describe('ServiceBuilder', () => {
       // The validate() method always sets a field, so this is internal validation
       const validatorBuilder = builder.validate('email').using(validator)
       // Manually clear fields to test validation
-      ;(validatorBuilder as unknown as { config: { fields?: string[] } }).config.fields = []
+      ;(
+        validatorBuilder as unknown as { config: { fields?: string[] } }
+      ).config.fields = []
 
       expect(() => validatorBuilder._parent.build()).toThrow(
-        'must have at least one field configured',
+        'must have at least one field configured'
       )
     })
 
@@ -331,10 +341,12 @@ describe('ServiceBuilder', () => {
       const lookup = createMockLookupService()
 
       const lookupBuilder = builder.lookup('address').using(lookup)
-      ;(lookupBuilder as unknown as { config: { fields?: string[] } }).config.fields = []
+      ;(
+        lookupBuilder as unknown as { config: { fields?: string[] } }
+      ).config.fields = []
 
       expect(() => lookupBuilder._parent.build()).toThrow(
-        'must have at least one field configured',
+        'must have at least one field configured'
       )
     })
 
@@ -347,7 +359,7 @@ describe('ServiceBuilder', () => {
           .using(validator)
           .done()
           .executionOrder(['unknown-service'])
-          .build(),
+          .build()
       ).toThrow("Execution order references unknown service 'unknown-service'")
     })
   })
@@ -408,8 +420,12 @@ describe('ValidationServiceBuilder', () => {
     })
 
     it('rejects non-positive timeout', () => {
-      expect(() => validationBuilder.timeout(0)).toThrow('Timeout must be positive')
-      expect(() => validationBuilder.timeout(-100)).toThrow('Timeout must be positive')
+      expect(() => validationBuilder.timeout(0)).toThrow(
+        'Timeout must be positive'
+      )
+      expect(() => validationBuilder.timeout(-100)).toThrow(
+        'Timeout must be positive'
+      )
     })
   })
 
@@ -470,7 +486,9 @@ describe('ValidationServiceBuilder', () => {
     })
 
     it('chains to custom service', () => {
-      const nextBuilder = validationBuilder.using(mockValidator).custom('fraud-check')
+      const nextBuilder = validationBuilder
+        .using(mockValidator)
+        .custom('fraud-check')
       expect(nextBuilder).toBeInstanceOf(CustomServiceBuilder)
     })
   })
@@ -648,7 +666,8 @@ describe('CustomServiceBuilder', () => {
 
   describe('onResult', () => {
     it('sets result predicate', () => {
-      const predicate = (result: CustomOutput) => (result.result as { score: number }).score > 0.5
+      const predicate = (result: CustomOutput) =>
+        (result.result as { score: number }).score > 0.5
       customBuilder.using(mockCustom).onResult(predicate)
       const config = customBuilder.getConfig()
       expect(config.resultPredicate).toBe(predicate)
@@ -691,7 +710,9 @@ describe('CustomServiceBuilder', () => {
     })
 
     it('rejects non-positive timeout', () => {
-      expect(() => customBuilder.timeout(-500)).toThrow('Timeout must be positive')
+      expect(() => customBuilder.timeout(-500)).toThrow(
+        'Timeout must be positive'
+      )
     })
   })
 
@@ -817,7 +838,11 @@ describe('Builder integration', () => {
     // Check services config
     expect(config.services).toHaveLength(3)
     expect(config.cachingEnabled).toBe(true)
-    expect(config.executionOrder).toEqual([validator.name, lookup.name, custom.name])
+    expect(config.executionOrder).toEqual([
+      validator.name,
+      lookup.name,
+      custom.name,
+    ])
 
     // Check defaults
     expect(config.defaults?.timeout).toBe(5000)

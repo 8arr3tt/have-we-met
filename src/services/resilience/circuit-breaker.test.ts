@@ -71,11 +71,11 @@ describe('CircuitBreaker', () => {
       expect(breaker.isOpen).toBe(true)
 
       await expect(
-        breaker.execute(() => Promise.resolve('should not run')),
+        breaker.execute(() => Promise.resolve('should not run'))
       ).rejects.toThrow(ServiceUnavailableError)
 
       await expect(
-        breaker.execute(() => Promise.resolve('should not run')),
+        breaker.execute(() => Promise.resolve('should not run'))
       ).rejects.toThrow("Service 'test-service' is unavailable")
     })
 
@@ -196,7 +196,7 @@ describe('CircuitBreaker', () => {
       const error = new Error('custom error')
 
       await expect(
-        breaker.execute(() => Promise.reject(error)),
+        breaker.execute(() => Promise.reject(error))
       ).rejects.toThrow(error)
     })
 
@@ -217,7 +217,9 @@ describe('CircuitBreaker', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ServiceUnavailableError)
         const unavailableError = error as ServiceUnavailableError
-        expect(unavailableError.resetAt).toEqual(new Date('2024-01-01T00:00:30.000Z'))
+        expect(unavailableError.resetAt).toEqual(
+          new Date('2024-01-01T00:00:30.000Z')
+        )
       }
     })
   })
@@ -228,7 +230,7 @@ describe('CircuitBreaker', () => {
 
       const result = await breaker.executeWithFallback(
         () => Promise.resolve('main'),
-        () => 'fallback',
+        () => 'fallback'
       )
 
       expect(result).toBe('main')
@@ -240,7 +242,7 @@ describe('CircuitBreaker', () => {
 
       const result = await breaker.executeWithFallback(
         () => Promise.resolve('main'),
-        () => 'fallback',
+        () => 'fallback'
       )
 
       expect(result).toBe('fallback')
@@ -251,7 +253,7 @@ describe('CircuitBreaker', () => {
 
       const result = await breaker.executeWithFallback(
         () => Promise.reject(new Error('fail')),
-        (error) => `fallback: ${error?.message}`,
+        (error) => `fallback: ${error?.message}`
       )
 
       expect(result).toBe('fallback: fail')
@@ -263,7 +265,7 @@ describe('CircuitBreaker', () => {
 
       await breaker.executeWithFallback(
         () => Promise.reject(new Error('main error')),
-        fallback,
+        fallback
       )
 
       expect(fallback).toHaveBeenCalledWith(expect.any(Error))
@@ -276,10 +278,7 @@ describe('CircuitBreaker', () => {
 
       const fallback = vi.fn().mockReturnValue('fallback')
 
-      await breaker.executeWithFallback(
-        () => Promise.resolve('main'),
-        fallback,
-      )
+      await breaker.executeWithFallback(() => Promise.resolve('main'), fallback)
 
       expect(fallback).toHaveBeenCalledWith(expect.any(ServiceUnavailableError))
     })

@@ -6,14 +6,14 @@ This guide provides comprehensive strategies for optimizing **have-we-met** perf
 
 Expected performance with proper optimization:
 
-| Operation | Dataset Size | Target Time | Memory Usage |
-|-----------|-------------|-------------|--------------|
-| Single record resolution | Any | < 50ms | < 10MB |
-| Batch deduplication | 10k records | < 10 seconds | < 100MB |
-| Batch deduplication | 100k records | < 2 minutes | < 500MB |
-| Batch deduplication | 1M records | < 20 minutes | < 1GB |
-| Blocking query | Any | < 10ms | Minimal |
-| Batch insert | 1000 records | < 100ms | Minimal |
+| Operation                | Dataset Size | Target Time  | Memory Usage |
+| ------------------------ | ------------ | ------------ | ------------ |
+| Single record resolution | Any          | < 50ms       | < 10MB       |
+| Batch deduplication      | 10k records  | < 10 seconds | < 100MB      |
+| Batch deduplication      | 100k records | < 2 minutes  | < 500MB      |
+| Batch deduplication      | 1M records   | < 20 minutes | < 1GB        |
+| Blocking query           | Any          | < 10ms       | Minimal      |
+| Batch insert             | 1000 records | < 100ms      | Minimal      |
 
 ## Index Strategy
 
@@ -170,7 +170,7 @@ async function insertCustomer(customer: Customer) {
     soundexLastName: soundex(customer.lastName),
     metaphoneLastName: metaphone(customer.lastName),
     dobYear: customer.dateOfBirth.getFullYear(),
-    createdYear: new Date().getFullYear()
+    createdYear: new Date().getFullYear(),
   }
 
   return await db.customer.create({ data: enriched })
@@ -219,7 +219,10 @@ DELIMITER ;
 
 ```typescript
 prisma.$use(async (params, next) => {
-  if (params.model === 'Customer' && (params.action === 'create' || params.action === 'update')) {
+  if (
+    params.model === 'Customer' &&
+    (params.action === 'create' || params.action === 'update')
+  ) {
     if (params.args.data.lastName) {
       params.args.data.soundexLastName = soundex(params.args.data.lastName)
     }
@@ -273,7 +276,14 @@ const matches = await resolver.resolveWithDatabase(candidate)
 
 // Avoid: Fetching unnecessary fields manually
 const allCustomers = await db.customer.findMany({
-  select: { id: true, firstName: true, lastName: true, email: true, notes: true, history: true }
+  select: {
+    id: true,
+    firstName: true,
+    lastName: true,
+    email: true,
+    notes: true,
+    history: true,
+  },
 })
 ```
 
@@ -283,8 +293,8 @@ Always use blocking and limit fetch size:
 
 ```typescript
 const matches = await resolver.resolveWithDatabase(candidate, {
-  useBlocking: true,        // Essential for performance
-  maxFetchSize: 1000        // Reasonable limit
+  useBlocking: true, // Essential for performance
+  maxFetchSize: 1000, // Reasonable limit
 })
 ```
 
@@ -294,12 +304,12 @@ Batch operations when possible:
 
 ```typescript
 // Good: Batch fetch
-const customerIds = matches.map(m => m.record.id)
+const customerIds = matches.map((m) => m.record.id)
 const fullCustomers = await adapter.findByIds(customerIds)
 
 // Bad: Individual fetches
 for (const match of matches) {
-  const customer = await adapter.findByIds([match.record.id])  // N+1 problem
+  const customer = await adapter.findByIds([match.record.id]) // N+1 problem
 }
 ```
 
@@ -318,7 +328,7 @@ async function deduplicateInBatches() {
   while (hasMore) {
     const batch = await adapter.findAll({
       limit: batchSize,
-      offset: offset
+      offset: offset,
     })
 
     if (batch.length === 0) {
@@ -346,19 +356,21 @@ async function parallelDeduplication() {
   const totalRecords = await adapter.count()
   const batchSize = 1000
   const numBatches = Math.ceil(totalRecords / batchSize)
-  const concurrency = 4  // Process 4 batches at once
+  const concurrency = 4 // Process 4 batches at once
 
   const batches = Array.from({ length: numBatches }, (_, i) => i)
 
   for (let i = 0; i < batches.length; i += concurrency) {
     const chunk = batches.slice(i, i + concurrency)
 
-    await Promise.all(chunk.map(async (batchNum) => {
-      const offset = batchNum * batchSize
-      const records = await adapter.findAll({ limit: batchSize, offset })
-      const results = resolver.deduplicateBatch(records)
-      // Handle results
-    }))
+    await Promise.all(
+      chunk.map(async (batchNum) => {
+        const offset = batchNum * batchSize
+        const records = await adapter.findAll({ limit: batchSize, offset })
+        const results = resolver.deduplicateBatch(records)
+        // Handle results
+      })
+    )
   }
 }
 ```
@@ -371,11 +383,11 @@ async function parallelDeduplication() {
 import { Pool } from 'pg'
 
 const pool = new Pool({
-  max: 20,                    // Maximum connections
-  min: 5,                     // Minimum connections
-  idleTimeoutMillis: 30000,   // Close idle after 30s
-  connectionTimeoutMillis: 2000,  // Fail fast if no connection
-  statement_timeout: 30000    // Query timeout
+  max: 20, // Maximum connections
+  min: 5, // Minimum connections
+  idleTimeoutMillis: 30000, // Close idle after 30s
+  connectionTimeoutMillis: 2000, // Fail fast if no connection
+  statement_timeout: 30000, // Query timeout
 })
 ```
 
@@ -386,9 +398,9 @@ import mysql from 'mysql2/promise'
 
 const pool = mysql.createPool({
   connectionLimit: 20,
-  queueLimit: 0,             // Unlimited queue
+  queueLimit: 0, // Unlimited queue
   waitForConnections: true,
-  connectTimeout: 10000
+  connectTimeout: 10000,
 })
 ```
 
@@ -397,7 +409,9 @@ const pool = mysql.createPool({
 ```typescript
 // Log pool statistics
 setInterval(() => {
-  console.log(`Pool: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`)
+  console.log(
+    `Pool: ${pool.totalCount} total, ${pool.idleCount} idle, ${pool.waitingCount} waiting`
+  )
 }, 10000)
 ```
 
@@ -412,7 +426,7 @@ const result = resolver.deduplicateBatch(allRecords)
 
 // Good: Process in batches
 const result = await resolver.deduplicateBatchFromDatabase({
-  batchSize: 1000
+  batchSize: 1000,
 })
 ```
 
@@ -424,9 +438,9 @@ try {
   const matches = await resolver.resolveWithDatabase(candidate)
   // Process matches
 } finally {
-  await prisma.$disconnect()  // Prisma
-  await pool.end()            // pg Pool
-  await dataSource.destroy()  // TypeORM
+  await prisma.$disconnect() // Prisma
+  await pool.end() // pg Pool
+  await dataSource.destroy() // TypeORM
 }
 ```
 
@@ -463,8 +477,8 @@ const matches = await profileQuery('resolveWithDatabase', () =>
 const prisma = new PrismaClient({
   log: [
     { level: 'query', emit: 'event' },
-    { level: 'error', emit: 'stdout' }
-  ]
+    { level: 'error', emit: 'stdout' },
+  ],
 })
 
 prisma.$on('query', (e) => {
@@ -479,7 +493,7 @@ prisma.$on('query', (e) => {
 ```typescript
 export const AppDataSource = new DataSource({
   logging: ['query', 'error', 'warn'],
-  maxQueryExecutionTime: 1000  // Log queries > 1s
+  maxQueryExecutionTime: 1000, // Log queries > 1s
 })
 ```
 
@@ -534,7 +548,7 @@ import { LRUCache } from 'lru-cache'
 
 const cache = new LRUCache<string, any[]>({
   max: 1000,
-  ttl: 1000 * 60 * 5  // 5 minutes
+  ttl: 1000 * 60 * 5, // 5 minutes
 })
 
 async function findByBlockingKeysCached(keys: Map<string, unknown>) {
@@ -621,6 +635,7 @@ ANALYZE;
 **Symptoms:** Queries taking seconds instead of milliseconds
 
 **Solutions:**
+
 1. Check if indexes exist on blocking fields
 2. Run EXPLAIN to verify index usage
 3. Ensure blocking keys are pre-computed
@@ -631,6 +646,7 @@ ANALYZE;
 **Symptoms:** Memory usage growing unbounded
 
 **Solutions:**
+
 1. Reduce `batchSize` in deduplication
 2. Ensure connections are properly closed
 3. Use streaming for very large datasets
@@ -641,6 +657,7 @@ ANALYZE;
 **Symptoms:** "Too many connections" errors
 
 **Solutions:**
+
 1. Increase connection pool size
 2. Ensure connections are released after use
 3. Reduce concurrent operations
@@ -651,6 +668,7 @@ ANALYZE;
 **Symptoms:** Transaction failures with deadlock errors
 
 **Solutions:**
+
 1. Process records in consistent order
 2. Keep transactions short
 3. Use appropriate isolation levels
@@ -685,7 +703,7 @@ async function benchmark() {
     const start = Date.now()
     const result = await resolver.deduplicateBatchFromDatabase({
       batchSize: 1000,
-      maxRecords: size
+      maxRecords: size,
     })
     const duration = Date.now() - start
 

@@ -52,8 +52,12 @@ describe('QueryProfiler', () => {
         return Array.from({ length: 15000 }, (_, i) => ({ id: String(i) }))
       })
 
-      expect(result.issues.some((i) => i.includes('Large result set'))).toBe(true)
-      expect(result.recommendations).toContain('Use pagination with limit/offset')
+      expect(result.issues.some((i) => i.includes('Large result set'))).toBe(
+        true
+      )
+      expect(result.recommendations).toContain(
+        'Use pagination with limit/offset'
+      )
     })
 
     it('detects inefficient queries', async () => {
@@ -62,7 +66,9 @@ describe('QueryProfiler', () => {
         return [{ id: '1' }]
       })
 
-      expect(result.issues.some((i) => i.includes('Inefficient query'))).toBe(true)
+      expect(result.issues.some((i) => i.includes('Inefficient query'))).toBe(
+        true
+      )
     })
 
     it('handles query errors', async () => {
@@ -126,8 +132,12 @@ describe('QueryProfiler', () => {
         return Array.from({ length: 15000 }, (_, i) => ({ id: String(i) }))
       })
 
-      expect(result.recommendations).toContain('Use pagination with limit/offset')
-      expect(result.recommendations).toContain('Consider more selective blocking criteria')
+      expect(result.recommendations).toContain(
+        'Use pagination with limit/offset'
+      )
+      expect(result.recommendations).toContain(
+        'Consider more selective blocking criteria'
+      )
       expect(result.recommendations).toContain(
         'Fetch only required fields using field projection'
       )
@@ -139,7 +149,9 @@ describe('QueryProfiler', () => {
         return []
       })
 
-      expect(result.recommendations).toContain('Create an index on the filtering fields')
+      expect(result.recommendations).toContain(
+        'Create an index on the filtering fields'
+      )
     })
 
     it('includes blocking-specific recommendations', async () => {
@@ -154,7 +166,11 @@ describe('QueryProfiler', () => {
       expect(result.recommendations).toContain(
         'Use IndexAnalyzer to get specific index recommendations'
       )
-      expect(result.recommendations.some((r) => r.includes('for the customers table'))).toBe(true)
+      expect(
+        result.recommendations.some((r) =>
+          r.includes('for the customers table')
+        )
+      ).toBe(true)
     })
 
     it('tracks query history', async () => {
@@ -186,13 +202,17 @@ describe('QueryProfiler', () => {
         return []
       })
 
-      expect(result.issues.some((i) => i.includes('slower than average'))).toBe(true)
+      expect(result.issues.some((i) => i.includes('slower than average'))).toBe(
+        true
+      )
     })
   })
 
   describe('explain', () => {
     it('provides query plan for SELECT with WHERE', () => {
-      const plan = profiler.explain('SELECT * FROM customers WHERE lastName = ?')
+      const plan = profiler.explain(
+        'SELECT * FROM customers WHERE lastName = ?'
+      )
 
       expect(plan.scanType).toBe('index_scan')
       expect(plan.indexes).toContain('idx_lastName')
@@ -254,7 +274,11 @@ describe('QueryProfiler', () => {
     it('returns most recent entries when limit specified', async () => {
       await profiler.profile(async () => [{ id: '1' }])
       await profiler.profile(async () => [{ id: '2' }, { id: '3' }])
-      await profiler.profile(async () => [{ id: '4' }, { id: '5' }, { id: '6' }])
+      await profiler.profile(async () => [
+        { id: '4' },
+        { id: '5' },
+        { id: '6' },
+      ])
 
       const history = profiler.getHistory(2)
       expect(history).toHaveLength(2)
@@ -380,8 +404,12 @@ describe('QueryProfiler', () => {
         return []
       })
 
-      expect(result.recommendations).toContain('Consider using database query cache')
-      expect(result.recommendations).toContain('Review connection pooling configuration')
+      expect(result.recommendations).toContain(
+        'Consider using database query cache'
+      )
+      expect(result.recommendations).toContain(
+        'Review connection pooling configuration'
+      )
     })
 
     it('recommends batching for high memory usage', async () => {
@@ -393,7 +421,9 @@ describe('QueryProfiler', () => {
       })
 
       expect(
-        result.recommendations.some((r) => r.includes('smaller batches') || r.includes('pagination'))
+        result.recommendations.some(
+          (r) => r.includes('smaller batches') || r.includes('pagination')
+        )
       ).toBe(true)
     })
 
@@ -511,8 +541,12 @@ describe('QueryProfiler', () => {
       const result = await profiler.profile(async () => [{ id: '1' }])
       const after = new Date()
 
-      expect(result.stats.timestamp.getTime()).toBeGreaterThanOrEqual(before.getTime())
-      expect(result.stats.timestamp.getTime()).toBeLessThanOrEqual(after.getTime())
+      expect(result.stats.timestamp.getTime()).toBeGreaterThanOrEqual(
+        before.getTime()
+      )
+      expect(result.stats.timestamp.getTime()).toBeLessThanOrEqual(
+        after.getTime()
+      )
     })
   })
 })

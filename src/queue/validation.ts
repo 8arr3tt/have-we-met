@@ -3,8 +3,16 @@
  * @module queue/validation
  */
 
-import type { QueueItem, QueueStatus, QueueDecision, AddQueueItemRequest } from './types.js'
-import { QueueValidationError, InvalidStatusTransitionError } from './queue-error.js'
+import type {
+  QueueItem,
+  QueueStatus,
+  QueueDecision,
+  AddQueueItemRequest,
+} from './types.js'
+import {
+  QueueValidationError,
+  InvalidStatusTransitionError,
+} from './queue-error.js'
 
 /**
  * Valid status transitions in the queue lifecycle
@@ -24,14 +32,14 @@ const VALID_TRANSITIONS: Record<QueueStatus, QueueStatus[]> = {
  * @throws {QueueValidationError} If validation fails
  */
 export function validateQueueItem<T extends Record<string, unknown>>(
-  item: AddQueueItemRequest<T>,
+  item: AddQueueItemRequest<T>
 ): void {
   // Validate candidateRecord is not empty
   if (!item.candidateRecord || Object.keys(item.candidateRecord).length === 0) {
     throw new QueueValidationError(
       'candidateRecord',
       'candidateRecord must not be empty',
-      { candidateRecord: item.candidateRecord },
+      { candidateRecord: item.candidateRecord }
     )
   }
 
@@ -40,7 +48,7 @@ export function validateQueueItem<T extends Record<string, unknown>>(
     throw new QueueValidationError(
       'potentialMatches',
       'potentialMatches must be an array',
-      { potentialMatches: item.potentialMatches },
+      { potentialMatches: item.potentialMatches }
     )
   }
 
@@ -48,7 +56,7 @@ export function validateQueueItem<T extends Record<string, unknown>>(
     throw new QueueValidationError(
       'potentialMatches',
       'potentialMatches must not be empty',
-      { potentialMatches: item.potentialMatches },
+      { potentialMatches: item.potentialMatches }
     )
   }
 
@@ -60,7 +68,7 @@ export function validateQueueItem<T extends Record<string, unknown>>(
       throw new QueueValidationError(
         'potentialMatches',
         `potentialMatches[${i}].record must not be empty`,
-        { index: i, match },
+        { index: i, match }
       )
     }
 
@@ -68,7 +76,7 @@ export function validateQueueItem<T extends Record<string, unknown>>(
       throw new QueueValidationError(
         'potentialMatches',
         `potentialMatches[${i}].score must be a number`,
-        { index: i, match },
+        { index: i, match }
       )
     }
 
@@ -76,7 +84,7 @@ export function validateQueueItem<T extends Record<string, unknown>>(
       throw new QueueValidationError(
         'potentialMatches',
         `potentialMatches[${i}].outcome must be 'potential-match'`,
-        { index: i, match },
+        { index: i, match }
       )
     }
 
@@ -84,24 +92,24 @@ export function validateQueueItem<T extends Record<string, unknown>>(
       throw new QueueValidationError(
         'potentialMatches',
         `potentialMatches[${i}].explanation is required`,
-        { index: i, match },
+        { index: i, match }
       )
     }
   }
 
   // Validate priority if provided
   if (item.priority !== undefined && typeof item.priority !== 'number') {
-    throw new QueueValidationError(
-      'priority',
-      'priority must be a number',
-      { priority: item.priority },
-    )
+    throw new QueueValidationError('priority', 'priority must be a number', {
+      priority: item.priority,
+    })
   }
 
   // Validate tags if provided
   if (item.tags !== undefined) {
     if (!Array.isArray(item.tags)) {
-      throw new QueueValidationError('tags', 'tags must be an array', { tags: item.tags })
+      throw new QueueValidationError('tags', 'tags must be an array', {
+        tags: item.tags,
+      })
     }
 
     for (let i = 0; i < item.tags.length; i++) {
@@ -121,18 +129,25 @@ export function validateQueueItem<T extends Record<string, unknown>>(
  * @param to - Target status
  * @throws {InvalidStatusTransitionError} If transition is not valid
  */
-export function validateStatusTransition(from: QueueStatus, to: QueueStatus): void {
+export function validateStatusTransition(
+  from: QueueStatus,
+  to: QueueStatus
+): void {
   const validTransitions = VALID_TRANSITIONS[from]
 
   if (!validTransitions.includes(to)) {
     if (validTransitions.length === 0) {
-      throw new InvalidStatusTransitionError(from, to, `'${from}' is a final state`)
+      throw new InvalidStatusTransitionError(
+        from,
+        to,
+        `'${from}' is a final state`
+      )
     }
 
     throw new InvalidStatusTransitionError(
       from,
       to,
-      `allowed transitions: ${validTransitions.join(', ')}`,
+      `allowed transitions: ${validTransitions.join(', ')}`
     )
   }
 }
@@ -145,7 +160,9 @@ export function validateStatusTransition(from: QueueStatus, to: QueueStatus): vo
 export function validateQueueDecision(decision: QueueDecision): void {
   // Validate action is provided
   if (!decision.action) {
-    throw new QueueValidationError('decision.action', 'action is required', { decision })
+    throw new QueueValidationError('decision.action', 'action is required', {
+      decision,
+    })
   }
 
   // Validate action is valid
@@ -154,31 +171,42 @@ export function validateQueueDecision(decision: QueueDecision): void {
     throw new QueueValidationError(
       'decision.action',
       `action must be one of: ${validActions.join(', ')}`,
-      { decision },
+      { decision }
     )
   }
 
   // Validate selectedMatchId is provided for confirm and merge
-  if ((decision.action === 'confirm' || decision.action === 'merge') && !decision.selectedMatchId) {
+  if (
+    (decision.action === 'confirm' || decision.action === 'merge') &&
+    !decision.selectedMatchId
+  ) {
     throw new QueueValidationError(
       'decision.selectedMatchId',
       `selectedMatchId is required for action '${decision.action}'`,
-      { decision },
+      { decision }
     )
   }
 
   // Validate confidence if provided
   if (decision.confidence !== undefined) {
     if (typeof decision.confidence !== 'number') {
-      throw new QueueValidationError('decision.confidence', 'confidence must be a number', {
-        decision,
-      })
+      throw new QueueValidationError(
+        'decision.confidence',
+        'confidence must be a number',
+        {
+          decision,
+        }
+      )
     }
 
     if (decision.confidence < 0 || decision.confidence > 1) {
-      throw new QueueValidationError('decision.confidence', 'confidence must be between 0 and 1', {
-        decision,
-      })
+      throw new QueueValidationError(
+        'decision.confidence',
+        'confidence must be between 0 and 1',
+        {
+          decision,
+        }
+      )
     }
   }
 }
@@ -189,25 +217,38 @@ export function validateQueueDecision(decision: QueueDecision): void {
  * @throws {QueueValidationError} If validation fails
  */
 export function validateCompleteQueueItem<T extends Record<string, unknown>>(
-  item: QueueItem<T>,
+  item: QueueItem<T>
 ): void {
   // Validate ID
   if (!item.id || typeof item.id !== 'string') {
-    throw new QueueValidationError('id', 'id must be a non-empty string', { item })
+    throw new QueueValidationError('id', 'id must be a non-empty string', {
+      item,
+    })
   }
 
   // Validate candidateRecord
   if (!item.candidateRecord || Object.keys(item.candidateRecord).length === 0) {
-    throw new QueueValidationError('candidateRecord', 'candidateRecord must not be empty', {
-      item,
-    })
+    throw new QueueValidationError(
+      'candidateRecord',
+      'candidateRecord must not be empty',
+      {
+        item,
+      }
+    )
   }
 
   // Validate potentialMatches
-  if (!Array.isArray(item.potentialMatches) || item.potentialMatches.length === 0) {
-    throw new QueueValidationError('potentialMatches', 'potentialMatches must be a non-empty array', {
-      item,
-    })
+  if (
+    !Array.isArray(item.potentialMatches) ||
+    item.potentialMatches.length === 0
+  ) {
+    throw new QueueValidationError(
+      'potentialMatches',
+      'potentialMatches must be a non-empty array',
+      {
+        item,
+      }
+    )
   }
 
   // Validate status
@@ -223,22 +264,28 @@ export function validateCompleteQueueItem<T extends Record<string, unknown>>(
     throw new QueueValidationError(
       'status',
       `status must be one of: ${validStatuses.join(', ')}`,
-      { item },
+      { item }
     )
   }
 
   // Validate timestamps
   if (!(item.createdAt instanceof Date)) {
-    throw new QueueValidationError('createdAt', 'createdAt must be a Date', { item })
+    throw new QueueValidationError('createdAt', 'createdAt must be a Date', {
+      item,
+    })
   }
 
   if (!(item.updatedAt instanceof Date)) {
-    throw new QueueValidationError('updatedAt', 'updatedAt must be a Date', { item })
+    throw new QueueValidationError('updatedAt', 'updatedAt must be a Date', {
+      item,
+    })
   }
 
   // Validate decidedAt if present
   if (item.decidedAt !== undefined && !(item.decidedAt instanceof Date)) {
-    throw new QueueValidationError('decidedAt', 'decidedAt must be a Date', { item })
+    throw new QueueValidationError('decidedAt', 'decidedAt must be a Date', {
+      item,
+    })
   }
 
   // Validate decision if present
@@ -252,7 +299,7 @@ export function validateCompleteQueueItem<T extends Record<string, unknown>>(
     throw new QueueValidationError(
       'decision',
       `decision is required for status '${item.status}'`,
-      { item },
+      { item }
     )
   }
 }

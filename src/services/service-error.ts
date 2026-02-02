@@ -26,7 +26,7 @@ export class ServiceError extends Error {
     code: string,
     type: ServiceErrorType,
     retryable: boolean,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message)
     this.name = 'ServiceError'
@@ -54,13 +54,17 @@ export class ServiceTimeoutError extends ServiceError {
   /** Service name that timed out */
   public readonly serviceName: string
 
-  constructor(serviceName: string, timeoutMs: number, context?: Record<string, unknown>) {
+  constructor(
+    serviceName: string,
+    timeoutMs: number,
+    context?: Record<string, unknown>
+  ) {
     super(
       `Service '${serviceName}' timed out after ${timeoutMs}ms`,
       'SERVICE_TIMEOUT',
       'timeout',
       true, // Timeouts are retryable
-      { serviceName, timeoutMs, ...context },
+      { serviceName, timeoutMs, ...context }
     )
     this.name = 'ServiceTimeoutError'
     this.serviceName = serviceName
@@ -78,13 +82,18 @@ export class ServiceNetworkError extends ServiceError {
   /** Original network error */
   public readonly cause?: Error
 
-  constructor(serviceName: string, message: string, cause?: Error, context?: Record<string, unknown>) {
+  constructor(
+    serviceName: string,
+    message: string,
+    cause?: Error,
+    context?: Record<string, unknown>
+  ) {
     super(
       `Network error in service '${serviceName}': ${message}`,
       'SERVICE_NETWORK_ERROR',
       'network',
       true, // Network errors are retryable
-      { serviceName, originalMessage: message, ...context },
+      { serviceName, originalMessage: message, ...context }
     )
     this.name = 'ServiceNetworkError'
     this.serviceName = serviceName
@@ -109,7 +118,7 @@ export class ServiceInputValidationError extends ServiceError {
     serviceName: string,
     reason: string,
     field?: string,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     const fieldInfo = field ? ` for field '${field}'` : ''
     super(
@@ -117,7 +126,7 @@ export class ServiceInputValidationError extends ServiceError {
       'SERVICE_INPUT_VALIDATION_ERROR',
       'validation',
       false, // Input validation errors are not retryable
-      { serviceName, field, reason, ...context },
+      { serviceName, field, reason, ...context }
     )
     this.name = 'ServiceInputValidationError'
     this.serviceName = serviceName
@@ -139,7 +148,7 @@ export class ServiceNotFoundError extends ServiceError {
   constructor(
     serviceName: string,
     lookupKey?: Record<string, unknown>,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     const keyInfo = lookupKey ? ` for key ${JSON.stringify(lookupKey)}` : ''
     super(
@@ -147,7 +156,7 @@ export class ServiceNotFoundError extends ServiceError {
       'SERVICE_NOT_FOUND',
       'not_found',
       false, // Not found errors are not retryable
-      { serviceName, lookupKey, ...context },
+      { serviceName, lookupKey, ...context }
     )
     this.name = 'ServiceNotFoundError'
     this.serviceName = serviceName
@@ -168,14 +177,14 @@ export class ServiceRejectedError extends ServiceError {
   constructor(
     serviceName: string,
     reason: string,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(
       `Request rejected by service '${serviceName}': ${reason}`,
       'SERVICE_REJECTED',
       'rejected',
       false, // Rejected requests are not retryable
-      { serviceName, reason, ...context },
+      { serviceName, reason, ...context }
     )
     this.name = 'ServiceRejectedError'
     this.serviceName = serviceName
@@ -200,7 +209,7 @@ export class ServiceUnavailableError extends ServiceError {
     serviceName: string,
     circuitState: CircuitState,
     resetAt?: Date,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     const resetInfo = resetAt ? `. May reset at ${resetAt.toISOString()}` : ''
     super(
@@ -208,7 +217,7 @@ export class ServiceUnavailableError extends ServiceError {
       'SERVICE_UNAVAILABLE',
       'unavailable',
       false, // Circuit breaker errors are not immediately retryable
-      { serviceName, circuitState, resetAt, ...context },
+      { serviceName, circuitState, resetAt, ...context }
     )
     this.name = 'ServiceUnavailableError'
     this.serviceName = serviceName
@@ -231,7 +240,7 @@ export class ServiceServerError extends ServiceError {
     serviceName: string,
     message: string,
     statusCode?: number,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     const statusInfo = statusCode ? ` (HTTP ${statusCode})` : ''
     super(
@@ -239,7 +248,7 @@ export class ServiceServerError extends ServiceError {
       'SERVICE_SERVER_ERROR',
       'unknown',
       true, // Server errors are retryable
-      { serviceName, statusCode, originalMessage: message, ...context },
+      { serviceName, statusCode, originalMessage: message, ...context }
     )
     this.name = 'ServiceServerError'
     this.serviceName = serviceName
@@ -260,14 +269,14 @@ export class ServiceConfigurationError extends ServiceError {
   constructor(
     field: string,
     reason: string,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(
       `Invalid service configuration for '${field}': ${reason}`,
       'SERVICE_CONFIGURATION_ERROR',
       'validation',
       false, // Configuration errors are not retryable
-      { field, reason, ...context },
+      { field, reason, ...context }
     )
     this.name = 'ServiceConfigurationError'
     this.field = field
@@ -288,7 +297,7 @@ export class ServicePluginError extends ServiceError {
   constructor(
     reason: string,
     pluginName?: string,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     const nameInfo = pluginName ? ` '${pluginName}'` : ''
     super(
@@ -296,7 +305,7 @@ export class ServicePluginError extends ServiceError {
       'SERVICE_PLUGIN_ERROR',
       'validation',
       false,
-      { pluginName, reason, ...context },
+      { pluginName, reason, ...context }
     )
     this.name = 'ServicePluginError'
     this.pluginName = pluginName
@@ -317,14 +326,14 @@ export class ServiceNotRegisteredError extends ServiceError {
   constructor(
     serviceName: string,
     availableServices: string[],
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(
       `Service '${serviceName}' is not registered. Available services: ${availableServices.join(', ') || 'none'}`,
       'SERVICE_NOT_REGISTERED',
       'validation',
       false,
-      { serviceName, availableServices, ...context },
+      { serviceName, availableServices, ...context }
     )
     this.name = 'ServiceNotRegisteredError'
     this.serviceName = serviceName
@@ -345,7 +354,7 @@ export class ServiceAlreadyRegisteredError extends ServiceError {
       'SERVICE_ALREADY_REGISTERED',
       'validation',
       false,
-      { serviceName, ...context },
+      { serviceName, ...context }
     )
     this.name = 'ServiceAlreadyRegisteredError'
     this.serviceName = serviceName
@@ -375,7 +384,7 @@ export function isRetryableError(error: unknown): boolean {
 export function toServiceError(
   error: unknown,
   serviceName: string,
-  defaultType: ServiceErrorType = 'unknown',
+  defaultType: ServiceErrorType = 'unknown'
 ): ServiceError {
   if (error instanceof ServiceError) {
     return error
@@ -386,7 +395,9 @@ export function toServiceError(
     const message = error.message.toLowerCase()
 
     if (message.includes('timeout') || message.includes('timed out')) {
-      return new ServiceTimeoutError(serviceName, 0, { originalError: error.message })
+      return new ServiceTimeoutError(serviceName, 0, {
+        originalError: error.message,
+      })
     }
 
     if (
@@ -403,7 +414,7 @@ export function toServiceError(
       'SERVICE_ERROR',
       defaultType,
       defaultType === 'timeout' || defaultType === 'network',
-      { originalError: error.message, serviceName },
+      { originalError: error.message, serviceName }
     )
   }
 
@@ -412,6 +423,6 @@ export function toServiceError(
     'SERVICE_ERROR',
     defaultType,
     false,
-    { originalError: String(error), serviceName },
+    { originalError: String(error), serviceName }
   )
 }

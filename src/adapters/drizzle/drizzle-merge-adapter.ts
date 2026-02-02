@@ -21,7 +21,9 @@ type DrizzleDatabase = {
   insert: (table: unknown) => {
     values: (values: unknown) => {
       returning: () => Promise<unknown[]>
-      onConflictDoUpdate: (config: unknown) => { returning: () => Promise<unknown[]> }
+      onConflictDoUpdate: (config: unknown) => {
+        returning: () => Promise<unknown[]>
+      }
     }
   }
   update: (table: unknown) => {
@@ -75,7 +77,11 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
   private readonly table: DrizzleTable
   private readonly operators: DrizzleOperators
 
-  constructor(db: DrizzleDatabase, table: DrizzleTable, operators: DrizzleOperators) {
+  constructor(
+    db: DrizzleDatabase,
+    table: DrizzleTable,
+    operators: DrizzleOperators
+  ) {
     this.db = db
     this.table = table
     this.operators = operators
@@ -138,13 +144,19 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
   async get(goldenRecordId: string): Promise<Provenance | null> {
     try {
       const goldenRecordIdCol = this.getColumn('goldenRecordId')
-      const whereCondition = this.operators.eq(goldenRecordIdCol, goldenRecordId)
+      const whereCondition = this.operators.eq(
+        goldenRecordIdCol,
+        goldenRecordId
+      )
 
-      const query = this.db.select().from(this.table).where(whereCondition).limit(1)
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const query = this.db
+        .select()
+        .from(this.table)
+        .where(whereCondition)
+        .limit(1)
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
       if (results.length === 0) {
         return null
@@ -162,13 +174,14 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
   async getBySourceId(sourceId: string): Promise<Provenance[]> {
     try {
       const sourceRecordIdsCol = this.getColumn('sourceRecordIds')
-      const whereCondition = this.operators.arrayContains(sourceRecordIdsCol, [sourceId])
+      const whereCondition = this.operators.arrayContains(sourceRecordIdsCol, [
+        sourceId,
+      ])
 
       const query = this.db.select().from(this.table).where(whereCondition)
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
       return results.map((r) => this.mapToProvenance(r))
     } catch (error) {
@@ -182,7 +195,10 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
   async markUnmerged(goldenRecordId: string, info: UnmergeInfo): Promise<void> {
     try {
       const goldenRecordIdCol = this.getColumn('goldenRecordId')
-      const whereCondition = this.operators.eq(goldenRecordIdCol, goldenRecordId)
+      const whereCondition = this.operators.eq(
+        goldenRecordIdCol,
+        goldenRecordId
+      )
 
       const results = await this.db
         .update(this.table)
@@ -196,9 +212,12 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
         .returning()
 
       if ((results as unknown[]).length === 0) {
-        throw new NotFoundError(`Provenance not found for golden record: ${goldenRecordId}`, {
-          goldenRecordId,
-        })
+        throw new NotFoundError(
+          `Provenance not found for golden record: ${goldenRecordId}`,
+          {
+            goldenRecordId,
+          }
+        )
       }
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -214,7 +233,10 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
   async delete(goldenRecordId: string): Promise<boolean> {
     try {
       const goldenRecordIdCol = this.getColumn('goldenRecordId')
-      const whereCondition = this.operators.eq(goldenRecordIdCol, goldenRecordId)
+      const whereCondition = this.operators.eq(
+        goldenRecordIdCol,
+        goldenRecordId
+      )
 
       await this.db.delete(this.table).where(whereCondition)
       return true
@@ -229,13 +251,18 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
   async exists(goldenRecordId: string): Promise<boolean> {
     try {
       const goldenRecordIdCol = this.getColumn('goldenRecordId')
-      const whereCondition = this.operators.eq(goldenRecordIdCol, goldenRecordId)
+      const whereCondition = this.operators.eq(
+        goldenRecordIdCol,
+        goldenRecordId
+      )
 
       const query = this.db
         .select({ count: this.operators.count() })
         .from(this.table)
         .where(whereCondition)
-      const results = (await (query as unknown as Promise<Array<{ count: number }>>)) as Array<{
+      const results = (await (query as unknown as Promise<
+        Array<{ count: number }>
+      >)) as Array<{
         count: number
       }>
 
@@ -250,7 +277,9 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
 
   async count(includeUnmerged: boolean = false): Promise<number> {
     try {
-      let query = this.db.select({ count: this.operators.count() }).from(this.table) as unknown as DrizzleQuery
+      let query = this.db
+        .select({ count: this.operators.count() })
+        .from(this.table) as unknown as DrizzleQuery
 
       if (!includeUnmerged) {
         const unmergedCol = this.getColumn('unmerged')
@@ -258,7 +287,9 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
         query = query.where(whereCondition)
       }
 
-      const results = (await (query as unknown as Promise<Array<{ count: number }>>)) as Array<{
+      const results = (await (query as unknown as Promise<
+        Array<{ count: number }>
+      >)) as Array<{
         count: number
       }>
       return results[0]?.count ?? 0
@@ -285,7 +316,9 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
           ? JSON.parse(record.strategyUsed)
           : record.strategyUsed,
       unmerged: record.unmerged as boolean | undefined,
-      unmergedAt: record.unmergedAt ? new Date(record.unmergedAt as string | Date) : undefined,
+      unmergedAt: record.unmergedAt
+        ? new Date(record.unmergedAt as string | Date)
+        : undefined,
       unmergedBy: record.unmergedBy as string | undefined,
       unmergeReason: record.unmergeReason as string | undefined,
     }
@@ -295,7 +328,9 @@ export class DrizzleProvenanceAdapter implements ProvenanceAdapter {
 /**
  * Drizzle implementation of the merge adapter for archive/restore operations
  */
-export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements MergeAdapter<T> {
+export class DrizzleMergeAdapter<
+  T extends Record<string, unknown>,
+> implements MergeAdapter<T> {
   private readonly db: DrizzleDatabase
   private readonly table: DrizzleTable
   private readonly operators: DrizzleOperators
@@ -318,7 +353,11 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
     this.config = { ...DEFAULT_MERGE_ADAPTER_CONFIG, ...config }
 
     if (provenanceTable && this.config.trackProvenance) {
-      this.provenance = new DrizzleProvenanceAdapter(db, provenanceTable, operators)
+      this.provenance = new DrizzleProvenanceAdapter(
+        db,
+        provenanceTable,
+        operators
+      )
     }
   }
 
@@ -385,10 +424,9 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
 
       const selectCondition = this.operators.inArray(primaryKeyCol, ids)
       const query = this.db.select().from(this.table).where(selectCondition)
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
       return results as T[]
     } catch (error) {
@@ -412,10 +450,9 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
       )
 
       const query = this.db.select().from(this.table).where(whereCondition)
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
       return results.map((r) => this.mapToArchivedRecord(r))
     } catch (error) {
@@ -439,13 +476,17 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
         this.operators.isNotNull(archivedAtCol)
       )
 
-      const query = this.db.select({ [this.primaryKey]: primaryKeyCol }).from(this.table).where(whereCondition)
-      const archived = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const query = this.db
+        .select({ [this.primaryKey]: primaryKeyCol })
+        .from(this.table)
+        .where(whereCondition)
+      const archived = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
-      const archivedIds = new Set(archived.map((r) => r[this.primaryKey] as string))
+      const archivedIds = new Set(
+        archived.map((r) => r[this.primaryKey] as string)
+      )
 
       for (const id of ids) {
         result.set(id, archivedIds.has(id))
@@ -460,7 +501,9 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
     }
   }
 
-  async getArchivedByGoldenRecord(goldenRecordId: string): Promise<ArchivedRecord<T>[]> {
+  async getArchivedByGoldenRecord(
+    goldenRecordId: string
+  ): Promise<ArchivedRecord<T>[]> {
     try {
       const mergedIntoIdCol = this.getColumn(this.config.mergedIntoIdField)
       const archivedAtCol = this.getColumn(this.config.archivedAtField)
@@ -471,10 +514,9 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
       )
 
       const query = this.db.select().from(this.table).where(whereCondition)
-      const results = (await (query as unknown as Promise<Record<string, unknown>[]>)) as Record<
-        string,
-        unknown
-      >[]
+      const results = (await (query as unknown as Promise<
+        Record<string, unknown>[]
+      >)) as Record<string, unknown>[]
 
       return results.map((r) => this.mapToArchivedRecord(r))
     } catch (error) {
@@ -524,7 +566,9 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
         .select({ count: this.operators.count() })
         .from(this.table)
         .where(whereCondition)
-      const results = (await (query as unknown as Promise<Array<{ count: number }>>)) as Array<{
+      const results = (await (query as unknown as Promise<
+        Array<{ count: number }>
+      >)) as Array<{
         count: number
       }>
 
@@ -537,8 +581,17 @@ export class DrizzleMergeAdapter<T extends Record<string, unknown>> implements M
     }
   }
 
-  private mapToArchivedRecord(record: Record<string, unknown>): ArchivedRecord<T> {
-    const { [this.config.archivedAtField]: archivedAt, [this.config.archivedReasonField]: archivedReason, [this.config.mergedIntoIdField]: mergedIntoId, createdAt, updatedAt, ...rest } = record
+  private mapToArchivedRecord(
+    record: Record<string, unknown>
+  ): ArchivedRecord<T> {
+    const {
+      [this.config.archivedAtField]: archivedAt,
+      [this.config.archivedReasonField]: archivedReason,
+      [this.config.mergedIntoIdField]: mergedIntoId,
+      createdAt,
+      updatedAt,
+      ...rest
+    } = record
 
     return {
       id: record[this.primaryKey] as string,
@@ -571,7 +624,14 @@ export function createDrizzleMergeAdapter<T extends Record<string, unknown>>(
   config?: MergeAdapterConfig,
   provenanceTable?: DrizzleTable
 ): DrizzleMergeAdapter<T> {
-  return new DrizzleMergeAdapter<T>(db, table, operators, primaryKey, config, provenanceTable)
+  return new DrizzleMergeAdapter<T>(
+    db,
+    table,
+    operators,
+    primaryKey,
+    config,
+    provenanceTable
+  )
 }
 
 /**

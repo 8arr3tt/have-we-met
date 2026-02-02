@@ -341,16 +341,24 @@ describe('FieldMergeBuilder', () => {
   describe('options', () => {
     it('sets options for strategy', () => {
       const builder = new MergeBuilder<TestPerson>()
-      builder.field('addresses').strategy('concatenate').options({ removeDuplicates: true })
+      builder
+        .field('addresses')
+        .strategy('concatenate')
+        .options({ removeDuplicates: true })
 
       const config = builder.build()
 
-      expect(config.fieldStrategies[0].options).toEqual({ removeDuplicates: true })
+      expect(config.fieldStrategies[0].options).toEqual({
+        removeDuplicates: true,
+      })
     })
 
     it('sets separator option for concatenate', () => {
       const builder = new MergeBuilder<TestPerson>()
-      builder.field('addresses').strategy('concatenate').options({ separator: ', ' })
+      builder
+        .field('addresses')
+        .strategy('concatenate')
+        .options({ separator: ', ' })
 
       const config = builder.build()
 
@@ -359,7 +367,10 @@ describe('FieldMergeBuilder', () => {
 
     it('sets dateField option for temporal strategies', () => {
       const builder = new MergeBuilder<TestPerson>()
-      builder.field('email').strategy('preferNewer').options({ dateField: 'createdAt' })
+      builder
+        .field('email')
+        .strategy('preferNewer')
+        .options({ dateField: 'createdAt' })
 
       const config = builder.build()
 
@@ -368,7 +379,10 @@ describe('FieldMergeBuilder', () => {
 
     it('sets nullHandling option', () => {
       const builder = new MergeBuilder<TestPerson>()
-      builder.field('phone').strategy('preferNonNull').options({ nullHandling: 'skip' })
+      builder
+        .field('phone')
+        .strategy('preferNonNull')
+        .options({ nullHandling: 'skip' })
 
       const config = builder.build()
 
@@ -399,7 +413,11 @@ describe('FieldMergeBuilder', () => {
 
     it('finalizes current field before starting next', () => {
       const builder = new MergeBuilder<TestPerson>()
-      builder.field('firstName').strategy('preferLonger').field('lastName').strategy('preferShorter')
+      builder
+        .field('firstName')
+        .strategy('preferLonger')
+        .field('lastName')
+        .strategy('preferShorter')
 
       const config = builder.build()
 
@@ -562,10 +580,21 @@ describe('Builder integration', () => {
       .build()
 
     expect(config.fieldStrategies).toHaveLength(6)
-    expect(config.fieldStrategies.find((fs) => fs.field === 'firstName')?.options?.nullHandling).toBe('skip')
-    expect(config.fieldStrategies.find((fs) => fs.field === 'email')?.options?.dateField).toBe('updatedAt')
-    expect(config.fieldStrategies.find((fs) => fs.field === 'phone')?.strategy).toBe('custom')
-    expect(typeof config.fieldStrategies.find((fs) => fs.field === 'phone')?.customMerge).toBe('function')
+    expect(
+      config.fieldStrategies.find((fs) => fs.field === 'firstName')?.options
+        ?.nullHandling
+    ).toBe('skip')
+    expect(
+      config.fieldStrategies.find((fs) => fs.field === 'email')?.options
+        ?.dateField
+    ).toBe('updatedAt')
+    expect(
+      config.fieldStrategies.find((fs) => fs.field === 'phone')?.strategy
+    ).toBe('custom')
+    expect(
+      typeof config.fieldStrategies.find((fs) => fs.field === 'phone')
+        ?.customMerge
+    ).toBe('function')
   })
 })
 

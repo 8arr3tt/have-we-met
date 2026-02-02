@@ -98,7 +98,9 @@ console.log('Results:')
 for (const result of results1) {
   console.log()
   console.log(`Outcome: ${result.outcome.toUpperCase()}`)
-  console.log(`Total Score: ${result.score.totalScore}/${result.score.maxPossibleScore}`)
+  console.log(
+    `Total Score: ${result.score.totalScore}/${result.score.maxPossibleScore}`
+  )
   console.log(`Normalized Score: ${result.score.normalizedScore.toFixed(2)}`)
   console.log()
   console.log('Field Breakdown:')
@@ -150,7 +152,9 @@ console.log('Results:')
 for (const result of results2) {
   console.log()
   console.log(`Outcome: ${result.outcome.toUpperCase()}`)
-  console.log(`Total Score: ${result.score.totalScore}/${result.score.maxPossibleScore}`)
+  console.log(
+    `Total Score: ${result.score.totalScore}/${result.score.maxPossibleScore}`
+  )
   console.log(`Normalized Score: ${result.score.normalizedScore.toFixed(2)}`)
   console.log()
   console.log('Field Breakdown:')
@@ -221,11 +225,17 @@ const duration = Date.now() - startTime
 console.log('Statistics:')
 console.log(`  Records Processed: ${batchResult.stats.recordsProcessed}`)
 console.log(`  Comparisons Made: ${batchResult.stats.comparisonsMade}`)
-console.log(`  Definite Matches Found: ${batchResult.stats.definiteMatchesFound}`)
-console.log(`  Potential Matches Found: ${batchResult.stats.potentialMatchesFound}`)
+console.log(
+  `  Definite Matches Found: ${batchResult.stats.definiteMatchesFound}`
+)
+console.log(
+  `  Potential Matches Found: ${batchResult.stats.potentialMatchesFound}`
+)
 console.log(`  No Matches Found: ${batchResult.stats.noMatchesFound}`)
 console.log(`  Records With Matches: ${batchResult.stats.recordsWithMatches}`)
-console.log(`  Records Without Matches: ${batchResult.stats.recordsWithoutMatches}`)
+console.log(
+  `  Records Without Matches: ${batchResult.stats.recordsWithoutMatches}`
+)
 console.log(`  Processing Time: ${duration}ms`)
 console.log()
 
@@ -233,7 +243,9 @@ console.log('Deduplication Results:')
 for (const dedupResult of batchResult.results) {
   if (dedupResult.matches.length > 0) {
     console.log()
-    console.log(`Record: ${dedupResult.record.firstName} ${dedupResult.record.lastName}`)
+    console.log(
+      `Record: ${dedupResult.record.firstName} ${dedupResult.record.lastName}`
+    )
     console.log(`  Email: ${dedupResult.record.email}`)
     console.log(`  Match Count: ${dedupResult.matchCount}`)
     console.log(`  Has Definite Matches: ${dedupResult.hasDefiniteMatches}`)
@@ -275,7 +287,9 @@ console.log('   - Adjust thresholds to balance precision vs recall')
 console.log()
 console.log('4. Field thresholds for quality control:')
 console.log('   - Use threshold parameter to exclude low-quality matches')
-console.log('   - Example: threshold 0.85 means similarity must be >= 0.85 to contribute')
+console.log(
+  '   - Example: threshold 0.85 means similarity must be >= 0.85 to contribute'
+)
 console.log()
 
 const highPrecisionResolver = HaveWeMet.create<Person>()
@@ -313,7 +327,9 @@ const highPrecisionResolver = HaveWeMet.create<Person>()
 console.log('Example: High Precision Configuration (fewer false positives)')
 console.log('  - Higher field thresholds (0.9 instead of 0.85)')
 console.log('  - Higher definiteMatch threshold (55 instead of 45)')
-console.log('  - Result: More conservative matching, fewer errors, more manual review')
+console.log(
+  '  - Result: More conservative matching, fewer errors, more manual review'
+)
 console.log()
 
 const highRecallResolver = HaveWeMet.create<Person>()
@@ -351,7 +367,9 @@ const highRecallResolver = HaveWeMet.create<Person>()
 console.log('Example: High Recall Configuration (fewer false negatives)')
 console.log('  - Lower field thresholds (0.75 instead of 0.85)')
 console.log('  - Lower definiteMatch threshold (40 instead of 45)')
-console.log('  - Result: More matches found, more false positives, less manual review needed')
+console.log(
+  '  - Result: More matches found, more false positives, less manual review needed'
+)
 console.log()
 
 console.log('='.repeat(80))

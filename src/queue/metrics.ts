@@ -27,7 +27,7 @@ export class QueueMetrics {
    * Calculate comprehensive queue statistics from items
    */
   static calculate<T extends Record<string, unknown>>(
-    items: QueueItem<T>[],
+    items: QueueItem<T>[]
   ): {
     total: number
     byStatus: Record<QueueStatus, number>
@@ -67,7 +67,7 @@ export class QueueMetrics {
    * Group items by status
    */
   static groupByStatus<T extends Record<string, unknown>>(
-    items: QueueItem<T>[],
+    items: QueueItem<T>[]
   ): Record<QueueStatus, number> {
     const byStatus: Record<QueueStatus, number> = {
       pending: 0,
@@ -89,7 +89,7 @@ export class QueueMetrics {
    * Calculate average wait time (time in queue before decision)
    */
   static calculateWaitTime<T extends Record<string, unknown>>(
-    items: QueueItem<T>[],
+    items: QueueItem<T>[]
   ): number {
     let totalWaitTime = 0
     let decidedCount = 0
@@ -109,7 +109,7 @@ export class QueueMetrics {
    * Note: This is simplified since we don't track status change history
    */
   static calculateDecisionTime<T extends Record<string, unknown>>(
-    items: QueueItem<T>[],
+    items: QueueItem<T>[]
   ): number {
     // Simplified implementation - same as wait time
     // In a real implementation with status change tracking, this would calculate
@@ -122,7 +122,7 @@ export class QueueMetrics {
    */
   static calculateThroughput<T extends Record<string, unknown>>(
     items: QueueItem<T>[],
-    periodMs: number,
+    periodMs: number
   ): number {
     const now = new Date()
     const cutoff = new Date(now.getTime() - periodMs)
@@ -141,7 +141,7 @@ export class QueueMetrics {
    * Calculate age distribution of items
    */
   static calculateAgeDistribution<T extends Record<string, unknown>>(
-    items: QueueItem<T>[],
+    items: QueueItem<T>[]
   ): AgeDistribution {
     const now = new Date()
     const distribution: AgeDistribution = {
@@ -176,7 +176,7 @@ export class QueueMetrics {
    * Find the oldest pending item
    */
   static findOldestPending<T extends Record<string, unknown>>(
-    items: QueueItem<T>[],
+    items: QueueItem<T>[]
   ): Date | undefined {
     const pendingItems = items.filter((item) => item.status === 'pending')
 
@@ -185,7 +185,7 @@ export class QueueMetrics {
     }
 
     return pendingItems.reduce((oldest, item) =>
-      item.createdAt < oldest.createdAt ? item : oldest,
+      item.createdAt < oldest.createdAt ? item : oldest
     ).createdAt
   }
 }

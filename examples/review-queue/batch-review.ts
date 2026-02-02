@@ -13,7 +13,9 @@ import type { DatabaseAdapter, QueueAdapter } from '../../src/adapters/types'
 import type { QueueItem } from '../../src/queue/types'
 
 // Simple mock adapter for examples
-function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter<T> {
+function createMockAdapter<
+  T extends Record<string, unknown>,
+>(): DatabaseAdapter<T> {
   const records: T[] = []
   const queueItems: QueueItem<T>[] = []
 
@@ -24,9 +26,10 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
       records.push(newRecord)
       return newRecord
     },
-    update: async () => ({} as T),
+    update: async () => ({}) as T,
     delete: async () => {},
-    findById: async (id: string) => records.find((r) => (r as any).id === id) || null,
+    findById: async (id: string) =>
+      records.find((r) => (r as any).id === id) || null,
     findAll: async () => records,
     count: async () => records.length,
     batchInsert: async (batch: T[]) => batch,
@@ -46,7 +49,8 @@ function createMockAdapter<T extends Record<string, unknown>>(): DatabaseAdapter
         return item
       },
       findQueueItems: async () => queueItems,
-      findQueueItemById: async (id: string) => queueItems.find((i) => i.id === id) || null,
+      findQueueItemById: async (id: string) =>
+        queueItems.find((i) => i.id === id) || null,
       deleteQueueItem: async (id: string) => {
         const index = queueItems.findIndex((i) => i.id === id)
         if (index >= 0) queueItems.splice(index, 1)
@@ -83,10 +87,14 @@ async function batchReviewExample() {
     .blocking((block) => block.exact('email').phonetic('lastName'))
     .matching((match) =>
       match
-        .field('firstName').using('jaro-winkler', { weight: 1.0 })
-        .field('lastName').using('jaro-winkler', { weight: 1.5 })
-        .field('email').using('exact', { weight: 2.0 })
-        .field('phone').using('exact', { weight: 1.0 })
+        .field('firstName')
+        .using('jaro-winkler', { weight: 1.0 })
+        .field('lastName')
+        .using('jaro-winkler', { weight: 1.5 })
+        .field('email')
+        .using('exact', { weight: 2.0 })
+        .field('phone')
+        .using('exact', { weight: 1.0 })
     )
     .thresholds({ noMatch: 20, definiteMatch: 50 })
     .adapter(adapter)
@@ -103,18 +111,20 @@ async function batchReviewExample() {
       phone: `+1-555-0${i.toString().padStart(3, '0')}`,
       company: i % 2 === 0 ? 'Acme Corp' : 'Tech Inc',
     },
-    potentialMatches: [{
-      record: {
-        id: `existing-${i}`,
-        firstName: `Customer${i}`,
-        lastName: `LastName${i}`,
-        email: `customer${i}@old-domain.com`,
-        phone: `+1-555-0${i.toString().padStart(3, '0')}`,
+    potentialMatches: [
+      {
+        record: {
+          id: `existing-${i}`,
+          firstName: `Customer${i}`,
+          lastName: `LastName${i}`,
+          email: `customer${i}@old-domain.com`,
+          phone: `+1-555-0${i.toString().padStart(3, '0')}`,
+        },
+        score: 30 + Math.random() * 15,
+        outcome: 'potential-match' as const,
+        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
       },
-      score: 30 + Math.random() * 15,
-      outcome: 'potential-match' as const,
-      explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-    }],
+    ],
     priority: Math.floor(Math.random() * 3), // 0-2
     tags: i % 3 === 0 ? ['high-priority', 'import'] : ['import'],
     context: {
@@ -141,7 +151,9 @@ async function batchReviewExample() {
 
   console.log(`High-priority items: ${highPriorityItems.items.length}`)
   for (const item of highPriorityItems.items) {
-    console.log(`  - ${item.id}: priority ${item.priority}, tags: ${item.tags?.join(', ')}`)
+    console.log(
+      `  - ${item.id}: priority ${item.priority}, tags: ${item.tags?.join(', ')}`
+    )
   }
   console.log()
 
@@ -209,7 +221,9 @@ async function batchReviewExample() {
   console.log(`  Total processed: ${processedCount}`)
   console.log(`  Confirmed: ${confirmedCount}`)
   console.log(`  Rejected: ${rejectedCount}`)
-  console.log(`  Marked for manual review: ${processedCount - confirmedCount - rejectedCount}`)
+  console.log(
+    `  Marked for manual review: ${processedCount - confirmedCount - rejectedCount}`
+  )
   console.log()
 
   // Step 4: Check remaining items requiring manual review
@@ -222,7 +236,9 @@ async function batchReviewExample() {
   if (manualReviewItems.items.length > 0) {
     console.log('Sample items:')
     for (const item of manualReviewItems.items.slice(0, 3)) {
-      console.log(`  - ${item.id}: score ${item.potentialMatches[0].score.toFixed(2)}`)
+      console.log(
+        `  - ${item.id}: score ${item.potentialMatches[0].score.toFixed(2)}`
+      )
     }
   }
   console.log()
@@ -241,7 +257,9 @@ async function batchReviewExample() {
   console.log(`  Average decision time: ${stats.avgDecisionTime.toFixed(2)}ms`)
 
   if (stats.throughput) {
-    console.log(`  Throughput (last 24h): ${stats.throughput.last24h} decisions`)
+    console.log(
+      `  Throughput (last 24h): ${stats.throughput.last24h} decisions`
+    )
   }
   console.log()
 

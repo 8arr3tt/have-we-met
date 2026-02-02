@@ -71,7 +71,9 @@ export type StandardBlockConfig = SingleFieldBlockConfig | MultiFieldBlockConfig
  * })
  * ```
  */
-export class StandardBlockingStrategy<T = unknown> implements BlockingStrategy<T> {
+export class StandardBlockingStrategy<
+  T = unknown,
+> implements BlockingStrategy<T> {
   readonly name: string
   private config: StandardBlockConfig
 
@@ -160,7 +162,11 @@ export class StandardBlockingStrategy<T = unknown> implements BlockingStrategy<T
     // Apply transform if configured
     let transformedValue: string | null
     if (config.transform) {
-      transformedValue = applyTransform(value, config.transform, config.transformOptions)
+      transformedValue = applyTransform(
+        value,
+        config.transform,
+        config.transformOptions
+      )
     } else {
       transformedValue = value == null ? null : String(value)
     }

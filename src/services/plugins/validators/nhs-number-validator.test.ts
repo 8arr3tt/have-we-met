@@ -10,10 +10,11 @@ import {
   normalizeNHSNumber,
 } from './nhs-number-validator.js'
 import type { ServiceContext } from '../../types.js'
+import type { ResolverConfig } from '../../../types/config.js'
 
 const createMockContext = (): ServiceContext => ({
   record: {},
-  config: {} as any,
+  config: {} as unknown as ResolverConfig,
   metadata: {
     correlationId: 'test-123',
     startedAt: new Date(),
@@ -101,7 +102,7 @@ describe('NHS Number Validator', () => {
     it('validates correct NHS numbers', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '943 476 5919' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -114,7 +115,7 @@ describe('NHS Number Validator', () => {
     it('validates NHS numbers without spaces', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '9434765919' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -124,7 +125,7 @@ describe('NHS Number Validator', () => {
     it('rejects empty values', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -135,7 +136,7 @@ describe('NHS Number Validator', () => {
     it('rejects null values', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: null },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -146,42 +147,52 @@ describe('NHS Number Validator', () => {
     it('rejects invalid format (too short)', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '12345' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('NHS number must be exactly 10 digits')
-      expect(result.data?.suggestions).toContain('Check if any digits are missing')
+      expect(result.data?.invalidReason).toBe(
+        'NHS number must be exactly 10 digits'
+      )
+      expect(result.data?.suggestions).toContain(
+        'Check if any digits are missing'
+      )
     })
 
     it('rejects invalid format (too long)', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '12345678901' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('NHS number must be exactly 10 digits')
-      expect(result.data?.suggestions).toContain('Check if there are extra digits')
+      expect(result.data?.invalidReason).toBe(
+        'NHS number must be exactly 10 digits'
+      )
+      expect(result.data?.suggestions).toContain(
+        'Check if there are extra digits'
+      )
     })
 
     it('rejects invalid format (contains letters)', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '943476591A' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('NHS number must contain only digits')
+      expect(result.data?.invalidReason).toBe(
+        'NHS number must contain only digits'
+      )
     })
 
     it('rejects invalid checksum', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '9434765910' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -193,21 +204,25 @@ describe('NHS Number Validator', () => {
     it('returns validation checks detail', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '9434765919' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.details?.checks).toBeDefined()
 
       const checks = result.data?.details?.checks ?? []
-      expect(checks).toContainEqual(expect.objectContaining({ name: 'format', passed: true }))
-      expect(checks).toContainEqual(expect.objectContaining({ name: 'checksum', passed: true }))
+      expect(checks).toContainEqual(
+        expect.objectContaining({ name: 'format', passed: true })
+      )
+      expect(checks).toContainEqual(
+        expect.objectContaining({ name: 'checksum', passed: true })
+      )
     })
 
     it('tracks timing information', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '9434765919' },
-        context,
+        context
       )
 
       expect(result.timing).toBeDefined()
@@ -219,7 +234,7 @@ describe('NHS Number Validator', () => {
     it('indicates result is not cached', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '9434765919' },
-        context,
+        context
       )
 
       expect(result.cached).toBe(false)
@@ -267,7 +282,7 @@ describe('NHS Number Validator', () => {
 
       const result = await validator.execute(
         { field: 'nhs', value: '9434765919' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -285,7 +300,7 @@ describe('NHS Number Validator', () => {
     it('handles whitespace-only input', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '   ' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -296,7 +311,7 @@ describe('NHS Number Validator', () => {
     it('handles mixed whitespace and dashes', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '943 - 476 - 5919' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -311,7 +326,7 @@ describe('NHS Number Validator', () => {
       // 156 mod 11 = 2, check = 11 - 2 = 9
       const result = await nhsNumberValidator.execute(
         { field: 'nhsNumber', value: '0123456789' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -321,7 +336,7 @@ describe('NHS Number Validator', () => {
     it('preserves field name in context', async () => {
       const result = await nhsNumberValidator.execute(
         { field: 'patientNHS', value: '9434765919' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)

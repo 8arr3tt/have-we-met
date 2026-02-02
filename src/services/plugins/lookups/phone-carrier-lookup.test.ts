@@ -2,7 +2,7 @@
  * Tests for Phone Carrier Lookup Service
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { ServiceContext } from '../../types.js'
 import type { ResolverConfig } from '../../../types/config.js'
 import {
@@ -16,7 +16,9 @@ import {
   type CarrierLookupData,
 } from './phone-carrier-lookup.js'
 
-function createMockContext(keyFields: Record<string, unknown> = {}): ServiceContext {
+function createMockContext(
+  keyFields: Record<string, unknown> = {}
+): ServiceContext {
   return {
     record: keyFields,
     config: {} as ResolverConfig,
@@ -57,7 +59,9 @@ describe('Phone Carrier Lookup Service', () => {
     })
 
     it('extracts phone from phoneNumber field', () => {
-      expect(extractPhoneNumber({ phoneNumber: '5551234567' })).toBe('5551234567')
+      expect(extractPhoneNumber({ phoneNumber: '5551234567' })).toBe(
+        '5551234567'
+      )
     })
 
     it('extracts phone from mobile field', () => {
@@ -73,7 +77,9 @@ describe('Phone Carrier Lookup Service', () => {
     })
 
     it('extracts phone from primaryPhone field', () => {
-      expect(extractPhoneNumber({ primaryPhone: '+15551234567' })).toBe('+15551234567')
+      expect(extractPhoneNumber({ primaryPhone: '+15551234567' })).toBe(
+        '+15551234567'
+      )
     })
 
     it('returns undefined for empty input', () => {
@@ -301,7 +307,7 @@ describe('Phone Carrier Lookup Service', () => {
       expect(() =>
         createPhoneCarrierLookup({
           provider: 'custom',
-        }),
+        })
       ).toThrow('Custom provider requires customProvider function')
     })
 
@@ -309,7 +315,7 @@ describe('Phone Carrier Lookup Service', () => {
       expect(() =>
         createPhoneCarrierLookup({
           provider: 'twilio',
-        }),
+        })
       ).toThrow("Provider 'twilio' requires apiKey")
     })
 
@@ -339,7 +345,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -358,7 +364,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: {},
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -380,7 +386,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -408,7 +414,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         const data = result.data?.data as Record<string, unknown>
@@ -436,7 +442,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         const data = result.data?.data as Record<string, unknown>
@@ -469,7 +475,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         expect(result.data?.data).toEqual({
@@ -495,7 +501,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         expect(result.metadata?.cost).toBe(0.005)
@@ -514,7 +520,7 @@ describe('Phone Carrier Lookup Service', () => {
           {
             keyFields: { phone: '+15551234567' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(false)
@@ -541,7 +547,9 @@ describe('Phone Carrier Lookup Service', () => {
       })
 
       it('returns unhealthy when provider fails', async () => {
-        const mockProvider = vi.fn().mockRejectedValue(new Error('Connection timeout'))
+        const mockProvider = vi
+          .fn()
+          .mockRejectedValue(new Error('Connection timeout'))
 
         const service = createPhoneCarrierLookup({
           provider: 'custom',
@@ -568,7 +576,7 @@ describe('Phone Carrier Lookup Service', () => {
         {
           keyFields: { phone: '+15551234567' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -588,7 +596,7 @@ describe('Phone Carrier Lookup Service', () => {
         {
           keyFields: { phone: '+15551234567' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)
@@ -606,7 +614,7 @@ describe('Phone Carrier Lookup Service', () => {
         {
           keyFields: { phone: '+15551234567' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)
@@ -623,7 +631,7 @@ describe('Phone Carrier Lookup Service', () => {
         {
           keyFields: { phone: '+15551234567' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)

@@ -20,10 +20,38 @@ describe('Sorted Neighbourhood Integration', () => {
   describe('catches matches missed by standard blocking', () => {
     it('handles typos in blocking field', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'John', lastName: 'Smitt', email: 'john@example.com', birthYear: 1990, city: 'NYC' }, // Typo in last name
-        { id: '3', firstName: 'Jane', lastName: 'Jones', email: 'jane@example.com', birthYear: 1985, city: 'LA' },
-        { id: '4', firstName: 'Bob', lastName: 'Brown', email: 'bob@example.com', birthYear: 1995, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'John',
+          lastName: 'Smitt',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        }, // Typo in last name
+        {
+          id: '3',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
+        {
+          id: '4',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob@example.com',
+          birthYear: 1995,
+          city: 'Chicago',
+        },
       ]
 
       // Standard blocking would miss Smith/Smitt match
@@ -67,10 +95,38 @@ describe('Sorted Neighbourhood Integration', () => {
 
     it('handles variations in name spelling', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Anderson', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Andersen', email: 'jane@example.com', birthYear: 1985, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Andersson', email: 'bob@example.com', birthYear: 1995, city: 'Chicago' },
-        { id: '4', firstName: 'Alice', lastName: 'Smith', email: 'alice@example.com', birthYear: 1992, city: 'NYC' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Anderson',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Andersen',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Andersson',
+          email: 'bob@example.com',
+          birthYear: 1995,
+          city: 'Chicago',
+        },
+        {
+          id: '4',
+          firstName: 'Alice',
+          lastName: 'Smith',
+          email: 'alice@example.com',
+          birthYear: 1992,
+          city: 'NYC',
+        },
       ]
 
       // Sorted neighbourhood with smaller window should group similar names
@@ -95,9 +151,30 @@ describe('Sorted Neighbourhood Integration', () => {
 
     it('finds matches across block boundaries in standard blocking', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Miller', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Mills', email: 'jane@example.com', birthYear: 1985, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Moore', email: 'bob@example.com', birthYear: 1995, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Miller',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Mills',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Moore',
+          email: 'bob@example.com',
+          birthYear: 1995,
+          city: 'Chicago',
+        },
       ]
 
       // Standard blocking on first letter: Miller(M), Mills(M), Moore(M) all together
@@ -168,9 +245,23 @@ describe('Sorted Neighbourhood Integration', () => {
 
     it('provides good reduction with realistic window size', () => {
       const people: Person[] = []
-      const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                         'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-                         'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson']
+      const lastNames = [
+        'Smith',
+        'Johnson',
+        'Williams',
+        'Brown',
+        'Jones',
+        'Garcia',
+        'Miller',
+        'Davis',
+        'Rodriguez',
+        'Martinez',
+        'Hernandez',
+        'Lopez',
+        'Gonzalez',
+        'Wilson',
+        'Anderson',
+      ]
 
       for (let i = 0; i < 500; i++) {
         people.push({
@@ -202,11 +293,46 @@ describe('Sorted Neighbourhood Integration', () => {
   describe('real-world scenarios', () => {
     it('handles person matching with phonetic sorting', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jon', lastName: 'Smyth', email: 'jon.smyth@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '3', firstName: 'John', lastName: 'Schmidt', email: 'john.schmidt@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '4', firstName: 'Jane', lastName: 'Jones', email: 'jane.jones@example.com', birthYear: 1985, city: 'LA' },
-        { id: '5', firstName: 'Bob', lastName: 'Brown', email: 'bob.brown@example.com', birthYear: 1995, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jon',
+          lastName: 'Smyth',
+          email: 'jon.smyth@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '3',
+          firstName: 'John',
+          lastName: 'Schmidt',
+          email: 'john.schmidt@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '4',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane.jones@example.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
+        {
+          id: '5',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob.brown@example.com',
+          birthYear: 1995,
+          city: 'Chicago',
+        },
       ]
 
       // Sort by Soundex to group phonetically similar names
@@ -232,17 +358,42 @@ describe('Sorted Neighbourhood Integration', () => {
 
     it('handles multi-field sorting (name + year)', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', birthYear: 1990, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Smith', email: 'bob@example.com', birthYear: 1985, city: 'Chicago' },
-        { id: '4', firstName: 'Alice', lastName: 'Smith', email: 'alice@example.com', birthYear: 1992, city: 'NYC' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Smith',
+          email: 'bob@example.com',
+          birthYear: 1985,
+          city: 'Chicago',
+        },
+        {
+          id: '4',
+          firstName: 'Alice',
+          lastName: 'Smith',
+          email: 'alice@example.com',
+          birthYear: 1992,
+          city: 'NYC',
+        },
       ]
 
       const strategy = new SortedNeighbourhoodStrategy<Person>({
-        sortBy: [
-          { field: 'lastName' },
-          { field: 'birthYear' },
-        ],
+        sortBy: [{ field: 'lastName' }, { field: 'birthYear' }],
         windowSize: 2,
       })
 
@@ -260,10 +411,38 @@ describe('Sorted Neighbourhood Integration', () => {
 
     it('handles date-based sorting', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1995, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Jones', email: 'jane@example.com', birthYear: 1987, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Brown', email: 'bob@example.com', birthYear: 1991, city: 'Chicago' },
-        { id: '4', firstName: 'Alice', lastName: 'Wilson', email: 'alice@example.com', birthYear: 1983, city: 'NYC' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1995,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Jones',
+          email: 'jane@example.com',
+          birthYear: 1987,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Brown',
+          email: 'bob@example.com',
+          birthYear: 1991,
+          city: 'Chicago',
+        },
+        {
+          id: '4',
+          firstName: 'Alice',
+          lastName: 'Wilson',
+          email: 'alice@example.com',
+          birthYear: 1983,
+          city: 'NYC',
+        },
       ]
 
       const strategy = new SortedNeighbourhoodStrategy<Person>({
@@ -308,9 +487,30 @@ describe('Sorted Neighbourhood Integration', () => {
       })
 
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'Jane', lastName: 'Smyth', email: 'jane@example.com', birthYear: 1990, city: 'LA' },
-        { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', birthYear: 1985, city: 'Chicago' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smyth',
+          email: 'jane@example.com',
+          birthYear: 1990,
+          city: 'LA',
+        },
+        {
+          id: '3',
+          firstName: 'Bob',
+          lastName: 'Jones',
+          email: 'bob@example.com',
+          birthYear: 1985,
+          city: 'Chicago',
+        },
       ]
 
       const stats = engine.getBlockingStats(people)
@@ -385,10 +585,38 @@ describe('Sorted Neighbourhood Integration', () => {
   describe('comparison with standard blocking', () => {
     it('provides better recall than standard blocking with typos', () => {
       const people: Person[] = [
-        { id: '1', firstName: 'John', lastName: 'Anderson', email: 'john@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '2', firstName: 'John', lastName: 'Andersen', email: 'john2@example.com', birthYear: 1990, city: 'NYC' },
-        { id: '3', firstName: 'John', lastName: 'Andersan', email: 'john3@example.com', birthYear: 1990, city: 'NYC' }, // Typo
-        { id: '4', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', birthYear: 1985, city: 'LA' },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Anderson',
+          email: 'john@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '2',
+          firstName: 'John',
+          lastName: 'Andersen',
+          email: 'john2@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        },
+        {
+          id: '3',
+          firstName: 'John',
+          lastName: 'Andersan',
+          email: 'john3@example.com',
+          birthYear: 1990,
+          city: 'NYC',
+        }, // Typo
+        {
+          id: '4',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          birthYear: 1985,
+          city: 'LA',
+        },
       ]
 
       // Standard blocking misses Andersan (typo)
@@ -504,8 +732,12 @@ describe('Sorted Neighbourhood Integration', () => {
         windowSize: 20,
       })
 
-      const smallStats = generator.calculateStats(smallWindow.generateBlocks(people))
-      const largeStats = generator.calculateStats(largeWindow.generateBlocks(people))
+      const smallStats = generator.calculateStats(
+        smallWindow.generateBlocks(people)
+      )
+      const largeStats = generator.calculateStats(
+        largeWindow.generateBlocks(people)
+      )
 
       // Smaller window = fewer comparisons
       expect(smallStats.comparisonsWithBlocking).toBeLessThan(

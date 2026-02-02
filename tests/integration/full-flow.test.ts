@@ -65,7 +65,10 @@ describe('Full Resolution Flow', () => {
       ]
 
       // Resolve
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       // Verify match outcome
       expect(results.length).toBeGreaterThan(0)
@@ -135,7 +138,10 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('no-match')
@@ -185,7 +191,10 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('potential-match')
@@ -260,7 +269,10 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBe(3)
       expect(results[0].outcome).toBe('definite-match')
@@ -279,9 +291,7 @@ describe('Full Resolution Flow', () => {
             .field('lastName', { type: 'name', component: 'last' })
             .field('email', { type: 'email' })
         )
-        .matching((m) =>
-          m.field('firstName').strategy('exact').weight(100)
-        )
+        .matching((m) => m.field('firstName').strategy('exact').weight(100))
         .thresholds({ noMatch: 10, definiteMatch: 80 })
         .build()
 
@@ -295,7 +305,11 @@ describe('Full Resolution Flow', () => {
         createPersonRecord({ firstName: 'Jane' }, '5'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data), { maxResults: 2 })
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data),
+        { maxResults: 2 }
+      )
 
       expect(results).toHaveLength(2)
     })
@@ -319,7 +333,10 @@ describe('Full Resolution Flow', () => {
         createPersonRecord({ email: 'jane.smith@example.com' }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('no-match')
@@ -342,7 +359,10 @@ describe('Full Resolution Flow', () => {
         createPersonRecord({ email: 'jane.smith@example.com' }, '1'),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -387,7 +407,10 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].outcome).toBe('definite-match')
@@ -439,7 +462,10 @@ describe('Full Resolution Flow', () => {
         ),
       ]
 
-      const results = resolver.resolve(input.data, candidates.map(c => c.data))
+      const results = resolver.resolve(
+        input.data,
+        candidates.map((c) => c.data)
+      )
 
       expect(results.length).toBeGreaterThan(0)
       expect(results[0].explanation).toBeTruthy()

@@ -13,17 +13,24 @@ Three core resilience patterns are available:
 These can be used individually or combined:
 
 ```typescript
-import { withResilience, withTimeout, withRetry, CircuitBreaker } from 'have-we-met/services'
+import {
+  withResilience,
+  withTimeout,
+  withRetry,
+  CircuitBreaker,
+} from 'have-we-met/services'
 
 // Combined patterns (recommended)
-const result = await withResilience(
-  () => fetchExternalData(),
-  {
-    timeout: { timeoutMs: 5000 },
-    retry: { maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 5000 },
-    circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 30000 },
-  }
-)
+const result = await withResilience(() => fetchExternalData(), {
+  timeout: { timeoutMs: 5000 },
+  retry: {
+    maxAttempts: 3,
+    initialDelayMs: 100,
+    backoffMultiplier: 2,
+    maxDelayMs: 5000,
+  },
+  circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 30000 },
+})
 
 // Individual patterns
 const result = await withTimeout(fetchExternalData(), { timeoutMs: 5000 })
@@ -39,10 +46,10 @@ Timeouts prevent operations from hanging indefinitely.
 import { withTimeout, ServiceTimeoutError } from 'have-we-met/services'
 
 try {
-  const result = await withTimeout(
-    fetchData(),
-    { timeoutMs: 5000, serviceName: 'my-api' }
-  )
+  const result = await withTimeout(fetchData(), {
+    timeoutMs: 5000,
+    serviceName: 'my-api',
+  })
 } catch (error) {
   if (error instanceof ServiceTimeoutError) {
     console.log(`${error.serviceName} timed out after ${error.timeoutMs}ms`)
@@ -54,9 +61,9 @@ try {
 
 ```typescript
 interface TimeoutOptions {
-  timeoutMs: number       // Timeout duration in milliseconds
-  serviceName?: string    // Service name for error messages
-  signal?: AbortSignal    // External abort signal
+  timeoutMs: number // Timeout duration in milliseconds
+  serviceName?: string // Service name for error messages
+  signal?: AbortSignal // External abort signal
 }
 ```
 
@@ -66,10 +73,9 @@ interface TimeoutOptions {
 import { withTimeoutFn } from 'have-we-met/services'
 
 // Wrap a function with timeout
-const timedFetch = withTimeoutFn(
-  (url: string) => fetch(url),
-  { timeoutMs: 5000 }
-)
+const timedFetch = withTimeoutFn((url: string) => fetch(url), {
+  timeoutMs: 5000,
+})
 
 const response = await timedFetch('https://api.example.com')
 ```
@@ -81,10 +87,9 @@ Get timing information along with the result:
 ```typescript
 import { withTimeoutTimed } from 'have-we-met/services'
 
-const { result, durationMs, timedOut } = await withTimeoutTimed(
-  fetchData(),
-  { timeoutMs: 5000 }
-)
+const { result, durationMs, timedOut } = await withTimeoutTimed(fetchData(), {
+  timeoutMs: 5000,
+})
 
 console.log(`Operation took ${durationMs}ms`)
 ```
@@ -94,7 +99,10 @@ console.log(`Operation took ${durationMs}ms`)
 For more control over timeout behavior:
 
 ```typescript
-import { createTimeoutController, TimeoutController } from 'have-we-met/services'
+import {
+  createTimeoutController,
+  TimeoutController,
+} from 'have-we-met/services'
 
 const controller = createTimeoutController(5000)
 
@@ -119,26 +127,23 @@ Automatic retry handles transient failures with exponential backoff.
 ```typescript
 import { withRetry } from 'have-we-met/services'
 
-const result = await withRetry(
-  () => callExternalApi(),
-  {
-    maxAttempts: 3,
-    initialDelayMs: 100,
-    backoffMultiplier: 2,
-    maxDelayMs: 5000,
-    retryOn: ['timeout', 'network', 'server'],
-  }
-)
+const result = await withRetry(() => callExternalApi(), {
+  maxAttempts: 3,
+  initialDelayMs: 100,
+  backoffMultiplier: 2,
+  maxDelayMs: 5000,
+  retryOn: ['timeout', 'network', 'server'],
+})
 ```
 
 ### Configuration Options
 
 ```typescript
 interface RetryConfig {
-  maxAttempts: number         // Maximum retry attempts (including initial)
-  initialDelayMs: number      // Initial delay between retries
-  backoffMultiplier: number   // Multiplier for exponential backoff
-  maxDelayMs: number          // Maximum delay between retries
+  maxAttempts: number // Maximum retry attempts (including initial)
+  initialDelayMs: number // Initial delay between retries
+  backoffMultiplier: number // Multiplier for exponential backoff
+  maxDelayMs: number // Maximum delay between retries
   retryOn?: RetryableErrorType[] // Error types to retry
 }
 
@@ -158,6 +163,7 @@ actualDelay = delay + (delay * 0.2 * random(-1, 1))
 ```
 
 **Example with defaults:**
+
 - Attempt 1: Fail, wait ~100ms (±20%)
 - Attempt 2: Fail, wait ~200ms (±20%)
 - Attempt 3: Fail, wait ~400ms (±20%)
@@ -168,16 +174,16 @@ actualDelay = delay + (delay * 0.2 * random(-1, 1))
 ```typescript
 import { withRetryDetailed } from 'have-we-met/services'
 
-const { result, attempts, totalDurationMs, attemptDetails } = await withRetryDetailed(
-  () => callExternalApi(),
-  retryConfig
-)
+const { result, attempts, totalDurationMs, attemptDetails } =
+  await withRetryDetailed(() => callExternalApi(), retryConfig)
 
 console.log(`Succeeded on attempt ${attempts}`)
 console.log(`Total time: ${totalDurationMs}ms`)
 
 for (const attempt of attemptDetails) {
-  console.log(`Attempt ${attempt.number}: ${attempt.success ? 'success' : attempt.error}`)
+  console.log(
+    `Attempt ${attempt.number}: ${attempt.success ? 'success' : attempt.error}`
+  )
 }
 ```
 
@@ -186,10 +192,12 @@ for (const attempt of attemptDetails) {
 ```typescript
 import { createRetryable } from 'have-we-met/services'
 
-const resilientApiCall = createRetryable(
-  (id: string) => fetchRecord(id),
-  { maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 5000 }
-)
+const resilientApiCall = createRetryable((id: string) => fetchRecord(id), {
+  maxAttempts: 3,
+  initialDelayMs: 100,
+  backoffMultiplier: 2,
+  maxDelayMs: 5000,
+})
 
 // Each call retries automatically
 const record1 = await resilientApiCall('123')
@@ -276,9 +284,9 @@ import { CircuitBreaker, withCircuitBreaker } from 'have-we-met/services'
 
 // Create a circuit breaker
 const breaker = new CircuitBreaker({
-  failureThreshold: 5,    // Open after 5 failures
-  resetTimeoutMs: 30000,  // Try to reset after 30 seconds
-  successThreshold: 2,    // Close after 2 successes in half-open
+  failureThreshold: 5, // Open after 5 failures
+  resetTimeoutMs: 30000, // Try to reset after 30 seconds
+  successThreshold: 2, // Close after 2 successes in half-open
   failureWindowMs: 60000, // Count failures within 60 seconds
 })
 
@@ -286,20 +294,17 @@ const breaker = new CircuitBreaker({
 const result = await breaker.execute(() => callExternalApi())
 
 // Or use the wrapper
-const result = await withCircuitBreaker(
-  () => callExternalApi(),
-  breakerConfig
-)
+const result = await withCircuitBreaker(() => callExternalApi(), breakerConfig)
 ```
 
 ### Configuration Options
 
 ```typescript
 interface CircuitBreakerConfig {
-  failureThreshold: number   // Failures before opening (default: 5)
-  resetTimeoutMs: number     // Time before attempting reset (default: 30000)
-  successThreshold: number   // Successes to close from half-open (default: 2)
-  failureWindowMs: number    // Time window for failure counting (default: 60000)
+  failureThreshold: number // Failures before opening (default: 5)
+  resetTimeoutMs: number // Time before attempting reset (default: 30000)
+  successThreshold: number // Successes to close from half-open (default: 2)
+  failureWindowMs: number // Time window for failure counting (default: 60000)
 }
 ```
 
@@ -336,7 +341,10 @@ breaker.onStateChange((newState, oldState) => {
 Manage multiple circuit breakers:
 
 ```typescript
-import { CircuitBreakerRegistry, createCircuitBreakerRegistry } from 'have-we-met/services'
+import {
+  CircuitBreakerRegistry,
+  createCircuitBreakerRegistry,
+} from 'have-we-met/services'
 
 const registry = createCircuitBreakerRegistry()
 
@@ -376,27 +384,24 @@ Use all patterns together for comprehensive protection.
 import { withResilience, withResilienceDetailed } from 'have-we-met/services'
 
 // Basic combined usage
-const result = await withResilience(
-  () => callExternalApi(),
-  {
-    timeout: {
-      timeoutMs: 5000,
-      serviceName: 'external-api',
-    },
-    retry: {
-      maxAttempts: 3,
-      initialDelayMs: 100,
-      backoffMultiplier: 2,
-      maxDelayMs: 5000,
-      retryOn: ['timeout', 'network'],
-    },
-    circuitBreaker: {
-      failureThreshold: 5,
-      resetTimeoutMs: 30000,
-      successThreshold: 2,
-    },
-  }
-)
+const result = await withResilience(() => callExternalApi(), {
+  timeout: {
+    timeoutMs: 5000,
+    serviceName: 'external-api',
+  },
+  retry: {
+    maxAttempts: 3,
+    initialDelayMs: 100,
+    backoffMultiplier: 2,
+    maxDelayMs: 5000,
+    retryOn: ['timeout', 'network'],
+  },
+  circuitBreaker: {
+    failureThreshold: 5,
+    resetTimeoutMs: 30000,
+    successThreshold: 2,
+  },
+})
 
 // With detailed results
 const {
@@ -405,10 +410,7 @@ const {
   attempts,
   circuitBreakerInvolved,
   circuitState,
-} = await withResilienceDetailed(
-  () => callExternalApi(),
-  resilienceConfig
-)
+} = await withResilienceDetailed(() => callExternalApi(), resilienceConfig)
 
 console.log(`Completed in ${totalDurationMs}ms after ${attempts} attempt(s)`)
 if (circuitBreakerInvolved) {
@@ -422,10 +424,15 @@ if (circuitBreakerInvolved) {
 import { createResilient } from 'have-we-met/services'
 
 const resilientFetch = createResilient(
-  (url: string) => fetch(url).then(r => r.json()),
+  (url: string) => fetch(url).then((r) => r.json()),
   {
     timeout: { timeoutMs: 5000 },
-    retry: { maxAttempts: 3, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 5000 },
+    retry: {
+      maxAttempts: 3,
+      initialDelayMs: 100,
+      backoffMultiplier: 2,
+      maxDelayMs: 5000,
+    },
     circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 30000 },
   }
 )
@@ -475,22 +482,22 @@ const servicesConfig = createServiceBuilder<MyRecord>()
 
   // This service uses defaults
   .validate('email')
-    .using(emailValidator)
+  .using(emailValidator)
 
   // This service has custom timeout
   .lookup('address')
-    .using(addressStandardization)
-    .timeout(10000)  // Longer timeout for external API
+  .using(addressStandardization)
+  .timeout(10000) // Longer timeout for external API
 
   // This service has custom retry
   .custom('fraudCheck')
-    .using(fraudDetection)
-    .retry({
-      maxAttempts: 1,  // No retries - fail fast
-      initialDelayMs: 0,
-      backoffMultiplier: 1,
-      maxDelayMs: 0,
-    })
+  .using(fraudDetection)
+  .retry({
+    maxAttempts: 1, // No retries - fail fast
+    initialDelayMs: 0,
+    backoffMultiplier: 1,
+    maxDelayMs: 0,
+  })
 
   .build()
 ```
@@ -524,28 +531,28 @@ for (const [name, status] of Object.entries(circuitStatus)) {
 
 ### Timeout Guidelines
 
-| Service Type | Recommended Timeout |
-|--------------|---------------------|
-| Local validation | 100ms - 500ms |
-| Database query | 1s - 5s |
-| External API | 5s - 30s |
-| File upload | 30s - 120s |
+| Service Type     | Recommended Timeout |
+| ---------------- | ------------------- |
+| Local validation | 100ms - 500ms       |
+| Database query   | 1s - 5s             |
+| External API     | 5s - 30s            |
+| File upload      | 30s - 120s          |
 
 ### Retry Guidelines
 
-| Scenario | Recommended Config |
-|----------|-------------------|
-| Transient network issues | 3 attempts, 100ms initial, 2x backoff |
-| Rate-limited API | 3 attempts, 1000ms initial, 2x backoff |
-| Critical operation | 5 attempts, 500ms initial, 1.5x backoff |
-| Fire-and-forget | 1 attempt (no retry) |
+| Scenario                 | Recommended Config                      |
+| ------------------------ | --------------------------------------- |
+| Transient network issues | 3 attempts, 100ms initial, 2x backoff   |
+| Rate-limited API         | 3 attempts, 1000ms initial, 2x backoff  |
+| Critical operation       | 5 attempts, 500ms initial, 1.5x backoff |
+| Fire-and-forget          | 1 attempt (no retry)                    |
 
 ### Circuit Breaker Guidelines
 
-| Scenario | Recommended Config |
-|----------|-------------------|
-| High-volume API | 5 failures, 30s reset, 2 successes |
-| Critical dependency | 3 failures, 60s reset, 3 successes |
+| Scenario             | Recommended Config                 |
+| -------------------- | ---------------------------------- |
+| High-volume API      | 5 failures, 30s reset, 2 successes |
+| Critical dependency  | 3 failures, 60s reset, 3 successes |
 | Optional enhancement | 10 failures, 120s reset, 1 success |
 
 ### General Best Practices
@@ -564,15 +571,15 @@ for (const [name, status] of Object.entries(circuitStatus)) {
 
 ## Error Types
 
-| Error | Retryable | Description |
-|-------|-----------|-------------|
-| `ServiceTimeoutError` | Yes | Operation timed out |
-| `ServiceNetworkError` | Yes | Network connectivity issue |
-| `ServiceServerError` | Yes | Server returned 5xx |
-| `ServiceUnavailableError` | No | Circuit breaker is open |
-| `ServiceInputValidationError` | No | Invalid input |
-| `ServiceNotFoundError` | No | Resource not found |
-| `ServiceRejectedError` | No | Request rejected |
+| Error                         | Retryable | Description                |
+| ----------------------------- | --------- | -------------------------- |
+| `ServiceTimeoutError`         | Yes       | Operation timed out        |
+| `ServiceNetworkError`         | Yes       | Network connectivity issue |
+| `ServiceServerError`          | Yes       | Server returned 5xx        |
+| `ServiceUnavailableError`     | No        | Circuit breaker is open    |
+| `ServiceInputValidationError` | No        | Invalid input              |
+| `ServiceNotFoundError`        | No        | Resource not found         |
+| `ServiceRejectedError`        | No        | Request rejected           |
 
 ## See Also
 

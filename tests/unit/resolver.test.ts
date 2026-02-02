@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { Resolver } from '../../src/core/resolver'
 import type { ResolverConfig } from '../../src/types/config'
 import { StandardBlockingStrategy } from '../../src/core/blocking/strategies/standard-blocking'
-import { registerNormalizer, clearNormalizers } from '../../src/core/normalizers/registry'
+import {
+  registerNormalizer,
+  clearNormalizers,
+} from '../../src/core/normalizers/registry'
 
 interface TestPerson {
   firstName: string
@@ -11,7 +14,9 @@ interface TestPerson {
   phone?: string
 }
 
-function createTestResolver(overrides?: Partial<ResolverConfig<TestPerson>>): Resolver<TestPerson> {
+function createTestResolver(
+  overrides?: Partial<ResolverConfig<TestPerson>>
+): Resolver<TestPerson> {
   const config: ResolverConfig<TestPerson> = {
     schema: {
       firstName: { type: 'name', component: 'first' },
@@ -78,11 +83,15 @@ describe('Resolver', () => {
             firstName: { type: 'name' },
           },
           matching: {
-            fields: new Map([['invalidField', { strategy: 'exact', weight: 10 }]]),
+            fields: new Map([
+              ['invalidField', { strategy: 'exact', weight: 10 }],
+            ]),
             thresholds: { noMatch: 20, definiteMatch: 45 },
           },
         })
-      }).toThrow("Field 'invalidField' is configured for matching but not defined in schema")
+      }).toThrow(
+        "Field 'invalidField' is configured for matching but not defined in schema"
+      )
     })
 
     it('validates noMatch threshold is non-negative', () => {
@@ -178,7 +187,9 @@ describe('Resolver', () => {
     })
 
     it('applies blocking to reduce candidates', () => {
-      const blockingStrategy = new StandardBlockingStrategy<Record<string, unknown>>({
+      const blockingStrategy = new StandardBlockingStrategy<
+        Record<string, unknown>
+      >({
         name: 'emailDomain',
         field: 'email',
         transform: (value) => {
@@ -273,8 +284,12 @@ describe('Resolver', () => {
       const results = resolver.resolve(candidate, existingRecords)
 
       expect(results[0].candidateRecord).toEqual(existingRecords[1])
-      expect(results[0].score.totalScore).toBeGreaterThanOrEqual(results[1].score.totalScore)
-      expect(results[1].score.totalScore).toBeGreaterThanOrEqual(results[2].score.totalScore)
+      expect(results[0].score.totalScore).toBeGreaterThanOrEqual(
+        results[1].score.totalScore
+      )
+      expect(results[1].score.totalScore).toBeGreaterThanOrEqual(
+        results[2].score.totalScore
+      )
     })
 
     it('includes explanations in results', () => {
@@ -352,11 +367,17 @@ describe('Resolver', () => {
       const existingRecords = [
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
         { firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
-        { firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com' },
+        {
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john.smith@example.com',
+        },
         { firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@example.com' },
       ]
 
-      const results = resolver.resolve(candidate, existingRecords, { maxResults: 2 })
+      const results = resolver.resolve(candidate, existingRecords, {
+        maxResults: 2,
+      })
 
       expect(results).toHaveLength(2)
     })
@@ -433,7 +454,11 @@ describe('Resolver', () => {
       const records = [
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com' },
+        {
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -445,7 +470,9 @@ describe('Resolver', () => {
     })
 
     it('applies blocking to reduce comparisons', () => {
-      const blockingStrategy = new StandardBlockingStrategy<Record<string, unknown>>({
+      const blockingStrategy = new StandardBlockingStrategy<
+        Record<string, unknown>
+      >({
         name: 'emailDomain',
         field: 'email',
         transform: (value) => {
@@ -480,7 +507,9 @@ describe('Resolver', () => {
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
       ]
 
-      const result = resolver.deduplicateBatch(records, { maxPairsPerRecord: 2 })
+      const result = resolver.deduplicateBatch(records, {
+        maxPairsPerRecord: 2,
+      })
 
       result.results.forEach((dedupResult) => {
         expect(dedupResult.matches.length).toBeLessThanOrEqual(2)
@@ -512,10 +541,14 @@ describe('Resolver', () => {
         { firstName: 'Bob', lastName: 'Johnson', email: 'bob@example.com' },
       ]
 
-      const resultWithNoMatches = resolver.deduplicateBatch(records, { includeNoMatches: true })
+      const resultWithNoMatches = resolver.deduplicateBatch(records, {
+        includeNoMatches: true,
+      })
       const resultWithoutNoMatches = resolver.deduplicateBatch(records)
 
-      expect(resultWithNoMatches.results.length).toBeGreaterThanOrEqual(resultWithoutNoMatches.results.length)
+      expect(resultWithNoMatches.results.length).toBeGreaterThanOrEqual(
+        resultWithoutNoMatches.results.length
+      )
     })
 
     it('groups matches by record', () => {
@@ -523,7 +556,11 @@ describe('Resolver', () => {
       const records = [
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com' },
+        {
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -540,7 +577,11 @@ describe('Resolver', () => {
       const records = [
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
         { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com' },
+        {
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -582,8 +623,18 @@ describe('Resolver', () => {
     it('correctly identifies definite matches', () => {
       const resolver = createTestResolver()
       const records = [
-        { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
+        {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -602,7 +653,9 @@ describe('Resolver', () => {
 
       const result = resolver.deduplicateBatch(records)
 
-      const recordWithMatches = result.results.find((r) => r.hasPotentialMatches)
+      const recordWithMatches = result.results.find(
+        (r) => r.hasPotentialMatches
+      )
       expect(recordWithMatches).toBeDefined()
       expect(recordWithMatches!.hasPotentialMatches).toBe(true)
     })
@@ -619,9 +672,9 @@ describe('Resolver', () => {
 
       result.results.forEach((dedupResult) => {
         for (let i = 1; i < dedupResult.matches.length; i++) {
-          expect(dedupResult.matches[i - 1].score.totalScore).toBeGreaterThanOrEqual(
-            dedupResult.matches[i].score.totalScore
-          )
+          expect(
+            dedupResult.matches[i - 1].score.totalScore
+          ).toBeGreaterThanOrEqual(dedupResult.matches[i].score.totalScore)
         }
       })
     })

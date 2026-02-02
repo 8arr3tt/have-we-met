@@ -185,9 +185,7 @@ describe('levenshtein', () => {
     it('respects case when caseSensitive is true', () => {
       expect(levenshtein('Hello', 'hello', { caseSensitive: true })).toBe(0.8)
       expect(levenshtein('HELLO', 'hello', { caseSensitive: true })).toBe(0)
-      expect(
-        levenshtein('hello', 'hello', { caseSensitive: true })
-      ).toBe(1)
+      expect(levenshtein('hello', 'hello', { caseSensitive: true })).toBe(1)
     })
   })
 
@@ -292,10 +290,7 @@ describe('levenshtein', () => {
 
     it('handles strings with special characters', () => {
       expect(levenshtein('hello!', 'hello!')).toBe(1)
-      expect(levenshtein('hello@world', 'hello#world')).toBeCloseTo(
-        10 / 11,
-        3
-      )
+      expect(levenshtein('hello@world', 'hello#world')).toBeCloseTo(10 / 11, 3)
       expect(levenshtein('test-123', 'test-123')).toBe(1)
     })
 
@@ -1205,7 +1200,9 @@ describe('metaphone', () => {
 
     it('returns 0 when nullMatchesNull is false', () => {
       expect(metaphone(null, null, { nullMatchesNull: false })).toBe(0)
-      expect(metaphone(undefined, undefined, { nullMatchesNull: false })).toBe(0)
+      expect(metaphone(undefined, undefined, { nullMatchesNull: false })).toBe(
+        0
+      )
     })
 
     it('returns 0 when only one value is null/undefined', () => {

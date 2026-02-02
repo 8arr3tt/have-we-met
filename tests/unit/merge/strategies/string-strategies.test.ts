@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { preferLonger, preferShorter } from '../../../../src/merge/strategies/string-strategies.js'
+import {
+  preferLonger,
+  preferShorter,
+} from '../../../../src/merge/strategies/string-strategies.js'
 import type { SourceRecord } from '../../../../src/merge/types.js'
 
 const createRecords = (count: number): SourceRecord[] =>

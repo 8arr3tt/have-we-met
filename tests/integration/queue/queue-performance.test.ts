@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { HaveWeMet } from '../../../src/index.js'
-import type { DatabaseAdapter, QueueAdapter } from '../../../src/adapters/types.js'
+import type {
+  DatabaseAdapter,
+  QueueAdapter,
+} from '../../../src/adapters/types.js'
 import type { QueueItem } from '../../../src/queue/types.js'
 
 interface TestRecord {
@@ -26,12 +29,16 @@ function createMockQueueAdapter() {
       Object.assign(item, updates)
       return item
     },
-    async findQueueItems(filter?: import('../../../src/queue/types.js').QueueFilter) {
+    async findQueueItems(
+      filter?: import('../../../src/queue/types.js').QueueFilter
+    ) {
       let result = [...items]
 
       // Filter by status
       if (filter?.status) {
-        const statuses = Array.isArray(filter.status) ? filter.status : [filter.status]
+        const statuses = Array.isArray(filter.status)
+          ? filter.status
+          : [filter.status]
         result = result.filter((item) => statuses.includes(item.status))
       }
 
@@ -61,11 +68,15 @@ function createMockQueueAdapter() {
       const index = items.findIndex((i) => i.id === id)
       if (index >= 0) items.splice(index, 1)
     },
-    async countQueueItems(filter?: import('../../../src/queue/types.js').QueueFilter) {
+    async countQueueItems(
+      filter?: import('../../../src/queue/types.js').QueueFilter
+    ) {
       let result = [...items]
 
       if (filter?.status) {
-        const statuses = Array.isArray(filter.status) ? filter.status : [filter.status]
+        const statuses = Array.isArray(filter.status)
+          ? filter.status
+          : [filter.status]
         result = result.filter((item) => statuses.includes(item.status))
       }
 
@@ -115,7 +126,7 @@ function createMockAdapter(): DatabaseAdapter<TestRecord> {
 
 describe('Performance: Queue Operations', () => {
   let adapter: ReturnType<typeof createMockAdapter<TestRecord>>
-  let resolver: ReturnType<typeof HaveWeMet.schema<TestRecord>['build']>
+  let resolver: ReturnType<(typeof HaveWeMet.schema<TestRecord>)['build']>
 
   beforeEach(async () => {
     adapter = createMockAdapter<TestRecord>()
@@ -153,17 +164,19 @@ describe('Performance: Queue Operations', () => {
         email: `person${i}@example.com`,
         phone: `+1-555-${i.toString().padStart(4, '0')}`,
       },
-      potentialMatches: [{
-        record: {
-          id: `r${i}`,
-          firstName: `Person${i}`,
-          lastName: `Last${i}`,
-          email: `person${i}@old.com`,
+      potentialMatches: [
+        {
+          record: {
+            id: `r${i}`,
+            firstName: `Person${i}`,
+            lastName: `Last${i}`,
+            email: `person${i}@old.com`,
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
         },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      ],
     }))
 
     const startTime = Date.now()
@@ -191,17 +204,23 @@ describe('Performance: Queue Operations', () => {
             lastName: `Last${index}`,
             email: `person${index}@example.com`,
           },
-          potentialMatches: [{
-            record: {
-              id: `r${index}`,
-              firstName: `Person${index}`,
-              lastName: `Last${index}`,
-              email: `person${index}@old.com`,
+          potentialMatches: [
+            {
+              record: {
+                id: `r${index}`,
+                firstName: `Person${index}`,
+                lastName: `Last${index}`,
+                email: `person${index}@old.com`,
+              },
+              score: 30,
+              outcome: 'potential-match' as const,
+              explanation: {
+                totalScore: 30,
+                fieldScores: [],
+                missingFields: [],
+              },
             },
-            score: 30,
-            outcome: 'potential-match' as const,
-            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-          }],
+          ],
         }
       })
 
@@ -227,17 +246,19 @@ describe('Performance: Queue Operations', () => {
         lastName: `Last${i}`,
         email: `person${i}@example.com`,
       },
-      potentialMatches: [{
-        record: {
-          id: `r${i}`,
-          firstName: `Person${i}`,
-          lastName: `Last${i}`,
-          email: `person${i}@old.com`,
+      potentialMatches: [
+        {
+          record: {
+            id: `r${i}`,
+            firstName: `Person${i}`,
+            lastName: `Last${i}`,
+            email: `person${i}@old.com`,
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
         },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      ],
     }))
 
     const added = await resolver.queue.addBatch(itemsToAdd)
@@ -278,17 +299,23 @@ describe('Performance: Queue Operations', () => {
             lastName: `Last${index}`,
             email: `person${index}@example.com`,
           },
-          potentialMatches: [{
-            record: {
-              id: `r${index}`,
-              firstName: `Person${index}`,
-              lastName: `Last${index}`,
-              email: `person${index}@old.com`,
+          potentialMatches: [
+            {
+              record: {
+                id: `r${index}`,
+                firstName: `Person${index}`,
+                lastName: `Last${index}`,
+                email: `person${index}@old.com`,
+              },
+              score: 30,
+              outcome: 'potential-match' as const,
+              explanation: {
+                totalScore: 30,
+                fieldScores: [],
+                missingFields: [],
+              },
             },
-            score: 30,
-            outcome: 'potential-match' as const,
-            explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-          }],
+          ],
         }
       })
 
@@ -314,17 +341,19 @@ describe('Performance: Queue Operations', () => {
         lastName: `Last${i}`,
         email: `person${i}@example.com`,
       },
-      potentialMatches: [{
-        record: {
-          id: `r${i}`,
-          firstName: `Person${i}`,
-          lastName: `Last${i}`,
-          email: `person${i}@old.com`,
+      potentialMatches: [
+        {
+          record: {
+            id: `r${i}`,
+            firstName: `Person${i}`,
+            lastName: `Last${i}`,
+            email: `person${i}@old.com`,
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
         },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      ],
     }))
 
     const added = await resolver.queue.addBatch(itemsToAdd)
@@ -363,17 +392,19 @@ describe('Performance: Queue Operations', () => {
         lastName: `Last${i}`,
         email: `person${i}@example.com`,
       },
-      potentialMatches: [{
-        record: {
-          id: `r${i}`,
-          firstName: `Person${i}`,
-          lastName: `Last${i}`,
-          email: `person${i}@old.com`,
+      potentialMatches: [
+        {
+          record: {
+            id: `r${i}`,
+            firstName: `Person${i}`,
+            lastName: `Last${i}`,
+            email: `person${i}@old.com`,
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
         },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      ],
       priority: i % 3,
       tags: i % 2 === 0 ? ['even', 'import'] : ['odd', 'import'],
     }))
@@ -415,17 +446,19 @@ describe('Performance: Queue Operations', () => {
         lastName: `Last${i}`,
         email: `person${i}@example.com`,
       },
-      potentialMatches: [{
-        record: {
-          id: `r${i}`,
-          firstName: `Person${i}`,
-          lastName: `Last${i}`,
-          email: `person${i}@old.com`,
+      potentialMatches: [
+        {
+          record: {
+            id: `r${i}`,
+            firstName: `Person${i}`,
+            lastName: `Last${i}`,
+            email: `person${i}@old.com`,
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
         },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      ],
     }))
 
     const added = await resolver.queue.addBatch(itemsToAdd)
@@ -462,17 +495,19 @@ describe('Performance: Queue Operations', () => {
         lastName: `Last${i}`,
         email: `person${i}@example.com`,
       },
-      potentialMatches: [{
-        record: {
-          id: `r${i}`,
-          firstName: `Person${i}`,
-          lastName: `Last${i}`,
-          email: `person${i}@old.com`,
+      potentialMatches: [
+        {
+          record: {
+            id: `r${i}`,
+            firstName: `Person${i}`,
+            lastName: `Last${i}`,
+            email: `person${i}@old.com`,
+          },
+          score: 30,
+          outcome: 'potential-match' as const,
+          explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
         },
-        score: 30,
-        outcome: 'potential-match' as const,
-        explanation: { totalScore: 30, fieldScores: [], missingFields: [] },
-      }],
+      ],
     }))
 
     await resolver.queue.addBatch(itemsToAdd)

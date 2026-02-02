@@ -16,7 +16,8 @@ describe('Normalizer Registry', () => {
 
   describe('registerNormalizer', () => {
     it('registers a normalizer function', () => {
-      const mockNormalizer: NormalizerFunction = (value) => String(value).toUpperCase()
+      const mockNormalizer: NormalizerFunction = (value) =>
+        String(value).toUpperCase()
       registerNormalizer('uppercase', mockNormalizer)
 
       const retrieved = getNormalizer('uppercase')
@@ -35,7 +36,9 @@ describe('Normalizer Registry', () => {
     })
 
     it('warns when overwriting an existing normalizer', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {})
 
       const first: NormalizerFunction = () => 'first'
       const second: NormalizerFunction = () => 'second'
@@ -129,7 +132,9 @@ describe('Normalizer Registry', () => {
     })
 
     it('returns original value when normalizer is not found', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {})
 
       const result = applyNormalizer('test', 'nonexistent')
       expect(result).toBe('test')
@@ -141,7 +146,9 @@ describe('Normalizer Registry', () => {
     })
 
     it('returns original value when normalizer throws an error', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {})
 
       registerNormalizer('error', () => {
         throw new Error('Normalizer failed')
@@ -249,7 +256,9 @@ describe('Normalizer Registry', () => {
     })
 
     it('handles errors in composed normalizers', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {})
 
       const throwError: NormalizerFunction = () => {
         throw new Error('Failed')
@@ -346,8 +355,10 @@ describe('Normalizer Registry', () => {
     it('allows building a library of reusable normalizers', () => {
       const normalizers = {
         trim: (value: unknown) => (value == null ? null : String(value).trim()),
-        lowercase: (value: unknown) => (value == null ? null : String(value).toLowerCase()),
-        uppercase: (value: unknown) => (value == null ? null : String(value).toUpperCase()),
+        lowercase: (value: unknown) =>
+          value == null ? null : String(value).toLowerCase(),
+        uppercase: (value: unknown) =>
+          value == null ? null : String(value).toUpperCase(),
         alphanumeric: (value: unknown) =>
           value == null ? null : String(value).replace(/[^a-zA-Z0-9]/g, ''),
       }

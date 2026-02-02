@@ -75,10 +75,17 @@ export interface CacheGetOptions {
  */
 export interface ExtendedServiceCache extends ServiceCache {
   /** Get entry with extended options */
-  getWithOptions<T>(key: string, options?: CacheGetOptions): Promise<ExtendedCacheEntry<T> | null>
+  getWithOptions<T>(
+    key: string,
+    options?: CacheGetOptions
+  ): Promise<ExtendedCacheEntry<T> | null>
 
   /** Set entry with extended options */
-  setWithOptions<T>(key: string, value: T, options: CacheSetOptions): Promise<void>
+  setWithOptions<T>(
+    key: string,
+    value: T,
+    options: CacheSetOptions
+  ): Promise<void>
 
   /** Check if a key exists without retrieving */
   has(key: string): Promise<boolean>
@@ -87,7 +94,9 @@ export interface ExtendedServiceCache extends ServiceCache {
   getMany<T>(keys: string[]): Promise<Map<string, CacheEntry<T> | null>>
 
   /** Set multiple values at once */
-  setMany<T>(entries: Array<{ key: string; value: T; ttlSeconds: number }>): Promise<void>
+  setMany<T>(
+    entries: Array<{ key: string; value: T; ttlSeconds: number }>
+  ): Promise<void>
 
   /** Get extended statistics */
   getExtendedStats(): ExtendedCacheStats

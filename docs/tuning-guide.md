@@ -50,15 +50,17 @@ How often is each field populated?
 
 ```typescript
 // Example: Calculate field completeness
-const dataset = [/* your records */]
+const dataset = [
+  /* your records */
+]
 const fieldCounts = {
   email: 0,
   phone: 0,
   firstName: 0,
-  lastName: 0
+  lastName: 0,
 }
 
-dataset.forEach(record => {
+dataset.forEach((record) => {
   if (record.email) fieldCounts.email++
   if (record.phone) fieldCounts.phone++
   if (record.firstName) fieldCounts.firstName++
@@ -69,6 +71,7 @@ dataset.forEach(record => {
 ```
 
 **Impact on weighting:**
+
 - Fields with low completeness need lower weights
 - Can't rely on a field that's often missing
 - Consider using `threshold` to ensure missing fields don't contribute
@@ -80,18 +83,20 @@ How discriminating is each field?
 ```typescript
 // Example: Check uniqueness
 const emailCounts = new Map()
-dataset.forEach(record => {
+dataset.forEach((record) => {
   const count = emailCounts.get(record.email) || 0
   emailCounts.set(record.email, count + 1)
 })
 
-const duplicateEmails = Array.from(emailCounts.entries())
-  .filter(([_, count]) => count > 1)
+const duplicateEmails = Array.from(emailCounts.entries()).filter(
+  ([_, count]) => count > 1
+)
 
 console.log(`${duplicateEmails.length} emails are shared by multiple records`)
 ```
 
 **Impact on weighting:**
+
 - Highly unique fields (one value per person) → high weight
 - Common values (many "John Smith"s) → lower weight
 - Non-unique fields still help when combined
@@ -103,16 +108,17 @@ How clean is your data?
 ```typescript
 // Check for quality issues
 const issues = {
-  typos: 0,        // "Smoth" instead of "Smith"
-  formatting: 0,   // "+1-555-0100" vs "+15550100"
+  typos: 0, // "Smoth" instead of "Smith"
+  formatting: 0, // "+1-555-0100" vs "+15550100"
   abbreviations: 0, // "St" vs "Street"
-  nulls: 0
+  nulls: 0,
 }
 
 // Run checks and identify patterns
 ```
 
 **Impact on configuration:**
+
 - Clean data → can use higher thresholds
 - Messy data → use fuzzy matching with lower thresholds
 - Apply normalizers before matching
@@ -143,6 +149,7 @@ Ask these questions for each field:
 ### Weight Guidelines by Field Type
 
 #### Email Addresses
+
 **Recommended weight: 20-25**
 
 ```typescript
@@ -150,16 +157,19 @@ Ask these questions for each field:
 ```
 
 Why:
+
 - Highly unique (one email = one person in most cases)
 - Standardized format
 - Rarely changes within a dataset
 
 Exceptions:
+
 - Shared emails (family accounts): weight 15
 - Work emails that change: weight 15
 - Low-quality data with typos: weight 15
 
 #### Phone Numbers
+
 **Recommended weight: 15-20**
 
 ```typescript
@@ -167,16 +177,19 @@ Exceptions:
 ```
 
 Why:
+
 - Good uniqueness
 - Can be shared (family landlines)
 - Changes more often than email
 
 Considerations:
+
 - Mobile vs landline
 - International formats
 - Use normalizers to standardize format
 
 #### Names (First/Last)
+
 **Recommended weight: 10-15**
 
 ```typescript
@@ -185,16 +198,19 @@ Considerations:
 ```
 
 Why:
+
 - Not unique (many "John Smith"s)
 - Prone to nicknames, typos
 - Powerful when combined with other fields
 
 Considerations:
+
 - Always use threshold (0.85-0.90)
 - Use jaro-winkler for typos
 - Consider soundex as supporting evidence
 
 #### Date of Birth
+
 **Recommended weight: 8-12**
 
 ```typescript
@@ -202,16 +218,19 @@ Considerations:
 ```
 
 Why:
+
 - Moderately discriminating
 - Relatively stable
 - Standard format
 
 Considerations:
+
 - Typos in entry (day/month swapped)
 - Year-only matches
 - Consider fuzzy matching for dates with known issues
 
 #### Address Fields
+
 **Recommended weight: 8-12 for full address, 5-8 for city**
 
 ```typescript
@@ -220,16 +239,19 @@ Considerations:
 ```
 
 Why:
+
 - Full addresses are moderately unique
 - Cities are common
 - Prone to abbreviations and typos
 
 Considerations:
+
 - Use normalizers for standardization
 - "St" vs "Street", "Ave" vs "Avenue"
 - ZIP code can be more reliable than city name
 
 #### Weak Signals
+
 **Recommended weight: 5-8**
 
 Examples: Gender, country, job title
@@ -239,6 +261,7 @@ Examples: Gender, country, job title
 ```
 
 Why:
+
 - Very common values
 - Useful for ruling out non-matches
 - Minimal individual discriminating power
@@ -251,7 +274,7 @@ Thresholds control the three-tier outcome classification.
 
 ```typescript
 // Sum all weights
-const maxScore = 20 + 15 + 10 + 10 + 10  // = 65 for example above
+const maxScore = 20 + 15 + 10 + 10 + 10 // = 65 for example above
 ```
 
 ### Choose Based on Use Case
@@ -268,6 +291,7 @@ const maxScore = 20 + 15 + 10 + 10 + 10  // = 65 for example above
 ```
 
 Effect:
+
 - Most matches go to review
 - Very few false positives in definite matches
 - High confidence when auto-merging
@@ -285,6 +309,7 @@ Effect:
 ```
 
 Effect:
+
 - Fewer matches sent to review
 - More auto-merging
 - Risk of false positives increases
@@ -302,6 +327,7 @@ Effect:
 ```
 
 Effect:
+
 - Reasonable review queue
 - Good balance of precision and recall
 - Most common starting point
@@ -344,6 +370,7 @@ console.log(falsePositive.explanation)
 ```
 
 Look for:
+
 - Which fields contributed most to the score?
 - Are certain fields over-weighted?
 - Did low-similarity fields contribute when they shouldn't?
@@ -364,11 +391,13 @@ console.log(falseNegative.explanation)
 ```
 
 Look for:
+
 - Are important fields not contributing due to thresholds?
 - Are field weights too low?
 - Is data quality causing similarity scores to be low?
 
 **Fix:**
+
 - Increase weights for discriminating fields
 - Lower field thresholds (but risk false positives)
 - Apply normalizers to improve data quality
@@ -378,15 +407,16 @@ Look for:
 Potential matches show you the edge cases:
 
 ```typescript
-const potentialMatches = results.filter(r => r.outcome === 'potential-match')
+const potentialMatches = results.filter((r) => r.outcome === 'potential-match')
 
-potentialMatches.forEach(match => {
+potentialMatches.forEach((match) => {
   console.log(match.explanation)
   // Manually verify: is this a match or not?
 })
 ```
 
 If most potential matches are:
+
 - **True matches:** Increase definiteMatch threshold (too conservative)
 - **Non-matches:** Decrease noMatch threshold (too aggressive)
 - **Mixed:** Your thresholds are well-calibrated
@@ -401,7 +431,9 @@ Use the recommended starting weights and thresholds.
 
 ```typescript
 // Use a sample where you know the ground truth
-const testRecords = [/* known matches and non-matches */]
+const testRecords = [
+  /* known matches and non-matches */
+]
 
 const results = resolver.deduplicateBatch(testRecords)
 ```
@@ -440,6 +472,7 @@ Review explanations for false positives and false negatives.
 ### Step 5: Adjust Configuration
 
 Based on your findings:
+
 - Adjust field weights
 - Adjust field thresholds
 - Adjust outcome thresholds
@@ -458,12 +491,14 @@ Test on a different sample to ensure you haven't overfit.
 ### Scenario 1: Customer Deduplication (E-commerce)
 
 **Characteristics:**
+
 - Email is very reliable
 - Names prone to typos
 - Phone and address change frequently
 - Need high precision (avoid merging different customers)
 
 **Configuration:**
+
 ```typescript
 .matching(match => match
   .field('email').strategy('exact').weight(25)
@@ -476,6 +511,7 @@ Test on a different sample to ensure you haven't overfit.
 ```
 
 **Rationale:**
+
 - High email weight (most reliable)
 - High thresholds (avoid false merges)
 - ZIP code helps but addresses change
@@ -483,12 +519,14 @@ Test on a different sample to ensure you haven't overfit.
 ### Scenario 2: Patient Matching (Healthcare)
 
 **Characteristics:**
+
 - Multiple identifiers (MRN, SSN)
 - Critical accuracy (HIPAA compliance)
 - Names, DOB very important
 - Need very high precision
 
 **Configuration:**
+
 ```typescript
 .matching(match => match
   .field('mrn').strategy('exact').weight(30)  // Medical record number
@@ -502,6 +540,7 @@ Test on a different sample to ensure you haven't overfit.
 ```
 
 **Rationale:**
+
 - Very high weights for identifiers
 - Very high thresholds (safety-critical)
 - High name thresholds
@@ -510,12 +549,14 @@ Test on a different sample to ensure you haven't overfit.
 ### Scenario 3: Marketing Lead Deduplication
 
 **Characteristics:**
+
 - Email most reliable
 - Names inconsistent (company contacts)
 - Want high recall (don't want to spam same person twice)
 - False positives less critical
 
 **Configuration:**
+
 ```typescript
 .matching(match => match
   .field('email').strategy('exact').weight(25)
@@ -528,6 +569,7 @@ Test on a different sample to ensure you haven't overfit.
 ```
 
 **Rationale:**
+
 - Lower thresholds (favor recall)
 - Company name helps (same person likely at same company)
 - Lower name thresholds (nicknames, informal names)
@@ -535,12 +577,14 @@ Test on a different sample to ensure you haven't overfit.
 ### Scenario 4: Contact List Merging
 
 **Characteristics:**
+
 - Merging multiple sources with different quality
 - No single reliable identifier
 - Need to rely on combinations
 - Moderate precision needs
 
 **Configuration:**
+
 ```typescript
 .matching(match => match
   .field('email').strategy('exact').weight(18)
@@ -554,6 +598,7 @@ Test on a different sample to ensure you haven't overfit.
 ```
 
 **Rationale:**
+
 - Balanced weights across multiple fields
 - No single field dominates
 - City provides weak supporting evidence

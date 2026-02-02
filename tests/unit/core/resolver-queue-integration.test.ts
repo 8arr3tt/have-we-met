@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Resolver } from '../../../src/core/resolver.js'
 import type { ResolverConfig } from '../../../src/types/config.js'
-import type { QueueAdapter, QueueItem, AddQueueItemRequest } from '../../../src/queue/types.js'
+import type {
+  QueueAdapter,
+  QueueItem,
+  AddQueueItemRequest,
+} from '../../../src/queue/types.js'
 import type { DatabaseAdapter } from '../../../src/adapters/types.js'
 import { QueueError } from '../../../src/queue/queue-error.js'
 
@@ -147,10 +151,14 @@ describe('Resolver Queue Integration', () => {
       const adapter = createMockAdapter(true)
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John Smith', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John Smith',
+        email: 'john@example.com',
+      }
       const existingRecords = [
         { id: '2', name: 'John Smyth', email: 'john2@example.com' }, // Potential match
-        { id: '3', name: 'Jane Doe', email: 'jane@example.com' },     // No match
+        { id: '3', name: 'Jane Doe', email: 'jane@example.com' }, // No match
       ]
 
       resolver.resolve(candidateRecord, existingRecords, { autoQueue: true })
@@ -166,7 +174,11 @@ describe('Resolver Queue Integration', () => {
       const adapter = createMockAdapter(true)
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John',
+        email: 'john@example.com',
+      }
       const existingRecords = [
         { id: '2', name: 'John', email: 'john@example.com' }, // Definite match
       ]
@@ -184,7 +196,11 @@ describe('Resolver Queue Integration', () => {
       const adapter = createMockAdapter(true)
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John Smith', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John Smith',
+        email: 'john@example.com',
+      }
       const existingRecords = [
         { id: '2', name: 'John Smyth', email: 'john2@example.com' },
       ]
@@ -211,7 +227,11 @@ describe('Resolver Queue Integration', () => {
       const adapter = createMockAdapter(true)
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John Smith', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John Smith',
+        email: 'john@example.com',
+      }
       const existingRecords = [
         { id: '2', name: 'John Smyth', email: 'john2@example.com' },
       ]
@@ -228,7 +248,11 @@ describe('Resolver Queue Integration', () => {
       const adapter = createMockAdapter(true)
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John Smith', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John Smith',
+        email: 'john@example.com',
+      }
       const existingRecords = [
         { id: '2', name: 'John Smyth', email: 'john2@example.com' },
       ]
@@ -254,7 +278,9 @@ describe('Resolver Queue Integration', () => {
         { id: '4', name: 'Jane Do', email: 'jane2@example.com' },
       ]
 
-      const batchResult = resolver.deduplicateBatch(records, { autoQueue: true })
+      const batchResult = resolver.deduplicateBatch(records, {
+        autoQueue: true,
+      })
 
       await new Promise((resolve) => setTimeout(resolve, 50))
 
@@ -305,7 +331,11 @@ describe('Resolver Queue Integration', () => {
 
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John Smith', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John Smith',
+        email: 'john@example.com',
+      }
 
       await resolver.resolveWithDatabase(candidateRecord, { autoQueue: true })
 
@@ -317,13 +347,19 @@ describe('Resolver Queue Integration', () => {
 
     it('includes database query context', async () => {
       const adapter = createMockAdapter(true)
-      adapter.findAll = vi.fn().mockResolvedValue([
-        { id: '2', name: 'John Smyth', email: 'john@exmpl.com' },
-      ])
+      adapter.findAll = vi
+        .fn()
+        .mockResolvedValue([
+          { id: '2', name: 'John Smyth', email: 'john@exmpl.com' },
+        ])
 
       const resolver = new Resolver({ ...config, adapter })
 
-      const candidateRecord = { id: '1', name: 'John Smith', email: 'john@example.com' }
+      const candidateRecord = {
+        id: '1',
+        name: 'John Smith',
+        email: 'john@example.com',
+      }
 
       await resolver.resolveWithDatabase(candidateRecord, {
         autoQueue: true,

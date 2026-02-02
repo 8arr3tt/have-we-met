@@ -8,11 +8,14 @@ All service plugins implement the `ServicePlugin` interface:
 
 ```typescript
 interface ServicePlugin<TInput = unknown, TOutput = unknown> {
-  name: string              // Unique identifier
-  type: ServiceType         // 'validation' | 'lookup' | 'custom'
-  description?: string      // Human-readable description
+  name: string // Unique identifier
+  type: ServiceType // 'validation' | 'lookup' | 'custom'
+  description?: string // Human-readable description
 
-  execute(input: TInput, context: ServiceContext): Promise<ServiceResult<TOutput>>
+  execute(
+    input: TInput,
+    context: ServiceContext
+  ): Promise<ServiceResult<TOutput>>
 
   healthCheck?(): Promise<HealthCheckResult>
   dispose?(): Promise<void>
@@ -27,13 +30,13 @@ Every service execution receives a context object:
 
 ```typescript
 interface ServiceContext {
-  record: Record<string, unknown>   // The record being processed
-  config: ResolverConfig            // Resolver configuration
-  metadata: RequestMetadata         // Correlation ID, timestamps
-  cache?: ServiceCache              // Cache interface
-  logger?: Logger                   // Logging interface
-  signal?: AbortSignal              // For cancellation
-  matchResult?: MatchResult         // Only for post-match services
+  record: Record<string, unknown> // The record being processed
+  config: ResolverConfig // Resolver configuration
+  metadata: RequestMetadata // Correlation ID, timestamps
+  cache?: ServiceCache // Cache interface
+  logger?: Logger // Logging interface
+  signal?: AbortSignal // For cancellation
+  matchResult?: MatchResult // Only for post-match services
 }
 ```
 
@@ -78,12 +81,15 @@ const myValidator: ValidationService = {
     })
 
     if (!formatValid) {
-      return createResult({
-        valid: false,
-        details: { checks },
-        invalidReason: 'Invalid format',
-        suggestions: ['Check the format requirements'],
-      }, startedAt)
+      return createResult(
+        {
+          valid: false,
+          details: { checks },
+          invalidReason: 'Invalid format',
+          suggestions: ['Check the format requirements'],
+        },
+        startedAt
+      )
     }
 
     // Additional checks...
@@ -94,15 +100,18 @@ const myValidator: ValidationService = {
       message: checksumValid ? 'Valid checksum' : 'Invalid checksum',
     })
 
-    return createResult({
-      valid: checksumValid,
-      details: {
-        checks,
-        normalizedValue: normalized,
-        confidence: checksumValid ? 1.0 : 0,
+    return createResult(
+      {
+        valid: checksumValid,
+        details: {
+          checks,
+          normalizedValue: normalized,
+          confidence: checksumValid ? 1.0 : 0,
+        },
+        invalidReason: checksumValid ? undefined : 'Invalid checksum',
       },
-      invalidReason: checksumValid ? undefined : 'Invalid checksum',
-    }, startedAt)
+      startedAt
+    )
   },
 
   async healthCheck() {
@@ -155,7 +164,12 @@ export interface CreditCardValidatorOptions {
 export function createCreditCardValidator(
   options: CreditCardValidatorOptions = {}
 ): ValidationService {
-  const allowedNetworks = options.allowedNetworks ?? ['visa', 'mastercard', 'amex', 'discover']
+  const allowedNetworks = options.allowedNetworks ?? [
+    'visa',
+    'mastercard',
+    'amex',
+    'discover',
+  ]
 
   return {
     name: options.name ?? 'credit-card-validator',
@@ -175,15 +189,20 @@ export function createCreditCardValidator(
       checks.push({
         name: 'digits',
         passed: digitsOnly,
-        message: digitsOnly ? 'Contains only digits' : 'Must contain only digits',
+        message: digitsOnly
+          ? 'Contains only digits'
+          : 'Must contain only digits',
       })
 
       if (!digitsOnly) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Card number must contain only digits',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Card number must contain only digits',
+          },
+          startedAt
+        )
       }
 
       // Check length (13-19 digits for most cards)
@@ -197,11 +216,14 @@ export function createCreditCardValidator(
       })
 
       if (!validLength) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: 'Invalid card number length',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: 'Invalid card number length',
+          },
+          startedAt
+        )
       }
 
       // Detect network
@@ -218,13 +240,16 @@ export function createCreditCardValidator(
       })
 
       if (!networkAllowed) {
-        return createSuccessResult({
-          valid: false,
-          details: { checks },
-          invalidReason: network
-            ? `Card network ${network} is not allowed`
-            : 'Unknown card network',
-        }, startedAt)
+        return createSuccessResult(
+          {
+            valid: false,
+            details: { checks },
+            invalidReason: network
+              ? `Card network ${network} is not allowed`
+              : 'Unknown card network',
+          },
+          startedAt
+        )
       }
 
       // Luhn checksum
@@ -235,15 +260,18 @@ export function createCreditCardValidator(
         message: luhnValid ? 'Valid Luhn checksum' : 'Invalid checksum',
       })
 
-      return createSuccessResult({
-        valid: luhnValid,
-        details: {
-          checks,
-          normalizedValue: maskCardNumber(normalized),
-          confidence: luhnValid ? 1.0 : 0,
+      return createSuccessResult(
+        {
+          valid: luhnValid,
+          details: {
+            checks,
+            normalizedValue: maskCardNumber(normalized),
+            confidence: luhnValid ? 1.0 : 0,
+          },
+          invalidReason: luhnValid ? undefined : 'Invalid card number',
         },
-        invalidReason: luhnValid ? undefined : 'Invalid card number',
-      }, startedAt)
+        startedAt
+      )
     },
   }
 }
@@ -312,21 +340,27 @@ const myLookup: LookupService = {
       const response = await callExternalApi(keyFields, context.signal)
 
       if (!response.found) {
-        return createResult({
-          found: false,
-        }, startedAt)
+        return createResult(
+          {
+            found: false,
+          },
+          startedAt
+        )
       }
 
-      return createResult({
-        found: true,
-        data: response.data,
-        matchQuality: response.confidence > 0.9 ? 'exact' : 'partial',
-        source: {
-          system: 'my-external-api',
-          recordId: response.id,
-          lastUpdated: new Date(response.updatedAt),
+      return createResult(
+        {
+          found: true,
+          data: response.data,
+          matchQuality: response.confidence > 0.9 ? 'exact' : 'partial',
+          source: {
+            system: 'my-external-api',
+            recordId: response.id,
+            lastUpdated: new Date(response.updatedAt),
+          },
         },
-      }, startedAt)
+        startedAt
+      )
     } catch (error) {
       return createErrorResult(error, startedAt)
     }
@@ -457,7 +491,9 @@ export function createCompanyRegistryLookup(
               companyName: company.company_name,
               companyStatus: company.company_status,
               companyType: company.type,
-              registeredAddress: formatAddress(company.registered_office_address),
+              registeredAddress: formatAddress(
+                company.registered_office_address
+              ),
               incorporationDate: company.date_of_creation,
               sicCodes: company.sic_codes,
             },
@@ -639,7 +675,7 @@ export function createFraudDetectionService(
         const response = await fetch(config.endpoint, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${config.apiKey}`,
+            Authorization: `Bearer ${config.apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(fraudCheckPayload),
@@ -663,9 +699,10 @@ export function createFraudDetectionService(
         if (signals.includes('proxy')) flags.push('proxy-detected')
 
         // Calculate score adjustment (penalize high-risk records)
-        const scoreAdjustment = riskScore > riskThreshold
-          ? -Math.round((riskScore - riskThreshold) * 20)
-          : 0
+        const scoreAdjustment =
+          riskScore > riskThreshold
+            ? -Math.round((riskScore - riskThreshold) * 20)
+            : 0
 
         return {
           success: true,
@@ -845,7 +882,11 @@ import { buildServiceContext } from 'have-we-met/services'
 describe('myValidator', () => {
   const mockContext = buildServiceContext({
     record: {},
-    config: { schema: {}, matchingRules: [], thresholds: { noMatch: 0.3, definiteMatch: 0.9 } },
+    config: {
+      schema: {},
+      matchingRules: [],
+      thresholds: { noMatch: 0.3, definiteMatch: 0.9 },
+    },
   })
 
   it('validates correct values', async () => {
@@ -908,7 +949,9 @@ describe('Lookup Integration', () => {
     })
 
     executor = createServiceExecutor({
-      resolverConfig: { /* ... */ },
+      resolverConfig: {
+        /* ... */
+      },
     })
 
     executor.register({

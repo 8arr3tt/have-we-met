@@ -52,13 +52,12 @@ describe('ResolverBuilder merge integration', () => {
     })
 
     it('returns builder for chaining', () => {
-      const builder = HaveWeMet.create<TestPerson>()
-        .schema((schema) =>
-          schema
-            .field('firstName', { type: 'name', component: 'first' })
-            .field('lastName', { type: 'name', component: 'last' })
-            .field('email', { type: 'email' })
-        )
+      const builder = HaveWeMet.create<TestPerson>().schema((schema) =>
+        schema
+          .field('firstName', { type: 'name', component: 'first' })
+          .field('lastName', { type: 'name', component: 'last' })
+          .field('email', { type: 'email' })
+      )
 
       const result = builder.merge((merge) =>
         merge.field('firstName').strategy('preferLonger')
@@ -103,15 +102,16 @@ describe('ResolverBuilder merge integration', () => {
     })
 
     it('validates field paths against schema when schema is available', () => {
-      const builder = HaveWeMet.create<TestPerson>()
-        .schema((schema) =>
-          schema.field('firstName', { type: 'name', component: 'first' })
-        )
+      const builder = HaveWeMet.create<TestPerson>().schema((schema) =>
+        schema.field('firstName', { type: 'name', component: 'first' })
+      )
 
       // This should not throw because schema validates at build time
       // within the merge builder
       expect(() => {
-        builder.merge((merge) => merge.field('firstName').strategy('preferLonger'))
+        builder.merge((merge) =>
+          merge.field('firstName').strategy('preferLonger')
+        )
       }).not.toThrow()
     })
 
@@ -301,8 +301,15 @@ describe('ResolverBuilder merge integration', () => {
 
       const mergeConfig = builder.getMergeConfig()
 
-      expect(mergeConfig?.fieldStrategies.find((fs) => fs.field === 'firstName')?.strategy).toBe('custom')
-      expect(typeof mergeConfig?.fieldStrategies.find((fs) => fs.field === 'firstName')?.customMerge).toBe('function')
+      expect(
+        mergeConfig?.fieldStrategies.find((fs) => fs.field === 'firstName')
+          ?.strategy
+      ).toBe('custom')
+      expect(
+        typeof mergeConfig?.fieldStrategies.find(
+          (fs) => fs.field === 'firstName'
+        )?.customMerge
+      ).toBe('function')
     })
   })
 })

@@ -13,7 +13,11 @@ import type {
   Provenance,
   MergeConfig,
 } from '../../../src/merge/index.js'
-import type { QueueItem, QueueAdapter, MergeDecision } from '../../../src/queue/types.js'
+import type {
+  QueueItem,
+  QueueAdapter,
+  MergeDecision,
+} from '../../../src/queue/types.js'
 import type { MatchExplanation } from '../../../src/types/match.js'
 
 interface TestRecord {
@@ -29,7 +33,9 @@ interface TestRecord {
 }
 
 // Mock queue adapter
-function createMockQueueAdapter<T extends Record<string, unknown>>(): QueueAdapter<T> {
+function createMockQueueAdapter<
+  T extends Record<string, unknown>,
+>(): QueueAdapter<T> {
   const items = new Map<string, QueueItem<T>>()
 
   return {
@@ -46,7 +52,9 @@ function createMockQueueAdapter<T extends Record<string, unknown>>(): QueueAdapt
     },
     findQueueItems: async () => Array.from(items.values()),
     findQueueItemById: async (id: string) => items.get(id) || null,
-    deleteQueueItem: async (id: string) => { items.delete(id) },
+    deleteQueueItem: async (id: string) => {
+      items.delete(id)
+    },
     countQueueItems: async () => items.size,
     batchInsertQueueItems: async (newItems: QueueItem<T>[]) => {
       for (const item of newItems) {
@@ -87,7 +95,9 @@ function createMockDatabase<T extends { id: string }>() {
 
 describe('Integration: Merge Workflow', () => {
   let provenanceStore: ReturnType<typeof createInMemoryProvenanceStore>
-  let sourceRecordArchive: ReturnType<typeof createInMemorySourceRecordArchive<TestRecord>>
+  let sourceRecordArchive: ReturnType<
+    typeof createInMemorySourceRecordArchive<TestRecord>
+  >
   let mergeExecutor: MergeExecutor<TestRecord>
   let mergeConfig: MergeConfig
   let db: ReturnType<typeof createMockDatabase<TestRecord>>
@@ -122,7 +132,9 @@ describe('Integration: Merge Workflow', () => {
     })
 
     it('should configure field-specific strategies', () => {
-      const strategies = new Map(mergeConfig.fieldStrategies.map((fs) => [fs.field, fs.strategy]))
+      const strategies = new Map(
+        mergeConfig.fieldStrategies.map((fs) => [fs.field, fs.strategy])
+      )
 
       expect(strategies.get('firstName')).toBe('preferLonger')
       expect(strategies.get('lastName')).toBe('preferLonger')
@@ -225,7 +237,10 @@ describe('Integration: Merge Workflow', () => {
       })
 
       // Persist to database - use goldenRecordId as the ID
-      const recordWithId = { ...result.goldenRecord, id: result.goldenRecordId } as TestRecord
+      const recordWithId = {
+        ...result.goldenRecord,
+        id: result.goldenRecordId,
+      } as TestRecord
       await db.insert(recordWithId)
 
       // Verify in database
@@ -288,7 +303,9 @@ describe('Integration: Merge Workflow', () => {
 
       // Check field sources
       expect(provenance?.fieldSources.firstName).toBeDefined()
-      expect(provenance?.fieldSources.firstName.strategyApplied).toBe('preferLonger')
+      expect(provenance?.fieldSources.firstName.strategyApplied).toBe(
+        'preferLonger'
+      )
       expect(provenance?.fieldSources.email.strategyApplied).toBe('preferNewer')
     })
 
@@ -332,7 +349,8 @@ describe('Integration: Merge Workflow', () => {
       await provenanceStore.save(result.provenance)
 
       // Query by source ID
-      const provenanceResults = await provenanceStore.getBySourceId('source-001')
+      const provenanceResults =
+        await provenanceStore.getBySourceId('source-001')
 
       expect(provenanceResults).toHaveLength(1)
       expect(provenanceResults[0].goldenRecordId).toBe('golden-001')
@@ -378,7 +396,8 @@ describe('Integration: Merge Workflow', () => {
       await provenanceStore.save(result.provenance)
 
       // Find golden records that include src-a
-      const goldenRecordIds = await provenanceStore.findGoldenRecordsBySource('src-a')
+      const goldenRecordIds =
+        await provenanceStore.findGoldenRecordsBySource('src-a')
 
       expect(goldenRecordIds).toContain('golden-xyz')
     })
@@ -424,7 +443,10 @@ describe('Integration: Merge Workflow', () => {
       })
 
       // Archive source records
-      await sourceRecordArchive.archive(sourceRecords, mergeResult.goldenRecordId)
+      await sourceRecordArchive.archive(
+        sourceRecords,
+        mergeResult.goldenRecordId
+      )
       await provenanceStore.save(mergeResult.provenance)
 
       // Create unmerge executor
@@ -497,7 +519,10 @@ describe('Integration: Merge Workflow', () => {
         mergedBy: 'test',
       })
 
-      await sourceRecordArchive.archive(sourceRecords, mergeResult.goldenRecordId)
+      await sourceRecordArchive.archive(
+        sourceRecords,
+        mergeResult.goldenRecordId
+      )
       await provenanceStore.save(mergeResult.provenance)
 
       const unmergeExecutor = new UnmergeExecutor<TestRecord>({
@@ -610,7 +635,8 @@ describe('Integration: Merge Workflow', () => {
       expect(provenance?.queueItemId).toBe('queue-item-001')
 
       // Verify queue item updated
-      const updatedQueueItem = await queueAdapter.findQueueItemById('queue-item-001')
+      const updatedQueueItem =
+        await queueAdapter.findQueueItemById('queue-item-001')
       expect(updatedQueueItem?.status).toBe('merged')
     })
 
@@ -647,7 +673,11 @@ describe('Integration: Merge Workflow', () => {
             },
             score: 40,
             outcome: 'potential-match',
-            explanation: { overallScore: 40, fieldBreakdown: [], matchFactors: [] },
+            explanation: {
+              overallScore: 40,
+              fieldBreakdown: [],
+              matchFactors: [],
+            },
           },
         ],
         status: 'pending',
@@ -722,19 +752,22 @@ describe('Performance: Merge Operations', () => {
 
   it('merges 10 records in < 50ms', async () => {
     const now = new Date()
-    const sourceRecords: SourceRecord<TestRecord>[] = Array.from({ length: 10 }, (_, i) => ({
-      id: `perf-${i}`,
-      record: {
+    const sourceRecords: SourceRecord<TestRecord>[] = Array.from(
+      { length: 10 },
+      (_, i) => ({
         id: `perf-${i}`,
-        firstName: `Test${i}`,
-        lastName: 'User',
-        email: `test${i}@example.com`,
+        record: {
+          id: `perf-${i}`,
+          firstName: `Test${i}`,
+          lastName: 'User',
+          email: `test${i}@example.com`,
+          createdAt: now,
+          updatedAt: now,
+        },
         createdAt: now,
         updatedAt: now,
-      },
-      createdAt: now,
-      updatedAt: now,
-    }))
+      })
+    )
 
     const startTime = Date.now()
     await mergeExecutor.merge({ sourceRecords, mergedBy: 'test' })
@@ -776,7 +809,10 @@ describe('Performance: Merge Operations', () => {
       },
     ]
 
-    const result = await mergeExecutor.merge({ sourceRecords, mergedBy: 'test' })
+    const result = await mergeExecutor.merge({
+      sourceRecords,
+      mergedBy: 'test',
+    })
 
     const startTime = Date.now()
     await provenanceStore.save(result.provenance)

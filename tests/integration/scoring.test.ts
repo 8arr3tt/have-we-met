@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { ScoreCalculator, OutcomeClassifier } from '../../src/core/scoring'
-import type { FieldComparison, MatchThresholds } from '../../src/core/scoring/types'
+import type {
+  FieldComparison,
+  MatchThresholds,
+} from '../../src/core/scoring/types'
 
 describe('Integration: Scoring Infrastructure', () => {
   const calculator = new ScoreCalculator()
@@ -29,8 +32,18 @@ describe('Integration: Scoring Infrastructure', () => {
       const comparisons: FieldComparison[] = [
         { field: 'email', strategy: 'exact', weight: 20 },
         { field: 'phone', strategy: 'exact', weight: 15 },
-        { field: 'firstName', strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
-        { field: 'lastName', strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
+        {
+          field: 'firstName',
+          strategy: 'jaro-winkler',
+          weight: 10,
+          threshold: 0.85,
+        },
+        {
+          field: 'lastName',
+          strategy: 'jaro-winkler',
+          weight: 10,
+          threshold: 0.85,
+        },
       ]
 
       const score = calculator.calculateScore(record1, record2, comparisons)
@@ -63,8 +76,18 @@ describe('Integration: Scoring Infrastructure', () => {
       const comparisons: FieldComparison[] = [
         { field: 'email', strategy: 'exact', weight: 20 },
         { field: 'phone', strategy: 'exact', weight: 15 },
-        { field: 'firstName', strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
-        { field: 'lastName', strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
+        {
+          field: 'firstName',
+          strategy: 'jaro-winkler',
+          weight: 10,
+          threshold: 0.85,
+        },
+        {
+          field: 'lastName',
+          strategy: 'jaro-winkler',
+          weight: 10,
+          threshold: 0.85,
+        },
         { field: 'dateOfBirth', strategy: 'exact', weight: 10 },
       ]
 
@@ -226,7 +249,11 @@ describe('Integration: Scoring Infrastructure', () => {
       const comparisons: FieldComparison[] = [
         { field: 'user.contact.email', strategy: 'exact', weight: 25 },
         { field: 'user.contact.phone', strategy: 'exact', weight: 15 },
-        { field: 'user.profile.firstName', strategy: 'jaro-winkler', weight: 10 },
+        {
+          field: 'user.profile.firstName',
+          strategy: 'jaro-winkler',
+          weight: 10,
+        },
         { field: 'user.profile.lastName', strategy: 'exact', weight: 10 },
       ]
 

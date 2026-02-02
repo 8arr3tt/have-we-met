@@ -52,15 +52,15 @@ interface AddressNormalizerOptions {
 
 ```typescript
 interface AddressComponents {
-  street?: string         // Street address (number + name)
-  streetNumber?: string   // Street number only
-  streetName?: string     // Street name only
-  unit?: string          // Apartment/unit/suite number
-  city?: string          // City name
-  state?: string         // State/province (abbreviated if US/Canada)
-  postalCode?: string    // ZIP/postal code (formatted)
-  country?: string       // Country code (ISO 3166-1 alpha-2)
-  full?: string          // Full normalized address
+  street?: string // Street address (number + name)
+  streetNumber?: string // Street number only
+  streetName?: string // Street name only
+  unit?: string // Apartment/unit/suite number
+  city?: string // City name
+  state?: string // State/province (abbreviated if US/Canada)
+  postalCode?: string // ZIP/postal code (formatted)
+  country?: string // Country code (ISO 3166-1 alpha-2)
+  full?: string // Full normalized address
 }
 ```
 
@@ -70,14 +70,12 @@ interface AddressComponents {
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('address')
-      .type('address')
-      .normalizer('address', {
-        abbreviateStreetTypes: true,
-        abbreviateStates: true,
-        normalizeCase: true
-      })
+  .schema((s) =>
+    s.field('address').type('address').normalizer('address', {
+      abbreviateStreetTypes: true,
+      abbreviateStates: true,
+      normalizeCase: true,
+    })
   )
   .matching(/* ... */)
   .build()
@@ -142,7 +140,7 @@ normalizeAddress('456 Oak Ave, Portland, Oregon 97201')
 
 // Keep abbreviations
 normalizeAddress('123 Main St, Anytown, CA 90210', {
-  abbreviateStates: false
+  abbreviateStates: false,
 })
 // → '123 Main St, Anytown, California 90210'
 ```
@@ -164,7 +162,7 @@ normalizeAddress('789 Elm Boulevard, Seattle, WA 98101')
 
 ```typescript
 normalizeAddress('123 Main Street Apt 4B, Anytown, CA 90210', {
-  outputFormat: 'components'
+  outputFormat: 'components',
 })
 // → {
 //   streetNumber: '123',
@@ -195,42 +193,42 @@ normalizeAddress(address)
 ### Street Types
 
 | Full Name | Abbreviation |
-|-----------|--------------|
-| Street | St |
-| Avenue | Ave |
-| Boulevard | Blvd |
-| Road | Rd |
-| Drive | Dr |
-| Lane | Ln |
-| Circle | Cir |
-| Court | Ct |
-| Place | Pl |
-| Parkway | Pkwy |
-| Highway | Hwy |
+| --------- | ------------ |
+| Street    | St           |
+| Avenue    | Ave          |
+| Boulevard | Blvd         |
+| Road      | Rd           |
+| Drive     | Dr           |
+| Lane      | Ln           |
+| Circle    | Cir          |
+| Court     | Ct           |
+| Place     | Pl           |
+| Parkway   | Pkwy         |
+| Highway   | Hwy          |
 
 ### Directionals
 
 | Full Name | Abbreviation |
-|-----------|--------------|
-| North | N |
-| South | S |
-| East | E |
-| West | W |
-| Northeast | NE |
-| Northwest | NW |
-| Southeast | SE |
-| Southwest | SW |
+| --------- | ------------ |
+| North     | N            |
+| South     | S            |
+| East      | E            |
+| West      | W            |
+| Northeast | NE           |
+| Northwest | NW           |
+| Southeast | SE           |
+| Southwest | SW           |
 
 ### Unit Types
 
 | Full Name | Abbreviation |
-|-----------|--------------|
-| Apartment | Apt |
-| Suite | Ste |
-| Building | Bldg |
-| Floor | Fl |
-| Room | Rm |
-| Unit | Unit |
+| --------- | ------------ |
+| Apartment | Apt          |
+| Suite     | Ste          |
+| Building  | Bldg         |
+| Floor     | Fl           |
+| Room      | Rm           |
+| Unit      | Unit         |
 
 ### US States
 
@@ -371,19 +369,14 @@ Addresses often have legitimate variations. Use Levenshtein or similar:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('address')
-      .type('address')
-      .normalizer('address', {
-        abbreviateStreetTypes: true,
-        abbreviateStates: true
-      })
+  .schema((s) =>
+    s.field('address').type('address').normalizer('address', {
+      abbreviateStreetTypes: true,
+      abbreviateStates: true,
+    })
   )
-  .matching(m => m
-    .field('address')
-      .strategy('levenshtein')
-      .threshold(0.85)
-      .weight(100)
+  .matching((m) =>
+    m.field('address').strategy('levenshtein').threshold(0.85).weight(100)
   )
   .build()
 ```
@@ -435,23 +428,25 @@ interface Customer {
 }
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(s => s
-    .field('name')
+  .schema((s) =>
+    s
+      .field('name')
       .type('name')
       .normalizer('name')
-    .field('address')
+      .field('address')
       .type('address')
       .normalizer('address', {
         abbreviateStreetTypes: true,
         abbreviateStates: true,
-        normalizeCase: true
+        normalizeCase: true,
       })
   )
-  .matching(m => m
-    .field('name')
+  .matching((m) =>
+    m
+      .field('name')
       .strategy('jaro-winkler')
       .weight(40)
-    .field('address')
+      .field('address')
       .strategy('levenshtein')
       .threshold(0.85)
       .weight(60)
@@ -463,15 +458,15 @@ const resolver = HaveWeMet.create<Customer>()
 const input = {
   id: 'in',
   name: 'John Smith',
-  address: '123 MAIN STREET, ANYTOWN, CALIFORNIA 90210'
+  address: '123 MAIN STREET, ANYTOWN, CALIFORNIA 90210',
 }
 
 const candidates = [
   {
     id: 'c1',
     name: 'John Smith',
-    address: '123 Main St, Anytown, CA 90210'
-  }
+    address: '123 Main St, Anytown, CA 90210',
+  },
 ]
 
 const result = resolver.resolve(input, candidates)

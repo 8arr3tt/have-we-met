@@ -28,7 +28,7 @@ interface TestRecord {
 function createSourceRecord<T extends Record<string, unknown>>(
   id: string,
   record: T,
-  options?: { createdAt?: Date; updatedAt?: Date },
+  options?: { createdAt?: Date; updatedAt?: Date }
 ): SourceRecord<T> {
   return {
     id,
@@ -259,8 +259,12 @@ describe('MergeExecutor', () => {
 
       expect(result.provenance.fieldSources).toBeDefined()
       expect(result.provenance.fieldSources.firstName).toBeDefined()
-      expect(result.provenance.fieldSources.firstName.sourceRecordId).toBe('rec-1')
-      expect(result.provenance.fieldSources.firstName.strategyApplied).toBe('preferFirst')
+      expect(result.provenance.fieldSources.firstName.sourceRecordId).toBe(
+        'rec-1'
+      )
+      expect(result.provenance.fieldSources.firstName.strategyApplied).toBe(
+        'preferFirst'
+      )
       expect(result.provenance.fieldSources.firstName.allValues).toHaveLength(2)
     })
 
@@ -425,7 +429,7 @@ describe('MergeExecutor', () => {
       })
 
       await expect(
-        executor.merge({ sourceRecords: [record1, record2] }),
+        executor.merge({ sourceRecords: [record1, record2] })
       ).rejects.toThrow(MergeConflictError)
     })
 
@@ -475,7 +479,9 @@ describe('MergeExecutor', () => {
       const result = await executor.merge({ sourceRecords: [record1, record2] })
 
       // Should not throw, but mark conflicts as deferred
-      expect(result.conflicts.some((c) => c.resolution === 'deferred')).toBe(true)
+      expect(result.conflicts.some((c) => c.resolution === 'deferred')).toBe(
+        true
+      )
     })
 
     it('records conflict details', async () => {
@@ -498,7 +504,9 @@ describe('MergeExecutor', () => {
 
       const result = await executor.merge({ sourceRecords: [record1, record2] })
 
-      const firstNameConflict = result.conflicts.find((c) => c.field === 'firstName')
+      const firstNameConflict = result.conflicts.find(
+        (c) => c.field === 'firstName'
+      )
       expect(firstNameConflict).toBeDefined()
       expect(firstNameConflict?.values).toHaveLength(2)
       expect(firstNameConflict?.values.map((v) => v.value)).toContain('John')
@@ -628,7 +636,9 @@ describe('MergeExecutor', () => {
       expect(result.goldenRecord.addresses).toContain('456 Oak Ave')
       expect(result.goldenRecord.addresses).toContain('789 Pine Rd')
       // Union should deduplicate
-      expect(result.goldenRecord.addresses?.filter((a) => a === '456 Oak Ave')).toHaveLength(1)
+      expect(
+        result.goldenRecord.addresses?.filter((a) => a === '456 Oak Ave')
+      ).toHaveLength(1)
     })
 
     it('handles arrays with concatenate strategy', async () => {
@@ -652,7 +662,10 @@ describe('MergeExecutor', () => {
 
       const result = await executor.merge({ sourceRecords: [record1, record2] })
 
-      expect(result.goldenRecord.addresses).toEqual(['123 Main St', '456 Oak Ave'])
+      expect(result.goldenRecord.addresses).toEqual([
+        '123 Main St',
+        '456 Oak Ave',
+      ])
     })
   })
 
@@ -669,7 +682,7 @@ describe('MergeExecutor', () => {
           lastName: 'Doe',
           email: 'old@example.com',
         },
-        { updatedAt: new Date('2024-01-01') },
+        { updatedAt: new Date('2024-01-01') }
       )
 
       const record2 = createSourceRecord(
@@ -679,7 +692,7 @@ describe('MergeExecutor', () => {
           lastName: 'Smith',
           email: 'new@example.com',
         },
-        { updatedAt: new Date('2024-06-01') },
+        { updatedAt: new Date('2024-06-01') }
       )
 
       const result = await executor.merge({ sourceRecords: [record1, record2] })
@@ -699,7 +712,7 @@ describe('MergeExecutor', () => {
           lastName: 'Doe',
           email: 'old@example.com',
         },
-        { updatedAt: new Date('2024-01-01') },
+        { updatedAt: new Date('2024-01-01') }
       )
 
       const record2 = createSourceRecord(
@@ -709,7 +722,7 @@ describe('MergeExecutor', () => {
           lastName: 'Smith',
           email: 'new@example.com',
         },
-        { updatedAt: new Date('2024-06-01') },
+        { updatedAt: new Date('2024-06-01') }
       )
 
       const result = await executor.merge({ sourceRecords: [record1, record2] })
@@ -808,9 +821,13 @@ describe('MergeExecutor', () => {
             strategy: 'custom',
             customMerge: (values: unknown[]) => {
               // Custom logic: uppercase the longest value
-              const strings = values.filter((v) => typeof v === 'string') as string[]
+              const strings = values.filter(
+                (v) => typeof v === 'string'
+              ) as string[]
               if (strings.length === 0) return undefined
-              const longest = strings.reduce((a, b) => (a.length >= b.length ? a : b))
+              const longest = strings.reduce((a, b) =>
+                a.length >= b.length ? a : b
+              )
               return longest.toUpperCase()
             },
           },
@@ -979,7 +996,7 @@ describe('MergeExecutor', () => {
           firstName: `First${i}`,
           lastName: `Last${i}`,
           email: `user${i}@example.com`,
-        }),
+        })
       )
 
       const start = performance.now()
@@ -997,7 +1014,7 @@ describe('MergeExecutor', () => {
           firstName: `First${i}`,
           lastName: `Last${i}`,
           email: `user${i}@example.com`,
-        }),
+        })
       )
 
       const start = performance.now()

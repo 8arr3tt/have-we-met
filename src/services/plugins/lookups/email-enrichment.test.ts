@@ -2,7 +2,7 @@
  * Tests for Email Enrichment Lookup Service
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { ServiceContext } from '../../types.js'
 import type { ResolverConfig } from '../../../types/config.js'
 import {
@@ -15,7 +15,9 @@ import {
   type EnrichedEmailData,
 } from './email-enrichment.js'
 
-function createMockContext(keyFields: Record<string, unknown> = {}): ServiceContext {
+function createMockContext(
+  keyFields: Record<string, unknown> = {}
+): ServiceContext {
   return {
     record: keyFields,
     config: {} as ResolverConfig,
@@ -29,27 +31,39 @@ function createMockContext(keyFields: Record<string, unknown> = {}): ServiceCont
 describe('Email Enrichment Lookup Service', () => {
   describe('extractEmail', () => {
     it('extracts email from email field', () => {
-      expect(extractEmail({ email: 'john@example.com' })).toBe('john@example.com')
+      expect(extractEmail({ email: 'john@example.com' })).toBe(
+        'john@example.com'
+      )
     })
 
     it('extracts email from emailAddress field', () => {
-      expect(extractEmail({ emailAddress: 'jane@example.com' })).toBe('jane@example.com')
+      expect(extractEmail({ emailAddress: 'jane@example.com' })).toBe(
+        'jane@example.com'
+      )
     })
 
     it('extracts email from mail field', () => {
-      expect(extractEmail({ mail: 'test@example.com' })).toBe('test@example.com')
+      expect(extractEmail({ mail: 'test@example.com' })).toBe(
+        'test@example.com'
+      )
     })
 
     it('extracts email from primaryEmail field', () => {
-      expect(extractEmail({ primaryEmail: 'primary@example.com' })).toBe('primary@example.com')
+      expect(extractEmail({ primaryEmail: 'primary@example.com' })).toBe(
+        'primary@example.com'
+      )
     })
 
     it('normalizes email to lowercase', () => {
-      expect(extractEmail({ email: 'John.Doe@Example.COM' })).toBe('john.doe@example.com')
+      expect(extractEmail({ email: 'John.Doe@Example.COM' })).toBe(
+        'john.doe@example.com'
+      )
     })
 
     it('trims whitespace', () => {
-      expect(extractEmail({ email: '  john@example.com  ' })).toBe('john@example.com')
+      expect(extractEmail({ email: '  john@example.com  ' })).toBe(
+        'john@example.com'
+      )
     })
 
     it('returns undefined for empty input', () => {
@@ -63,7 +77,9 @@ describe('Email Enrichment Lookup Service', () => {
     })
 
     it('finds email-like values in any field', () => {
-      expect(extractEmail({ contact: 'user@domain.org' })).toBe('user@domain.org')
+      expect(extractEmail({ contact: 'user@domain.org' })).toBe(
+        'user@domain.org'
+      )
     })
   })
 
@@ -287,7 +303,7 @@ describe('Email Enrichment Lookup Service', () => {
       expect(() =>
         createEmailEnrichment({
           provider: 'custom',
-        }),
+        })
       ).toThrow('Custom provider requires customProvider function')
     })
 
@@ -295,7 +311,7 @@ describe('Email Enrichment Lookup Service', () => {
       expect(() =>
         createEmailEnrichment({
           provider: 'clearbit',
-        }),
+        })
       ).toThrow("Provider 'clearbit' requires apiKey")
     })
 
@@ -327,7 +343,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'john@acme.com' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -346,7 +362,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: {},
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -368,7 +384,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'unknown@example.com' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(true)
@@ -396,7 +412,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'john@acme.com' },
           },
-          context,
+          context
         )
 
         const data = result.data?.data as Record<string, unknown>
@@ -423,7 +439,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'john@acme.com' },
           },
-          context,
+          context
         )
 
         const data = result.data?.data as Record<string, unknown>
@@ -455,7 +471,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'john@example.com' },
           },
-          context,
+          context
         )
 
         expect(result.data?.data).toEqual({
@@ -481,7 +497,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'john@example.com' },
           },
-          context,
+          context
         )
 
         expect(result.metadata?.rateLimitRemaining).toBe(99)
@@ -500,7 +516,7 @@ describe('Email Enrichment Lookup Service', () => {
           {
             keyFields: { email: 'john@example.com' },
           },
-          context,
+          context
         )
 
         expect(result.success).toBe(false)
@@ -526,7 +542,9 @@ describe('Email Enrichment Lookup Service', () => {
       })
 
       it('returns unhealthy when provider fails', async () => {
-        const mockProvider = vi.fn().mockRejectedValue(new Error('Connection refused'))
+        const mockProvider = vi
+          .fn()
+          .mockRejectedValue(new Error('Connection refused'))
 
         const service = createEmailEnrichment({
           provider: 'custom',
@@ -553,7 +571,7 @@ describe('Email Enrichment Lookup Service', () => {
         {
           keyFields: { email: 'john.doe@company.com' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -573,7 +591,7 @@ describe('Email Enrichment Lookup Service', () => {
         {
           keyFields: { email: 'test@example.com' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)
@@ -591,7 +609,7 @@ describe('Email Enrichment Lookup Service', () => {
         {
           keyFields: { email: 'test@example.com' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)
@@ -608,7 +626,7 @@ describe('Email Enrichment Lookup Service', () => {
         {
           keyFields: { email: 'test@example.com' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(false)

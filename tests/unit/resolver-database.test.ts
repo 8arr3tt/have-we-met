@@ -27,7 +27,10 @@ describe('Resolver with Database Integration', () => {
     matchingConfig = {
       fields: new Map([
         ['email', { strategy: 'exact', weight: 20, threshold: 1.0 }],
-        ['firstName', { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 }],
+        [
+          'firstName',
+          { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
+        ],
         ['lastName', { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 }],
       ]),
       thresholds: {
@@ -64,13 +67,15 @@ describe('Resolver with Database Integration', () => {
         email: 'john@example.com',
       }
 
-      await expect(resolver.resolveWithDatabase(candidateRecord)).rejects.toThrow(
-        'Database adapter is not configured'
-      )
+      await expect(
+        resolver.resolveWithDatabase(candidateRecord)
+      ).rejects.toThrow('Database adapter is not configured')
     })
 
     it('queries database using blocking keys', async () => {
-      const blockingStrategy = new StandardBlockingStrategy<TestRecord>({ field: 'lastName' })
+      const blockingStrategy = new StandardBlockingStrategy<TestRecord>({
+        field: 'lastName',
+      })
       const blockingConfig = {
         strategies: [blockingStrategy],
       }
@@ -240,7 +245,9 @@ describe('Resolver with Database Integration', () => {
     })
 
     it('applies blocking to reduce queries', async () => {
-      const blockingStrategy = new StandardBlockingStrategy<TestRecord>({ field: 'lastName' })
+      const blockingStrategy = new StandardBlockingStrategy<TestRecord>({
+        field: 'lastName',
+      })
       const blockingConfig = {
         strategies: [blockingStrategy],
       }
@@ -400,9 +407,11 @@ describe('Resolver with Database Integration', () => {
         ...records[0],
         ...updates,
       }))
-      vi.mocked(mockAdapter.transaction).mockImplementation(async (callback) => {
-        return callback(mockAdapter)
-      })
+      vi.mocked(mockAdapter.transaction).mockImplementation(
+        async (callback) => {
+          return callback(mockAdapter)
+        }
+      )
 
       const results = await resolver.findAndMergeDuplicates({
         deleteAfterMerge: false,
@@ -439,9 +448,11 @@ describe('Resolver with Database Integration', () => {
       vi.mocked(mockAdapter.findAll).mockResolvedValue(records)
       vi.mocked(mockAdapter.findByIds).mockResolvedValue(records)
       vi.mocked(mockAdapter.update).mockResolvedValue(records[0])
-      vi.mocked(mockAdapter.transaction).mockImplementation(async (callback) => {
-        return callback(mockAdapter)
-      })
+      vi.mocked(mockAdapter.transaction).mockImplementation(
+        async (callback) => {
+          return callback(mockAdapter)
+        }
+      )
 
       const results = await resolver.findAndMergeDuplicates()
 
@@ -475,9 +486,11 @@ describe('Resolver with Database Integration', () => {
       vi.mocked(mockAdapter.findAll).mockResolvedValue(records)
       vi.mocked(mockAdapter.findByIds).mockResolvedValue(records)
       vi.mocked(mockAdapter.update).mockResolvedValue(records[0])
-      vi.mocked(mockAdapter.transaction).mockImplementation(async (callback) => {
-        return callback(mockAdapter)
-      })
+      vi.mocked(mockAdapter.transaction).mockImplementation(
+        async (callback) => {
+          return callback(mockAdapter)
+        }
+      )
 
       const results = await resolver.findAndMergeDuplicates()
 
@@ -494,9 +507,11 @@ describe('Resolver with Database Integration', () => {
 
       vi.mocked(mockAdapter.count).mockResolvedValue(0)
       vi.mocked(mockAdapter.findAll).mockResolvedValue([])
-      vi.mocked(mockAdapter.transaction).mockImplementation(async (callback) => {
-        return callback(mockAdapter)
-      })
+      vi.mocked(mockAdapter.transaction).mockImplementation(
+        async (callback) => {
+          return callback(mockAdapter)
+        }
+      )
 
       const results = await resolver.findAndMergeDuplicates({
         useTransaction: true,
@@ -533,9 +548,11 @@ describe('Resolver with Database Integration', () => {
       vi.mocked(mockAdapter.findByIds).mockResolvedValue(records)
       vi.mocked(mockAdapter.update).mockResolvedValue(records[0])
       vi.mocked(mockAdapter.delete).mockResolvedValue()
-      vi.mocked(mockAdapter.transaction).mockImplementation(async (callback) => {
-        return callback(mockAdapter)
-      })
+      vi.mocked(mockAdapter.transaction).mockImplementation(
+        async (callback) => {
+          return callback(mockAdapter)
+        }
+      )
 
       const results = await resolver.findAndMergeDuplicates({
         deleteAfterMerge: true,

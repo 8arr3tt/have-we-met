@@ -218,7 +218,11 @@ export function jaroWinkler(
 
   // Calculate common prefix length (up to maxPrefixLength)
   let prefixLength = 0
-  for (let i = 0; i < Math.min(strA.length, strB.length, maxPrefixLength); i++) {
+  for (
+    let i = 0;
+    i < Math.min(strA.length, strB.length, maxPrefixLength);
+    i++
+  ) {
     if (strA[i] === strB[i]) {
       prefixLength++
     } else {
@@ -280,7 +284,9 @@ function calculateJaro(strA: string, strB: string): number {
   // Calculate Jaro similarity
   // Jaro = (m/|a| + m/|b| + (m-t/2)/m) / 3
   return (
-    (matches / lenA + matches / lenB + (matches - transpositions / 2) / matches) /
+    (matches / lenA +
+      matches / lenB +
+      (matches - transpositions / 2) / matches) /
     3
   )
 }
@@ -477,7 +483,13 @@ export function metaphoneEncode(name: string, maxLength: number = 4): string {
 
   // Helper function to check if a character is a vowel
   const isVowel = (char: string): boolean => {
-    return char === 'A' || char === 'E' || char === 'I' || char === 'O' || char === 'U'
+    return (
+      char === 'A' ||
+      char === 'E' ||
+      char === 'I' ||
+      char === 'O' ||
+      char === 'U'
+    )
   }
 
   // Helper function to get character at position (safe)
@@ -558,10 +570,7 @@ export function metaphoneEncode(name: string, maxLength: number = 4): string {
 
       case 'D':
         // DGE, DGY, DGI -> J
-        if (
-          next === 'G' &&
-          (next2 === 'E' || next2 === 'Y' || next2 === 'I')
-        ) {
+        if (next === 'G' && (next2 === 'E' || next2 === 'Y' || next2 === 'I')) {
           addChar('J')
           i += 3
         }

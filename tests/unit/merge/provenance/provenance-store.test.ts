@@ -17,7 +17,7 @@ function createMergeConfig(): MergeConfig {
 function createProvenance(
   goldenRecordId: string,
   sourceRecordIds: string[],
-  overrides?: Partial<Provenance>,
+  overrides?: Partial<Provenance>
 ): Provenance {
   return {
     goldenRecordId,
@@ -27,7 +27,10 @@ function createProvenance(
       firstName: {
         sourceRecordId: sourceRecordIds[0],
         strategyApplied: 'preferFirst',
-        allValues: sourceRecordIds.map((id) => ({ recordId: id, value: 'Test' })),
+        allValues: sourceRecordIds.map((id) => ({
+          recordId: id,
+          value: 'Test',
+        })),
         hadConflict: false,
       },
     },
@@ -55,9 +58,13 @@ describe('InMemoryProvenanceStore', () => {
 
     it('updates existing provenance', async () => {
       const provenance1 = createProvenance('golden-1', ['rec-1', 'rec-2'])
-      const provenance2 = createProvenance('golden-1', ['rec-1', 'rec-2', 'rec-3'], {
-        mergedBy: 'user-updated',
-      })
+      const provenance2 = createProvenance(
+        'golden-1',
+        ['rec-1', 'rec-2', 'rec-3'],
+        {
+          mergedBy: 'user-updated',
+        }
+      )
 
       await store.save(provenance1)
       await store.save(provenance2)
@@ -109,15 +116,21 @@ describe('InMemoryProvenanceStore', () => {
 
   describe('getBySourceId', () => {
     beforeEach(async () => {
-      await store.save(createProvenance('golden-1', ['rec-1', 'rec-2'], {
-        mergedAt: new Date('2024-06-15T10:00:00Z'),
-      }))
-      await store.save(createProvenance('golden-2', ['rec-2', 'rec-3'], {
-        mergedAt: new Date('2024-06-16T10:00:00Z'),
-      }))
-      await store.save(createProvenance('golden-3', ['rec-3', 'rec-4'], {
-        mergedAt: new Date('2024-06-17T10:00:00Z'),
-      }))
+      await store.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'], {
+          mergedAt: new Date('2024-06-15T10:00:00Z'),
+        })
+      )
+      await store.save(
+        createProvenance('golden-2', ['rec-2', 'rec-3'], {
+          mergedAt: new Date('2024-06-16T10:00:00Z'),
+        })
+      )
+      await store.save(
+        createProvenance('golden-3', ['rec-3', 'rec-4'], {
+          mergedAt: new Date('2024-06-17T10:00:00Z'),
+        })
+      )
     })
 
     it('finds provenance by source record ID', async () => {
@@ -181,7 +194,9 @@ describe('InMemoryProvenanceStore', () => {
     it('includes unmerged records when requested', async () => {
       await store.markUnmerged('golden-1', { unmergedAt: new Date() })
 
-      const results = await store.getBySourceId('rec-2', { includeUnmerged: true })
+      const results = await store.getBySourceId('rec-2', {
+        includeUnmerged: true,
+      })
 
       expect(results).toHaveLength(2)
     })
@@ -207,7 +222,7 @@ describe('InMemoryProvenanceStore', () => {
 
     it('throws if provenance not found', async () => {
       await expect(
-        store.markUnmerged('non-existent', { unmergedAt: new Date() }),
+        store.markUnmerged('non-existent', { unmergedAt: new Date() })
       ).rejects.toThrow('Provenance not found')
     })
   })
@@ -286,7 +301,10 @@ describe('InMemoryProvenanceStore', () => {
     it('returns empty array for non-existent field', async () => {
       await store.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
 
-      const history = await store.getFieldHistory('golden-1', 'nonExistentField')
+      const history = await store.getFieldHistory(
+        'golden-1',
+        'nonExistentField'
+      )
 
       expect(history).toEqual([])
     })
@@ -294,18 +312,24 @@ describe('InMemoryProvenanceStore', () => {
 
   describe('getMergeTimeline', () => {
     beforeEach(async () => {
-      await store.save(createProvenance('golden-1', ['rec-1', 'rec-2'], {
-        mergedAt: new Date('2024-06-15T10:00:00Z'),
-        mergedBy: 'user-1',
-      }))
-      await store.save(createProvenance('golden-2', ['rec-3', 'rec-4'], {
-        mergedAt: new Date('2024-06-16T10:00:00Z'),
-        mergedBy: 'user-2',
-      }))
-      await store.save(createProvenance('golden-3', ['rec-5', 'rec-6'], {
-        mergedAt: new Date('2024-06-17T10:00:00Z'),
-        mergedBy: 'user-3',
-      }))
+      await store.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'], {
+          mergedAt: new Date('2024-06-15T10:00:00Z'),
+          mergedBy: 'user-1',
+        })
+      )
+      await store.save(
+        createProvenance('golden-2', ['rec-3', 'rec-4'], {
+          mergedAt: new Date('2024-06-16T10:00:00Z'),
+          mergedBy: 'user-2',
+        })
+      )
+      await store.save(
+        createProvenance('golden-3', ['rec-5', 'rec-6'], {
+          mergedAt: new Date('2024-06-17T10:00:00Z'),
+          mergedBy: 'user-3',
+        })
+      )
     })
 
     it('gets merge timeline', async () => {
@@ -369,7 +393,9 @@ describe('InMemoryProvenanceStore', () => {
       const timeline = await store.getMergeTimeline({ includeUnmerged: true })
 
       expect(timeline).toHaveLength(3)
-      const unmergedEntry = timeline.find((t) => t.goldenRecordId === 'golden-2')
+      const unmergedEntry = timeline.find(
+        (t) => t.goldenRecordId === 'golden-2'
+      )
       expect(unmergedEntry?.unmerged).toBe(true)
     })
   })

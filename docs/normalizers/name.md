@@ -49,12 +49,12 @@ interface NameNormalizerOptions {
 
 ```typescript
 interface NameComponents {
-  title?: string           // Mr., Mrs., Dr., etc.
-  first?: string          // First/given name
-  middle?: string[]       // Middle name(s)
-  last?: string           // Last/family/surname
-  suffix?: string         // Jr., Sr., III, PhD, etc.
-  full?: string           // Full normalized name
+  title?: string // Mr., Mrs., Dr., etc.
+  first?: string // First/given name
+  middle?: string[] // Middle name(s)
+  last?: string // Last/family/surname
+  suffix?: string // Jr., Sr., III, PhD, etc.
+  full?: string // Full normalized name
 }
 ```
 
@@ -64,15 +64,13 @@ interface NameComponents {
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('fullName')
-      .type('name')
-      .normalizer('name', {
-        preserveCase: false,
-        extractTitles: true,
-        extractSuffixes: true,
-        outputFormat: 'full'
-      })
+  .schema((s) =>
+    s.field('fullName').type('name').normalizer('name', {
+      preserveCase: false,
+      extractTitles: true,
+      extractSuffixes: true,
+      outputFormat: 'full',
+    })
   )
   .matching(/* ... */)
   .build()
@@ -152,7 +150,7 @@ normalizeName('John Paul George Ringo')
 
 ```typescript
 normalizeName('Dr. John Michael Smith Jr.', {
-  outputFormat: 'components'
+  outputFormat: 'components',
 })
 // → {
 //   title: 'Dr.',
@@ -189,13 +187,16 @@ normalizeName('JOHN SMITH', { preserveCase: true })
 ### Titles
 
 **Common titles:**
+
 - Mr., Mrs., Ms., Miss
 - Dr., Prof., Rev.
 
 **Academic:**
+
 - PhD, MD, DDS, Esq.
 
 **Military:**
+
 - Capt., Lt., Col., Gen., Sgt., Maj.
 
 Titles are case-insensitive and the trailing period is optional.
@@ -203,12 +204,15 @@ Titles are case-insensitive and the trailing period is optional.
 ### Suffixes
 
 **Generational:**
+
 - Jr., Sr., II, III, IV, V, etc.
 
 **Academic:**
+
 - PhD, MD, DDS, JD, MBA, etc.
 
 **Professional:**
+
 - Esq., CPA, PE, etc.
 
 ## Parsing Logic
@@ -253,7 +257,9 @@ normalizeName('Prince')
 ### Very Long Names
 
 ```typescript
-normalizeName('Pablo Diego José Francisco de Paula Juan Nepomuceno María de los Remedios Cipriano de la Santísima Trinidad Ruiz y Picasso')
+normalizeName(
+  'Pablo Diego José Francisco de Paula Juan Nepomuceno María de los Remedios Cipriano de la Santísima Trinidad Ruiz y Picasso'
+)
 // → 'Pablo Diego José Francisco De Paula Juan Nepomuceno María De Los Remedios Cipriano De La Santísima Trinidad Ruiz Y Picasso'
 ```
 
@@ -299,6 +305,7 @@ normalizeName('eBay Inc', { preserveCase: true })
 ### Recommended Pairings
 
 **For fuzzy matching:**
+
 ```typescript
 .schema(s => s
   .field('fullName')
@@ -315,6 +322,7 @@ normalizeName('eBay Inc', { preserveCase: true })
 ```
 
 **For exact matching:**
+
 ```typescript
 .schema(s => s
   .field('fullName')
@@ -329,6 +337,7 @@ normalizeName('eBay Inc', { preserveCase: true })
 ```
 
 **For phonetic matching:**
+
 ```typescript
 .schema(s => s
   .field('lastName')
@@ -353,20 +362,15 @@ interface Customer {
 }
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(s => s
-    .field('fullName')
-      .type('name')
-      .normalizer('name', {
-        extractTitles: true,
-        extractSuffixes: true,
-        preserveCase: false
-      })
+  .schema((s) =>
+    s.field('fullName').type('name').normalizer('name', {
+      extractTitles: true,
+      extractSuffixes: true,
+      preserveCase: false,
+    })
   )
-  .matching(m => m
-    .field('fullName')
-      .strategy('jaro-winkler')
-      .threshold(0.85)
-      .weight(100)
+  .matching((m) =>
+    m.field('fullName').strategy('jaro-winkler').threshold(0.85).weight(100)
   )
   .thresholds({ noMatch: 20, definiteMatch: 80 })
   .build()

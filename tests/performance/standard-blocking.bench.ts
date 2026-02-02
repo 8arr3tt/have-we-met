@@ -17,8 +17,18 @@ describe('Standard Blocking Performance', () => {
   // Generate test datasets
   const generate1kPeople = () => {
     const people: Person[] = []
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                       'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez']
+    const lastNames = [
+      'Smith',
+      'Johnson',
+      'Williams',
+      'Brown',
+      'Jones',
+      'Garcia',
+      'Miller',
+      'Davis',
+      'Rodriguez',
+      'Martinez',
+    ]
     for (let i = 0; i < 1000; i++) {
       people.push({
         id: `${i}`,
@@ -34,9 +44,23 @@ describe('Standard Blocking Performance', () => {
 
   const generate10kPeople = () => {
     const people: Person[] = []
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                       'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-                       'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson']
+    const lastNames = [
+      'Smith',
+      'Johnson',
+      'Williams',
+      'Brown',
+      'Jones',
+      'Garcia',
+      'Miller',
+      'Davis',
+      'Rodriguez',
+      'Martinez',
+      'Hernandez',
+      'Lopez',
+      'Gonzalez',
+      'Wilson',
+      'Anderson',
+    ]
     for (let i = 0; i < 10000; i++) {
       people.push({
         id: `${i}`,
@@ -52,11 +76,33 @@ describe('Standard Blocking Performance', () => {
 
   const generate100kPeople = () => {
     const people: Person[] = []
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones',
-                       'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-                       'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
-                       'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin',
-                       'Lee', 'Perez', 'Thompson', 'White', 'Harris']
+    const lastNames = [
+      'Smith',
+      'Johnson',
+      'Williams',
+      'Brown',
+      'Jones',
+      'Garcia',
+      'Miller',
+      'Davis',
+      'Rodriguez',
+      'Martinez',
+      'Hernandez',
+      'Lopez',
+      'Gonzalez',
+      'Wilson',
+      'Anderson',
+      'Thomas',
+      'Taylor',
+      'Moore',
+      'Jackson',
+      'Martin',
+      'Lee',
+      'Perez',
+      'Thompson',
+      'White',
+      'Harris',
+    ]
     for (let i = 0; i < 100000; i++) {
       people.push({
         id: `${i}`,

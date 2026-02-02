@@ -17,7 +17,11 @@ import {
   createMergeBuilder,
 } from '../../src/merge'
 import type { SourceRecord, Provenance } from '../../src/merge'
-import type { QueueItem, QueueAdapter, MergeDecision } from '../../src/queue/types'
+import type {
+  QueueItem,
+  QueueAdapter,
+  MergeDecision,
+} from '../../src/queue/types'
 import type { MatchExplanation } from '../../src/types/match'
 
 interface Customer {
@@ -32,7 +36,9 @@ interface Customer {
 }
 
 // In-memory queue adapter for demonstration
-function createMockQueueAdapter<T extends Record<string, unknown>>(): QueueAdapter<T> {
+function createMockQueueAdapter<
+  T extends Record<string, unknown>,
+>(): QueueAdapter<T> {
   const items = new Map<string, QueueItem<T>>()
 
   return {
@@ -49,7 +55,9 @@ function createMockQueueAdapter<T extends Record<string, unknown>>(): QueueAdapt
     },
     findQueueItems: async () => Array.from(items.values()),
     findQueueItemById: async (id: string) => items.get(id) || null,
-    deleteQueueItem: async (id: string) => { items.delete(id) },
+    deleteQueueItem: async (id: string) => {
+      items.delete(id)
+    },
     countQueueItems: async () => items.size,
     batchInsertQueueItems: async (newItems: QueueItem<T>[]) => {
       for (const item of newItems) {
@@ -73,11 +81,16 @@ async function queueMergeExample() {
     .timestampField('updatedAt')
     .defaultStrategy('preferNonNull')
     .onConflict('useDefault')
-    .field('firstName').strategy('preferLonger')
-    .field('lastName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
-    .field('phone').strategy('preferNonNull')
-    .field('company').strategy('preferNewer')
+    .field('firstName')
+    .strategy('preferLonger')
+    .field('lastName')
+    .strategy('preferLonger')
+    .field('email')
+    .strategy('preferNewer')
+    .field('phone')
+    .strategy('preferNonNull')
+    .field('company')
+    .strategy('preferNewer')
     .build()
 
   console.log('Merge configuration created')
@@ -201,8 +214,12 @@ async function queueMergeExample() {
   console.log('Queue item created:')
   console.log(`  ID: ${queueItem.id}`)
   console.log(`  Status: ${queueItem.status}`)
-  console.log(`  Candidate: ${candidateRecord.firstName} ${candidateRecord.lastName}`)
-  console.log(`  Potential match: ${existingRecord.firstName} ${existingRecord.lastName}`)
+  console.log(
+    `  Candidate: ${candidateRecord.firstName} ${candidateRecord.lastName}`
+  )
+  console.log(
+    `  Potential match: ${existingRecord.firstName} ${existingRecord.lastName}`
+  )
   console.log(`  Match score: ${queueItem.potentialMatches[0].score}`)
   console.log()
 
@@ -210,7 +227,9 @@ async function queueMergeExample() {
   console.log('Step 4: Reviewer examines the queue item...')
   console.log()
   console.log('Candidate Record:')
-  console.log(`  Name: ${candidateRecord.firstName} ${candidateRecord.lastName}`)
+  console.log(
+    `  Name: ${candidateRecord.firstName} ${candidateRecord.lastName}`
+  )
   console.log(`  Email: ${candidateRecord.email}`)
   console.log(`  Phone: ${candidateRecord.phone}`)
   console.log(`  Company: ${candidateRecord.company}`)
@@ -223,9 +242,13 @@ async function queueMergeExample() {
   console.log()
   console.log('Match Explanation:')
   console.log(`  Overall Score: ${matchExplanation.overallScore}`)
-  console.log(`  Confidence: ${(matchExplanation.confidence! * 100).toFixed(0)}%`)
+  console.log(
+    `  Confidence: ${(matchExplanation.confidence! * 100).toFixed(0)}%`
+  )
   console.log(`  Match Factors: ${matchExplanation.matchFactors.join(', ')}`)
-  console.log(`  No-Match Factors: ${matchExplanation.noMatchFactors?.join(', ') || 'None'}`)
+  console.log(
+    `  No-Match Factors: ${matchExplanation.noMatchFactors?.join(', ') || 'None'}`
+  )
   console.log()
 
   // Step 5: Check if merge is possible
@@ -242,7 +265,8 @@ async function queueMergeExample() {
   console.log('Step 6: Reviewer decides to merge records...')
   const mergeDecision: MergeDecision = {
     selectedMatchId: existingRecord.id,
-    notes: 'Same person - Jon is a nickname for Jonathan, company name variation',
+    notes:
+      'Same person - Jon is a nickname for Jonathan, company name variation',
     confidence: 0.95,
     decidedBy: 'reviewer-alice',
   }
@@ -256,7 +280,10 @@ async function queueMergeExample() {
 
   // Step 7: Execute the queue merge
   console.log('Step 7: Executing queue merge...')
-  const mergeResult = await queueMergeHandler.handleMergeDecision(queueItem, mergeDecision)
+  const mergeResult = await queueMergeHandler.handleMergeDecision(
+    queueItem,
+    mergeDecision
+  )
 
   console.log('Merge executed successfully!')
   console.log()
@@ -264,7 +291,9 @@ async function queueMergeExample() {
   // Step 8: Display the golden record
   console.log('Step 8: Golden record created:')
   console.log(`  ID: ${mergeResult.goldenRecordId}`)
-  console.log(`  Name: ${mergeResult.goldenRecord.firstName} ${mergeResult.goldenRecord.lastName}`)
+  console.log(
+    `  Name: ${mergeResult.goldenRecord.firstName} ${mergeResult.goldenRecord.lastName}`
+  )
   console.log(`  Email: ${mergeResult.goldenRecord.email}`)
   console.log(`  Phone: ${mergeResult.goldenRecord.phone}`)
   console.log(`  Company: ${mergeResult.goldenRecord.company}`)
@@ -297,15 +326,23 @@ async function queueMergeExample() {
   console.log('Step 11: Verifying database state...')
   console.log(`  Golden records in DB: ${goldenRecordsDb.size}`)
   console.log(`  Archived source records: ${archivedRecordsDb.size}`)
-  console.log(`  Source records archived: ${Array.from(archivedRecordsDb).join(', ')}`)
+  console.log(
+    `  Source records archived: ${Array.from(archivedRecordsDb).join(', ')}`
+  )
   console.log()
 
   // Step 12: Query provenance by source record
   console.log('Step 12: Querying provenance by source record...')
-  const provenanceBySource = await provenanceStore.getBySourceId(existingRecord.id)
-  console.log(`  Found ${provenanceBySource.length} provenance record(s) for ${existingRecord.id}`)
+  const provenanceBySource = await provenanceStore.getBySourceId(
+    existingRecord.id
+  )
+  console.log(
+    `  Found ${provenanceBySource.length} provenance record(s) for ${existingRecord.id}`
+  )
   if (provenanceBySource.length > 0) {
-    console.log(`  Golden record created from this source: ${provenanceBySource[0].goldenRecordId}`)
+    console.log(
+      `  Golden record created from this source: ${provenanceBySource[0].goldenRecordId}`
+    )
   }
   console.log()
 

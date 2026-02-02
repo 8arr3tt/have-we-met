@@ -57,7 +57,9 @@ describe('Queue Validation', () => {
       }
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('candidateRecord must not be empty')
+      expect(() => validateQueueItem(request)).toThrow(
+        'candidateRecord must not be empty'
+      )
     })
 
     it('rejects queue item with non-array potentialMatches', () => {
@@ -67,7 +69,9 @@ describe('Queue Validation', () => {
       } as unknown as AddQueueItemRequest<{ id: string }>
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('potentialMatches must be an array')
+      expect(() => validateQueueItem(request)).toThrow(
+        'potentialMatches must be an array'
+      )
     })
 
     it('rejects queue item with empty potentialMatches', () => {
@@ -77,7 +81,9 @@ describe('Queue Validation', () => {
       }
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('potentialMatches must not be empty')
+      expect(() => validateQueueItem(request)).toThrow(
+        'potentialMatches must not be empty'
+      )
     })
 
     it('rejects queue item with invalid match record', () => {
@@ -99,7 +105,9 @@ describe('Queue Validation', () => {
       }
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('potentialMatches[0].record must not be empty')
+      expect(() => validateQueueItem(request)).toThrow(
+        'potentialMatches[0].record must not be empty'
+      )
     })
 
     it('rejects queue item with invalid match score', () => {
@@ -121,7 +129,9 @@ describe('Queue Validation', () => {
       } as unknown as AddQueueItemRequest<{ id: string }>
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('potentialMatches[0].score must be a number')
+      expect(() => validateQueueItem(request)).toThrow(
+        'potentialMatches[0].score must be a number'
+      )
     })
 
     it('rejects queue item with invalid match outcome', () => {
@@ -143,7 +153,9 @@ describe('Queue Validation', () => {
       } as unknown as AddQueueItemRequest<{ id: string }>
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow("potentialMatches[0].outcome must be 'potential-match'")
+      expect(() => validateQueueItem(request)).toThrow(
+        "potentialMatches[0].outcome must be 'potential-match'"
+      )
     })
 
     it('rejects queue item with missing explanation', () => {
@@ -159,7 +171,9 @@ describe('Queue Validation', () => {
       } as unknown as AddQueueItemRequest<{ id: string }>
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('potentialMatches[0].explanation is required')
+      expect(() => validateQueueItem(request)).toThrow(
+        'potentialMatches[0].explanation is required'
+      )
     })
 
     it('rejects queue item with invalid priority', () => {
@@ -182,7 +196,9 @@ describe('Queue Validation', () => {
       } as unknown as AddQueueItemRequest<{ id: string }>
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('priority must be a number')
+      expect(() => validateQueueItem(request)).toThrow(
+        'priority must be a number'
+      )
     })
 
     it('rejects queue item with non-array tags', () => {
@@ -228,56 +244,74 @@ describe('Queue Validation', () => {
       } as unknown as AddQueueItemRequest<{ id: string }>
 
       expect(() => validateQueueItem(request)).toThrow(QueueValidationError)
-      expect(() => validateQueueItem(request)).toThrow('tags[0] must be a string')
+      expect(() => validateQueueItem(request)).toThrow(
+        'tags[0] must be a string'
+      )
     })
   })
 
   describe('validateStatusTransition', () => {
     it('validates transition from pending to confirmed', () => {
-      expect(() => validateStatusTransition('pending', 'confirmed')).not.toThrow()
+      expect(() =>
+        validateStatusTransition('pending', 'confirmed')
+      ).not.toThrow()
     })
 
     it('validates transition from pending to rejected', () => {
-      expect(() => validateStatusTransition('pending', 'rejected')).not.toThrow()
+      expect(() =>
+        validateStatusTransition('pending', 'rejected')
+      ).not.toThrow()
     })
 
     it('validates transition from pending to reviewing', () => {
-      expect(() => validateStatusTransition('pending', 'reviewing')).not.toThrow()
+      expect(() =>
+        validateStatusTransition('pending', 'reviewing')
+      ).not.toThrow()
     })
 
     it('validates transition from reviewing to confirmed', () => {
-      expect(() => validateStatusTransition('reviewing', 'confirmed')).not.toThrow()
+      expect(() =>
+        validateStatusTransition('reviewing', 'confirmed')
+      ).not.toThrow()
     })
 
     it('validates transition from reviewing to pending', () => {
-      expect(() => validateStatusTransition('reviewing', 'pending')).not.toThrow()
+      expect(() =>
+        validateStatusTransition('reviewing', 'pending')
+      ).not.toThrow()
     })
 
     it('rejects invalid transition from confirmed to pending', () => {
       expect(() => validateStatusTransition('confirmed', 'pending')).toThrow(
-        InvalidStatusTransitionError,
+        InvalidStatusTransitionError
       )
-      expect(() => validateStatusTransition('confirmed', 'pending')).toThrow("'confirmed' is a final state")
+      expect(() => validateStatusTransition('confirmed', 'pending')).toThrow(
+        "'confirmed' is a final state"
+      )
     })
 
     it('rejects invalid transition from rejected to confirmed', () => {
       expect(() => validateStatusTransition('rejected', 'confirmed')).toThrow(
-        InvalidStatusTransitionError,
+        InvalidStatusTransitionError
       )
-      expect(() => validateStatusTransition('rejected', 'confirmed')).toThrow("'rejected' is a final state")
+      expect(() => validateStatusTransition('rejected', 'confirmed')).toThrow(
+        "'rejected' is a final state"
+      )
     })
 
     it('rejects invalid transition from merged to pending', () => {
       expect(() => validateStatusTransition('merged', 'pending')).toThrow(
-        InvalidStatusTransitionError,
+        InvalidStatusTransitionError
       )
-      expect(() => validateStatusTransition('merged', 'pending')).toThrow("'merged' is a final state")
+      expect(() => validateStatusTransition('merged', 'pending')).toThrow(
+        "'merged' is a final state"
+      )
     })
 
     it('rejects invalid transition from pending to expired incorrectly to pending', () => {
       validateStatusTransition('pending', 'expired')
       expect(() => validateStatusTransition('expired', 'pending')).toThrow(
-        InvalidStatusTransitionError,
+        InvalidStatusTransitionError
       )
     })
   })
@@ -313,8 +347,12 @@ describe('Queue Validation', () => {
     it('rejects decision without action', () => {
       const decision = {} as QueueDecision
 
-      expect(() => validateQueueDecision(decision)).toThrow(QueueValidationError)
-      expect(() => validateQueueDecision(decision)).toThrow('action is required')
+      expect(() => validateQueueDecision(decision)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateQueueDecision(decision)).toThrow(
+        'action is required'
+      )
     })
 
     it('rejects decision with invalid action', () => {
@@ -322,8 +360,12 @@ describe('Queue Validation', () => {
         action: 'invalid-action',
       } as unknown as QueueDecision
 
-      expect(() => validateQueueDecision(decision)).toThrow(QueueValidationError)
-      expect(() => validateQueueDecision(decision)).toThrow('action must be one of: confirm, reject, merge')
+      expect(() => validateQueueDecision(decision)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateQueueDecision(decision)).toThrow(
+        'action must be one of: confirm, reject, merge'
+      )
     })
 
     it('rejects confirm decision without selectedMatchId', () => {
@@ -331,8 +373,12 @@ describe('Queue Validation', () => {
         action: 'confirm',
       }
 
-      expect(() => validateQueueDecision(decision)).toThrow(QueueValidationError)
-      expect(() => validateQueueDecision(decision)).toThrow("selectedMatchId is required for action 'confirm'")
+      expect(() => validateQueueDecision(decision)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateQueueDecision(decision)).toThrow(
+        "selectedMatchId is required for action 'confirm'"
+      )
     })
 
     it('rejects merge decision without selectedMatchId', () => {
@@ -340,8 +386,12 @@ describe('Queue Validation', () => {
         action: 'merge',
       }
 
-      expect(() => validateQueueDecision(decision)).toThrow(QueueValidationError)
-      expect(() => validateQueueDecision(decision)).toThrow("selectedMatchId is required for action 'merge'")
+      expect(() => validateQueueDecision(decision)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateQueueDecision(decision)).toThrow(
+        "selectedMatchId is required for action 'merge'"
+      )
     })
 
     it('rejects decision with invalid confidence type', () => {
@@ -351,8 +401,12 @@ describe('Queue Validation', () => {
         confidence: 'high',
       } as unknown as QueueDecision
 
-      expect(() => validateQueueDecision(decision)).toThrow(QueueValidationError)
-      expect(() => validateQueueDecision(decision)).toThrow('confidence must be a number')
+      expect(() => validateQueueDecision(decision)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateQueueDecision(decision)).toThrow(
+        'confidence must be a number'
+      )
     })
 
     it('rejects decision with confidence out of range', () => {
@@ -362,8 +416,12 @@ describe('Queue Validation', () => {
         confidence: 1.5,
       }
 
-      expect(() => validateQueueDecision(decision)).toThrow(QueueValidationError)
-      expect(() => validateQueueDecision(decision)).toThrow('confidence must be between 0 and 1')
+      expect(() => validateQueueDecision(decision)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateQueueDecision(decision)).toThrow(
+        'confidence must be between 0 and 1'
+      )
     })
   })
 
@@ -414,8 +472,12 @@ describe('Queue Validation', () => {
         updatedAt: new Date(),
       } as unknown as QueueItem<{ id: string }>
 
-      expect(() => validateCompleteQueueItem(item)).toThrow(QueueValidationError)
-      expect(() => validateCompleteQueueItem(item)).toThrow('id must be a non-empty string')
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        'id must be a non-empty string'
+      )
     })
 
     it('rejects item with invalid status', () => {
@@ -440,8 +502,12 @@ describe('Queue Validation', () => {
         updatedAt: new Date(),
       } as unknown as QueueItem<{ id: string }>
 
-      expect(() => validateCompleteQueueItem(item)).toThrow(QueueValidationError)
-      expect(() => validateCompleteQueueItem(item)).toThrow('status must be one of:')
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        'status must be one of:'
+      )
     })
 
     it('rejects item with invalid createdAt', () => {
@@ -466,8 +532,12 @@ describe('Queue Validation', () => {
         updatedAt: new Date(),
       } as unknown as QueueItem<{ id: string }>
 
-      expect(() => validateCompleteQueueItem(item)).toThrow(QueueValidationError)
-      expect(() => validateCompleteQueueItem(item)).toThrow('createdAt must be a Date')
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        'createdAt must be a Date'
+      )
     })
 
     it('rejects confirmed item without decision', () => {
@@ -492,8 +562,12 @@ describe('Queue Validation', () => {
         updatedAt: new Date(),
       }
 
-      expect(() => validateCompleteQueueItem(item)).toThrow(QueueValidationError)
-      expect(() => validateCompleteQueueItem(item)).toThrow("decision is required for status 'confirmed'")
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        QueueValidationError
+      )
+      expect(() => validateCompleteQueueItem(item)).toThrow(
+        "decision is required for status 'confirmed'"
+      )
     })
 
     it('validates confirmed item with decision', () => {

@@ -72,9 +72,9 @@ interface PartialServiceConfig {
  *     .required(true)
  * ```
  */
-export class ValidationServiceBuilder<T extends Record<string, unknown>>
-  implements ChainableServiceBuilder<T>
-{
+export class ValidationServiceBuilder<
+  T extends Record<string, unknown>,
+> implements ChainableServiceBuilder<T> {
   private config: PartialServiceConfig
 
   /** @internal Reference to parent builder for chaining */
@@ -270,9 +270,9 @@ export class ValidationServiceBuilder<T extends Record<string, unknown>>
  *     .onNotFound('continue')
  * ```
  */
-export class LookupServiceBuilder<T extends Record<string, unknown>>
-  implements ChainableServiceBuilder<T>
-{
+export class LookupServiceBuilder<
+  T extends Record<string, unknown>,
+> implements ChainableServiceBuilder<T> {
   private config: PartialServiceConfig
 
   /** @internal Reference to parent builder for chaining */
@@ -487,9 +487,9 @@ export class LookupServiceBuilder<T extends Record<string, unknown>>
  *     .onResult(r => r.result.riskScore < 0.7)
  * ```
  */
-export class CustomServiceBuilder<T extends Record<string, unknown>>
-  implements ChainableServiceBuilder<T>
-{
+export class CustomServiceBuilder<
+  T extends Record<string, unknown>,
+> implements ChainableServiceBuilder<T> {
   private config: PartialServiceConfig
   private serviceName: string
 
@@ -728,9 +728,9 @@ export class CustomServiceBuilder<T extends Record<string, unknown>>
  *   .build()
  * ```
  */
-export class ServiceBuilder<T extends Record<string, unknown>>
-  implements ChainableServiceBuilder<T>
-{
+export class ServiceBuilder<
+  T extends Record<string, unknown>,
+> implements ChainableServiceBuilder<T> {
   private services: ServiceConfig[] = []
   private defaults: ServiceDefaults = {}
   private _cachingEnabled: boolean = true
@@ -847,7 +847,7 @@ export class ServiceBuilder<T extends Record<string, unknown>>
    */
   addServiceConfig(config: ServiceConfig): void {
     const existingIndex = this.services.findIndex(
-      (s) => s.plugin.name === config.plugin.name,
+      (s) => s.plugin.name === config.plugin.name
     )
     if (existingIndex !== -1) {
       this.services[existingIndex] = config
@@ -921,26 +921,26 @@ export class ServiceBuilder<T extends Record<string, unknown>>
 
       if (serviceNames.has(name)) {
         throw new ServiceBuilderError(
-          `Duplicate service name '${name}'. Each service must have a unique name.`,
+          `Duplicate service name '${name}'. Each service must have a unique name.`
         )
       }
       serviceNames.add(name)
 
       if (!service.plugin.execute) {
         throw new ServiceBuilderError(
-          `Service '${name}' does not have an execute function.`,
+          `Service '${name}' does not have an execute function.`
         )
       }
 
       if (service.plugin.type === 'validation' && !service.fields?.length) {
         throw new ServiceBuilderError(
-          `Validation service '${name}' must have at least one field configured.`,
+          `Validation service '${name}' must have at least one field configured.`
         )
       }
 
       if (service.plugin.type === 'lookup' && !service.fields?.length) {
         throw new ServiceBuilderError(
-          `Lookup service '${name}' must have at least one field configured.`,
+          `Lookup service '${name}' must have at least one field configured.`
         )
       }
     }
@@ -950,7 +950,7 @@ export class ServiceBuilder<T extends Record<string, unknown>>
         if (!serviceNames.has(name)) {
           throw new ServiceBuilderError(
             `Execution order references unknown service '${name}'. ` +
-              `Available services: ${Array.from(serviceNames).join(', ')}`,
+              `Available services: ${Array.from(serviceNames).join(', ')}`
           )
         }
       }
@@ -972,7 +972,9 @@ export class ServiceBuilder<T extends Record<string, unknown>>
       throw new ServiceBuilderError('backoffMultiplier must be at least 1')
     }
     if (config.maxDelayMs < config.initialDelayMs) {
-      throw new ServiceBuilderError('maxDelayMs must be greater than or equal to initialDelayMs')
+      throw new ServiceBuilderError(
+        'maxDelayMs must be greater than or equal to initialDelayMs'
+      )
     }
   }
 

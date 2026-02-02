@@ -1,4 +1,10 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria, QueueAdapter } from '../types'
+import type {
+  DatabaseAdapter,
+  AdapterConfig,
+  QueryOptions,
+  FilterCriteria,
+  QueueAdapter,
+} from '../types'
 import { BaseAdapter } from '../base-adapter'
 import { QueryError, TransactionError, NotFoundError } from '../adapter-error'
 import { PrismaQueueAdapter } from './prisma-queue-adapter'
@@ -25,9 +31,12 @@ export class PrismaAdapter<T extends Record<string, unknown>>
   private getModel() {
     const model = (this.prisma as Record<string, unknown>)[this.modelName]
     if (!model || typeof model !== 'object') {
-      throw new QueryError(`Model '${this.modelName}' not found in Prisma client`, {
-        modelName: this.modelName,
-      })
+      throw new QueryError(
+        `Model '${this.modelName}' not found in Prisma client`,
+        {
+          modelName: this.modelName,
+        }
+      )
     }
     return model as Record<string, CallableFunction>
   }
@@ -36,7 +45,11 @@ export class PrismaAdapter<T extends Record<string, unknown>>
     const where: Record<string, unknown> = {}
 
     for (const [field, condition] of Object.entries(filter)) {
-      if (typeof condition === 'object' && condition !== null && 'operator' in condition) {
+      if (
+        typeof condition === 'object' &&
+        condition !== null &&
+        'operator' in condition
+      ) {
         const operatorCondition = condition as {
           operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'like'
           value: unknown
@@ -94,7 +107,8 @@ export class PrismaAdapter<T extends Record<string, unknown>>
 
       if (normalized.orderBy) {
         queryOptions.orderBy = {
-          [this.mapFieldToColumn(normalized.orderBy.field)]: normalized.orderBy.direction,
+          [this.mapFieldToColumn(normalized.orderBy.field)]:
+            normalized.orderBy.direction,
         }
       }
 
@@ -106,7 +120,10 @@ export class PrismaAdapter<T extends Record<string, unknown>>
         queryOptions.select = select
       }
 
-      const results = (await model.findMany(queryOptions)) as Record<string, unknown>[]
+      const results = (await model.findMany(queryOptions)) as Record<
+        string,
+        unknown
+      >[]
       return results.map((record) => this.mapRecordFromDatabase(record))
     } catch (error) {
       throw new QueryError('Failed to find records by blocking keys', {
@@ -148,7 +165,8 @@ export class PrismaAdapter<T extends Record<string, unknown>>
 
       if (normalized.orderBy) {
         queryOptions.orderBy = {
-          [this.mapFieldToColumn(normalized.orderBy.field)]: normalized.orderBy.direction,
+          [this.mapFieldToColumn(normalized.orderBy.field)]:
+            normalized.orderBy.direction,
         }
       }
 
@@ -160,7 +178,10 @@ export class PrismaAdapter<T extends Record<string, unknown>>
         queryOptions.select = select
       }
 
-      const results = (await model.findMany(queryOptions)) as Record<string, unknown>[]
+      const results = (await model.findMany(queryOptions)) as Record<
+        string,
+        unknown
+      >[]
       return results.map((record) => this.mapRecordFromDatabase(record))
     } catch (error) {
       throw new QueryError('Failed to find all records', {
@@ -189,7 +210,10 @@ export class PrismaAdapter<T extends Record<string, unknown>>
       const mapped = this.mapRecordToDatabase(record)
       const model = this.getModel()
 
-      const result = (await model.create({ data: mapped })) as Record<string, unknown>
+      const result = (await model.create({ data: mapped })) as Record<
+        string,
+        unknown
+      >
       return this.mapRecordFromDatabase(result)
     } catch (error) {
       throw new QueryError('Failed to insert record', {
@@ -249,7 +273,9 @@ export class PrismaAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async transaction<R>(callback: (adapter: DatabaseAdapter<T>) => Promise<R>): Promise<R> {
+  async transaction<R>(
+    callback: (adapter: DatabaseAdapter<T>) => Promise<R>
+  ): Promise<R> {
     try {
       return await this.prisma.$transaction(async (tx: PrismaClient) => {
         const txAdapter = new PrismaAdapter<T>(tx, {
@@ -303,7 +329,9 @@ export class PrismaAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async batchUpdate(updates: Array<{ id: string; updates: Partial<T> }>): Promise<T[]> {
+  async batchUpdate(
+    updates: Array<{ id: string; updates: Partial<T> }>
+  ): Promise<T[]> {
     if (updates.length === 0) {
       return []
     }

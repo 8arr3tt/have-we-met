@@ -33,14 +33,16 @@ interface TestRecord {
 class MockQueueAdapter implements QueueAdapter<TestRecord> {
   private items: Map<string, QueueItem<TestRecord>> = new Map()
 
-  async insertQueueItem(item: QueueItem<TestRecord>): Promise<QueueItem<TestRecord>> {
+  async insertQueueItem(
+    item: QueueItem<TestRecord>
+  ): Promise<QueueItem<TestRecord>> {
     this.items.set(item.id, item)
     return item
   }
 
   async updateQueueItem(
     id: string,
-    updates: Partial<QueueItem<TestRecord>>,
+    updates: Partial<QueueItem<TestRecord>>
   ): Promise<QueueItem<TestRecord>> {
     const item = this.items.get(id)
     if (!item) {
@@ -57,7 +59,9 @@ class MockQueueAdapter implements QueueAdapter<TestRecord> {
 
     // Apply status filter
     if (filter.status) {
-      const statuses = Array.isArray(filter.status) ? filter.status : [filter.status]
+      const statuses = Array.isArray(filter.status)
+        ? filter.status
+        : [filter.status]
       items = items.filter((item) => statuses.includes(item.status))
     }
 
@@ -131,11 +135,17 @@ class MockQueueAdapter implements QueueAdapter<TestRecord> {
       return this.items.size
     }
 
-    const items = await this.findQueueItems({ ...filter, limit: undefined, offset: 0 })
+    const items = await this.findQueueItems({
+      ...filter,
+      limit: undefined,
+      offset: 0,
+    })
     return items.length
   }
 
-  async batchInsertQueueItems(items: QueueItem<TestRecord>[]): Promise<QueueItem<TestRecord>[]> {
+  async batchInsertQueueItems(
+    items: QueueItem<TestRecord>[]
+  ): Promise<QueueItem<TestRecord>[]> {
     for (const item of items) {
       this.items.set(item.id, item)
     }
@@ -287,7 +297,11 @@ describe('ReviewQueue', () => {
 
   describe('addBatch', () => {
     it('adds multiple items efficiently', async () => {
-      const requests = [createTestRequest(), createTestRequest(), createTestRequest()]
+      const requests = [
+        createTestRequest(),
+        createTestRequest(),
+        createTestRequest(),
+      ]
 
       const items = await queue.addBatch(requests)
 
@@ -299,7 +313,9 @@ describe('ReviewQueue', () => {
       const requests = [createTestRequest(), createTestRequest()]
       requests[1].candidateRecord = {} as TestRecord
 
-      await expect(queue.addBatch(requests)).rejects.toThrow(QueueOperationError)
+      await expect(queue.addBatch(requests)).rejects.toThrow(
+        QueueOperationError
+      )
       expect(adapter.size()).toBe(0)
     })
 
@@ -350,7 +366,10 @@ describe('ReviewQueue', () => {
     })
 
     it('orders by createdAt ascending', async () => {
-      const result = await queue.list({ orderBy: 'createdAt', orderDirection: 'asc' })
+      const result = await queue.list({
+        orderBy: 'createdAt',
+        orderDirection: 'asc',
+      })
 
       const timestamps = result.items.map((item) => item.createdAt.getTime())
       const sorted = [...timestamps].sort((a, b) => a - b)
@@ -358,7 +377,10 @@ describe('ReviewQueue', () => {
     })
 
     it('orders by priority descending', async () => {
-      const result = await queue.list({ orderBy: 'priority', orderDirection: 'desc' })
+      const result = await queue.list({
+        orderBy: 'priority',
+        orderDirection: 'desc',
+      })
 
       const priorities = result.items.map((item) => item.priority ?? 0)
       const sorted = [...priorities].sort((a, b) => b - a)
@@ -437,8 +459,12 @@ describe('ReviewQueue', () => {
 
       const after = new Date()
       expect(confirmed.decidedAt).toBeInstanceOf(Date)
-      expect(confirmed.decidedAt!.getTime()).toBeGreaterThanOrEqual(before.getTime())
-      expect(confirmed.decidedAt!.getTime()).toBeLessThanOrEqual(after.getTime())
+      expect(confirmed.decidedAt!.getTime()).toBeGreaterThanOrEqual(
+        before.getTime()
+      )
+      expect(confirmed.decidedAt!.getTime()).toBeLessThanOrEqual(
+        after.getTime()
+      )
     })
 
     it('sets decidedBy field', async () => {
@@ -456,13 +482,13 @@ describe('ReviewQueue', () => {
       const item = await queue.add(createTestRequest())
 
       await expect(
-        queue.confirm(item.id, { selectedMatchId: '' } as any),
+        queue.confirm(item.id, { selectedMatchId: '' } as any)
       ).rejects.toThrow(QueueValidationError)
     })
 
     it('throws if item not found', async () => {
       await expect(
-        queue.confirm('non-existent', { selectedMatchId: 'match-1' }),
+        queue.confirm('non-existent', { selectedMatchId: 'match-1' })
       ).rejects.toThrow(QueueItemNotFoundError)
     })
 
@@ -471,7 +497,7 @@ describe('ReviewQueue', () => {
       await queue.confirm(item.id, { selectedMatchId: 'match-1' })
 
       await expect(
-        queue.confirm(item.id, { selectedMatchId: 'match-2' }),
+        queue.confirm(item.id, { selectedMatchId: 'match-2' })
       ).rejects.toThrow(InvalidStatusTransitionError)
     })
   })
@@ -501,14 +527,18 @@ describe('ReviewQueue', () => {
     })
 
     it('throws if item not found', async () => {
-      await expect(queue.reject('non-existent', {})).rejects.toThrow(QueueItemNotFoundError)
+      await expect(queue.reject('non-existent', {})).rejects.toThrow(
+        QueueItemNotFoundError
+      )
     })
 
     it('throws if item already decided', async () => {
       const item = await queue.add(createTestRequest())
       await queue.reject(item.id, {})
 
-      await expect(queue.reject(item.id, {})).rejects.toThrow(InvalidStatusTransitionError)
+      await expect(queue.reject(item.id, {})).rejects.toThrow(
+        InvalidStatusTransitionError
+      )
     })
   })
 
@@ -545,13 +575,13 @@ describe('ReviewQueue', () => {
       const item = await queue.add(createTestRequest())
 
       await expect(
-        queue.merge(item.id, { selectedMatchId: '' } as any),
+        queue.merge(item.id, { selectedMatchId: '' } as any)
       ).rejects.toThrow(QueueValidationError)
     })
 
     it('throws if item not found', async () => {
       await expect(
-        queue.merge('non-existent', { selectedMatchId: 'match-1' }),
+        queue.merge('non-existent', { selectedMatchId: 'match-1' })
       ).rejects.toThrow(QueueItemNotFoundError)
     })
   })
@@ -579,7 +609,7 @@ describe('ReviewQueue', () => {
       await queue.confirm(item.id, { selectedMatchId: 'match-1' })
 
       await expect(queue.updateStatus(item.id, 'pending')).rejects.toThrow(
-        InvalidStatusTransitionError,
+        InvalidStatusTransitionError
       )
     })
 
@@ -592,7 +622,9 @@ describe('ReviewQueue', () => {
 
       const updated = await queue.updateStatus(item.id, 'reviewing')
 
-      expect(updated.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt.getTime())
+      expect(updated.updatedAt.getTime()).toBeGreaterThan(
+        originalUpdatedAt.getTime()
+      )
     })
   })
 
@@ -607,7 +639,9 @@ describe('ReviewQueue', () => {
     })
 
     it('throws if item not found', async () => {
-      await expect(queue.delete('non-existent')).rejects.toThrow(QueueItemNotFoundError)
+      await expect(queue.delete('non-existent')).rejects.toThrow(
+        QueueItemNotFoundError
+      )
     })
   })
 

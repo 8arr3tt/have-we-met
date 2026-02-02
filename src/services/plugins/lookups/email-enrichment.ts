@@ -18,7 +18,11 @@ import { ServiceNetworkError, ServiceServerError } from '../../service-error.js'
 /**
  * Supported email enrichment providers
  */
-export type EmailEnrichmentProvider = 'clearbit' | 'hunter' | 'fullcontact' | 'custom'
+export type EmailEnrichmentProvider =
+  | 'clearbit'
+  | 'hunter'
+  | 'fullcontact'
+  | 'custom'
 
 /**
  * Enriched email data
@@ -149,7 +153,7 @@ export interface EmailEnrichmentResponse {
  */
 export type CustomEmailEnrichmentProvider = (
   email: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) => Promise<EmailEnrichmentResponse>
 
 /**
@@ -198,12 +202,25 @@ export const DEFAULT_EMAIL_ENRICHMENT_CONFIG: Partial<EmailEnrichmentConfig> = {
 /**
  * Extract email from key fields
  */
-export function extractEmail(keyFields: Record<string, unknown>): string | undefined {
-  const emailFields = ['email', 'emailAddress', 'mail', 'e-mail', 'primaryEmail']
+export function extractEmail(
+  keyFields: Record<string, unknown>
+): string | undefined {
+  const emailFields = [
+    'email',
+    'emailAddress',
+    'mail',
+    'e-mail',
+    'primaryEmail',
+  ]
 
   for (const field of emailFields) {
     const value = keyFields[field]
-    if (value !== undefined && value !== null && typeof value === 'string' && value.includes('@')) {
+    if (
+      value !== undefined &&
+      value !== null &&
+      typeof value === 'string' &&
+      value.includes('@')
+    ) {
       return value.toLowerCase().trim()
     }
   }
@@ -221,7 +238,9 @@ export function extractEmail(keyFields: Record<string, unknown>): string | undef
 /**
  * Flatten enriched data for field mapping
  */
-export function flattenEnrichedData(data: EnrichedEmailData): Record<string, unknown> {
+export function flattenEnrichedData(
+  data: EnrichedEmailData
+): Record<string, unknown> {
   const flat: Record<string, unknown> = {}
 
   if (data.email) flat.email = data.email
@@ -261,13 +280,14 @@ export function flattenEnrichedData(data: EnrichedEmailData): Record<string, unk
     flat['emailMetadata.isFreeProvider'] = data.emailMetadata.isFreeProvider
     flat['emailMetadata.isDisposable'] = data.emailMetadata.isDisposable
     flat['emailMetadata.isRoleBased'] = data.emailMetadata.isRoleBased
-    flat['emailMetadata.deliverabilityScore'] = data.emailMetadata.deliverabilityScore
+    flat['emailMetadata.deliverabilityScore'] =
+      data.emailMetadata.deliverabilityScore
     flat['emailMetadata.isFormatValid'] = data.emailMetadata.isFormatValid
   }
 
   // Remove undefined values
   return Object.fromEntries(
-    Object.entries(flat).filter(([_, v]) => v !== undefined),
+    Object.entries(flat).filter(([_, v]) => v !== undefined)
   )
 }
 
@@ -276,7 +296,7 @@ export function flattenEnrichedData(data: EnrichedEmailData): Record<string, unk
  */
 export function mapEnrichedFields(
   data: EnrichedEmailData,
-  fieldMapping: Record<string, string>,
+  fieldMapping: Record<string, string>
 ): Record<string, unknown> {
   const flat = flattenEnrichedData(data)
   const result: Record<string, unknown> = {}
@@ -308,7 +328,7 @@ function createSuccessResult(
   data: LookupOutput,
   startedAt: Date,
   cached: boolean = false,
-  metadata?: Record<string, unknown>,
+  metadata?: Record<string, unknown>
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -329,7 +349,7 @@ function createSuccessResult(
  */
 function createFailureResult(
   error: Error,
-  startedAt: Date,
+  startedAt: Date
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -399,7 +419,8 @@ export function createMockEmailEnrichmentProvider(): CustomEmailEnrichmentProvid
     // Determine email characteristics
     const isFreeProvider = FREE_EMAIL_PROVIDERS.has(domain.toLowerCase())
     const isRoleBased = ROLE_BASED_PREFIXES.has(localPart.toLowerCase())
-    const isDisposable = domain.includes('tempmail') || domain.includes('throwaway')
+    const isDisposable =
+      domain.includes('tempmail') || domain.includes('throwaway')
 
     // Generate mock name from email local part
     const nameParts = localPart
@@ -409,7 +430,8 @@ export function createMockEmailEnrichmentProvider(): CustomEmailEnrichmentProvid
       .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
 
     const firstName = nameParts[0] || 'Unknown'
-    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined
+    const lastName =
+      nameParts.length > 1 ? nameParts[nameParts.length - 1] : undefined
 
     const data: EnrichedEmailData = {
       email,
@@ -475,7 +497,9 @@ export function createMockEmailEnrichmentProvider(): CustomEmailEnrichmentProvid
  * }, context)
  * ```
  */
-export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupService {
+export function createEmailEnrichment(
+  config: EmailEnrichmentConfig
+): LookupService {
   const mergedConfig = { ...DEFAULT_EMAIL_ENRICHMENT_CONFIG, ...config }
   const serviceName = `email-enrichment-${mergedConfig.provider}`
 
@@ -490,7 +514,7 @@ export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupServ
 
   const executeProvider = async (
     email: string,
-    signal?: AbortSignal,
+    signal?: AbortSignal
   ): Promise<EmailEnrichmentResponse> => {
     switch (mergedConfig.provider) {
       case 'custom':
@@ -502,7 +526,7 @@ export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupServ
         // For now, these providers require custom implementation
         throw new ServiceNetworkError(
           serviceName,
-          `Provider '${mergedConfig.provider}' requires custom implementation. Use 'custom' provider with customProvider function.`,
+          `Provider '${mergedConfig.provider}' requires custom implementation. Use 'custom' provider with customProvider function.`
         )
 
       default:
@@ -517,7 +541,7 @@ export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupServ
 
     async execute(
       input: LookupInput,
-      context: ServiceContext,
+      context: ServiceContext
     ): Promise<ServiceResult<LookupOutput>> {
       const startedAt = new Date()
 
@@ -529,7 +553,7 @@ export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupServ
             {
               found: false,
             },
-            startedAt,
+            startedAt
           )
         }
 
@@ -540,7 +564,7 @@ export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupServ
             {
               found: false,
             },
-            startedAt,
+            startedAt
           )
         }
 
@@ -576,19 +600,22 @@ export function createEmailEnrichment(config: EmailEnrichmentConfig): LookupServ
           false,
           response.rateLimitRemaining !== undefined
             ? { rateLimitRemaining: response.rateLimitRemaining }
-            : undefined,
+            : undefined
         )
       } catch (error) {
-        if (error instanceof ServiceNetworkError || error instanceof ServiceServerError) {
+        if (
+          error instanceof ServiceNetworkError ||
+          error instanceof ServiceServerError
+        ) {
           return createFailureResult(error, startedAt)
         }
 
         return createFailureResult(
           new ServiceNetworkError(
             serviceName,
-            error instanceof Error ? error.message : String(error),
+            error instanceof Error ? error.message : String(error)
           ),
-          startedAt,
+          startedAt
         )
       }
     },

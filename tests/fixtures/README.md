@@ -5,6 +5,7 @@ This directory contains reusable test data and helper functions for creating tes
 ## Purpose
 
 Test fixtures provide:
+
 - Consistent test data across unit and integration tests
 - Helper functions to reduce boilerplate in tests
 - Type-safe record creation with sensible defaults
@@ -14,12 +15,14 @@ Test fixtures provide:
 ### Person
 
 Represents a typical person/customer entity with fields:
+
 - `firstName`, `lastName`, `email` (required)
 - `phone`, `dateOfBirth` (optional)
 
 ### Customer
 
 Represents a business customer entity with fields:
+
 - `companyName`, `contactName`, `email` (required)
 - `phone`, `taxId`, `website` (optional)
 
@@ -31,13 +34,13 @@ import { createPersonRecord, createCustomerRecord } from '../fixtures'
 // Create a person with defaults
 const person = createPersonRecord({
   firstName: 'Jane',
-  email: 'jane@example.com'
+  email: 'jane@example.com',
 })
 
 // Create multiple records
 const people = createPersonRecords([
   { firstName: 'Alice', email: 'alice@example.com' },
-  { firstName: 'Bob', email: 'bob@example.com' }
+  { firstName: 'Bob', email: 'bob@example.com' },
 ])
 ```
 

@@ -55,7 +55,9 @@ export function createRequestMetadata(options: {
 /**
  * Builds a service execution context from options
  */
-export function buildServiceContext(options: ExecutionContextOptions): ServiceContext {
+export function buildServiceContext(
+  options: ExecutionContextOptions
+): ServiceContext {
   const metadata = createRequestMetadata({
     correlationId: options.correlationId,
     caller: options.caller,
@@ -108,12 +110,19 @@ export function createSilentLogger(): Logger {
 /**
  * Creates a logger that prefixes messages with a service name
  */
-export function createPrefixedLogger(serviceName: string, baseLogger: Logger): Logger {
+export function createPrefixedLogger(
+  serviceName: string,
+  baseLogger: Logger
+): Logger {
   const prefix = `[${serviceName}]`
   return {
-    debug: (message, context) => baseLogger.debug(`${prefix} ${message}`, context),
-    info: (message, context) => baseLogger.info(`${prefix} ${message}`, context),
-    warn: (message, context) => baseLogger.warn(`${prefix} ${message}`, context),
-    error: (message, context) => baseLogger.error(`${prefix} ${message}`, context),
+    debug: (message, context) =>
+      baseLogger.debug(`${prefix} ${message}`, context),
+    info: (message, context) =>
+      baseLogger.info(`${prefix} ${message}`, context),
+    warn: (message, context) =>
+      baseLogger.warn(`${prefix} ${message}`, context),
+    error: (message, context) =>
+      baseLogger.error(`${prefix} ${message}`, context),
   }
 }

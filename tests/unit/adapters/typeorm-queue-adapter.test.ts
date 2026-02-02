@@ -15,7 +15,11 @@ describe('TypeORMQueueAdapter', () => {
 
   const createMockQueueItem = (): QueueItem<TestRecord> => ({
     id: 'queue-1',
-    candidateRecord: { id: 'rec-1', name: 'John Doe', email: 'john@example.com' },
+    candidateRecord: {
+      id: 'rec-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+    },
     potentialMatches: [
       {
         record: { id: 'rec-2', name: 'Jon Doe', email: 'jon@example.com' },
@@ -23,7 +27,9 @@ describe('TypeORMQueueAdapter', () => {
         outcome: 'potential-match' as const,
         explanation: {
           totalScore: 35,
-          fieldScores: [{ field: 'name', score: 20, method: 'levenshtein', details: {} }],
+          fieldScores: [
+            { field: 'name', score: 20, method: 'levenshtein', details: {} },
+          ],
           outcome: 'potential-match' as const,
         },
       },
@@ -105,7 +111,10 @@ describe('TypeORMQueueAdapter', () => {
 
       expect(mockRepository.update).toHaveBeenCalledWith(
         { id: 'queue-1' },
-        expect.objectContaining({ status: 'confirmed', updatedAt: expect.any(Date) })
+        expect.objectContaining({
+          status: 'confirmed',
+          updatedAt: expect.any(Date),
+        })
       )
       expect(result.status).toBe('confirmed')
     })
@@ -113,9 +122,9 @@ describe('TypeORMQueueAdapter', () => {
     it('throws NotFoundError if item not found', async () => {
       mockRepository.update.mockResolvedValue({ affected: 0 })
 
-      await expect(adapter.updateQueueItem('nonexistent', { status: 'confirmed' })).rejects.toThrow(
-        NotFoundError
-      )
+      await expect(
+        adapter.updateQueueItem('nonexistent', { status: 'confirmed' })
+      ).rejects.toThrow(NotFoundError)
     })
   })
 
@@ -164,7 +173,9 @@ describe('TypeORMQueueAdapter', () => {
     })
 
     it('orders by field and direction', async () => {
-      const filter: QueueFilter = { orderBy: { field: 'createdAt', direction: 'desc' } }
+      const filter: QueueFilter = {
+        orderBy: { field: 'createdAt', direction: 'desc' },
+      }
       mockRepository.find.mockResolvedValue([])
 
       await adapter.findQueueItems(filter)
@@ -222,7 +233,9 @@ describe('TypeORMQueueAdapter', () => {
     it('throws NotFoundError if item not found', async () => {
       mockRepository.delete.mockResolvedValue({ affected: 0 })
 
-      await expect(adapter.deleteQueueItem('nonexistent')).rejects.toThrow(NotFoundError)
+      await expect(adapter.deleteQueueItem('nonexistent')).rejects.toThrow(
+        NotFoundError
+      )
     })
   })
 
@@ -250,7 +263,10 @@ describe('TypeORMQueueAdapter', () => {
 
   describe('batchInsertQueueItems', () => {
     it('inserts multiple items efficiently', async () => {
-      const items = [createMockQueueItem(), { ...createMockQueueItem(), id: 'queue-2' }]
+      const items = [
+        createMockQueueItem(),
+        { ...createMockQueueItem(), id: 'queue-2' },
+      ]
       mockRepository.insert.mockResolvedValue({})
       mockRepository.find.mockResolvedValue(
         items.map((item) => ({

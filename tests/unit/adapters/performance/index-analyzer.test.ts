@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { IndexAnalyzer } from '../../../../src/adapters/performance/index-analyzer'
-import type { SchemaField, QueryPattern } from '../../../../src/adapters/performance/index-analyzer'
+import type {
+  SchemaField,
+  QueryPattern,
+} from '../../../../src/adapters/performance/index-analyzer'
 import type { BlockingStrategy } from '../../../../src/core/blocking/types'
 
 describe('IndexAnalyzer', () => {
@@ -34,7 +37,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['lastName', 'Smith']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations).toHaveLength(1)
       expect(recommendations[0].fields).toEqual(['lastName'])
@@ -52,7 +58,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['lastName', 'Smith']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations).toHaveLength(1)
       expect(recommendations[0].fields).toEqual(['lastName'])
@@ -65,10 +74,17 @@ describe('IndexAnalyzer', () => {
       const analyzer = new IndexAnalyzer('postgresql')
       const strategy: BlockingStrategy = {
         name: 'composite:intersection[standard:lastName+standard:dobYear]',
-        generate: () => new Map([['lastName', 'Smith'], ['dobYear', '1985']]),
+        generate: () =>
+          new Map([
+            ['lastName', 'Smith'],
+            ['dobYear', '1985'],
+          ]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations).toHaveLength(1)
       expect(recommendations[0].fields).toEqual(['lastName', 'dobYear'])
@@ -83,10 +99,15 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map(),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations.length).toBeGreaterThan(0)
-      expect(recommendations.some((r) => r.fields.includes('lastName'))).toBe(true)
+      expect(recommendations.some((r) => r.fields.includes('lastName'))).toBe(
+        true
+      )
       expect(recommendations.some((r) => r.fields.includes('email'))).toBe(true)
     })
 
@@ -97,7 +118,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['email', 'test@example.com']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'users')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'users'
+      )
 
       expect(recommendations[0].sql).toContain('USING btree')
       expect(recommendations[0].sql).toMatch(/CREATE INDEX .* ON users/)
@@ -110,7 +134,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['email', 'test@example.com']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'users')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'users'
+      )
 
       expect(recommendations[0].sql).toContain('USING BTREE')
     })
@@ -122,7 +149,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['email', 'test@example.com']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'users')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'users'
+      )
 
       expect(recommendations[0].sql).toContain('CREATE INDEX')
       expect(recommendations[0].sql).not.toContain('USING')
@@ -157,9 +187,7 @@ describe('IndexAnalyzer', () => {
 
     it('returns empty array when no matches', () => {
       const analyzer = new IndexAnalyzer('postgresql')
-      const queries: QueryPattern[] = [
-        { fields: ['lastName'], frequency: 5 },
-      ]
+      const queries: QueryPattern[] = [{ fields: ['lastName'], frequency: 5 }]
 
       const recommendations = analyzer.analyzeQueryPattern(queries, 'customers')
 
@@ -224,7 +252,9 @@ describe('IndexAnalyzer', () => {
       const recommendations = analyzer.analyzeQueryPattern(queries, 'customers')
 
       expect(recommendations[0].fields).toEqual(['email'])
-      expect(recommendations[0].priority).toBeGreaterThanOrEqual(recommendations[1].priority)
+      expect(recommendations[0].priority).toBeGreaterThanOrEqual(
+        recommendations[1].priority
+      )
     })
 
     it('selects hash index for equality operators', () => {
@@ -285,9 +315,7 @@ describe('IndexAnalyzer', () => {
 
     it('generates suggestions for sorted neighbourhood', () => {
       const analyzer = new IndexAnalyzer('postgresql')
-      const schema: SchemaField[] = [
-        { name: 'lastName', type: 'string' },
-      ]
+      const schema: SchemaField[] = [{ name: 'lastName', type: 'string' }]
       const strategy: BlockingStrategy = {
         name: 'sorted-neighbourhood:lastName:w5',
         generate: () => new Map([['lastName', 'Smith']]),
@@ -308,7 +336,11 @@ describe('IndexAnalyzer', () => {
       ]
       const strategy: BlockingStrategy = {
         name: 'composite:intersection[standard:lastName+standard:dobYear]',
-        generate: () => new Map([['lastName', 'Smith'], ['dobYear', '1985']]),
+        generate: () =>
+          new Map([
+            ['lastName', 'Smith'],
+            ['dobYear', '1985'],
+          ]),
       }
 
       const suggestions = analyzer.generateIndexSuggestions(schema, strategy)
@@ -335,9 +367,7 @@ describe('IndexAnalyzer', () => {
 
     it('includes priority in suggestions', () => {
       const analyzer = new IndexAnalyzer('postgresql')
-      const schema: SchemaField[] = [
-        { name: 'lastName', type: 'string' },
-      ]
+      const schema: SchemaField[] = [{ name: 'lastName', type: 'string' }]
       const strategy: BlockingStrategy = {
         name: 'sorted-neighbourhood:lastName:w5',
         generate: () => new Map([['lastName', 'Smith']]),
@@ -350,9 +380,7 @@ describe('IndexAnalyzer', () => {
 
     it('includes estimated improvement', () => {
       const analyzer = new IndexAnalyzer('postgresql')
-      const schema: SchemaField[] = [
-        { name: 'lastName', type: 'string' },
-      ]
+      const schema: SchemaField[] = [{ name: 'lastName', type: 'string' }]
       const strategy: BlockingStrategy = {
         name: 'standard:lastName',
         generate: () => new Map([['lastName', 'Smith']]),
@@ -372,9 +400,14 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['email', 'test@example.com']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'users')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'users'
+      )
 
-      expect(recommendations[0].sql).toMatch(/CREATE INDEX .* ON users USING btree \(email\);/)
+      expect(recommendations[0].sql).toMatch(
+        /CREATE INDEX .* ON users USING btree \(email\);/
+      )
     })
 
     it('generates MySQL syntax with USING clause', () => {
@@ -384,9 +417,14 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['email', 'test@example.com']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'users')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'users'
+      )
 
-      expect(recommendations[0].sql).toMatch(/CREATE INDEX .* ON users \(email\) USING BTREE;/)
+      expect(recommendations[0].sql).toMatch(
+        /CREATE INDEX .* ON users \(email\) USING BTREE;/
+      )
     })
 
     it('generates SQLite syntax without USING clause', () => {
@@ -396,9 +434,14 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['email', 'test@example.com']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'users')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'users'
+      )
 
-      expect(recommendations[0].sql).toMatch(/CREATE INDEX .* ON users \(email\);/)
+      expect(recommendations[0].sql).toMatch(
+        /CREATE INDEX .* ON users \(email\);/
+      )
       expect(recommendations[0].sql).not.toContain('USING')
     })
 
@@ -434,7 +477,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map(),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations).toHaveLength(0)
     })
@@ -446,7 +492,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map(),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations).toHaveLength(0)
     })
@@ -478,7 +527,10 @@ describe('IndexAnalyzer', () => {
         generate: () => new Map([['address.zipCode', '12345']]),
       }
 
-      const recommendations = analyzer.analyzeBlockingStrategy(strategy, 'customers')
+      const recommendations = analyzer.analyzeBlockingStrategy(
+        strategy,
+        'customers'
+      )
 
       expect(recommendations[0].name).toBe('idx_customers_address_zipCode')
       expect(recommendations[0].name).not.toContain('.')

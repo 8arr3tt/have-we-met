@@ -12,7 +12,11 @@ import {
   UnmergeError,
   SourceRecordNotFoundError,
 } from '../../../src/merge/index.js'
-import type { SourceRecord, Provenance, MergeConfig } from '../../../src/merge/types.js'
+import type {
+  SourceRecord,
+  Provenance,
+  MergeConfig,
+} from '../../../src/merge/types.js'
 
 interface TestRecord {
   firstName: string
@@ -24,7 +28,7 @@ interface TestRecord {
 function createSourceRecord<T extends Record<string, unknown>>(
   id: string,
   record: T,
-  options?: { createdAt?: Date; updatedAt?: Date },
+  options?: { createdAt?: Date; updatedAt?: Date }
 ): SourceRecord<T> {
   return {
     id,
@@ -43,7 +47,7 @@ function createProvenance(
     unmerged?: boolean
     unmergedAt?: Date
     unmergedBy?: string
-  },
+  }
 ): Provenance {
   const config: MergeConfig = {
     fieldStrategies: [],
@@ -62,7 +66,10 @@ function createProvenance(
       firstName: {
         sourceRecordId: sourceRecordIds[0],
         strategyApplied: 'preferFirst',
-        allValues: sourceRecordIds.map((id) => ({ recordId: id, value: `Name-${id}` })),
+        allValues: sourceRecordIds.map((id) => ({
+          recordId: id,
+          value: `Name-${id}`,
+        })),
         hadConflict: false,
       },
     },
@@ -137,7 +144,10 @@ describe('UnmergeExecutor', () => {
       await provenanceStore.save(provenance)
 
       // Archive source records
-      await sourceRecordArchive.archive([sourceRecord1, sourceRecord2], 'golden-1')
+      await sourceRecordArchive.archive(
+        [sourceRecord1, sourceRecord2],
+        'golden-1'
+      )
 
       // Unmerge
       const result = await executor.unmerge({
@@ -201,7 +211,7 @@ describe('UnmergeExecutor', () => {
       const executor = createExecutor()
 
       await expect(
-        executor.unmerge({ goldenRecordId: 'non-existent' }),
+        executor.unmerge({ goldenRecordId: 'non-existent' })
       ).rejects.toThrow(ProvenanceNotFoundError)
     })
 
@@ -209,11 +219,13 @@ describe('UnmergeExecutor', () => {
       const executor = createExecutor()
 
       // Provenance exists but no archived records
-      await provenanceStore.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
-
-      await expect(executor.unmerge({ goldenRecordId: 'golden-1' })).rejects.toThrow(
-        SourceRecordNotFoundError,
+      await provenanceStore.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'])
       )
+
+      await expect(
+        executor.unmerge({ goldenRecordId: 'golden-1' })
+      ).rejects.toThrow(SourceRecordNotFoundError)
     })
 
     it('throws if already unmerged', async () => {
@@ -226,7 +238,9 @@ describe('UnmergeExecutor', () => {
       })
       await provenanceStore.save(provenance)
 
-      await expect(executor.unmerge({ goldenRecordId: 'golden-1' })).rejects.toThrow(UnmergeError)
+      await expect(
+        executor.unmerge({ goldenRecordId: 'golden-1' })
+      ).rejects.toThrow(UnmergeError)
     })
 
     it('handles partial source record availability', async () => {
@@ -238,13 +252,15 @@ describe('UnmergeExecutor', () => {
         email: 'john@example.com',
       })
 
-      await provenanceStore.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
+      await provenanceStore.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'])
+      )
       // Only archive rec-1, not rec-2
       await sourceRecordArchive.archive([sourceRecord1], 'golden-1')
 
-      await expect(executor.unmerge({ goldenRecordId: 'golden-1' })).rejects.toThrow(
-        SourceRecordNotFoundError,
-      )
+      await expect(
+        executor.unmerge({ goldenRecordId: 'golden-1' })
+      ).rejects.toThrow(SourceRecordNotFoundError)
     })
 
     it('removes records from archive after restoration', async () => {
@@ -303,7 +319,10 @@ describe('UnmergeExecutor', () => {
       await provenanceStore.save(createProvenance('golden-1', ['rec-1']))
       await sourceRecordArchive.archive([sourceRecord1], 'golden-1')
 
-      const result = await executor.unmerge({ goldenRecordId: 'golden-1' }, { mode: 'full' })
+      const result = await executor.unmerge(
+        { goldenRecordId: 'golden-1' },
+        { mode: 'full' }
+      )
 
       expect(result.goldenRecordDeleted).toBe(true)
       expect(result.restoredRecords).toHaveLength(1)
@@ -324,12 +343,17 @@ describe('UnmergeExecutor', () => {
         email: 'jane@example.com',
       })
 
-      await provenanceStore.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
-      await sourceRecordArchive.archive([sourceRecord1, sourceRecord2], 'golden-1')
+      await provenanceStore.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'])
+      )
+      await sourceRecordArchive.archive(
+        [sourceRecord1, sourceRecord2],
+        'golden-1'
+      )
 
       const result = await executor.unmerge(
         { goldenRecordId: 'golden-1' },
-        { mode: 'partial', sourceRecordIdsToRestore: ['rec-1'] },
+        { mode: 'partial', sourceRecordIdsToRestore: ['rec-1'] }
       )
 
       expect(result.goldenRecordDeleted).toBe(false)
@@ -352,12 +376,17 @@ describe('UnmergeExecutor', () => {
         email: 'jane@example.com',
       })
 
-      await provenanceStore.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
-      await sourceRecordArchive.archive([sourceRecord1, sourceRecord2], 'golden-1')
+      await provenanceStore.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'])
+      )
+      await sourceRecordArchive.archive(
+        [sourceRecord1, sourceRecord2],
+        'golden-1'
+      )
 
       const result = await executor.unmerge(
         { goldenRecordId: 'golden-1' },
-        { mode: 'split', sourceRecordIdsToRestore: ['rec-2'] },
+        { mode: 'split', sourceRecordIdsToRestore: ['rec-2'] }
       )
 
       expect(result.goldenRecordDeleted).toBe(false)
@@ -378,7 +407,7 @@ describe('UnmergeExecutor', () => {
       await sourceRecordArchive.archive([sourceRecord1], 'golden-1')
 
       await expect(
-        executor.unmerge({ goldenRecordId: 'golden-1' }, { mode: 'partial' }),
+        executor.unmerge({ goldenRecordId: 'golden-1' }, { mode: 'partial' })
       ).rejects.toThrow(UnmergeError)
     })
 
@@ -397,8 +426,8 @@ describe('UnmergeExecutor', () => {
       await expect(
         executor.unmerge(
           { goldenRecordId: 'golden-1' },
-          { mode: 'partial', sourceRecordIdsToRestore: ['rec-999'] },
-        ),
+          { mode: 'partial', sourceRecordIdsToRestore: ['rec-999'] }
+        )
       ).rejects.toThrow(UnmergeError)
     })
 
@@ -417,12 +446,21 @@ describe('UnmergeExecutor', () => {
         email: 'jane@example.com',
       })
 
-      await provenanceStore.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
-      await sourceRecordArchive.archive([sourceRecord1, sourceRecord2], 'golden-1')
+      await provenanceStore.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'])
+      )
+      await sourceRecordArchive.archive(
+        [sourceRecord1, sourceRecord2],
+        'golden-1'
+      )
 
       const result = await executor.unmerge(
         { goldenRecordId: 'golden-1' },
-        { mode: 'partial', sourceRecordIdsToRestore: ['rec-1'], deleteGoldenRecord: true },
+        {
+          mode: 'partial',
+          sourceRecordIdsToRestore: ['rec-1'],
+          deleteGoldenRecord: true,
+        }
       )
 
       expect(result.goldenRecordDeleted).toBe(true)
@@ -475,7 +513,9 @@ describe('UnmergeExecutor', () => {
     it('returns false when source records missing from archive', async () => {
       const executor = createExecutor()
 
-      await provenanceStore.save(createProvenance('golden-1', ['rec-1', 'rec-2']))
+      await provenanceStore.save(
+        createProvenance('golden-1', ['rec-1', 'rec-2'])
+      )
       // No archived records
 
       const result = await executor.canUnmerge('golden-1')
@@ -557,7 +597,9 @@ describe('UnmergeExecutor', () => {
       })
 
       const provenance = await provenanceStore.get('golden-1')
-      expect(provenance?.unmergeReason).toBe('Customer requested separation of records')
+      expect(provenance?.unmergeReason).toBe(
+        'Customer requested separation of records'
+      )
     })
   })
 
@@ -594,7 +636,7 @@ describe('UnmergeExecutor', () => {
             firstName: `First${i}`,
             lastName: `Last${i}`,
             email: `user${i}@example.com`,
-          }),
+          })
         )
       }
 
@@ -792,7 +834,7 @@ describe('performance', () => {
           firstName: `First${i}`,
           lastName: `Last${i}`,
           email: `user${i}@example.com`,
-        }),
+        })
       )
     }
 

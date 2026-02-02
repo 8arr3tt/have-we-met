@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { DrizzleAdapter, drizzleAdapter } from '../../../src/adapters/drizzle'
-import { QueryError, TransactionError, NotFoundError } from '../../../src/adapters/adapter-error'
+import {
+  QueryError,
+  TransactionError,
+  NotFoundError,
+} from '../../../src/adapters/adapter-error'
 import type { AdapterConfig } from '../../../src/adapters/types'
 
 type TestRecord = {
@@ -66,20 +70,21 @@ const createMockTable = () => ({
   age: { name: 'age' },
 })
 
-const createMockOperators = () => ({
-  eq: vi.fn((col, val) => ({ type: 'eq', col, val })),
-  ne: vi.fn((col, val) => ({ type: 'ne', col, val })),
-  gt: vi.fn((col, val) => ({ type: 'gt', col, val })),
-  gte: vi.fn((col, val) => ({ type: 'gte', col, val })),
-  lt: vi.fn((col, val) => ({ type: 'lt', col, val })),
-  lte: vi.fn((col, val) => ({ type: 'lte', col, val })),
-  inArray: vi.fn((col, vals) => ({ type: 'in', col, vals })),
-  like: vi.fn((col, pattern) => ({ type: 'like', col, pattern })),
-  and: vi.fn((...conditions) => ({ type: 'and', conditions })),
-  asc: vi.fn((col) => ({ type: 'asc', col })),
-  desc: vi.fn((col) => ({ type: 'desc', col })),
-  count: vi.fn(() => ({ type: 'count' })),
-}) as any
+const createMockOperators = () =>
+  ({
+    eq: vi.fn((col, val) => ({ type: 'eq', col, val })),
+    ne: vi.fn((col, val) => ({ type: 'ne', col, val })),
+    gt: vi.fn((col, val) => ({ type: 'gt', col, val })),
+    gte: vi.fn((col, val) => ({ type: 'gte', col, val })),
+    lt: vi.fn((col, val) => ({ type: 'lt', col, val })),
+    lte: vi.fn((col, val) => ({ type: 'lte', col, val })),
+    inArray: vi.fn((col, vals) => ({ type: 'in', col, vals })),
+    like: vi.fn((col, pattern) => ({ type: 'like', col, pattern })),
+    and: vi.fn((...conditions) => ({ type: 'and', conditions })),
+    asc: vi.fn((col) => ({ type: 'asc', col })),
+    desc: vi.fn((col) => ({ type: 'desc', col })),
+    count: vi.fn(() => ({ type: 'count' })),
+  }) as any
 
 describe('DrizzleAdapter', () => {
   let mockDb: ReturnType<typeof createMockDrizzleDB>
@@ -107,15 +112,29 @@ describe('DrizzleAdapter', () => {
 
     it('throws error for missing column', async () => {
       const blockingKeys = new Map([['invalidField', 'value']])
-      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(QueryError)
+      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(
+        QueryError
+      )
     })
   })
 
   describe('findByBlockingKeys', () => {
     it('finds records by single blocking key', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
       mockDb._setMockQueryResult(mockRecords)
@@ -129,7 +148,13 @@ describe('DrizzleAdapter', () => {
 
     it('finds records by multiple blocking keys', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
 
       mockDb._setMockQueryResult(mockRecords)
@@ -159,7 +184,10 @@ describe('DrizzleAdapter', () => {
       mockDb._setMockQueryResult([])
 
       const blockingKeys = new Map([['lastName', 'Smith']])
-      const results = await adapter.findByBlockingKeys(blockingKeys, { limit: 10, offset: 5 })
+      const results = await adapter.findByBlockingKeys(blockingKeys, {
+        limit: 10,
+        offset: 5,
+      })
 
       expect(results).toEqual([])
     })
@@ -192,22 +220,39 @@ describe('DrizzleAdapter', () => {
       })
 
       const blockingKeys = new Map([['lastName', 'Smith']])
-      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(QueryError)
+      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(
+        QueryError
+      )
     })
   })
 
   describe('findByIds', () => {
     it('finds multiple records by ID', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Doe', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
       mockDb._setMockQueryResult(mockRecords)
 
       const results = await adapter.findByIds(['1', '2'])
 
-      expect(mockOperators.inArray).toHaveBeenCalledWith(mockTable.id, ['1', '2'])
+      expect(mockOperators.inArray).toHaveBeenCalledWith(mockTable.id, [
+        '1',
+        '2',
+      ])
       expect(results).toEqual(mockRecords)
     })
 
@@ -231,7 +276,13 @@ describe('DrizzleAdapter', () => {
   describe('findAll', () => {
     it('retrieves all records with default options', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
 
       mockDb._setMockQueryResult(mockRecords)
@@ -365,14 +416,23 @@ describe('DrizzleAdapter', () => {
       }
 
       const updateResult = mockDb.update(mockTable)
-      const setResult = updateResult.set({ email: 'john.smith@test.com', age: 31 })
+      const setResult = updateResult.set({
+        email: 'john.smith@test.com',
+        age: 31,
+      })
       const whereResult = setResult.where(mockOperators.eq(mockTable.id, '1'))
       whereResult.returning.mockResolvedValue([updatedRecord])
 
-      const result = await adapter.update('1', { email: 'john.smith@test.com', age: 31 })
+      const result = await adapter.update('1', {
+        email: 'john.smith@test.com',
+        age: 31,
+      })
 
       expect(mockOperators.eq).toHaveBeenCalledWith(mockTable.id, '1')
-      expect(updateResult.set).toHaveBeenCalledWith({ email: 'john.smith@test.com', age: 31 })
+      expect(updateResult.set).toHaveBeenCalledWith({
+        email: 'john.smith@test.com',
+        age: 31,
+      })
       expect(whereResult.returning).toHaveBeenCalled()
       expect(result).toEqual(updatedRecord)
     })
@@ -383,9 +443,9 @@ describe('DrizzleAdapter', () => {
       const whereResult = setResult.where(mockOperators.eq(mockTable.id, '999'))
       whereResult.returning.mockResolvedValue([])
 
-      await expect(adapter.update('999', { email: 'new@test.com' })).rejects.toThrow(
-        NotFoundError
-      )
+      await expect(
+        adapter.update('999', { email: 'new@test.com' })
+      ).rejects.toThrow(NotFoundError)
     })
 
     it('handles other database errors', async () => {
@@ -393,7 +453,9 @@ describe('DrizzleAdapter', () => {
         throw new Error('Constraint violation')
       })
 
-      await expect(adapter.update('1', { email: 'new@test.com' })).rejects.toThrow(QueryError)
+      await expect(
+        adapter.update('1', { email: 'new@test.com' })
+      ).rejects.toThrow(QueryError)
     })
   })
 
@@ -514,8 +576,20 @@ describe('DrizzleAdapter', () => {
   describe('batchInsert', () => {
     it('inserts multiple records efficiently', async () => {
       const records = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
       const insertResult = mockDb.insert(mockTable)
@@ -539,7 +613,13 @@ describe('DrizzleAdapter', () => {
       })
 
       const records = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
 
       await expect(adapter.batchInsert(records)).rejects.toThrow(QueryError)
@@ -640,7 +720,10 @@ describe('DrizzleAdapter', () => {
       const blockingKeys = new Map([['firstName', 'John']])
       await adapterWithMapping.findByBlockingKeys(blockingKeys)
 
-      expect(mockOperators.eq).toHaveBeenCalledWith(tableWithMapping.first_name, 'John')
+      expect(mockOperators.eq).toHaveBeenCalledWith(
+        tableWithMapping.first_name,
+        'John'
+      )
     })
   })
 
@@ -675,7 +758,10 @@ describe('DrizzleAdapter', () => {
 
       await adapter.count({ age: { operator: 'in', value: [25, 30, 35] } })
 
-      expect(mockOperators.inArray).toHaveBeenCalledWith(mockTable.age, [25, 30, 35])
+      expect(mockOperators.inArray).toHaveBeenCalledWith(
+        mockTable.age,
+        [25, 30, 35]
+      )
     })
 
     it('handles LIKE operator', async () => {
@@ -683,12 +769,17 @@ describe('DrizzleAdapter', () => {
 
       await adapter.count({ email: { operator: 'like', value: '@test.com' } })
 
-      expect(mockOperators.like).toHaveBeenCalledWith(mockTable.email, '@test.com')
+      expect(mockOperators.like).toHaveBeenCalledWith(
+        mockTable.email,
+        '@test.com'
+      )
     })
 
     it('throws error for IN operator with non-array value', async () => {
       const blockingKeys = new Map([['age', { operator: 'in', value: 30 }]])
-      await expect(adapter.findByBlockingKeys(blockingKeys as any)).rejects.toThrow(QueryError)
+      await expect(
+        adapter.findByBlockingKeys(blockingKeys as any)
+      ).rejects.toThrow(QueryError)
     })
   })
 

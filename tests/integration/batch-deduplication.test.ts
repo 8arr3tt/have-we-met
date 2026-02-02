@@ -23,8 +23,14 @@ describe('Integration: Batch Deduplication', () => {
       matching: {
         fields: new Map([
           ['email', { strategy: 'exact', weight: 20 }],
-          ['firstName', { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 }],
-          ['lastName', { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 }],
+          [
+            'firstName',
+            { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
+          ],
+          [
+            'lastName',
+            { strategy: 'jaro-winkler', weight: 10, threshold: 0.85 },
+          ],
           ['phone', { strategy: 'exact', weight: 15 }],
         ]),
         thresholds: { noMatch: 20, definiteMatch: 45 },
@@ -54,11 +60,40 @@ describe('Integration: Batch Deduplication', () => {
     it('finds all duplicates in dataset', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 3, firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com', phone: '555-0200' },
-        { id: 4, firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com', phone: '555-0200' },
-        { id: 5, firstName: 'Bob', lastName: 'Johnson', email: 'bob@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 3,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+          phone: '555-0200',
+        },
+        {
+          id: 4,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane.smith@example.com',
+          phone: '555-0200',
+        },
+        {
+          id: 5,
+          firstName: 'Bob',
+          lastName: 'Johnson',
+          email: 'bob@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -68,7 +103,9 @@ describe('Integration: Batch Deduplication', () => {
       expect(result.stats.definiteMatchesFound).toBeGreaterThan(0)
 
       const johnDoeResults = result.results.filter(
-        (r) => (r.record as TestPerson).firstName === 'John' && (r.record as TestPerson).lastName === 'Doe'
+        (r) =>
+          (r.record as TestPerson).firstName === 'John' &&
+          (r.record as TestPerson).lastName === 'Doe'
       )
       expect(johnDoeResults.length).toBe(2)
       johnDoeResults.forEach((dedupResult) => {
@@ -80,9 +117,24 @@ describe('Integration: Batch Deduplication', () => {
     it('handles dataset with no duplicates', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
-        { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' },
-        { id: 3, firstName: 'Bob', lastName: 'Johnson', email: 'bob@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+        },
+        {
+          id: 2,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+        },
+        {
+          id: 3,
+          firstName: 'Bob',
+          lastName: 'Johnson',
+          email: 'bob@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -95,9 +147,27 @@ describe('Integration: Batch Deduplication', () => {
     it('identifies potential matches separately from definite matches', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 3, firstName: 'John', lastName: 'Doe', email: 'different@example.com', phone: '555-0200' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 3,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'different@example.com',
+          phone: '555-0200',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -118,17 +188,58 @@ describe('Integration: Batch Deduplication', () => {
       const resolverWithBlocking = createResolver(true)
 
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@domainA.com' },
-        { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@domainA.com' },
-        { id: 3, firstName: 'Bob', lastName: 'Johnson', email: 'bob@domainB.com' },
-        { id: 4, firstName: 'Alice', lastName: 'Williams', email: 'alice@domainB.com' },
-        { id: 5, firstName: 'Charlie', lastName: 'Brown', email: 'charlie@domainC.com' },
-        { id: 6, firstName: 'David', lastName: 'Lee', email: 'david@domainC.com' },
-        { id: 7, firstName: 'Emma', lastName: 'Wilson', email: 'emma@domainD.com' },
-        { id: 8, firstName: 'Frank', lastName: 'Moore', email: 'frank@domainD.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@domainA.com',
+        },
+        {
+          id: 2,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@domainA.com',
+        },
+        {
+          id: 3,
+          firstName: 'Bob',
+          lastName: 'Johnson',
+          email: 'bob@domainB.com',
+        },
+        {
+          id: 4,
+          firstName: 'Alice',
+          lastName: 'Williams',
+          email: 'alice@domainB.com',
+        },
+        {
+          id: 5,
+          firstName: 'Charlie',
+          lastName: 'Brown',
+          email: 'charlie@domainC.com',
+        },
+        {
+          id: 6,
+          firstName: 'David',
+          lastName: 'Lee',
+          email: 'david@domainC.com',
+        },
+        {
+          id: 7,
+          firstName: 'Emma',
+          lastName: 'Wilson',
+          email: 'emma@domainD.com',
+        },
+        {
+          id: 8,
+          firstName: 'Frank',
+          lastName: 'Moore',
+          email: 'frank@domainD.com',
+        },
       ]
 
-      const resultWithoutBlocking = resolverWithoutBlocking.deduplicateBatch(records)
+      const resultWithoutBlocking =
+        resolverWithoutBlocking.deduplicateBatch(records)
       const resultWithBlocking = resolverWithBlocking.deduplicateBatch(records)
 
       expect(resultWithoutBlocking.stats.comparisonsMade).toBe(28)
@@ -141,15 +252,30 @@ describe('Integration: Batch Deduplication', () => {
     it('still finds matches within same block', () => {
       const resolver = createResolver(true)
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john1@example.com' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john2@example.com' },
-        { id: 3, firstName: 'Bob', lastName: 'Smith', email: 'bob@different.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john1@example.com',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john2@example.com',
+        },
+        {
+          id: 3,
+          firstName: 'Bob',
+          lastName: 'Smith',
+          email: 'bob@different.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
 
-      const exampleDomainResults = result.results.filter(
-        (r) => (r.record as TestPerson).email?.includes('@example.com')
+      const exampleDomainResults = result.results.filter((r) =>
+        (r.record as TestPerson).email?.includes('@example.com')
       )
       expect(exampleDomainResults.length).toBeGreaterThan(0)
     })
@@ -159,13 +285,35 @@ describe('Integration: Batch Deduplication', () => {
     it('respects maxPairsPerRecord limit', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { id: 3, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { id: 4, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+        {
+          id: 3,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+        {
+          id: 4,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
       ]
 
-      const result = resolver.deduplicateBatch(records, { maxPairsPerRecord: 2 })
+      const result = resolver.deduplicateBatch(records, {
+        maxPairsPerRecord: 2,
+      })
 
       result.results.forEach((dedupResult) => {
         expect(dedupResult.matches.length).toBeLessThanOrEqual(2)
@@ -176,9 +324,26 @@ describe('Integration: Batch Deduplication', () => {
     it('respects minScore threshold', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 3, firstName: 'John', lastName: 'Doe', email: 'different@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 3,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'different@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records, { minScore: 50 })
@@ -193,13 +358,32 @@ describe('Integration: Batch Deduplication', () => {
     it('includes records with no matches when requested', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
-        { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' },
-        { id: 3, firstName: 'Bob', lastName: 'Johnson', email: 'bob@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+        },
+        {
+          id: 2,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+        },
+        {
+          id: 3,
+          firstName: 'Bob',
+          lastName: 'Johnson',
+          email: 'bob@example.com',
+        },
       ]
 
-      const resultWithNoMatches = resolver.deduplicateBatch(records, { includeNoMatches: true })
-      const resultWithoutNoMatches = resolver.deduplicateBatch(records, { includeNoMatches: false })
+      const resultWithNoMatches = resolver.deduplicateBatch(records, {
+        includeNoMatches: true,
+      })
+      const resultWithoutNoMatches = resolver.deduplicateBatch(records, {
+        includeNoMatches: false,
+      })
 
       expect(resultWithNoMatches.results.length).toBe(3)
       expect(resultWithoutNoMatches.results.length).toBe(0)
@@ -210,8 +394,18 @@ describe('Integration: Batch Deduplication', () => {
     it('provides complete deduplication result for each record', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -236,18 +430,35 @@ describe('Integration: Batch Deduplication', () => {
     it('sorts matches by score for each record', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 3, firstName: 'John', lastName: 'Doe', email: 'different@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 3,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'different@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
 
       result.results.forEach((dedupResult) => {
         for (let i = 1; i < dedupResult.matches.length; i++) {
-          expect(dedupResult.matches[i - 1].score.totalScore).toBeGreaterThanOrEqual(
-            dedupResult.matches[i].score.totalScore
-          )
+          expect(
+            dedupResult.matches[i - 1].score.totalScore
+          ).toBeGreaterThanOrEqual(dedupResult.matches[i].score.totalScore)
         }
       })
     })
@@ -257,9 +468,24 @@ describe('Integration: Batch Deduplication', () => {
     it('provides comprehensive statistics', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-        { id: 3, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+        {
+          id: 3,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -280,9 +506,26 @@ describe('Integration: Batch Deduplication', () => {
     it('accurately counts match types', () => {
       const resolver = createResolver()
       const records: TestPerson[] = [
-        { id: 1, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 2, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com', phone: '555-0100' },
-        { id: 3, firstName: 'John', lastName: 'Doe', email: 'different@example.com' },
+        {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 2,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-0100',
+        },
+        {
+          id: 3,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'different@example.com',
+        },
       ]
 
       const result = resolver.deduplicateBatch(records)
@@ -307,7 +550,12 @@ describe('Integration: Batch Deduplication', () => {
         })
       }
 
-      records.push({ id: 100, firstName: 'Person0', lastName: 'Last0', email: 'person0@example.com' })
+      records.push({
+        id: 100,
+        firstName: 'Person0',
+        lastName: 'Last0',
+        email: 'person0@example.com',
+      })
 
       const startTime = Date.now()
       const result = resolver.deduplicateBatch(records)

@@ -1,4 +1,10 @@
-export type { BlockKey, BlockSet, BlockingStats, BlockingStrategy, BlockingConfig } from './types'
+export type {
+  BlockKey,
+  BlockSet,
+  BlockingStats,
+  BlockingStrategy,
+  BlockingConfig,
+} from './types'
 export { BlockGenerator } from './block-generator'
 export type { BlockTransform, FirstNOptions } from './transforms'
 export {
@@ -23,4 +29,7 @@ export type {
   SortedNeighbourhoodConfig,
 } from './strategies/sorted-neighbourhood'
 export { CompositeBlockingStrategy } from './strategies/composite-blocking'
-export type { CompositeMode, CompositeBlockingConfig } from './strategies/composite-blocking'
+export type {
+  CompositeMode,
+  CompositeBlockingConfig,
+} from './strategies/composite-blocking'

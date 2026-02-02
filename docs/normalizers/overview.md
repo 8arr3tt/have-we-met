@@ -33,16 +33,13 @@ When you configure a normalizer for a field, the matching engine automatically a
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('email')
+  .schema((s) =>
+    s
+      .field('email')
       .type('email')
       .normalizer('email', { removePlusAddressing: true })
   )
-  .matching(m => m
-    .field('email')
-      .strategy('exact')
-      .weight(100)
-  )
+  .matching((m) => m.field('email').strategy('exact').weight(100))
   .build()
 
 // Input: 'John+work@Example.COM'
@@ -82,16 +79,17 @@ Configure normalizers in your schema definition:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('firstName')
+  .schema((s) =>
+    s
+      .field('firstName')
       .type('name')
       .normalizer('name', { preserveCase: false, outputFormat: 'full' })
 
-    .field('email')
+      .field('email')
       .type('email')
       .normalizer('email', { removePlusAddressing: true })
 
-    .field('phone')
+      .field('phone')
       .type('phone')
       .normalizer('phone', { defaultCountry: 'US' })
   )
@@ -164,11 +162,13 @@ Normalizers add processing overhead before comparison:
 ### Optimization Strategies
 
 **For real-time matching:**
+
 - Normalizers add < 5ms latency (acceptable for most use cases)
 - Use simpler normalizers when possible
 - Consider pre-computing normalized values
 
 **For batch processing:**
+
 - Normalization overhead is amortized across many comparisons
 - Blocking strategies (Phase 4) reduce total comparison count
 - Parallel processing can offset normalization cost
@@ -194,6 +194,7 @@ const normalizedInput = {
 ### Common Use Cases
 
 **Customer Data Matching:**
+
 ```typescript
 .schema(s => s
   .field('firstName').type('name').normalizer('name')
@@ -204,6 +205,7 @@ const normalizedInput = {
 ```
 
 **Patient Record Matching:**
+
 ```typescript
 .schema(s => s
   .field('fullName').type('name').normalizer('name')
@@ -214,6 +216,7 @@ const normalizedInput = {
 ```
 
 **Contact Deduplication:**
+
 ```typescript
 .schema(s => s
   .field('name').type('name').normalizer('name')
@@ -227,33 +230,41 @@ const normalizedInput = {
 
 ### Recommended Pairings
 
-| Field Type | Normalizer | Comparator | Rationale |
-|------------|------------|------------|-----------|
-| Email | `email` | `exact` | Normalized emails should match exactly |
-| Phone | `phone` | `exact` | E.164 format enables exact matching |
-| Name | `name` | `jaro-winkler` | Handles typos after normalization |
-| Address | `address` | `levenshtein` | Handles abbreviation variations |
-| Date | `date` | `exact` | ISO format enables exact matching |
-| ID/Code | `alphanumericOnly` | `exact` | Removes noise for exact match |
+| Field Type | Normalizer         | Comparator     | Rationale                              |
+| ---------- | ------------------ | -------------- | -------------------------------------- |
+| Email      | `email`            | `exact`        | Normalized emails should match exactly |
+| Phone      | `phone`            | `exact`        | E.164 format enables exact matching    |
+| Name       | `name`             | `jaro-winkler` | Handles typos after normalization      |
+| Address    | `address`          | `levenshtein`  | Handles abbreviation variations        |
+| Date       | `date`             | `exact`        | ISO format enables exact matching      |
+| ID/Code    | `alphanumericOnly` | `exact`        | Removes noise for exact match          |
 
 ### Example Configuration
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('email').type('email').normalizer('email')
-    .field('firstName').type('name').normalizer('name')
-    .field('phone').type('phone').normalizer('phone', { defaultCountry: 'US' })
+  .schema((s) =>
+    s
+      .field('email')
+      .type('email')
+      .normalizer('email')
+      .field('firstName')
+      .type('name')
+      .normalizer('name')
+      .field('phone')
+      .type('phone')
+      .normalizer('phone', { defaultCountry: 'US' })
   )
-  .matching(m => m
-    .field('email')
+  .matching((m) =>
+    m
+      .field('email')
       .strategy('exact')
       .weight(40)
-    .field('firstName')
+      .field('firstName')
       .strategy('jaro-winkler')
       .jaroWinklerOptions({ prefixScale: 0.1 })
       .weight(30)
-    .field('phone')
+      .field('phone')
       .strategy('exact')
       .weight(30)
   )
@@ -273,9 +284,7 @@ Normalizers are designed to be fault-tolerant:
 ```typescript
 // If email normalizer fails, original value is used
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('email').type('email').normalizer('email')
-  )
+  .schema((s) => s.field('email').type('email').normalizer('email'))
   .build()
 
 // Input: 'invalid-email' (no @)

@@ -333,19 +333,25 @@ describe('normalizeDate', () => {
     })
 
     it('should impute missing values when option is set', () => {
-      expect(normalizeDate('2024-01', { partialDates: 'impute' })).toBe('2024-01-01')
-      expect(normalizeDate('2024', { partialDates: 'impute' })).toBe('2024-01-01')
+      expect(normalizeDate('2024-01', { partialDates: 'impute' })).toBe(
+        '2024-01-01'
+      )
+      expect(normalizeDate('2024', { partialDates: 'impute' })).toBe(
+        '2024-01-01'
+      )
     })
 
     it('should use custom impute value', () => {
-      expect(normalizeDate('2024-03', { partialDates: 'impute', imputeValue: 15 })).toBe(
-        '2024-03-15'
-      )
+      expect(
+        normalizeDate('2024-03', { partialDates: 'impute', imputeValue: 15 })
+      ).toBe('2024-03-15')
     })
 
     it('should validate after imputation', () => {
       // February 31 doesn't exist even after imputation
-      expect(normalizeDate('2024-02', { partialDates: 'impute', imputeValue: 31 })).toBeNull()
+      expect(
+        normalizeDate('2024-02', { partialDates: 'impute', imputeValue: 31 })
+      ).toBeNull()
     })
   })
 
@@ -389,7 +395,9 @@ describe('normalizeDate', () => {
 
     it('should reject invalid months', () => {
       expect(normalizeDate('2024-13-01')).toBeNull()
-      expect(normalizeDate('01/32/2024', { inputFormat: 'MM/DD/YYYY' })).toBeNull() // Invalid day
+      expect(
+        normalizeDate('01/32/2024', { inputFormat: 'MM/DD/YYYY' })
+      ).toBeNull() // Invalid day
       expect(normalizeDate('2024-00-15')).toBeNull() // Month 0
     })
 
@@ -436,11 +444,15 @@ describe('normalizeDate', () => {
 
   describe('Input format hints', () => {
     it('should respect MM/DD/YYYY hint for ambiguous dates', () => {
-      expect(normalizeDate('03/04/2024', { inputFormat: 'MM/DD/YYYY' })).toBe('2024-03-04')
+      expect(normalizeDate('03/04/2024', { inputFormat: 'MM/DD/YYYY' })).toBe(
+        '2024-03-04'
+      )
     })
 
     it('should respect DD/MM/YYYY hint for ambiguous dates', () => {
-      expect(normalizeDate('03/04/2024', { inputFormat: 'DD/MM/YYYY' })).toBe('2024-04-03')
+      expect(normalizeDate('03/04/2024', { inputFormat: 'DD/MM/YYYY' })).toBe(
+        '2024-04-03'
+      )
     })
   })
 

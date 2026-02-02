@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { preferFirst, preferLast, preferNonNull } from '../../../../src/merge/strategies/basic-strategies.js'
+import {
+  preferFirst,
+  preferLast,
+  preferNonNull,
+} from '../../../../src/merge/strategies/basic-strategies.js'
 import type { SourceRecord } from '../../../../src/merge/types.js'
 
 const createRecord = (data: Record<string, unknown>): SourceRecord => ({
@@ -21,7 +25,9 @@ describe('Basic Strategies', () => {
 
     it('skips undefined values', () => {
       const records = createRecords(3)
-      expect(preferFirst([undefined, 'second', 'third'], records)).toBe('second')
+      expect(preferFirst([undefined, 'second', 'third'], records)).toBe(
+        'second'
+      )
     })
 
     it('skips null values by default', () => {
@@ -31,7 +37,9 @@ describe('Basic Strategies', () => {
 
     it('handles all undefined values', () => {
       const records = createRecords(3)
-      expect(preferFirst([undefined, undefined, undefined], records)).toBeUndefined()
+      expect(
+        preferFirst([undefined, undefined, undefined], records)
+      ).toBeUndefined()
     })
 
     it('handles empty array', () => {
@@ -47,14 +55,18 @@ describe('Basic Strategies', () => {
 
     it('respects nullHandling: include', () => {
       const records = createRecords(3)
-      expect(preferFirst([null, 'second'], records, { nullHandling: 'include' })).toBe(null)
+      expect(
+        preferFirst([null, 'second'], records, { nullHandling: 'include' })
+      ).toBe(null)
     })
 
     it('respects nullHandling: preferNull', () => {
       const records = createRecords(3)
-      expect(preferFirst(['first', null, 'third'], records, { nullHandling: 'preferNull' })).toBe(
-        null,
-      )
+      expect(
+        preferFirst(['first', null, 'third'], records, {
+          nullHandling: 'preferNull',
+        })
+      ).toBe(null)
     })
 
     it('handles objects and arrays', () => {
@@ -89,7 +101,9 @@ describe('Basic Strategies', () => {
 
     it('handles all undefined values', () => {
       const records = createRecords(3)
-      expect(preferLast([undefined, undefined, undefined], records)).toBeUndefined()
+      expect(
+        preferLast([undefined, undefined, undefined], records)
+      ).toBeUndefined()
     })
 
     it('handles empty array', () => {
@@ -103,12 +117,16 @@ describe('Basic Strategies', () => {
 
     it('respects nullHandling: include', () => {
       const records = createRecords(3)
-      expect(preferLast(['first', null], records, { nullHandling: 'include' })).toBe(null)
+      expect(
+        preferLast(['first', null], records, { nullHandling: 'include' })
+      ).toBe(null)
     })
 
     it('handles mixed values', () => {
       const records = createRecords(5)
-      expect(preferLast([null, undefined, 'middle', undefined, null], records)).toBe('middle')
+      expect(
+        preferLast([null, undefined, 'middle', undefined, null], records)
+      ).toBe('middle')
     })
   })
 
@@ -135,7 +153,9 @@ describe('Basic Strategies', () => {
 
     it('skips undefined values', () => {
       const records = createRecords(3)
-      expect(preferNonNull([undefined, 'valid', 'other'], records)).toBe('valid')
+      expect(preferNonNull([undefined, 'valid', 'other'], records)).toBe(
+        'valid'
+      )
     })
 
     it('handles all null values', () => {
@@ -172,7 +192,9 @@ describe('Basic Strategies', () => {
 
     it('respects nullHandling: include (returns first non-undefined)', () => {
       const records = createRecords(3)
-      const result = preferNonNull([undefined, null, 'value'], records, { nullHandling: 'include' })
+      const result = preferNonNull([undefined, null, 'value'], records, {
+        nullHandling: 'include',
+      })
       // Note: preferNonNull still skips null, empty string even with include
       // unless specifically enabled - it falls back to looking for truthy values
       expect(result).toBe('value')
@@ -180,7 +202,9 @@ describe('Basic Strategies', () => {
 
     it('handles mixed empty values', () => {
       const records = createRecords(5)
-      expect(preferNonNull([null, undefined, '', '   ', 'valid'], records)).toBe('valid')
+      expect(
+        preferNonNull([null, undefined, '', '   ', 'valid'], records)
+      ).toBe('valid')
     })
   })
 })

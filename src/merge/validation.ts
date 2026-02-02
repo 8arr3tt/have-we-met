@@ -9,10 +9,7 @@ import type {
   SourceRecord,
   MergeStrategy,
 } from './types.js'
-import {
-  MERGE_STRATEGIES,
-  NUMERIC_STRATEGIES,
-} from './types.js'
+import { MERGE_STRATEGIES, NUMERIC_STRATEGIES } from './types.js'
 import {
   MergeValidationError,
   InsufficientSourceRecordsError,
@@ -35,13 +32,16 @@ const NUMERIC_FIELD_TYPES: FieldType[] = ['number']
 export function validateMergeConfig(config: MergeConfig): void {
   // Validate default strategy
   if (!config.defaultStrategy) {
-    throw new MergeValidationError('defaultStrategy', 'defaultStrategy is required')
+    throw new MergeValidationError(
+      'defaultStrategy',
+      'defaultStrategy is required'
+    )
   }
 
   if (!MERGE_STRATEGIES.includes(config.defaultStrategy)) {
     throw new MergeValidationError(
       'defaultStrategy',
-      `invalid strategy '${config.defaultStrategy}', must be one of: ${MERGE_STRATEGIES.join(', ')}`,
+      `invalid strategy '${config.defaultStrategy}', must be one of: ${MERGE_STRATEGIES.join(', ')}`
     )
   }
 
@@ -49,7 +49,7 @@ export function validateMergeConfig(config: MergeConfig): void {
   if (!Array.isArray(config.fieldStrategies)) {
     throw new MergeValidationError(
       'fieldStrategies',
-      'fieldStrategies must be an array',
+      'fieldStrategies must be an array'
     )
   }
 
@@ -60,11 +60,13 @@ export function validateMergeConfig(config: MergeConfig): void {
 
   // Check for duplicate field paths
   const fieldPaths = config.fieldStrategies.map((fs) => fs.field)
-  const duplicates = fieldPaths.filter((path, index) => fieldPaths.indexOf(path) !== index)
+  const duplicates = fieldPaths.filter(
+    (path, index) => fieldPaths.indexOf(path) !== index
+  )
   if (duplicates.length > 0) {
     throw new MergeValidationError(
       'fieldStrategies',
-      `duplicate field paths: ${[...new Set(duplicates)].join(', ')}`,
+      `duplicate field paths: ${[...new Set(duplicates)].join(', ')}`
     )
   }
 
@@ -73,7 +75,7 @@ export function validateMergeConfig(config: MergeConfig): void {
   if (!validConflictModes.includes(config.conflictResolution)) {
     throw new MergeValidationError(
       'conflictResolution',
-      `invalid mode '${config.conflictResolution}', must be one of: ${validConflictModes.join(', ')}`,
+      `invalid mode '${config.conflictResolution}', must be one of: ${validConflictModes.join(', ')}`
     )
   }
 }
@@ -86,19 +88,24 @@ export function validateMergeConfig(config: MergeConfig): void {
 export function validateFieldStrategy(fieldStrategy: FieldMergeConfig): void {
   // Validate field path
   if (!fieldStrategy.field || typeof fieldStrategy.field !== 'string') {
-    throw new MergeValidationError('field', 'field path must be a non-empty string')
+    throw new MergeValidationError(
+      'field',
+      'field path must be a non-empty string'
+    )
   }
 
   // Validate strategy is provided and valid
   if (!fieldStrategy.strategy) {
     throw new MergeValidationError(
       `fieldStrategies.${fieldStrategy.field}.strategy`,
-      'strategy is required',
+      'strategy is required'
     )
   }
 
   if (!MERGE_STRATEGIES.includes(fieldStrategy.strategy)) {
-    throw new InvalidStrategyError(fieldStrategy.strategy, { field: fieldStrategy.field })
+    throw new InvalidStrategyError(fieldStrategy.strategy, {
+      field: fieldStrategy.field,
+    })
   }
 
   // Validate custom strategy has custom function
@@ -107,16 +114,23 @@ export function validateFieldStrategy(fieldStrategy: FieldMergeConfig): void {
   }
 
   // Validate custom function is actually a function
-  if (fieldStrategy.customMerge && typeof fieldStrategy.customMerge !== 'function') {
+  if (
+    fieldStrategy.customMerge &&
+    typeof fieldStrategy.customMerge !== 'function'
+  ) {
     throw new MergeValidationError(
       `fieldStrategies.${fieldStrategy.field}.customMerge`,
-      'customMerge must be a function',
+      'customMerge must be a function'
     )
   }
 
   // Validate options if provided
   if (fieldStrategy.options) {
-    validateFieldMergeOptions(fieldStrategy.field, fieldStrategy.strategy, fieldStrategy.options)
+    validateFieldMergeOptions(
+      fieldStrategy.field,
+      fieldStrategy.strategy,
+      fieldStrategy.options
+    )
   }
 }
 
@@ -130,23 +144,29 @@ export function validateFieldStrategy(fieldStrategy: FieldMergeConfig): void {
 function validateFieldMergeOptions(
   field: string,
   _strategy: MergeStrategy,
-  options: FieldMergeConfig['options'],
+  options: FieldMergeConfig['options']
 ): void {
   if (!options) return
 
   // Validate separator for concatenate strategy
-  if (options.separator !== undefined && typeof options.separator !== 'string') {
+  if (
+    options.separator !== undefined &&
+    typeof options.separator !== 'string'
+  ) {
     throw new MergeValidationError(
       `fieldStrategies.${field}.options.separator`,
-      'separator must be a string',
+      'separator must be a string'
     )
   }
 
   // Validate dateField for temporal strategies
-  if (options.dateField !== undefined && typeof options.dateField !== 'string') {
+  if (
+    options.dateField !== undefined &&
+    typeof options.dateField !== 'string'
+  ) {
     throw new MergeValidationError(
       `fieldStrategies.${field}.options.dateField`,
-      'dateField must be a string',
+      'dateField must be a string'
     )
   }
 
@@ -156,16 +176,19 @@ function validateFieldMergeOptions(
     if (!validNullHandling.includes(options.nullHandling)) {
       throw new MergeValidationError(
         `fieldStrategies.${field}.options.nullHandling`,
-        `invalid value '${options.nullHandling}', must be one of: ${validNullHandling.join(', ')}`,
+        `invalid value '${options.nullHandling}', must be one of: ${validNullHandling.join(', ')}`
       )
     }
   }
 
   // Validate removeDuplicates
-  if (options.removeDuplicates !== undefined && typeof options.removeDuplicates !== 'boolean') {
+  if (
+    options.removeDuplicates !== undefined &&
+    typeof options.removeDuplicates !== 'boolean'
+  ) {
     throw new MergeValidationError(
       `fieldStrategies.${field}.options.removeDuplicates`,
-      'removeDuplicates must be a boolean',
+      'removeDuplicates must be a boolean'
     )
   }
 }
@@ -176,7 +199,7 @@ function validateFieldMergeOptions(
  * @throws {InsufficientSourceRecordsError | MergeValidationError} If validation fails
  */
 export function validateSourceRecords<T extends Record<string, unknown>>(
-  sourceRecords: SourceRecord<T>[],
+  sourceRecords: SourceRecord<T>[]
 ): void {
   // Must have at least 2 records to merge
   if (!sourceRecords || sourceRecords.length < 2) {
@@ -191,7 +214,7 @@ export function validateSourceRecords<T extends Record<string, unknown>>(
       throw new MergeValidationError(
         `sourceRecords[${i}].id`,
         'id must be a non-empty string',
-        { record },
+        { record }
       )
     }
 
@@ -199,7 +222,7 @@ export function validateSourceRecords<T extends Record<string, unknown>>(
       throw new MergeValidationError(
         `sourceRecords[${i}].record`,
         'record must be an object',
-        { record },
+        { record }
       )
     }
 
@@ -207,7 +230,7 @@ export function validateSourceRecords<T extends Record<string, unknown>>(
       throw new MergeValidationError(
         `sourceRecords[${i}].createdAt`,
         'createdAt must be a Date',
-        { record },
+        { record }
       )
     }
 
@@ -215,7 +238,7 @@ export function validateSourceRecords<T extends Record<string, unknown>>(
       throw new MergeValidationError(
         `sourceRecords[${i}].updatedAt`,
         'updatedAt must be a Date',
-        { record },
+        { record }
       )
     }
   }
@@ -226,7 +249,7 @@ export function validateSourceRecords<T extends Record<string, unknown>>(
   if (duplicateIds.length > 0) {
     throw new MergeValidationError(
       'sourceRecords',
-      `duplicate record IDs: ${[...new Set(duplicateIds)].join(', ')}`,
+      `duplicate record IDs: ${[...new Set(duplicateIds)].join(', ')}`
     )
   }
 }
@@ -239,7 +262,7 @@ export function validateSourceRecords<T extends Record<string, unknown>>(
  */
 export function validateFieldPathsAgainstSchema<T extends object>(
   fieldStrategies: FieldMergeConfig[],
-  schema: SchemaDefinition<T>,
+  schema: SchemaDefinition<T>
 ): void {
   const schemaFields = Object.keys(schema)
 
@@ -250,7 +273,7 @@ export function validateFieldPathsAgainstSchema<T extends object>(
     if (!schemaFields.includes(rootField)) {
       throw new MergeValidationError(
         `fieldStrategies.${fieldStrategy.field}`,
-        `field '${rootField}' does not exist in schema. Available fields: ${schemaFields.join(', ')}`,
+        `field '${rootField}' does not exist in schema. Available fields: ${schemaFields.join(', ')}`
       )
     }
   }
@@ -264,7 +287,7 @@ export function validateFieldPathsAgainstSchema<T extends object>(
  */
 export function validateStrategyFieldTypeCompatibility<T extends object>(
   fieldStrategies: FieldMergeConfig[],
-  schema: SchemaDefinition<T>,
+  schema: SchemaDefinition<T>
 ): void {
   for (const fieldStrategy of fieldStrategies) {
     const rootField = fieldStrategy.field.split('.')[0]
@@ -279,7 +302,7 @@ export function validateStrategyFieldTypeCompatibility<T extends object>(
           fieldStrategy.strategy,
           fieldStrategy.field,
           'number',
-          fieldDef.type,
+          fieldDef.type
         )
       }
     }
@@ -296,7 +319,7 @@ export function validateStrategyFieldTypeCompatibility<T extends object>(
 export function validateMergeRequest<T extends Record<string, unknown>>(
   sourceRecords: SourceRecord<T>[],
   config: MergeConfig,
-  schema?: SchemaDefinition<T>,
+  schema?: SchemaDefinition<T>
 ): void {
   // Validate config
   validateMergeConfig(config)
@@ -338,7 +361,10 @@ export function isEmpty(value: unknown): boolean {
  * @param path - Dot-notation path (e.g., 'address.city')
  * @returns The value at the path, or undefined if not found
  */
-export function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+export function getNestedValue(
+  obj: Record<string, unknown>,
+  path: string
+): unknown {
   const parts = path.split('.')
   let current: unknown = obj
 
@@ -360,14 +386,18 @@ export function getNestedValue(obj: Record<string, unknown>, path: string): unkn
 export function setNestedValue(
   obj: Record<string, unknown>,
   path: string,
-  value: unknown,
+  value: unknown
 ): void {
   const parts = path.split('.')
   let current: Record<string, unknown> = obj
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i]
-    if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {
+    if (
+      !(part in current) ||
+      typeof current[part] !== 'object' ||
+      current[part] === null
+    ) {
       current[part] = {}
     }
     current = current[part] as Record<string, unknown>

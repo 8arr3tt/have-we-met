@@ -53,7 +53,9 @@ describe('InvalidStatusTransitionError', () => {
 
     expect(error).toBeInstanceOf(QueueError)
     expect(error).toBeInstanceOf(InvalidStatusTransitionError)
-    expect(error.message).toBe("Invalid status transition from 'confirmed' to 'pending'")
+    expect(error.message).toBe(
+      "Invalid status transition from 'confirmed' to 'pending'"
+    )
     expect(error.code).toBe('INVALID_STATUS_TRANSITION')
     expect(error.name).toBe('InvalidStatusTransitionError')
     expect(error.context?.from).toBe('confirmed')
@@ -64,7 +66,7 @@ describe('InvalidStatusTransitionError', () => {
     const error = new InvalidStatusTransitionError(
       'confirmed',
       'pending',
-      "'confirmed' is a final state",
+      "'confirmed' is a final state"
     )
 
     expect(error.message).toContain("'confirmed' is a final state")
@@ -78,7 +80,9 @@ describe('QueueOperationError', () => {
 
     expect(error).toBeInstanceOf(QueueError)
     expect(error).toBeInstanceOf(QueueOperationError)
-    expect(error.message).toBe("Queue operation 'add' failed: Database connection failed")
+    expect(error.message).toBe(
+      "Queue operation 'add' failed: Database connection failed"
+    )
     expect(error.code).toBe('QUEUE_OPERATION_FAILED')
     expect(error.name).toBe('QueueOperationError')
     expect(error.context?.operation).toBe('add')
@@ -86,7 +90,9 @@ describe('QueueOperationError', () => {
   })
 
   it('includes additional context when provided', () => {
-    const error = new QueueOperationError('confirm', 'Item not found', { id: 'queue-123' })
+    const error = new QueueOperationError('confirm', 'Item not found', {
+      id: 'queue-123',
+    })
 
     expect(error.context?.operation).toBe('confirm')
     expect(error.context?.reason).toBe('Item not found')
@@ -96,12 +102,15 @@ describe('QueueOperationError', () => {
 
 describe('QueueValidationError', () => {
   it('creates error with field and reason', () => {
-    const error = new QueueValidationError('candidateRecord', 'candidateRecord must not be empty')
+    const error = new QueueValidationError(
+      'candidateRecord',
+      'candidateRecord must not be empty'
+    )
 
     expect(error).toBeInstanceOf(QueueError)
     expect(error).toBeInstanceOf(QueueValidationError)
     expect(error.message).toBe(
-      "Queue validation failed for 'candidateRecord': candidateRecord must not be empty",
+      "Queue validation failed for 'candidateRecord': candidateRecord must not be empty"
     )
     expect(error.code).toBe('QUEUE_VALIDATION_ERROR')
     expect(error.name).toBe('QueueValidationError')
@@ -110,9 +119,13 @@ describe('QueueValidationError', () => {
   })
 
   it('includes additional context when provided', () => {
-    const error = new QueueValidationError('priority', 'priority must be a number', {
-      value: 'invalid',
-    })
+    const error = new QueueValidationError(
+      'priority',
+      'priority must be a number',
+      {
+        value: 'invalid',
+      }
+    )
 
     expect(error.context?.field).toBe('priority')
     expect(error.context?.reason).toBe('priority must be a number')

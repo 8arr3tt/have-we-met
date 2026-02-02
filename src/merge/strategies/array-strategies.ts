@@ -3,7 +3,11 @@
  * @module merge/strategies/array-strategies
  */
 
-import type { StrategyFunction, SourceRecord, FieldMergeOptions } from '../types.js'
+import type {
+  StrategyFunction,
+  SourceRecord,
+  FieldMergeOptions,
+} from '../types.js'
 
 /**
  * Normalizes a value to an array.
@@ -37,7 +41,8 @@ function areEqual(a: unknown, b: unknown): boolean {
     if (aKeys.length !== bKeys.length) return false
     for (const key of aKeys) {
       if (
-        (a as Record<string, unknown>)[key] !== (b as Record<string, unknown>)[key]
+        (a as Record<string, unknown>)[key] !==
+        (b as Record<string, unknown>)[key]
       ) {
         return false
       }
@@ -69,7 +74,7 @@ function areEqual(a: unknown, b: unknown): boolean {
 export const concatenate: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ): unknown[] => {
   if (!values || values.length === 0) return []
 
@@ -116,7 +121,7 @@ export const concatenate: StrategyFunction = (
 export const union: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): unknown[] => {
   if (!values || values.length === 0) return []
 

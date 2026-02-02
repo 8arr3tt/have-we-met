@@ -103,7 +103,7 @@ class MockPrismaClient {
     },
 
     create: async (options: { data: Record<string, unknown> }) => {
-      const id = options.data.id as string || String(this.nextId++)
+      const id = (options.data.id as string) || String(this.nextId++)
       const record = { ...options.data, id }
       this.records.set(id, record)
       return record
@@ -132,9 +132,12 @@ class MockPrismaClient {
       return { id }
     },
 
-    createMany: async (options: { data: Record<string, unknown>[]; skipDuplicates?: boolean }) => {
+    createMany: async (options: {
+      data: Record<string, unknown>[]
+      skipDuplicates?: boolean
+    }) => {
       for (const data of options.data) {
-        const id = data.id as string || String(this.nextId++)
+        const id = (data.id as string) || String(this.nextId++)
         const record = { ...data, id }
         this.records.set(id, record)
       }
@@ -142,7 +145,9 @@ class MockPrismaClient {
     },
   }
 
-  async $transaction<R>(callback: (tx: MockPrismaClient) => Promise<R>): Promise<R> {
+  async $transaction<R>(
+    callback: (tx: MockPrismaClient) => Promise<R>
+  ): Promise<R> {
     const txClient = new MockPrismaClient()
     txClient.records = new Map(this.records)
     txClient.nextId = this.nextId
@@ -164,7 +169,7 @@ class MockPrismaClient {
 
   seed(records: Record<string, unknown>[]) {
     for (const record of records) {
-      const id = record.id as string || String(this.nextId++)
+      const id = (record.id as string) || String(this.nextId++)
       this.records.set(id, { ...record, id })
     }
   }
@@ -180,12 +185,41 @@ describe('Integration: Prisma Adapter', () => {
 
   beforeEach(() => {
     prisma = new MockPrismaClient()
-    adapter = new PrismaAdapter<TestRecord>(prisma as unknown as Parameters<typeof PrismaAdapter<TestRecord>['prototype']['constructor']>[0], config)
+    adapter = new PrismaAdapter<TestRecord>(
+      prisma as unknown as Parameters<
+        (typeof PrismaAdapter<TestRecord>)['prototype']['constructor']
+      >[0],
+      config
+    )
     prisma.seed([
-      { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@example.com', dobYear: 1985 },
-      { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', dobYear: 1990 },
-      { id: '3', firstName: 'Bob', lastName: 'Jones', email: 'bob@example.com', dobYear: 1985 },
-      { id: '4', firstName: 'Alice', lastName: 'Brown', email: 'alice@example.com', dobYear: 1988 },
+      {
+        id: '1',
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john@example.com',
+        dobYear: 1985,
+      },
+      {
+        id: '2',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane@example.com',
+        dobYear: 1990,
+      },
+      {
+        id: '3',
+        firstName: 'Bob',
+        lastName: 'Jones',
+        email: 'bob@example.com',
+        dobYear: 1985,
+      },
+      {
+        id: '4',
+        firstName: 'Alice',
+        lastName: 'Brown',
+        email: 'alice@example.com',
+        dobYear: 1988,
+      },
     ])
   })
 
@@ -204,9 +238,7 @@ describe('Integration: Prisma Adapter', () => {
     })
 
     it('returns empty array when no matches found', async () => {
-      const blockingKeys = new Map([
-        ['lastName', 'Nonexistent'],
-      ])
+      const blockingKeys = new Map([['lastName', 'Nonexistent']])
 
       const results = await adapter.findByBlockingKeys(blockingKeys)
 
@@ -214,9 +246,7 @@ describe('Integration: Prisma Adapter', () => {
     })
 
     it('handles multiple blocking keys correctly', async () => {
-      const blockingKeys = new Map([
-        ['lastName', 'Smith'],
-      ])
+      const blockingKeys = new Map([['lastName', 'Smith']])
 
       const results = await adapter.findByBlockingKeys(blockingKeys)
 
@@ -246,9 +276,24 @@ describe('Integration: Prisma Adapter', () => {
   describe('batch deduplicates records efficiently', () => {
     it('batch inserts multiple records', async () => {
       const newRecords: TestRecord[] = [
-        { id: '10', firstName: 'Test1', lastName: 'User', email: 'test1@example.com' },
-        { id: '11', firstName: 'Test2', lastName: 'User', email: 'test2@example.com' },
-        { id: '12', firstName: 'Test3', lastName: 'User', email: 'test3@example.com' },
+        {
+          id: '10',
+          firstName: 'Test1',
+          lastName: 'User',
+          email: 'test1@example.com',
+        },
+        {
+          id: '11',
+          firstName: 'Test2',
+          lastName: 'User',
+          email: 'test2@example.com',
+        },
+        {
+          id: '12',
+          firstName: 'Test3',
+          lastName: 'User',
+          email: 'test3@example.com',
+        },
       ]
 
       const results = await adapter.batchInsert(newRecords)
@@ -320,7 +365,9 @@ describe('Integration: Prisma Adapter', () => {
   describe('handles connection errors gracefully', () => {
     it('throws QueryError on invalid model name', async () => {
       const badAdapter = new PrismaAdapter<TestRecord>(
-        prisma as unknown as Parameters<typeof PrismaAdapter<TestRecord>['prototype']['constructor']>[0],
+        prisma as unknown as Parameters<
+          (typeof PrismaAdapter<TestRecord>)['prototype']['constructor']
+        >[0],
         { tableName: 'nonexistent', primaryKey: 'id' }
       )
 
@@ -328,9 +375,9 @@ describe('Integration: Prisma Adapter', () => {
     })
 
     it('throws NotFoundError when updating non-existent record', async () => {
-      await expect(adapter.update('999', { email: 'test@example.com' })).rejects.toThrow(
-        'not found'
-      )
+      await expect(
+        adapter.update('999', { email: 'test@example.com' })
+      ).rejects.toThrow('not found')
     })
 
     it('throws NotFoundError when deleting non-existent record', async () => {
@@ -355,7 +402,9 @@ describe('Integration: Prisma Adapter', () => {
     })
 
     it('updates an existing record', async () => {
-      const updated = await adapter.update('1', { email: 'newemail@example.com' })
+      const updated = await adapter.update('1', {
+        email: 'newemail@example.com',
+      })
 
       expect(updated.email).toBe('newemail@example.com')
       expect(updated.firstName).toBe('John')

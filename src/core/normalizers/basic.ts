@@ -32,7 +32,9 @@ export const trim: NormalizerFunction = (value: unknown): string | null => {
  * lowercase(null) // null
  * ```
  */
-export const lowercase: NormalizerFunction = (value: unknown): string | null => {
+export const lowercase: NormalizerFunction = (
+  value: unknown
+): string | null => {
   if (value == null) return null
   return String(value).toLowerCase()
 }
@@ -50,7 +52,9 @@ export const lowercase: NormalizerFunction = (value: unknown): string | null => 
  * uppercase(null) // null
  * ```
  */
-export const uppercase: NormalizerFunction = (value: unknown): string | null => {
+export const uppercase: NormalizerFunction = (
+  value: unknown
+): string | null => {
   if (value == null) return null
   return String(value).toUpperCase()
 }
@@ -74,9 +78,7 @@ export const normalizeWhitespace: NormalizerFunction = (
   value: unknown
 ): string | null => {
   if (value == null) return null
-  return String(value)
-    .trim()
-    .replace(/\s+/g, ' ')
+  return String(value).trim().replace(/\s+/g, ' ')
 }
 
 /**

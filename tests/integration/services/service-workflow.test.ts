@@ -114,9 +114,9 @@ describe('Integration: Service Workflow', () => {
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .defaultTimeout(5000)
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('reject')
-          .required(true)
+        .using(nhsNumberValidator)
+        .onInvalid('reject')
+        .required(true)
         .build()
 
       const executor = createServiceExecutor({
@@ -139,7 +139,8 @@ describe('Integration: Service Workflow', () => {
       expect(result.proceed).toBe(true)
       expect(result.results['nhs-number-validator'].success).toBe(true)
 
-      const nhsResult = result.results['nhs-number-validator'].data as ValidationOutput
+      const nhsResult = result.results['nhs-number-validator']
+        .data as ValidationOutput
       expect(nhsResult.valid).toBe(true)
       expect(nhsResult.details?.normalizedValue).toBe('9434765919')
 
@@ -149,9 +150,9 @@ describe('Integration: Service Workflow', () => {
     it('rejects record on validation failure when configured', async () => {
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('reject')
-          .required(true)
+        .using(nhsNumberValidator)
+        .onInvalid('reject')
+        .required(true)
         .build()
 
       const executor = createServiceExecutor({
@@ -181,9 +182,9 @@ describe('Integration: Service Workflow', () => {
     it('continues on validation failure when configured to flag', async () => {
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('flag')
-          .required(false)
+        .using(nhsNumberValidator)
+        .onInvalid('flag')
+        .required(false)
         .build()
 
       const executor = createServiceExecutor({
@@ -211,11 +212,11 @@ describe('Integration: Service Workflow', () => {
     it('validates multiple fields in sequence', async () => {
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('flag')
+        .using(nhsNumberValidator)
+        .onInvalid('flag')
         .validate('email')
-          .using(emailValidator)
-          .onInvalid('flag')
+        .using(emailValidator)
+        .onInvalid('flag')
         .build()
 
       const executor = createServiceExecutor({
@@ -263,12 +264,12 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .lookup('email')
-          .using(mockLookup)
-          .mapFields({
-            firstName: 'firstName',
-            lastName: 'lastName',
-          })
-          .onNotFound('continue')
+        .using(mockLookup)
+        .mapFields({
+          firstName: 'firstName',
+          lastName: 'lastName',
+        })
+        .onNotFound('continue')
         .build()
 
       const executor = createServiceExecutor({
@@ -301,8 +302,8 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .lookup('email')
-          .using(mockLookup)
-          .onNotFound('flag')
+        .using(mockLookup)
+        .onNotFound('flag')
         .build()
 
       const executor = createServiceExecutor({
@@ -336,12 +337,12 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .lookup('address')
-          .using(addressLookup)
-          .mapFields({
-            streetAddress: 'address',
-            city: 'city',
-            postalCode: 'postalCode',
-          })
+        .using(addressLookup)
+        .mapFields({
+          streetAddress: 'address',
+          city: 'city',
+          postalCode: 'postalCode',
+        })
         .build()
 
       const executor = createServiceExecutor({
@@ -375,10 +376,10 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .lookup('email')
-          .using(mockLookup)
-          .mapFields({
-            fullName: 'firstName', // Using fullName as firstName for demo
-          })
+        .using(mockLookup)
+        .mapFields({
+          fullName: 'firstName', // Using fullName as firstName for demo
+        })
         .build()
 
       const executor = createServiceExecutor({
@@ -411,9 +412,9 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .custom('fraudCheck')
-          .using(fraudService)
-          .params({ riskThreshold: 0.5 })
-          .executeAt('post-match')
+        .using(fraudService)
+        .params({ riskThreshold: 0.5 })
+        .executeAt('post-match')
         .build()
 
       const executor = createServiceExecutor({
@@ -462,9 +463,9 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .custom('fraudCheck')
-          .using(fraudService)
-          .params({ riskThreshold: 0.5 })
-          .executeAt('post-match')
+        .using(fraudService)
+        .params({ riskThreshold: 0.5 })
+        .executeAt('post-match')
         .build()
 
       const executor = createServiceExecutor({
@@ -494,7 +495,10 @@ describe('Integration: Service Workflow', () => {
         debug: {},
       }
 
-      const result = await executor.executePostMatch(lowRiskRecord, mockMatchResult)
+      const result = await executor.executePostMatch(
+        lowRiskRecord,
+        mockMatchResult
+      )
       expect(result.scoreAdjustments).toBeDefined()
       expect(result.scoreAdjustments?.[0]).toBe(0.05) // Low risk boost
 
@@ -506,14 +510,14 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .custom('fraudCheck')
-          .using(fraudService)
-          .params({ riskThreshold: 0.3 })
-          .executeAt('pre-match')
-          .onResult((result: CustomOutput) => {
-            const data = result.result as { riskScore: number }
-            return data.riskScore < 0.3
-          })
-          .required(true)
+        .using(fraudService)
+        .params({ riskThreshold: 0.3 })
+        .executeAt('pre-match')
+        .onResult((result: CustomOutput) => {
+          const data = result.result as { riskScore: number }
+          return data.riskScore < 0.3
+        })
+        .required(true)
         .build()
 
       const executor = createServiceExecutor({
@@ -561,8 +565,8 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .custom('contextCheck')
-          .using(customService)
-          .executeAt('post-match')
+        .using(customService)
+        .executeAt('post-match')
         .build()
 
       const executor = createServiceExecutor({
@@ -586,7 +590,10 @@ describe('Integration: Service Workflow', () => {
         debug: {},
       }
 
-      await executor.executePostMatch({ firstName: 'Test', lastName: 'User' }, mockMatchResult)
+      await executor.executePostMatch(
+        { firstName: 'Test', lastName: 'User' },
+        mockMatchResult
+      )
 
       expect(receivedMatchResult).toBeDefined()
       expect((receivedMatchResult as any).matchId).toBe('match-abc')
@@ -603,15 +610,15 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('flag')
-          .priority(1)
+        .using(nhsNumberValidator)
+        .onInvalid('flag')
+        .priority(1)
         .lookup('email')
-          .using(mockLookup)
-          .priority(2)
+        .using(mockLookup)
+        .priority(2)
         .custom('fraudCheck')
-          .using(fraudService)
-          .priority(3)
+        .using(fraudService)
+        .priority(3)
         .build()
 
       const executor = createServiceExecutor({
@@ -644,12 +651,12 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('flag')
+        .using(nhsNumberValidator)
+        .onInvalid('flag')
         .lookup('email')
-          .using(mockLookup)
+        .using(mockLookup)
         .custom('fraud')
-          .using(fraudService)
+        .using(fraudService)
         .build()
 
       const executor = createServiceExecutor({
@@ -692,11 +699,11 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .lookup('email')
-          .using(failingLookup)
-          .onFailure('flag') // Use 'flag' to add the failure flag
+        .using(failingLookup)
+        .onFailure('flag') // Use 'flag' to add the failure flag
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
-          .onInvalid('flag')
+        .using(nhsNumberValidator)
+        .onInvalid('flag')
         .build()
 
       const executor = createServiceExecutor({
@@ -737,7 +744,7 @@ describe('Integration: Service Workflow', () => {
 
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .lookup('email')
-          .using(slowLookup)
+        .using(slowLookup)
         .build()
 
       const executor = createServiceExecutor({
@@ -749,10 +756,16 @@ describe('Integration: Service Workflow', () => {
         executor.register(config)
       }
 
-      const result = await executor.executePreMatch({ firstName: 'Test', lastName: 'User', email: 'test@example.com' })
+      const result = await executor.executePreMatch({
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'test@example.com',
+      })
 
       expect(result.totalDurationMs).toBeGreaterThanOrEqual(50)
-      expect(result.results['mock-lookup'].timing.durationMs).toBeGreaterThanOrEqual(50)
+      expect(
+        result.results['mock-lookup'].timing.durationMs
+      ).toBeGreaterThanOrEqual(50)
 
       await executor.dispose()
     })
@@ -760,7 +773,7 @@ describe('Integration: Service Workflow', () => {
     it('provides health status for services', async () => {
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
+        .using(nhsNumberValidator)
         .build()
 
       const executor = createServiceExecutor({
@@ -782,7 +795,7 @@ describe('Integration: Service Workflow', () => {
     it('provides circuit breaker status', async () => {
       const servicesConfig = createServiceBuilder<PatientRecord>()
         .validate('nhsNumber')
-          .using(nhsNumberValidator)
+        .using(nhsNumberValidator)
         .build()
 
       const executor = createServiceExecutor({

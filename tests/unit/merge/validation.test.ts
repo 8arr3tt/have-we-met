@@ -18,7 +18,11 @@ import {
   InvalidStrategyError,
   StrategyTypeMismatchError,
 } from '../../../src/merge/merge-error.js'
-import type { MergeConfig, FieldMergeConfig, SourceRecord } from '../../../src/merge/types.js'
+import type {
+  MergeConfig,
+  FieldMergeConfig,
+  SourceRecord,
+} from '../../../src/merge/types.js'
 import type { SchemaDefinition } from '../../../src/types/schema.js'
 
 describe('validateMergeConfig', () => {
@@ -37,21 +41,34 @@ describe('validateMergeConfig', () => {
   })
 
   it('rejects missing defaultStrategy', () => {
-    const config = { ...validConfig, defaultStrategy: undefined as unknown as string }
+    const config = {
+      ...validConfig,
+      defaultStrategy: undefined as unknown as string,
+    }
 
-    expect(() => validateMergeConfig(config as MergeConfig)).toThrow(MergeValidationError)
-    expect(() => validateMergeConfig(config as MergeConfig)).toThrow('defaultStrategy is required')
+    expect(() => validateMergeConfig(config as MergeConfig)).toThrow(
+      MergeValidationError
+    )
+    expect(() => validateMergeConfig(config as MergeConfig)).toThrow(
+      'defaultStrategy is required'
+    )
   })
 
   it('rejects invalid defaultStrategy', () => {
-    const config = { ...validConfig, defaultStrategy: 'invalidStrategy' as MergeConfig['defaultStrategy'] }
+    const config = {
+      ...validConfig,
+      defaultStrategy: 'invalidStrategy' as MergeConfig['defaultStrategy'],
+    }
 
     expect(() => validateMergeConfig(config)).toThrow(MergeValidationError)
     expect(() => validateMergeConfig(config)).toThrow('invalid strategy')
   })
 
   it('rejects non-array fieldStrategies', () => {
-    const config = { ...validConfig, fieldStrategies: 'not-an-array' as unknown as FieldMergeConfig[] }
+    const config = {
+      ...validConfig,
+      fieldStrategies: 'not-an-array' as unknown as FieldMergeConfig[],
+    }
 
     expect(() => validateMergeConfig(config)).toThrow(MergeValidationError)
     expect(() => validateMergeConfig(config)).toThrow('must be an array')
@@ -71,7 +88,10 @@ describe('validateMergeConfig', () => {
   })
 
   it('rejects invalid conflictResolution', () => {
-    const config = { ...validConfig, conflictResolution: 'invalid' as MergeConfig['conflictResolution'] }
+    const config = {
+      ...validConfig,
+      conflictResolution: 'invalid' as MergeConfig['conflictResolution'],
+    }
 
     expect(() => validateMergeConfig(config)).toThrow(MergeValidationError)
     expect(() => validateMergeConfig(config)).toThrow("invalid mode 'invalid'")
@@ -85,7 +105,9 @@ describe('validateMergeConfig', () => {
       ],
     }
 
-    expect(() => validateMergeConfig(config)).toThrow(CustomStrategyMissingError)
+    expect(() => validateMergeConfig(config)).toThrow(
+      CustomStrategyMissingError
+    )
   })
 })
 
@@ -123,11 +145,16 @@ describe('validateFieldStrategy', () => {
     const strategy = { field: 'name' } as FieldMergeConfig
 
     expect(() => validateFieldStrategy(strategy)).toThrow(MergeValidationError)
-    expect(() => validateFieldStrategy(strategy)).toThrow('strategy is required')
+    expect(() => validateFieldStrategy(strategy)).toThrow(
+      'strategy is required'
+    )
   })
 
   it('rejects invalid strategy', () => {
-    const strategy = { field: 'name', strategy: 'invalidStrategy' } as FieldMergeConfig
+    const strategy = {
+      field: 'name',
+      strategy: 'invalidStrategy',
+    } as FieldMergeConfig
 
     expect(() => validateFieldStrategy(strategy)).toThrow(InvalidStrategyError)
   })
@@ -138,7 +165,9 @@ describe('validateFieldStrategy', () => {
       strategy: 'custom',
     }
 
-    expect(() => validateFieldStrategy(strategy)).toThrow(CustomStrategyMissingError)
+    expect(() => validateFieldStrategy(strategy)).toThrow(
+      CustomStrategyMissingError
+    )
   })
 
   it('accepts custom strategy with custom function', () => {
@@ -185,7 +214,9 @@ describe('validateFieldStrategy', () => {
     } as unknown as FieldMergeConfig
 
     expect(() => validateFieldStrategy(strategy)).toThrow(MergeValidationError)
-    expect(() => validateFieldStrategy(strategy)).toThrow('separator must be a string')
+    expect(() => validateFieldStrategy(strategy)).toThrow(
+      'separator must be a string'
+    )
   })
 })
 
@@ -212,25 +243,41 @@ describe('validateSourceRecords', () => {
   it('rejects fewer than 2 records', () => {
     const records = [createValidRecords()[0]]
 
-    expect(() => validateSourceRecords(records)).toThrow(InsufficientSourceRecordsError)
-    expect(() => validateSourceRecords(records)).toThrow('at least 2 source records')
+    expect(() => validateSourceRecords(records)).toThrow(
+      InsufficientSourceRecordsError
+    )
+    expect(() => validateSourceRecords(records)).toThrow(
+      'at least 2 source records'
+    )
   })
 
   it('rejects empty array', () => {
-    expect(() => validateSourceRecords([])).toThrow(InsufficientSourceRecordsError)
+    expect(() => validateSourceRecords([])).toThrow(
+      InsufficientSourceRecordsError
+    )
     expect(() => validateSourceRecords([])).toThrow('got 0')
   })
 
   it('rejects null/undefined', () => {
-    expect(() => validateSourceRecords(null as unknown as SourceRecord[])).toThrow(
-      InsufficientSourceRecordsError,
-    )
+    expect(() =>
+      validateSourceRecords(null as unknown as SourceRecord[])
+    ).toThrow(InsufficientSourceRecordsError)
   })
 
   it('rejects record with missing id', () => {
     const records = [
-      { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
-      { id: '', record: { name: 'Jane' }, createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: 'rec-001',
+        record: { name: 'John' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: '',
+        record: { name: 'Jane' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]
 
     expect(() => validateSourceRecords(records)).toThrow(MergeValidationError)
@@ -239,8 +286,18 @@ describe('validateSourceRecords', () => {
 
   it('rejects record with non-object record data', () => {
     const records = [
-      { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
-      { id: 'rec-002', record: null, createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: 'rec-001',
+        record: { name: 'John' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'rec-002',
+        record: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ] as unknown as SourceRecord[]
 
     expect(() => validateSourceRecords(records)).toThrow(MergeValidationError)
@@ -249,17 +306,34 @@ describe('validateSourceRecords', () => {
 
   it('rejects record with non-Date createdAt', () => {
     const records = [
-      { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
-      { id: 'rec-002', record: { name: 'Jane' }, createdAt: 'not-a-date', updatedAt: new Date() },
+      {
+        id: 'rec-001',
+        record: { name: 'John' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'rec-002',
+        record: { name: 'Jane' },
+        createdAt: 'not-a-date',
+        updatedAt: new Date(),
+      },
     ] as unknown as SourceRecord[]
 
     expect(() => validateSourceRecords(records)).toThrow(MergeValidationError)
-    expect(() => validateSourceRecords(records)).toThrow('createdAt must be a Date')
+    expect(() => validateSourceRecords(records)).toThrow(
+      'createdAt must be a Date'
+    )
   })
 
   it('rejects record with non-Date updatedAt', () => {
     const records = [
-      { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: 'rec-001',
+        record: { name: 'John' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
       {
         id: 'rec-002',
         record: { name: 'Jane' },
@@ -269,13 +343,25 @@ describe('validateSourceRecords', () => {
     ] as unknown as SourceRecord[]
 
     expect(() => validateSourceRecords(records)).toThrow(MergeValidationError)
-    expect(() => validateSourceRecords(records)).toThrow('updatedAt must be a Date')
+    expect(() => validateSourceRecords(records)).toThrow(
+      'updatedAt must be a Date'
+    )
   })
 
   it('rejects duplicate record IDs', () => {
     const records = [
-      { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
-      { id: 'rec-001', record: { name: 'Jane' }, createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: 'rec-001',
+        record: { name: 'John' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'rec-001',
+        record: { name: 'Jane' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]
 
     expect(() => validateSourceRecords(records)).toThrow(MergeValidationError)
@@ -284,9 +370,24 @@ describe('validateSourceRecords', () => {
 
   it('accepts more than 2 records', () => {
     const records = [
-      { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
-      { id: 'rec-002', record: { name: 'Jane' }, createdAt: new Date(), updatedAt: new Date() },
-      { id: 'rec-003', record: { name: 'Bob' }, createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: 'rec-001',
+        record: { name: 'John' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'rec-002',
+        record: { name: 'Jane' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'rec-003',
+        record: { name: 'Bob' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]
 
     expect(() => validateSourceRecords(records)).not.toThrow()
@@ -314,28 +415,38 @@ describe('validateFieldPathsAgainstSchema', () => {
       { field: 'email', strategy: 'preferNonNull' },
     ]
 
-    expect(() => validateFieldPathsAgainstSchema(fieldStrategies, schema)).not.toThrow()
+    expect(() =>
+      validateFieldPathsAgainstSchema(fieldStrategies, schema)
+    ).not.toThrow()
   })
 
   it('validates nested field paths (checks root field)', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'address.city', strategy: 'preferNonNull' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'address.city', strategy: 'preferNonNull' },
+    ]
 
-    expect(() => validateFieldPathsAgainstSchema(fieldStrategies, schema)).not.toThrow()
+    expect(() =>
+      validateFieldPathsAgainstSchema(fieldStrategies, schema)
+    ).not.toThrow()
   })
 
   it('rejects field paths not in schema', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'unknownField', strategy: 'preferFirst' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'unknownField', strategy: 'preferFirst' },
+    ]
 
-    expect(() => validateFieldPathsAgainstSchema(fieldStrategies, schema)).toThrow(
-      MergeValidationError,
-    )
-    expect(() => validateFieldPathsAgainstSchema(fieldStrategies, schema)).toThrow(
-      "does not exist in schema",
-    )
+    expect(() =>
+      validateFieldPathsAgainstSchema(fieldStrategies, schema)
+    ).toThrow(MergeValidationError)
+    expect(() =>
+      validateFieldPathsAgainstSchema(fieldStrategies, schema)
+    ).toThrow('does not exist in schema')
   })
 
   it('includes available fields in error message', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'missing', strategy: 'preferFirst' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'missing', strategy: 'preferFirst' },
+    ]
 
     try {
       validateFieldPathsAgainstSchema(fieldStrategies, schema)
@@ -369,19 +480,25 @@ describe('validateStrategyFieldTypeCompatibility', () => {
       { field: 'age', strategy: 'max' },
     ]
 
-    expect(() => validateStrategyFieldTypeCompatibility(fieldStrategies, schema)).not.toThrow()
+    expect(() =>
+      validateStrategyFieldTypeCompatibility(fieldStrategies, schema)
+    ).not.toThrow()
   })
 
   it('rejects numeric strategies on non-numeric fields', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'name', strategy: 'average' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'name', strategy: 'average' },
+    ]
 
-    expect(() => validateStrategyFieldTypeCompatibility(fieldStrategies, schema)).toThrow(
-      StrategyTypeMismatchError,
-    )
+    expect(() =>
+      validateStrategyFieldTypeCompatibility(fieldStrategies, schema)
+    ).toThrow(StrategyTypeMismatchError)
   })
 
   it('provides detailed error message for type mismatch', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'name', strategy: 'sum' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'name', strategy: 'sum' },
+    ]
 
     try {
       validateStrategyFieldTypeCompatibility(fieldStrategies, schema)
@@ -396,16 +513,24 @@ describe('validateStrategyFieldTypeCompatibility', () => {
   })
 
   it('allows string strategies on any field', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'name', strategy: 'preferLonger' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'name', strategy: 'preferLonger' },
+    ]
 
-    expect(() => validateStrategyFieldTypeCompatibility(fieldStrategies, schema)).not.toThrow()
+    expect(() =>
+      validateStrategyFieldTypeCompatibility(fieldStrategies, schema)
+    ).not.toThrow()
   })
 
   it('skips validation for fields not in schema', () => {
-    const fieldStrategies: FieldMergeConfig[] = [{ field: 'unknown', strategy: 'average' }]
+    const fieldStrategies: FieldMergeConfig[] = [
+      { field: 'unknown', strategy: 'average' },
+    ]
 
     // Should not throw - field validation is handled by validateFieldPathsAgainstSchema
-    expect(() => validateStrategyFieldTypeCompatibility(fieldStrategies, schema)).not.toThrow()
+    expect(() =>
+      validateStrategyFieldTypeCompatibility(fieldStrategies, schema)
+    ).not.toThrow()
   })
 })
 
@@ -418,8 +543,18 @@ describe('validateMergeRequest', () => {
   }
 
   const validRecords: SourceRecord<{ name: string }>[] = [
-    { id: 'rec-001', record: { name: 'John' }, createdAt: new Date(), updatedAt: new Date() },
-    { id: 'rec-002', record: { name: 'Jane' }, createdAt: new Date(), updatedAt: new Date() },
+    {
+      id: 'rec-001',
+      record: { name: 'John' },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'rec-002',
+      record: { name: 'Jane' },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   ]
 
   it('validates a complete valid merge request', () => {
@@ -431,20 +566,27 @@ describe('validateMergeRequest', () => {
       name: { type: 'name' },
     }
 
-    expect(() => validateMergeRequest(validRecords, validConfig, schema)).not.toThrow()
+    expect(() =>
+      validateMergeRequest(validRecords, validConfig, schema)
+    ).not.toThrow()
   })
 
   it('validates config errors', () => {
-    const badConfig = { ...validConfig, defaultStrategy: '' as MergeConfig['defaultStrategy'] }
+    const badConfig = {
+      ...validConfig,
+      defaultStrategy: '' as MergeConfig['defaultStrategy'],
+    }
 
-    expect(() => validateMergeRequest(validRecords, badConfig)).toThrow(MergeValidationError)
+    expect(() => validateMergeRequest(validRecords, badConfig)).toThrow(
+      MergeValidationError
+    )
   })
 
   it('validates source records errors', () => {
     const badRecords = [validRecords[0]] // Only 1 record
 
     expect(() => validateMergeRequest(badRecords, validConfig)).toThrow(
-      InsufficientSourceRecordsError,
+      InsufficientSourceRecordsError
     )
   })
 
@@ -457,9 +599,9 @@ describe('validateMergeRequest', () => {
       name: { type: 'name' },
     }
 
-    expect(() => validateMergeRequest(validRecords, configWithUnknownField, schema)).toThrow(
-      MergeValidationError,
-    )
+    expect(() =>
+      validateMergeRequest(validRecords, configWithUnknownField, schema)
+    ).toThrow(MergeValidationError)
   })
 })
 
@@ -565,7 +707,9 @@ describe('getNestedValue', () => {
 
   it('returns undefined for null in path', () => {
     const obj = { address: null }
-    expect(getNestedValue(obj as Record<string, unknown>, 'address.city')).toBeUndefined()
+    expect(
+      getNestedValue(obj as Record<string, unknown>, 'address.city')
+    ).toBeUndefined()
   })
 
   it('handles arrays', () => {
@@ -596,7 +740,12 @@ describe('setNestedValue', () => {
     const obj: Record<string, unknown> = {}
     setNestedValue(obj, 'level1.level2.level3', 'deep')
     expect(
-      ((obj.level1 as Record<string, unknown>).level2 as Record<string, unknown>).level3,
+      (
+        (obj.level1 as Record<string, unknown>).level2 as Record<
+          string,
+          unknown
+        >
+      ).level3
     ).toBe('deep')
   })
 

@@ -1,4 +1,9 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria } from './types'
+import type {
+  DatabaseAdapter,
+  AdapterConfig,
+  QueryOptions,
+  FilterCriteria,
+} from './types'
 import { ValidationError } from './adapter-error'
 
 /**
@@ -8,9 +13,9 @@ import { ValidationError } from './adapter-error'
  *
  * @typeParam T - The record type being stored and queried
  */
-export abstract class BaseAdapter<T extends Record<string, unknown>>
-  implements DatabaseAdapter<T>
-{
+export abstract class BaseAdapter<
+  T extends Record<string, unknown>,
+> implements DatabaseAdapter<T> {
   protected readonly config: Required<AdapterConfig>
 
   /**
@@ -42,20 +47,29 @@ export abstract class BaseAdapter<T extends Record<string, unknown>>
    */
   protected validateConfig(config: AdapterConfig): void {
     if (!config.tableName || typeof config.tableName !== 'string') {
-      throw new ValidationError('Missing or invalid required field: tableName', {
-        config,
-      })
+      throw new ValidationError(
+        'Missing or invalid required field: tableName',
+        {
+          config,
+        }
+      )
     }
 
     if (config.tableName.trim().length === 0) {
       throw new ValidationError('tableName cannot be empty', { config })
     }
 
-    if (config.primaryKey !== undefined && typeof config.primaryKey !== 'string') {
+    if (
+      config.primaryKey !== undefined &&
+      typeof config.primaryKey !== 'string'
+    ) {
       throw new ValidationError('primaryKey must be a string', { config })
     }
 
-    if (config.fieldMapping !== undefined && typeof config.fieldMapping !== 'object') {
+    if (
+      config.fieldMapping !== undefined &&
+      typeof config.fieldMapping !== 'object'
+    ) {
       throw new ValidationError('fieldMapping must be an object', { config })
     }
 
@@ -207,7 +221,9 @@ export abstract class BaseAdapter<T extends Record<string, unknown>>
       throw new ValidationError('records array cannot be empty', { records })
     }
 
-    if (!records.every((record) => typeof record === 'object' && record !== null)) {
+    if (
+      !records.every((record) => typeof record === 'object' && record !== null)
+    ) {
       throw new ValidationError('all records must be objects', { records })
     }
   }

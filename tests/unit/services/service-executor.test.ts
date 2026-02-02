@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ServiceExecutorImpl, createServiceExecutor } from '../../../src/services/service-executor.js'
+import {
+  ServiceExecutorImpl,
+  createServiceExecutor,
+} from '../../../src/services/service-executor.js'
 import {
   ServiceAlreadyRegisteredError,
   ServiceNotRegisteredError,
@@ -52,40 +55,49 @@ function createMockValidationService(
     delay?: number
     shouldThrow?: boolean
     throwOnAttempt?: number
-  } = {},
+  } = {}
 ): ValidationService {
   let attemptCount = 0
   return {
     name,
     type: 'validation',
     description: 'Mock validation service',
-    execute: vi.fn(async (_input: ValidationInput, _context: ServiceContext): Promise<ServiceResult<ValidationOutput>> => {
-      attemptCount++
-      if (options.delay) {
-        await new Promise(resolve => setTimeout(resolve, options.delay))
-      }
-      if (options.shouldThrow) {
-        if (!options.throwOnAttempt || attemptCount >= options.throwOnAttempt) {
-          throw new Error('Validation service error')
+    execute: vi.fn(
+      async (
+        _input: ValidationInput,
+        _context: ServiceContext
+      ): Promise<ServiceResult<ValidationOutput>> => {
+        attemptCount++
+        if (options.delay) {
+          await new Promise((resolve) => setTimeout(resolve, options.delay))
+        }
+        if (options.shouldThrow) {
+          if (
+            !options.throwOnAttempt ||
+            attemptCount >= options.throwOnAttempt
+          ) {
+            throw new Error('Validation service error')
+          }
+        }
+        return {
+          success: true,
+          data: {
+            valid: options.valid ?? true,
+            details: {
+              checks: [{ name: 'format', passed: true }],
+            },
+            invalidReason:
+              options.valid === false ? 'Invalid value' : undefined,
+          },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: options.delay ?? 0,
+          },
+          cached: false,
         }
       }
-      return {
-        success: true,
-        data: {
-          valid: options.valid ?? true,
-          details: {
-            checks: [{ name: 'format', passed: true }],
-          },
-          invalidReason: options.valid === false ? 'Invalid value' : undefined,
-        },
-        timing: {
-          startedAt: new Date(),
-          completedAt: new Date(),
-          durationMs: options.delay ?? 0,
-        },
-        cached: false,
-      }
-    }),
+    ),
   }
 }
 
@@ -99,34 +111,39 @@ function createMockLookupService(
     data?: Record<string, unknown>
     delay?: number
     shouldThrow?: boolean
-  } = {},
+  } = {}
 ): LookupService {
   return {
     name,
     type: 'lookup',
     description: 'Mock lookup service',
-    execute: vi.fn(async (_input: LookupInput, _context: ServiceContext): Promise<ServiceResult<LookupOutput>> => {
-      if (options.delay) {
-        await new Promise(resolve => setTimeout(resolve, options.delay))
+    execute: vi.fn(
+      async (
+        _input: LookupInput,
+        _context: ServiceContext
+      ): Promise<ServiceResult<LookupOutput>> => {
+        if (options.delay) {
+          await new Promise((resolve) => setTimeout(resolve, options.delay))
+        }
+        if (options.shouldThrow) {
+          throw new Error('Lookup service error')
+        }
+        return {
+          success: true,
+          data: {
+            found: options.found ?? true,
+            data: options.data ?? { enrichedField: 'enrichedValue' },
+            matchQuality: 'exact',
+          },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: options.delay ?? 0,
+          },
+          cached: false,
+        }
       }
-      if (options.shouldThrow) {
-        throw new Error('Lookup service error')
-      }
-      return {
-        success: true,
-        data: {
-          found: options.found ?? true,
-          data: options.data ?? { enrichedField: 'enrichedValue' },
-          matchQuality: 'exact',
-        },
-        timing: {
-          startedAt: new Date(),
-          completedAt: new Date(),
-          durationMs: options.delay ?? 0,
-        },
-        cached: false,
-      }
-    }),
+    ),
   }
 }
 
@@ -141,35 +158,40 @@ function createMockCustomService(
     flags?: string[]
     delay?: number
     shouldThrow?: boolean
-  } = {},
+  } = {}
 ): CustomService {
   return {
     name,
     type: 'custom',
     description: 'Mock custom service',
-    execute: vi.fn(async (_input: CustomInput, _context: ServiceContext): Promise<ServiceResult<CustomOutput>> => {
-      if (options.delay) {
-        await new Promise(resolve => setTimeout(resolve, options.delay))
+    execute: vi.fn(
+      async (
+        _input: CustomInput,
+        _context: ServiceContext
+      ): Promise<ServiceResult<CustomOutput>> => {
+        if (options.delay) {
+          await new Promise((resolve) => setTimeout(resolve, options.delay))
+        }
+        if (options.shouldThrow) {
+          throw new Error('Custom service error')
+        }
+        return {
+          success: true,
+          data: {
+            result: { checked: true },
+            proceed: options.proceed ?? true,
+            scoreAdjustment: options.scoreAdjustment,
+            flags: options.flags,
+          },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: options.delay ?? 0,
+          },
+          cached: false,
+        }
       }
-      if (options.shouldThrow) {
-        throw new Error('Custom service error')
-      }
-      return {
-        success: true,
-        data: {
-          result: { checked: true },
-          proceed: options.proceed ?? true,
-          scoreAdjustment: options.scoreAdjustment,
-          flags: options.flags,
-        },
-        timing: {
-          startedAt: new Date(),
-          completedAt: new Date(),
-          durationMs: options.delay ?? 0,
-        },
-        cached: false,
-      }
-    }),
+    ),
   }
 }
 
@@ -178,7 +200,7 @@ function createMockCustomService(
  */
 function createServiceConfig(
   plugin: ServicePlugin,
-  overrides: Partial<ServiceConfig> = {},
+  overrides: Partial<ServiceConfig> = {}
 ): ServiceConfig {
   return {
     plugin,
@@ -224,7 +246,9 @@ describe('ServiceExecutorImpl', () => {
 
       executor.register(config1)
 
-      expect(() => executor.register(config2)).toThrow(ServiceAlreadyRegisteredError)
+      expect(() => executor.register(config2)).toThrow(
+        ServiceAlreadyRegisteredError
+      )
     })
 
     it('merges defaults into service config', () => {
@@ -286,13 +310,31 @@ describe('ServiceExecutorImpl', () => {
       const first = createMockValidationService('first')
       ;(first.execute as any).mockImplementation(async () => {
         callOrder.push('first')
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       const second = createMockValidationService('second')
       ;(second.execute as any).mockImplementation(async () => {
         callOrder.push('second')
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       executor.register(createServiceConfig(second, { priority: 200 }))
@@ -304,15 +346,19 @@ describe('ServiceExecutorImpl', () => {
     })
 
     it('stops on required service rejection', async () => {
-      const rejectingValidator = createMockValidationService('rejecting', { valid: false })
+      const rejectingValidator = createMockValidationService('rejecting', {
+        valid: false,
+      })
       const secondValidator = createMockValidationService('second')
 
-      executor.register(createServiceConfig(rejectingValidator, {
-        fields: ['email'],
-        onInvalid: 'reject',
-        required: true,
-        priority: 100,
-      }))
+      executor.register(
+        createServiceConfig(rejectingValidator, {
+          fields: ['email'],
+          onInvalid: 'reject',
+          required: true,
+          priority: 100,
+        })
+      )
       executor.register(createServiceConfig(secondValidator, { priority: 200 }))
 
       const result = await executor.executePreMatch({ email: 'bad' })
@@ -323,15 +369,21 @@ describe('ServiceExecutorImpl', () => {
     })
 
     it('continues on optional service failure', async () => {
-      const failingValidator = createMockValidationService('failing', { shouldThrow: true })
+      const failingValidator = createMockValidationService('failing', {
+        shouldThrow: true,
+      })
       const successValidator = createMockValidationService('success')
 
-      executor.register(createServiceConfig(failingValidator, {
-        onFailure: 'continue',
-        required: false,
-        priority: 100,
-      }))
-      executor.register(createServiceConfig(successValidator, { priority: 200 }))
+      executor.register(
+        createServiceConfig(failingValidator, {
+          onFailure: 'continue',
+          required: false,
+          priority: 100,
+        })
+      )
+      executor.register(
+        createServiceConfig(successValidator, { priority: 200 })
+      )
 
       const result = await executor.executePreMatch({})
 
@@ -344,7 +396,9 @@ describe('ServiceExecutorImpl', () => {
       const validator = createMockValidationService('validator')
       executor.register(createServiceConfig(validator))
 
-      const result = await executor.executePreMatch({ email: 'test@example.com' })
+      const result = await executor.executePreMatch({
+        email: 'test@example.com',
+      })
 
       expect(result.results).toHaveProperty('validator')
       expect(result.totalDurationMs).toBeGreaterThanOrEqual(0)
@@ -366,9 +420,11 @@ describe('ServiceExecutorImpl', () => {
         scoreAdjustment: -5,
       })
 
-      executor.register(createServiceConfig(customService, {
-        executionPoint: 'post-match',
-      }))
+      executor.register(
+        createServiceConfig(customService, {
+          executionPoint: 'post-match',
+        })
+      )
 
       const record = { email: 'test@example.com' }
       const matchResult = {
@@ -389,15 +445,27 @@ describe('ServiceExecutorImpl', () => {
     it('includes match result in context', async () => {
       const customService = createMockCustomService('context-checker')
       let capturedContext: ServiceContext | undefined
+      ;(customService.execute as any).mockImplementation(
+        async (_input: CustomInput, context: ServiceContext) => {
+          capturedContext = context
+          return {
+            success: true,
+            data: { result: {}, proceed: true },
+            timing: {
+              startedAt: new Date(),
+              completedAt: new Date(),
+              durationMs: 0,
+            },
+            cached: false,
+          }
+        }
+      )
 
-      ;(customService.execute as any).mockImplementation(async (_input: CustomInput, context: ServiceContext) => {
-        capturedContext = context
-        return { success: true, data: { result: {}, proceed: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
-      })
-
-      executor.register(createServiceConfig(customService, {
-        executionPoint: 'post-match',
-      }))
+      executor.register(
+        createServiceConfig(customService, {
+          executionPoint: 'post-match',
+        })
+      )
 
       const matchResult = {
         outcome: 'match' as const,
@@ -415,9 +483,11 @@ describe('ServiceExecutorImpl', () => {
     it('can adjust match scores', async () => {
       const scorer = createMockCustomService('scorer', { scoreAdjustment: 10 })
 
-      executor.register(createServiceConfig(scorer, {
-        executionPoint: 'post-match',
-      }))
+      executor.register(
+        createServiceConfig(scorer, {
+          executionPoint: 'post-match',
+        })
+      )
 
       const matchResult = {
         outcome: 'match' as const,
@@ -438,14 +508,18 @@ describe('ServiceExecutorImpl', () => {
       const validator = createMockValidationService('my-validator')
       executor.register(createServiceConfig(validator, { fields: ['email'] }))
 
-      const result = await executor.executeService('my-validator', { email: 'test@example.com' })
+      const result = await executor.executeService('my-validator', {
+        email: 'test@example.com',
+      })
 
       expect(result.success).toBe(true)
       expect(validator.execute).toHaveBeenCalled()
     })
 
     it('throws for unknown service', async () => {
-      await expect(executor.executeService('unknown', {})).rejects.toThrow(ServiceNotRegisteredError)
+      await expect(executor.executeService('unknown', {})).rejects.toThrow(
+        ServiceNotRegisteredError
+      )
     })
 
     it('respects timeout configuration', async () => {
@@ -471,15 +545,33 @@ describe('ServiceExecutorImpl', () => {
       const service1 = createMockValidationService('parallel-1', { delay: 50 })
       ;(service1.execute as any).mockImplementation(async () => {
         startTimes.push(Date.now())
-        await new Promise(r => setTimeout(r, 50))
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 50 }, cached: false }
+        await new Promise((r) => setTimeout(r, 50))
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 50,
+          },
+          cached: false,
+        }
       })
 
       const service2 = createMockValidationService('parallel-2', { delay: 50 })
       ;(service2.execute as any).mockImplementation(async () => {
         startTimes.push(Date.now())
-        await new Promise(r => setTimeout(r, 50))
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 50 }, cached: false }
+        await new Promise((r) => setTimeout(r, 50))
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 50,
+          },
+          cached: false,
+        }
       })
 
       parallelExecutor.register(createServiceConfig(service1))
@@ -533,7 +625,9 @@ describe('ServiceExecutorImpl', () => {
     })
 
     it('reports unhealthy when circuit breaker is open', async () => {
-      const failingService = createMockValidationService('failing', { shouldThrow: true })
+      const failingService = createMockValidationService('failing', {
+        shouldThrow: true,
+      })
 
       const executor = createServiceExecutor({
         resolverConfig: mockResolverConfig,
@@ -622,7 +716,9 @@ describe('ServiceExecutorImpl', () => {
     })
 
     it('uses default timeout when not specified', async () => {
-      const slowValidator = createMockValidationService('default-timeout', { delay: 10000 })
+      const slowValidator = createMockValidationService('default-timeout', {
+        delay: 10000,
+      })
       executor.register(createServiceConfig(slowValidator))
 
       const result = await executor.executePreMatch({})
@@ -642,7 +738,16 @@ describe('ServiceExecutorImpl', () => {
           // Simulate a network error that includes timeout in message (will be converted by toServiceError)
           throw new Error('ECONNREFUSED network error')
         }
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       const retryConfig: RetryConfig = {
@@ -653,7 +758,9 @@ describe('ServiceExecutorImpl', () => {
         retryOn: ['all'], // Use 'all' to retry all error types
       }
 
-      executor.register(createServiceConfig(retryingValidator, { retry: retryConfig }))
+      executor.register(
+        createServiceConfig(retryingValidator, { retry: retryConfig })
+      )
 
       const result = await executor.executePreMatch({})
 
@@ -666,7 +773,10 @@ describe('ServiceExecutorImpl', () => {
       const nonRetryableValidator = createMockValidationService('non-retryable')
       ;(nonRetryableValidator.execute as any).mockImplementation(async () => {
         attemptCount++
-        const error = new Error('Validation error') as Error & { type: string; retryable: boolean }
+        const error = new Error('Validation error') as Error & {
+          type: string
+          retryable: boolean
+        }
         error.type = 'validation'
         error.retryable = false
         throw error
@@ -680,7 +790,9 @@ describe('ServiceExecutorImpl', () => {
         retryOn: ['timeout', 'network'],
       }
 
-      executor.register(createServiceConfig(nonRetryableValidator, { retry: retryConfig }))
+      executor.register(
+        createServiceConfig(nonRetryableValidator, { retry: retryConfig })
+      )
 
       const result = await executor.executePreMatch({})
 
@@ -697,7 +809,16 @@ describe('ServiceExecutorImpl', () => {
           // Simulate a timeout error (will be converted by toServiceError based on message)
           throw new Error('Request timed out')
         }
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       const retryConfig: RetryConfig = {
@@ -708,7 +829,9 @@ describe('ServiceExecutorImpl', () => {
         retryOn: ['all'], // Use 'all' to ensure retry happens
       }
 
-      executor.register(createServiceConfig(retryingValidator, { retry: retryConfig }))
+      executor.register(
+        createServiceConfig(retryingValidator, { retry: retryConfig })
+      )
 
       const result = await executor.executePreMatch({})
 
@@ -718,7 +841,9 @@ describe('ServiceExecutorImpl', () => {
 
   describe('circuit breaker', () => {
     it('opens after failure threshold', async () => {
-      const failingService = createMockValidationService('cb-failing', { shouldThrow: true })
+      const failingService = createMockValidationService('cb-failing', {
+        shouldThrow: true,
+      })
 
       const executor = createServiceExecutor({
         resolverConfig: mockResolverConfig,
@@ -743,7 +868,9 @@ describe('ServiceExecutorImpl', () => {
     })
 
     it('rejects immediately when open', async () => {
-      const failingService = createMockValidationService('cb-open', { shouldThrow: true })
+      const failingService = createMockValidationService('cb-open', {
+        shouldThrow: true,
+      })
 
       const executor = createServiceExecutor({
         resolverConfig: mockResolverConfig,
@@ -763,11 +890,15 @@ describe('ServiceExecutorImpl', () => {
       await executor.executePreMatch({})
 
       // Next call should be rejected by circuit breaker
-      await expect(executor.executeService('cb-open', {})).rejects.toThrow(ServiceUnavailableError)
+      await expect(executor.executeService('cb-open', {})).rejects.toThrow(
+        ServiceUnavailableError
+      )
     })
 
     it('transitions to half-open after reset timeout', async () => {
-      const failingService = createMockValidationService('cb-half-open', { shouldThrow: true })
+      const failingService = createMockValidationService('cb-half-open', {
+        shouldThrow: true,
+      })
 
       const executor = createServiceExecutor({
         resolverConfig: mockResolverConfig,
@@ -787,7 +918,7 @@ describe('ServiceExecutorImpl', () => {
       await executor.executePreMatch({})
 
       // Wait for reset timeout
-      await new Promise(r => setTimeout(r, 60))
+      await new Promise((r) => setTimeout(r, 60))
 
       // Now it should be half-open and allow one request
       const status = executor.getCircuitStatus()
@@ -806,17 +937,32 @@ describe('ServiceExecutorImpl', () => {
       const validator = createMockValidationService('post-enrichment')
 
       let capturedRecord: Record<string, unknown> | undefined
-      ;(validator.execute as any).mockImplementation(async (input: ValidationInput) => {
-        capturedRecord = input.context?.record as Record<string, unknown>
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
-      })
+      ;(validator.execute as any).mockImplementation(
+        async (input: ValidationInput) => {
+          capturedRecord = input.context?.record as Record<string, unknown>
+          return {
+            success: true,
+            data: { valid: true },
+            timing: {
+              startedAt: new Date(),
+              completedAt: new Date(),
+              durationMs: 0,
+            },
+            cached: false,
+          }
+        }
+      )
 
-      executor.register(createServiceConfig(lookup, {
-        fields: ['address'],
-        fieldMapping: { city: 'city' },
-        priority: 100,
-      }))
-      executor.register(createServiceConfig(validator, { fields: ['email'], priority: 200 }))
+      executor.register(
+        createServiceConfig(lookup, {
+          fields: ['address'],
+          fieldMapping: { city: 'city' },
+          priority: 100,
+        })
+      )
+      executor.register(
+        createServiceConfig(validator, { fields: ['email'], priority: 200 })
+      )
 
       const result = await executor.executePreMatch({ address: '123 Main St' })
 
@@ -829,14 +975,19 @@ describe('ServiceExecutorImpl', () => {
         data: { enrichedField: 'enrichedValue' },
       })
 
-      executor.register(createServiceConfig(lookup, {
-        fields: ['key'],
-        fieldMapping: { enrichedField: 'enrichedField' },
-      }))
+      executor.register(
+        createServiceConfig(lookup, {
+          fields: ['key'],
+          fieldMapping: { enrichedField: 'enrichedField' },
+        })
+      )
 
       const result = await executor.executePreMatch({ key: 'value' })
 
-      expect(result.enrichedData).toHaveProperty('enrichedField', 'enrichedValue')
+      expect(result.enrichedData).toHaveProperty(
+        'enrichedField',
+        'enrichedValue'
+      )
     })
   })
 
@@ -846,28 +997,37 @@ describe('ServiceExecutorImpl', () => {
         flags: ['high-risk', 'manual-review'],
       })
 
-      executor.register(createServiceConfig(customService, {
-        executionPoint: 'post-match',
-      }))
+      executor.register(
+        createServiceConfig(customService, {
+          executionPoint: 'post-match',
+        })
+      )
 
-      const result = await executor.executePostMatch({}, {
-        outcome: 'match',
-        candidates: [],
-        bestMatch: null,
-        inputRecord: { id: '1', data: {} },
-        processedAt: new Date(),
-      })
+      const result = await executor.executePostMatch(
+        {},
+        {
+          outcome: 'match',
+          candidates: [],
+          bestMatch: null,
+          inputRecord: { id: '1', data: {} },
+          processedAt: new Date(),
+        }
+      )
 
       expect(result.flags).toContain('high-risk')
       expect(result.flags).toContain('manual-review')
     })
 
     it('adds failure flags when onFailure is flag', async () => {
-      const failingService = createMockValidationService('failing-flagger', { shouldThrow: true })
+      const failingService = createMockValidationService('failing-flagger', {
+        shouldThrow: true,
+      })
 
-      executor.register(createServiceConfig(failingService, {
-        onFailure: 'flag',
-      }))
+      executor.register(
+        createServiceConfig(failingService, {
+          onFailure: 'flag',
+        })
+      )
 
       const result = await executor.executePreMatch({})
 
@@ -875,12 +1035,16 @@ describe('ServiceExecutorImpl', () => {
     })
 
     it('adds invalid flags when onInvalid is flag', async () => {
-      const invalidValidator = createMockValidationService('invalid-flagger', { valid: false })
+      const invalidValidator = createMockValidationService('invalid-flagger', {
+        valid: false,
+      })
 
-      executor.register(createServiceConfig(invalidValidator, {
-        fields: ['email'],
-        onInvalid: 'flag',
-      }))
+      executor.register(
+        createServiceConfig(invalidValidator, {
+          fields: ['email'],
+          onInvalid: 'flag',
+        })
+      )
 
       const result = await executor.executePreMatch({ email: 'bad' })
 
@@ -895,19 +1059,46 @@ describe('ServiceExecutorImpl', () => {
       const service1 = createMockValidationService('order-a')
       ;(service1.execute as any).mockImplementation(async () => {
         callOrder.push('order-a')
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       const service2 = createMockValidationService('order-b')
       ;(service2.execute as any).mockImplementation(async () => {
         callOrder.push('order-b')
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       const service3 = createMockValidationService('order-c')
       ;(service3.execute as any).mockImplementation(async () => {
         callOrder.push('order-c')
-        return { success: true, data: { valid: true }, timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 }, cached: false }
+        return {
+          success: true,
+          data: { valid: true },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
+          cached: false,
+        }
       })
 
       const executor = createServiceExecutor({

@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { TypeORMAdapter, typeormAdapter } from '../../../src/adapters/typeorm'
-import { QueryError, TransactionError, NotFoundError } from '../../../src/adapters/adapter-error'
+import {
+  QueryError,
+  TransactionError,
+  NotFoundError,
+} from '../../../src/adapters/adapter-error'
 import type { AdapterConfig } from '../../../src/adapters/types'
 
 type TestRecord = {
@@ -47,8 +51,20 @@ describe('TypeORMAdapter', () => {
   describe('findByBlockingKeys', () => {
     it('finds records by single blocking key', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
       mockRepository.find.mockResolvedValue(mockRecords)
 
@@ -65,7 +81,13 @@ describe('TypeORMAdapter', () => {
 
     it('finds records by multiple blocking keys', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
       mockRepository.find.mockResolvedValue(mockRecords)
 
@@ -141,15 +163,29 @@ describe('TypeORMAdapter', () => {
       mockRepository.find.mockRejectedValue(new Error('Database error'))
 
       const blockingKeys = new Map([['lastName', 'Smith']])
-      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(QueryError)
+      await expect(adapter.findByBlockingKeys(blockingKeys)).rejects.toThrow(
+        QueryError
+      )
     })
   })
 
   describe('findByIds', () => {
     it('finds multiple records by ID', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Doe', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
       mockRepository.find.mockResolvedValue(mockRecords)
 
@@ -181,7 +217,13 @@ describe('TypeORMAdapter', () => {
   describe('findAll', () => {
     it('retrieves all records with default options', async () => {
       const mockRecords = [
-        { id: '1', firstName: 'John', lastName: 'Smith', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Smith',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
       mockRepository.find.mockResolvedValue(mockRecords)
 
@@ -285,7 +327,9 @@ describe('TypeORMAdapter', () => {
     })
 
     it('handles database errors during insert', async () => {
-      mockRepository.save.mockRejectedValue(new Error('Unique constraint failed'))
+      mockRepository.save.mockRejectedValue(
+        new Error('Unique constraint failed')
+      )
 
       const newRecord = {
         id: '1',
@@ -311,7 +355,10 @@ describe('TypeORMAdapter', () => {
       mockRepository.update.mockResolvedValue({ affected: 1 })
       mockRepository.findOne.mockResolvedValue(updatedRecord)
 
-      const result = await adapter.update('1', { email: 'john.smith@test.com', age: 31 })
+      const result = await adapter.update('1', {
+        email: 'john.smith@test.com',
+        age: 31,
+      })
 
       expect(mockRepository.update).toHaveBeenCalledWith(
         { id: '1' },
@@ -326,24 +373,26 @@ describe('TypeORMAdapter', () => {
     it('throws NotFoundError when update affects no rows', async () => {
       mockRepository.update.mockResolvedValue({ affected: 0 })
 
-      await expect(adapter.update('999', { email: 'new@test.com' })).rejects.toThrow(
-        NotFoundError
-      )
+      await expect(
+        adapter.update('999', { email: 'new@test.com' })
+      ).rejects.toThrow(NotFoundError)
     })
 
     it('throws NotFoundError when record not found after update', async () => {
       mockRepository.update.mockResolvedValue({ affected: 1 })
       mockRepository.findOne.mockResolvedValue(null)
 
-      await expect(adapter.update('1', { email: 'new@test.com' })).rejects.toThrow(
-        NotFoundError
-      )
+      await expect(
+        adapter.update('1', { email: 'new@test.com' })
+      ).rejects.toThrow(NotFoundError)
     })
 
     it('handles other database errors', async () => {
       mockRepository.update.mockRejectedValue(new Error('Constraint violation'))
 
-      await expect(adapter.update('1', { email: 'new@test.com' })).rejects.toThrow(QueryError)
+      await expect(
+        adapter.update('1', { email: 'new@test.com' })
+      ).rejects.toThrow(QueryError)
     })
   })
 
@@ -380,12 +429,14 @@ describe('TypeORMAdapter', () => {
         age: 30,
       })
 
-      mockRepository.manager.connection.transaction.mockImplementation(async (callback) => {
-        const mockEntityManager = {
-          getRepository: vi.fn().mockReturnValue(mockTxRepository),
+      mockRepository.manager.connection.transaction.mockImplementation(
+        async (callback) => {
+          const mockEntityManager = {
+            getRepository: vi.fn().mockReturnValue(mockTxRepository),
+          }
+          return await callback(mockEntityManager)
         }
-        return await callback(mockEntityManager)
-      })
+      )
 
       const result = await adapter.transaction(async (txAdapter) => {
         const record = await txAdapter.insert({
@@ -425,12 +476,14 @@ describe('TypeORMAdapter', () => {
       })
       mockTxRepository.delete.mockResolvedValue({ affected: 1 })
 
-      mockRepository.manager.connection.transaction.mockImplementation(async (callback) => {
-        const mockEntityManager = {
-          getRepository: vi.fn().mockReturnValue(mockTxRepository),
+      mockRepository.manager.connection.transaction.mockImplementation(
+        async (callback) => {
+          const mockEntityManager = {
+            getRepository: vi.fn().mockReturnValue(mockTxRepository),
+          }
+          return await callback(mockEntityManager)
         }
-        return await callback(mockEntityManager)
-      })
+      )
 
       const result = await adapter.transaction(async (txAdapter) => {
         await txAdapter.insert({
@@ -451,11 +504,25 @@ describe('TypeORMAdapter', () => {
   describe('batchInsert', () => {
     it('inserts multiple records efficiently', async () => {
       const records = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
-      mockRepository.insert.mockResolvedValue({ identifiers: [{ id: '1' }, { id: '2' }] })
+      mockRepository.insert.mockResolvedValue({
+        identifiers: [{ id: '1' }, { id: '2' }],
+      })
       mockRepository.find.mockResolvedValue(records)
 
       const results = await adapter.batchInsert(records)
@@ -470,13 +537,37 @@ describe('TypeORMAdapter', () => {
 
     it('handles records without pre-assigned IDs', async () => {
       const records = [
-        { id: undefined, firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: undefined, firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: undefined,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: undefined,
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ] as any
 
       const insertedRecords = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
-        { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', age: 28 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
+        {
+          id: '2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@test.com',
+          age: 28,
+        },
       ]
 
       mockRepository.insert.mockResolvedValue({ identifiers: [] })
@@ -491,7 +582,13 @@ describe('TypeORMAdapter', () => {
       mockRepository.insert.mockRejectedValue(new Error('Batch insert failed'))
 
       const records = [
-        { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', age: 30 },
+        {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@test.com',
+          age: 30,
+        },
       ]
 
       await expect(adapter.batchInsert(records)).rejects.toThrow(QueryError)
@@ -525,12 +622,14 @@ describe('TypeORMAdapter', () => {
           age: 29,
         })
 
-      mockRepository.manager.connection.transaction.mockImplementation(async (callback) => {
-        const mockEntityManager = {
-          getRepository: vi.fn().mockReturnValue(mockTxRepository),
+      mockRepository.manager.connection.transaction.mockImplementation(
+        async (callback) => {
+          const mockEntityManager = {
+            getRepository: vi.fn().mockReturnValue(mockTxRepository),
+          }
+          return await callback(mockEntityManager)
         }
-        return await callback(mockEntityManager)
-      })
+      )
 
       const results = await adapter.batchUpdate(updates)
 
@@ -543,7 +642,9 @@ describe('TypeORMAdapter', () => {
       const results = await adapter.batchUpdate([])
 
       expect(results).toEqual([])
-      expect(mockRepository.manager.connection.transaction).not.toHaveBeenCalled()
+      expect(
+        mockRepository.manager.connection.transaction
+      ).not.toHaveBeenCalled()
     })
 
     it('handles errors during batch update', async () => {
@@ -672,7 +773,10 @@ describe('TypeORMAdapter', () => {
 
   describe('factory function', () => {
     it('creates adapter via factory function', () => {
-      const factoryAdapter = typeormAdapter<TestRecord>(mockRepository as any, config)
+      const factoryAdapter = typeormAdapter<TestRecord>(
+        mockRepository as any,
+        config
+      )
 
       expect(factoryAdapter).toBeInstanceOf(TypeORMAdapter)
     })

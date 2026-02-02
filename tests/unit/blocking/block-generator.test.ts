@@ -59,10 +59,10 @@ describe('BlockGenerator', () => {
         { id: '3', name: 'Bob', age: 35 },
       ]
 
-      const strategy: BlockingStrategy<typeof records[0]> = {
+      const strategy: BlockingStrategy<(typeof records)[0]> = {
         name: 'firstLetter',
         generateBlocks: (recs) => {
-          const blocks = new Map<string, typeof recs[0][]>()
+          const blocks = new Map<string, (typeof recs)[0][]>()
           for (const rec of recs) {
             if (!rec.name) continue
             const key = rec.name[0].toUpperCase()
@@ -120,7 +120,9 @@ describe('BlockGenerator', () => {
 
       const blocks = generator.generateBlocks(records, strategy)
       expect(blocks.size).toBe(3)
-      expect(Array.from(blocks.values()).every((b) => b.length === 1)).toBe(true)
+      expect(Array.from(blocks.values()).every((b) => b.length === 1)).toBe(
+        true
+      )
     })
   })
 
@@ -159,7 +161,10 @@ describe('BlockGenerator', () => {
         },
       }
 
-      const blocks = generator.generateBlocksComposite(records, [strategy1, strategy2])
+      const blocks = generator.generateBlocksComposite(records, [
+        strategy1,
+        strategy2,
+      ])
 
       expect(blocks.size).toBeGreaterThan(0)
       expect(blocks.has('firstName:A')).toBe(true)

@@ -39,7 +39,9 @@ const DEFAULT_ORDER_DIRECTION = 'asc'
 /**
  * ReviewQueue implementation
  */
-export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQueue<T> {
+export class ReviewQueue<
+  T extends Record<string, unknown>,
+> implements IReviewQueue<T> {
   constructor(private readonly adapter: QueueAdapter<T>) {}
 
   /**
@@ -80,10 +82,14 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
       try {
         validateQueueItem(items[i])
       } catch (error) {
-        throw new QueueOperationError('addBatch', `Validation failed for item at index ${i}`, {
-          index: i,
-          error: (error as Error).message,
-        })
+        throw new QueueOperationError(
+          'addBatch',
+          `Validation failed for item at index ${i}`,
+          {
+            index: i,
+            error: (error as Error).message,
+          }
+        )
       }
     }
 
@@ -105,7 +111,9 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
     try {
       return await this.adapter.batchInsertQueueItems(queueItems)
     } catch (error) {
-      throw new QueueOperationError('addBatch', (error as Error).message, { count: items.length })
+      throw new QueueOperationError('addBatch', (error as Error).message, {
+        count: items.length,
+      })
     }
   }
 
@@ -149,7 +157,9 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         hasMore,
       }
     } catch (error) {
-      throw new QueueOperationError('list', (error as Error).message, { options })
+      throw new QueueOperationError('list', (error as Error).message, {
+        options,
+      })
     }
   }
 
@@ -197,7 +207,10 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         updatedAt: now,
       })
     } catch (error) {
-      throw new QueueOperationError('confirm', (error as Error).message, { id, decision })
+      throw new QueueOperationError('confirm', (error as Error).message, {
+        id,
+        decision,
+      })
     }
   }
 
@@ -233,7 +246,10 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         updatedAt: now,
       })
     } catch (error) {
-      throw new QueueOperationError('reject', (error as Error).message, { id, decision })
+      throw new QueueOperationError('reject', (error as Error).message, {
+        id,
+        decision,
+      })
     }
   }
 
@@ -270,7 +286,10 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         updatedAt: now,
       })
     } catch (error) {
-      throw new QueueOperationError('merge', (error as Error).message, { id, decision })
+      throw new QueueOperationError('merge', (error as Error).message, {
+        id,
+        decision,
+      })
     }
   }
 
@@ -295,7 +314,10 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         updatedAt: now,
       })
     } catch (error) {
-      throw new QueueOperationError('updateStatus', (error as Error).message, { id, status })
+      throw new QueueOperationError('updateStatus', (error as Error).message, {
+        id,
+        status,
+      })
     }
   }
 
@@ -374,7 +396,7 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
       const oldestPending =
         pendingItems.length > 0
           ? pendingItems.reduce((oldest, item) =>
-              item.createdAt < oldest.createdAt ? item : oldest,
+              item.createdAt < oldest.createdAt ? item : oldest
             ).createdAt
           : undefined
 
@@ -415,7 +437,9 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         },
       }
     } catch (error) {
-      throw new QueueOperationError('stats', (error as Error).message, { options })
+      throw new QueueOperationError('stats', (error as Error).message, {
+        options,
+      })
     }
   }
 
@@ -443,7 +467,9 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
 
       return deletedCount
     } catch (error) {
-      throw new QueueOperationError('cleanup', (error as Error).message, { options })
+      throw new QueueOperationError('cleanup', (error as Error).message, {
+        options,
+      })
     }
   }
 
@@ -458,7 +484,11 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
 
       return QueueMetrics.calculateAgeDistribution(items)
     } catch (error) {
-      throw new QueueOperationError('getAgingReport', (error as Error).message, {})
+      throw new QueueOperationError(
+        'getAgingReport',
+        (error as Error).message,
+        {}
+      )
     }
   }
 
@@ -480,7 +510,11 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
 
       return priorityCount
     } catch (error) {
-      throw new QueueOperationError('getPriorityReport', (error as Error).message, {})
+      throw new QueueOperationError(
+        'getPriorityReport',
+        (error as Error).message,
+        {}
+      )
     }
   }
 
@@ -542,7 +576,11 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
 
       return reviewerStats
     } catch (error) {
-      throw new QueueOperationError('getReviewerReport', (error as Error).message, {})
+      throw new QueueOperationError(
+        'getReviewerReport',
+        (error as Error).message,
+        {}
+      )
     }
   }
 
@@ -584,7 +622,11 @@ export class ReviewQueue<T extends Record<string, unknown>> implements IReviewQu
         confirmRatio,
       }
     } catch (error) {
-      throw new QueueOperationError('getDecisionAccuracy', (error as Error).message, {})
+      throw new QueueOperationError(
+        'getDecisionAccuracy',
+        (error as Error).message,
+        {}
+      )
     }
   }
 }

@@ -1,4 +1,10 @@
-import type { DatabaseAdapter, AdapterConfig, QueryOptions, FilterCriteria, QueueAdapter } from '../types'
+import type {
+  DatabaseAdapter,
+  AdapterConfig,
+  QueryOptions,
+  FilterCriteria,
+  QueueAdapter,
+} from '../types'
 import { BaseAdapter } from '../base-adapter'
 import { QueryError, TransactionError, NotFoundError } from '../adapter-error'
 import { TypeORMQueueAdapter } from './typeorm-queue-adapter'
@@ -13,7 +19,9 @@ type Repository<T> = {
   insert: (entities: unknown) => Promise<unknown>
   manager: {
     connection: {
-      transaction: <R>(callback: (manager: EntityManager) => Promise<R>) => Promise<R>
+      transaction: <R>(
+        callback: (manager: EntityManager) => Promise<R>
+      ) => Promise<R>
     }
   }
 }
@@ -40,7 +48,8 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
     this.repository = repository
     this.entityTarget = entityTarget
     this.queue = new TypeORMQueueAdapter<T>(
-      queueRepository || (repository as unknown as Repository<Record<string, unknown>>),
+      queueRepository ||
+        (repository as unknown as Repository<Record<string, unknown>>),
       config.queue
     )
   }
@@ -49,7 +58,11 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
     const where: Record<string, unknown> = {}
 
     for (const [field, condition] of Object.entries(filter)) {
-      if (typeof condition === 'object' && condition !== null && 'operator' in condition) {
+      if (
+        typeof condition === 'object' &&
+        condition !== null &&
+        'operator' in condition
+      ) {
         const operatorCondition = condition as {
           operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'like'
           value: unknown
@@ -106,7 +119,8 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
 
       if (normalized.orderBy) {
         findOptions.order = {
-          [this.mapFieldToColumn(normalized.orderBy.field)]: normalized.orderBy.direction.toUpperCase(),
+          [this.mapFieldToColumn(normalized.orderBy.field)]:
+            normalized.orderBy.direction.toUpperCase(),
         }
       }
 
@@ -119,7 +133,9 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
       }
 
       const results = await this.repository.find(findOptions)
-      return results.map((record) => this.mapRecordFromDatabase(record as Record<string, unknown>))
+      return results.map((record) =>
+        this.mapRecordFromDatabase(record as Record<string, unknown>)
+      )
     } catch (error) {
       throw new QueryError('Failed to find records by blocking keys', {
         blockingKeys: Array.from(blockingKeys.entries()),
@@ -138,7 +154,9 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
         },
       })
 
-      return results.map((record) => this.mapRecordFromDatabase(record as Record<string, unknown>))
+      return results.map((record) =>
+        this.mapRecordFromDatabase(record as Record<string, unknown>)
+      )
     } catch (error) {
       throw new QueryError('Failed to find records by IDs', {
         ids,
@@ -158,7 +176,8 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
 
       if (normalized.orderBy) {
         findOptions.order = {
-          [this.mapFieldToColumn(normalized.orderBy.field)]: normalized.orderBy.direction.toUpperCase(),
+          [this.mapFieldToColumn(normalized.orderBy.field)]:
+            normalized.orderBy.direction.toUpperCase(),
         }
       }
 
@@ -171,7 +190,9 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
       }
 
       const results = await this.repository.find(findOptions)
-      return results.map((record) => this.mapRecordFromDatabase(record as Record<string, unknown>))
+      return results.map((record) =>
+        this.mapRecordFromDatabase(record as Record<string, unknown>)
+      )
     } catch (error) {
       throw new QueryError('Failed to find all records', {
         error: error instanceof Error ? error.message : String(error),
@@ -224,7 +245,10 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
       })
 
       if (!updated) {
-        throw new NotFoundError(`Record with id '${id}' not found after update`, { id })
+        throw new NotFoundError(
+          `Record with id '${id}' not found after update`,
+          { id }
+        )
       }
 
       return this.mapRecordFromDatabase(updated as Record<string, unknown>)
@@ -263,7 +287,9 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async transaction<R>(callback: (adapter: DatabaseAdapter<T>) => Promise<R>): Promise<R> {
+  async transaction<R>(
+    callback: (adapter: DatabaseAdapter<T>) => Promise<R>
+  ): Promise<R> {
     try {
       return await this.repository.manager.connection.transaction(
         async (entityManager: EntityManager) => {
@@ -327,7 +353,9 @@ export class TypeORMAdapter<T extends Record<string, unknown>>
     }
   }
 
-  async batchUpdate(updates: Array<{ id: string; updates: Partial<T> }>): Promise<T[]> {
+  async batchUpdate(
+    updates: Array<{ id: string; updates: Partial<T> }>
+  ): Promise<T[]> {
     if (updates.length === 0) {
       return []
     }

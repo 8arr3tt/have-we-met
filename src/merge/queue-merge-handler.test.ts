@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { QueueMergeHandler, createQueueMergeHandler } from './queue-merge-handler.js'
+import {
+  QueueMergeHandler,
+  createQueueMergeHandler,
+} from './queue-merge-handler.js'
 import { MergeExecutor } from './merge-executor.js'
 import { InMemoryProvenanceStore } from './provenance/provenance-store.js'
 import { InMemorySourceRecordArchive } from './unmerge.js'
@@ -158,7 +161,10 @@ describe('QueueMergeHandler', () => {
       await handlerWithCallback.handleMergeDecision(queueItem, decision)
 
       expect(onSourceRecordsArchive).toHaveBeenCalledTimes(1)
-      expect(onSourceRecordsArchive).toHaveBeenCalledWith(['rec-001', 'rec-002'])
+      expect(onSourceRecordsArchive).toHaveBeenCalledWith([
+        'rec-001',
+        'rec-002',
+      ])
     })
 
     it('stores provenance with queue reference', async () => {
@@ -230,7 +236,9 @@ describe('QueueMergeHandler', () => {
 
       await expect(
         handler.handleMergeDecision(queueItem, decision)
-      ).rejects.toThrow("'non-existent-id' not found in queue item potential matches")
+      ).rejects.toThrow(
+        "'non-existent-id' not found in queue item potential matches"
+      )
     })
 
     it('handles merge errors gracefully', async () => {
@@ -274,11 +282,13 @@ describe('QueueMergeHandler', () => {
     })
 
     it('continues if queue update fails', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
 
-      mockQueueAdapter.updateQueueItem = vi.fn().mockRejectedValue(
-        new Error('Queue update failed')
-      )
+      mockQueueAdapter.updateQueueItem = vi
+        .fn()
+        .mockRejectedValue(new Error('Queue update failed'))
 
       const queueItem = createQueueItem()
       const decision: MergeDecision = {
@@ -314,7 +324,9 @@ describe('QueueMergeHandler', () => {
   })
 
   describe('canMerge', () => {
-    const createQueueItem = (status: string = 'pending'): QueueItem<TestRecord> => ({
+    const createQueueItem = (
+      status: string = 'pending'
+    ): QueueItem<TestRecord> => ({
       id: 'queue-item-123',
       candidateRecord: {
         id: 'rec-001',
@@ -527,7 +539,10 @@ describe('QueueMergeHandler', () => {
       expect(result.goldenRecord.phone).toBe('123-456-7890') // preferNonNull
 
       // Verify provenance
-      expect(result.provenance.sourceRecordIds).toEqual(['candidate-1', 'match-1'])
+      expect(result.provenance.sourceRecordIds).toEqual([
+        'candidate-1',
+        'match-1',
+      ])
       expect(result.provenance.mergedBy).toBe('human-reviewer')
       expect(result.provenance.queueItemId).toBe('queue-item-full-test')
 
@@ -581,7 +596,9 @@ describe('QueueMergeHandler', () => {
       const provenance = result.provenance
       expect(provenance.fieldSources).toBeDefined()
       expect(provenance.fieldSources.firstName).toBeDefined()
-      expect(provenance.fieldSources.firstName.strategyApplied).toBe('preferLonger')
+      expect(provenance.fieldSources.firstName.strategyApplied).toBe(
+        'preferLonger'
+      )
 
       // Verify we can query by source record
       const foundBySource = await provenanceStore.getBySourceId('a1')

@@ -64,7 +64,10 @@ describe('withCache', () => {
 
     // Need a cache with stale window configured
     cache.dispose()
-    cache = new MemoryCache({ defaultStaleWindowSeconds: 60, pruneIntervalMs: 0 })
+    cache = new MemoryCache({
+      defaultStaleWindowSeconds: 60,
+      pruneIntervalMs: 0,
+    })
 
     await cache.set('key', 'stale-value', 1)
 
@@ -83,7 +86,9 @@ describe('withCache', () => {
   it('throws error when no stale value available', async () => {
     const fn = vi.fn().mockRejectedValue(new Error('fetch failed'))
 
-    await expect(withCache('key', fn, config, cache)).rejects.toThrow('fetch failed')
+    await expect(withCache('key', fn, config, cache)).rejects.toThrow(
+      'fetch failed'
+    )
   })
 
   it('throws error when staleOnError is disabled', async () => {
@@ -91,7 +96,10 @@ describe('withCache', () => {
 
     // Need a cache with stale window configured
     cache.dispose()
-    cache = new MemoryCache({ defaultStaleWindowSeconds: 60, pruneIntervalMs: 0 })
+    cache = new MemoryCache({
+      defaultStaleWindowSeconds: 60,
+      pruneIntervalMs: 0,
+    })
 
     config.staleOnError = false
     await cache.set('key', 'stale-value', 1)
@@ -100,7 +108,9 @@ describe('withCache', () => {
 
     const fn = vi.fn().mockRejectedValue(new Error('fetch failed'))
 
-    await expect(withCache('key', fn, config, cache)).rejects.toThrow('fetch failed')
+    await expect(withCache('key', fn, config, cache)).rejects.toThrow(
+      'fetch failed'
+    )
 
     vi.useRealTimers()
   })
@@ -121,7 +131,10 @@ describe('withCache', () => {
   it('does not return stale value for fresh cache check', async () => {
     vi.useFakeTimers()
 
-    cache = new MemoryCache({ defaultStaleWindowSeconds: 30, pruneIntervalMs: 0 })
+    cache = new MemoryCache({
+      defaultStaleWindowSeconds: 30,
+      pruneIntervalMs: 0,
+    })
 
     await cache.set('key', 'value', 5)
 
@@ -160,7 +173,12 @@ describe('withCacheDetailed', () => {
   it('returns cache details on hit', async () => {
     await cache.set('key', 'cached-value', 60)
 
-    const result = await withCacheDetailed('key', async () => 'new-value', config, cache)
+    const result = await withCacheDetailed(
+      'key',
+      async () => 'new-value',
+      config,
+      cache
+    )
 
     expect(result.result).toBe('cached-value')
     expect(result.cacheDetails.cached).toBe(true)
@@ -170,7 +188,12 @@ describe('withCacheDetailed', () => {
   })
 
   it('returns cache details on miss', async () => {
-    const result = await withCacheDetailed('key', async () => 'new-value', config, cache)
+    const result = await withCacheDetailed(
+      'key',
+      async () => 'new-value',
+      config,
+      cache
+    )
 
     expect(result.result).toBe('new-value')
     expect(result.cacheDetails.cached).toBe(false)
@@ -183,7 +206,10 @@ describe('withCacheDetailed', () => {
 
     // Need a cache with stale window configured
     cache.dispose()
-    cache = new MemoryCache({ defaultStaleWindowSeconds: 60, pruneIntervalMs: 0 })
+    cache = new MemoryCache({
+      defaultStaleWindowSeconds: 60,
+      pruneIntervalMs: 0,
+    })
 
     await cache.set('key', 'stale-value', 1)
 
@@ -195,7 +221,7 @@ describe('withCacheDetailed', () => {
         throw new Error('fail')
       },
       config,
-      cache,
+      cache
     )
 
     expect(result.result).toBe('stale-value')
@@ -211,7 +237,7 @@ describe('withCacheDetailed', () => {
       'key',
       async () => 'value',
       config,
-      cache,
+      cache
     )
 
     expect(result.cacheDetails.cacheTimeMs).toBeGreaterThanOrEqual(0)
@@ -220,7 +246,12 @@ describe('withCacheDetailed', () => {
   it('handles disabled cache', async () => {
     config.enabled = false
 
-    const result = await withCacheDetailed('key', async () => 'value', config, cache)
+    const result = await withCacheDetailed(
+      'key',
+      async () => 'value',
+      config,
+      cache
+    )
 
     expect(result.result).toBe('value')
     expect(result.cacheDetails.cached).toBe(false)
@@ -257,8 +288,16 @@ describe('createCachedFunction', () => {
   })
 
   it('uses custom key function', async () => {
-    const fn = vi.fn(async (opts: { id: number; extra: string }) => `user-${opts.id}`)
-    const cachedFn = createCachedFunction('user-lookup', fn, config, cache, (opts) => `id-${opts.id}`)
+    const fn = vi.fn(
+      async (opts: { id: number; extra: string }) => `user-${opts.id}`
+    )
+    const cachedFn = createCachedFunction(
+      'user-lookup',
+      fn,
+      config,
+      cache,
+      (opts) => `id-${opts.id}`
+    )
 
     await cachedFn({ id: 1, extra: 'a' })
     await cachedFn({ id: 1, extra: 'b' })
@@ -424,7 +463,13 @@ describe('cacheMethod', () => {
 
   it('creates a cached method', async () => {
     const originalMethod = vi.fn(async (id: string) => `user-${id}`)
-    const cachedMethod = cacheMethod('user-service', cache, config, originalMethod, (id) => id)
+    const cachedMethod = cacheMethod(
+      'user-service',
+      cache,
+      config,
+      originalMethod,
+      (id) => id
+    )
 
     const result1 = await cachedMethod('abc')
     expect(result1).toBe('user-abc')
@@ -437,7 +482,13 @@ describe('cacheMethod', () => {
 
   it('caches different keys separately', async () => {
     const originalMethod = vi.fn(async (id: string) => `user-${id}`)
-    const cachedMethod = cacheMethod('user-service', cache, config, originalMethod, (id) => id)
+    const cachedMethod = cacheMethod(
+      'user-service',
+      cache,
+      config,
+      originalMethod,
+      (id) => id
+    )
 
     await cachedMethod('a')
     await cachedMethod('b')
@@ -465,7 +516,13 @@ describe('batchWithCache', () => {
 
     const fetchFn = vi.fn().mockResolvedValue(new Map())
 
-    const results = await batchWithCache([1, 2], cache, config, (id) => `user:${id}`, fetchFn)
+    const results = await batchWithCache(
+      [1, 2],
+      cache,
+      config,
+      (id) => `user:${id}`,
+      fetchFn
+    )
 
     expect(results.get(1)?.value).toBe('user-1')
     expect(results.get(1)?.cached).toBe(true)
@@ -481,10 +538,16 @@ describe('batchWithCache', () => {
       new Map([
         [2, 'user-2-fetched'],
         [3, 'user-3-fetched'],
-      ]),
+      ])
     )
 
-    const results = await batchWithCache([1, 2, 3], cache, config, (id) => `user:${id}`, fetchFn)
+    const results = await batchWithCache(
+      [1, 2, 3],
+      cache,
+      config,
+      (id) => `user:${id}`,
+      fetchFn
+    )
 
     expect(results.get(1)?.value).toBe('user-1-cached')
     expect(results.get(1)?.cached).toBe(true)
@@ -501,7 +564,7 @@ describe('batchWithCache', () => {
       new Map([
         [1, 'user-1'],
         [2, 'user-2'],
-      ]),
+      ])
     )
 
     await batchWithCache([1, 2], cache, config, (id) => `user:${id}`, fetchFn)
@@ -516,7 +579,13 @@ describe('batchWithCache', () => {
 
     const fetchFn = vi.fn().mockResolvedValue(new Map([[1, 'fetched']]))
 
-    const results = await batchWithCache([1], cache, config, (id) => `user:${id}`, fetchFn)
+    const results = await batchWithCache(
+      [1],
+      cache,
+      config,
+      (id) => `user:${id}`,
+      fetchFn
+    )
 
     expect(results.get(1)?.value).toBe('fetched')
     expect(results.get(1)?.cached).toBe(false)
@@ -562,7 +631,10 @@ describe('refreshInBackground', () => {
   it('returns stale value and triggers background refresh', async () => {
     vi.useFakeTimers()
 
-    cache = new MemoryCache({ defaultStaleWindowSeconds: 60, pruneIntervalMs: 0 })
+    cache = new MemoryCache({
+      defaultStaleWindowSeconds: 60,
+      pruneIntervalMs: 0,
+    })
     await cache.set('key', 'stale-value', 1)
 
     vi.advanceTimersByTime(2000)
@@ -585,7 +657,10 @@ describe('refreshInBackground', () => {
   it('handles background refresh error silently', async () => {
     vi.useFakeTimers()
 
-    cache = new MemoryCache({ defaultStaleWindowSeconds: 60, pruneIntervalMs: 0 })
+    cache = new MemoryCache({
+      defaultStaleWindowSeconds: 60,
+      pruneIntervalMs: 0,
+    })
     await cache.set('key', 'stale-value', 1)
 
     vi.advanceTimersByTime(2000)

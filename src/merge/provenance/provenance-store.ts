@@ -79,7 +79,10 @@ export interface ProvenanceStore {
    * @param options - Query options
    * @returns Array of matching provenance records
    */
-  getBySourceId(sourceRecordId: string, options?: ProvenanceQueryOptions): Promise<Provenance[]>
+  getBySourceId(
+    sourceRecordId: string,
+    options?: ProvenanceQueryOptions
+  ): Promise<Provenance[]>
 
   /**
    * Marks a provenance record as unmerged
@@ -112,7 +115,10 @@ export interface ProvenanceStore {
    * @param field - The field path
    * @returns Array of field history entries
    */
-  getFieldHistory(goldenRecordId: string, field: string): Promise<FieldHistoryEntry[]>
+  getFieldHistory(
+    goldenRecordId: string,
+    field: string
+  ): Promise<FieldHistoryEntry[]>
 
   /**
    * Gets the merge timeline showing all merge operations
@@ -120,7 +126,9 @@ export interface ProvenanceStore {
    * @param options - Query options
    * @returns Array of merge timeline entries
    */
-  getMergeTimeline(options?: ProvenanceQueryOptions): Promise<MergeTimelineEntry[]>
+  getMergeTimeline(
+    options?: ProvenanceQueryOptions
+  ): Promise<MergeTimelineEntry[]>
 
   /**
    * Finds all golden records that a source record was merged into
@@ -171,7 +179,7 @@ export class InMemoryProvenanceStore implements ProvenanceStore {
 
   async getBySourceId(
     sourceRecordId: string,
-    options?: ProvenanceQueryOptions,
+    options?: ProvenanceQueryOptions
   ): Promise<Provenance[]> {
     const goldenRecordIds = this.sourceIndex.get(sourceRecordId) ?? new Set()
     let results: Provenance[] = []
@@ -205,7 +213,9 @@ export class InMemoryProvenanceStore implements ProvenanceStore {
   async markUnmerged(goldenRecordId: string, info: UnmergeInfo): Promise<void> {
     const provenance = this.store.get(goldenRecordId)
     if (!provenance) {
-      throw new Error(`Provenance not found for golden record: ${goldenRecordId}`)
+      throw new Error(
+        `Provenance not found for golden record: ${goldenRecordId}`
+      )
     }
 
     this.store.set(goldenRecordId, {
@@ -243,7 +253,10 @@ export class InMemoryProvenanceStore implements ProvenanceStore {
     return this.store.has(goldenRecordId)
   }
 
-  async getFieldHistory(goldenRecordId: string, field: string): Promise<FieldHistoryEntry[]> {
+  async getFieldHistory(
+    goldenRecordId: string,
+    field: string
+  ): Promise<FieldHistoryEntry[]> {
     const provenance = this.store.get(goldenRecordId)
     if (!provenance) {
       return []
@@ -261,13 +274,17 @@ export class InMemoryProvenanceStore implements ProvenanceStore {
         goldenRecordId,
         mergedAt: provenance.mergedAt,
         sourceRecordId: fieldSource.sourceRecordId,
-        value: fieldSource.allValues.find((v) => v.recordId === fieldSource.sourceRecordId)?.value,
+        value: fieldSource.allValues.find(
+          (v) => v.recordId === fieldSource.sourceRecordId
+        )?.value,
         strategyApplied: fieldSource.strategyApplied,
       },
     ]
   }
 
-  async getMergeTimeline(options?: ProvenanceQueryOptions): Promise<MergeTimelineEntry[]> {
+  async getMergeTimeline(
+    options?: ProvenanceQueryOptions
+  ): Promise<MergeTimelineEntry[]> {
     let entries: MergeTimelineEntry[] = []
 
     for (const provenance of this.store.values()) {

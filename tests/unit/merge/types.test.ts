@@ -320,7 +320,8 @@ describe('Merge Types', () => {
           { recordId: 'rec-002', value: 'value2' },
         ],
         hadConflict: true,
-        conflictResolution: 'Used default strategy (preferFirst) due to conflicting values',
+        conflictResolution:
+          'Used default strategy (preferFirst) due to conflicting values',
       }
 
       expect(fieldProv.hadConflict).toBe(true)

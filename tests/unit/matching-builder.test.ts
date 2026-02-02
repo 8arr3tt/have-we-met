@@ -107,7 +107,9 @@ describe('FieldMatchBuilder', () => {
       const builder = new MatchingBuilder()
       const fieldBuilder = builder.field('address')
 
-      const result = fieldBuilder.levenshteinOptions({ normalizeWhitespace: true })
+      const result = fieldBuilder.levenshteinOptions({
+        normalizeWhitespace: true,
+      })
       expect(result).toBe(fieldBuilder)
     })
 

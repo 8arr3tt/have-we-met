@@ -73,12 +73,8 @@ export class MatchExplainer {
       `${indicator} ${fieldScore.field}: ${similarityLabel} (${similarity} × ${weight} = ${contribution})`
     )
 
-    lines.push(
-      `  Record A: ${this.formatValue(fieldScore.leftValue)}`
-    )
-    lines.push(
-      `  Record B: ${this.formatValue(fieldScore.rightValue)}`
-    )
+    lines.push(`  Record A: ${this.formatValue(fieldScore.leftValue)}`)
+    lines.push(`  Record B: ${this.formatValue(fieldScore.rightValue)}`)
 
     if (fieldScore.strategy !== 'exact') {
       lines.push(`  Strategy: ${fieldScore.strategy}`)

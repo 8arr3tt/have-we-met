@@ -3,7 +3,11 @@
  * @module merge/strategies/temporal-strategies
  */
 
-import type { StrategyFunction, SourceRecord, FieldMergeOptions } from '../types.js'
+import type {
+  StrategyFunction,
+  SourceRecord,
+  FieldMergeOptions,
+} from '../types.js'
 
 /**
  * Gets a timestamp value from a record using the specified field path
@@ -42,7 +46,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
  */
 function isSkippableValue(
   value: unknown,
-  nullHandling: FieldMergeOptions['nullHandling'] = 'skip',
+  nullHandling: FieldMergeOptions['nullHandling'] = 'skip'
 ): boolean {
   if (value === undefined) return true
   if (nullHandling === 'include') return false
@@ -74,7 +78,7 @@ function isSkippableValue(
 export const preferNewer: StrategyFunction = (
   values: unknown[],
   records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
   if (!records || records.length === 0) return undefined
@@ -133,7 +137,7 @@ export const preferNewer: StrategyFunction = (
 export const preferOlder: StrategyFunction = (
   values: unknown[],
   records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
   if (!records || records.length === 0) return undefined

@@ -12,10 +12,11 @@ import {
   isDisposableDomain,
 } from './email-validator.js'
 import type { ServiceContext } from '../../types.js'
+import type { ResolverConfig } from '../../../types/config.js'
 
 const createMockContext = (): ServiceContext => ({
   record: {},
-  config: {} as any,
+  config: {} as unknown as ResolverConfig,
   metadata: {
     correlationId: 'test-123',
     startedAt: new Date(),
@@ -89,7 +90,9 @@ describe('Email Validator', () => {
   describe('extractDomain', () => {
     it('extracts domain from email', () => {
       expect(extractDomain('user@example.com')).toBe('example.com')
-      expect(extractDomain('user@SUBDOMAIN.Example.COM')).toBe('subdomain.example.com')
+      expect(extractDomain('user@SUBDOMAIN.Example.COM')).toBe(
+        'subdomain.example.com'
+      )
     })
 
     it('returns null for invalid emails', () => {
@@ -126,7 +129,7 @@ describe('Email Validator', () => {
     it('validates correct email addresses', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user@example.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -138,7 +141,7 @@ describe('Email Validator', () => {
     it('normalizes email to lowercase', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'User@Example.COM' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -149,7 +152,7 @@ describe('Email Validator', () => {
     it('rejects empty values', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: '' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -160,7 +163,7 @@ describe('Email Validator', () => {
     it('rejects invalid format', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'invalid-email' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -172,20 +175,20 @@ describe('Email Validator', () => {
     it('returns validation checks detail', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user@example.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.details?.checks).toBeDefined()
       expect(result.data?.details?.checks).toContainEqual(
-        expect.objectContaining({ name: 'format', passed: true }),
+        expect.objectContaining({ name: 'format', passed: true })
       )
     })
 
     it('tracks timing information', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user@example.com' },
-        context,
+        context
       )
 
       expect(result.timing).toBeDefined()
@@ -220,12 +223,14 @@ describe('Email Validator', () => {
 
       const result = await validator.execute(
         { field: 'email', value: 'user@mailinator.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('Disposable email addresses are not allowed')
+      expect(result.data?.invalidReason).toBe(
+        'Disposable email addresses are not allowed'
+      )
     })
 
     it('allows disposable emails when not configured', async () => {
@@ -233,7 +238,7 @@ describe('Email Validator', () => {
 
       const result = await validator.execute(
         { field: 'email', value: 'user@mailinator.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -248,12 +253,14 @@ describe('Email Validator', () => {
 
       const result = await validator.execute(
         { field: 'email', value: 'user@custom-disposable.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('Disposable email addresses are not allowed')
+      expect(result.data?.invalidReason).toBe(
+        'Disposable email addresses are not allowed'
+      )
     })
 
     it('includes MX check when configured', async () => {
@@ -261,13 +268,13 @@ describe('Email Validator', () => {
 
       const result = await validator.execute(
         { field: 'email', value: 'user@example.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(true)
       expect(result.data?.details?.checks).toContainEqual(
-        expect.objectContaining({ name: 'mx', passed: true }),
+        expect.objectContaining({ name: 'mx', passed: true })
       )
     })
   })
@@ -294,7 +301,7 @@ describe('Email Validator', () => {
     it('handles email with plus addressing', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user+tag@example.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -304,7 +311,7 @@ describe('Email Validator', () => {
     it('handles email with subdomain', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user@mail.subdomain.example.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -314,7 +321,7 @@ describe('Email Validator', () => {
     it('handles international TLDs', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user@example.co.uk' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -324,7 +331,7 @@ describe('Email Validator', () => {
     it('handles new TLDs', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: 'user@example.technology' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -334,7 +341,7 @@ describe('Email Validator', () => {
     it('handles numeric local part', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: '12345@example.com' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -344,7 +351,7 @@ describe('Email Validator', () => {
     it('handles email with special characters in local part', async () => {
       const result = await emailValidator.execute(
         { field: 'email', value: "user.name!#$%&'*+/=?^_`{|}~@example.com" },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)

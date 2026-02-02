@@ -207,7 +207,9 @@ describe('Service Types', () => {
       const service: ValidationService = {
         name: 'test-validator',
         type: 'validation',
-        execute: async (_input: ValidationInput): Promise<ServiceResult<ValidationOutput>> => ({
+        execute: async (
+          _input: ValidationInput
+        ): Promise<ServiceResult<ValidationOutput>> => ({
           success: true,
           data: {
             valid: true,
@@ -238,7 +240,11 @@ describe('Service Types', () => {
             details: {
               checks: [
                 { name: 'format', passed: true, message: 'Format OK' },
-                { name: 'checksum', passed: false, message: 'Invalid checksum' },
+                {
+                  name: 'checksum',
+                  passed: false,
+                  message: 'Invalid checksum',
+                },
               ],
             },
             invalidReason: 'Invalid checksum',
@@ -255,7 +261,7 @@ describe('Service Types', () => {
 
       const result = await service.execute(
         { field: 'id', value: '123' },
-        {} as ServiceContext,
+        {} as ServiceContext
       )
 
       expect(result.success).toBe(true)
@@ -270,7 +276,9 @@ describe('Service Types', () => {
       const service: LookupService = {
         name: 'test-lookup',
         type: 'lookup',
-        execute: async (_input: LookupInput): Promise<ServiceResult<LookupOutput>> => ({
+        execute: async (
+          _input: LookupInput
+        ): Promise<ServiceResult<LookupOutput>> => ({
           success: true,
           data: {
             found: true,
@@ -316,7 +324,7 @@ describe('Service Types', () => {
 
       const result = await service.execute(
         { keyFields: { id: '123' } },
-        {} as ServiceContext,
+        {} as ServiceContext
       )
 
       expect(result.data?.found).toBe(true)
@@ -343,7 +351,7 @@ describe('Service Types', () => {
 
       const result = await service.execute(
         { keyFields: { id: 'unknown' } },
-        {} as ServiceContext,
+        {} as ServiceContext
       )
 
       expect(result.data?.found).toBe(false)
@@ -356,7 +364,9 @@ describe('Service Types', () => {
       const service: CustomService = {
         name: 'fraud-check',
         type: 'custom',
-        execute: async (_input: CustomInput): Promise<ServiceResult<CustomOutput>> => ({
+        execute: async (
+          _input: CustomInput
+        ): Promise<ServiceResult<CustomOutput>> => ({
           success: true,
           data: {
             result: { riskScore: 0.3 },
@@ -397,7 +407,7 @@ describe('Service Types', () => {
 
       const result = await service.execute(
         { record: { email: 'test@example.com' } },
-        {} as ServiceContext,
+        {} as ServiceContext
       )
 
       expect(result.data?.proceed).toBe(false)
@@ -414,7 +424,11 @@ describe('Default Configurations', () => {
       expect(DEFAULT_RETRY_CONFIG.initialDelayMs).toBe(100)
       expect(DEFAULT_RETRY_CONFIG.backoffMultiplier).toBe(2)
       expect(DEFAULT_RETRY_CONFIG.maxDelayMs).toBe(5000)
-      expect(DEFAULT_RETRY_CONFIG.retryOn).toEqual(['timeout', 'network', 'server'])
+      expect(DEFAULT_RETRY_CONFIG.retryOn).toEqual([
+        'timeout',
+        'network',
+        'server',
+      ])
     })
   })
 
@@ -453,7 +467,11 @@ describe('Type Compatibility', () => {
         type: 'validation',
         execute: async () => ({
           success: true,
-          timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
           cached: false,
         }),
       },
@@ -468,7 +486,11 @@ describe('Type Compatibility', () => {
         type: 'lookup',
         execute: async () => ({
           success: true,
-          timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
           cached: false,
         }),
       },
@@ -487,7 +509,11 @@ describe('Type Compatibility', () => {
         type: 'custom',
         execute: async () => ({
           success: true,
-          timing: { startedAt: new Date(), completedAt: new Date(), durationMs: 0 },
+          timing: {
+            startedAt: new Date(),
+            completedAt: new Date(),
+            durationMs: 0,
+          },
           cached: false,
         }),
       },

@@ -18,7 +18,11 @@ export type {
 export { DEFAULT_MEMORY_CACHE_CONFIG } from './cache-interface.js'
 
 // Memory cache implementation
-export { MemoryCache, createMemoryCache, createNoOpCache } from './memory-cache.js'
+export {
+  MemoryCache,
+  createMemoryCache,
+  createNoOpCache,
+} from './memory-cache.js'
 
 // Cache key generation
 export type { CacheKeyOptions } from './cache-key-generator.js'

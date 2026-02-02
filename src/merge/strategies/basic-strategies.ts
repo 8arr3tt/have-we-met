@@ -3,14 +3,18 @@
  * @module merge/strategies/basic-strategies
  */
 
-import type { StrategyFunction, SourceRecord, FieldMergeOptions } from '../types.js'
+import type {
+  StrategyFunction,
+  SourceRecord,
+  FieldMergeOptions,
+} from '../types.js'
 
 /**
  * Determines if a value should be considered "empty" based on null handling options
  */
 function shouldSkipValue(
   value: unknown,
-  nullHandling: FieldMergeOptions['nullHandling'] = 'skip',
+  nullHandling: FieldMergeOptions['nullHandling'] = 'skip'
 ): boolean {
   if (value === undefined) return true
   if (nullHandling === 'include') return false
@@ -39,7 +43,7 @@ function shouldSkipValue(
 export const preferFirst: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
 
@@ -71,7 +75,7 @@ export const preferFirst: StrategyFunction = (
 export const preferLast: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
 
@@ -105,7 +109,7 @@ export const preferLast: StrategyFunction = (
 export const preferNonNull: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  options?: FieldMergeOptions,
+  options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
 

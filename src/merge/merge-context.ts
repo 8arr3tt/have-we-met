@@ -21,7 +21,7 @@ import type {
  */
 export function createMergeContext<T extends Record<string, unknown>>(
   config: MergeConfig,
-  sourceRecords: SourceRecord<T>[],
+  sourceRecords: SourceRecord<T>[]
 ): IMergeContext<T> {
   return {
     config,
@@ -44,7 +44,7 @@ export function createMergeContext<T extends Record<string, unknown>>(
 export function recordFieldProvenance<T extends Record<string, unknown>>(
   context: IMergeContext<T>,
   field: string,
-  provenance: FieldProvenance,
+  provenance: FieldProvenance
 ): void {
   if (context.trackProvenance) {
     context.fieldSources[field] = provenance
@@ -59,7 +59,7 @@ export function recordFieldProvenance<T extends Record<string, unknown>>(
  */
 export function recordConflict<T extends Record<string, unknown>>(
   context: IMergeContext<T>,
-  conflict: MergeConflict,
+  conflict: MergeConflict
 ): void {
   context.conflicts.push(conflict)
 }
@@ -72,7 +72,7 @@ export function recordConflict<T extends Record<string, unknown>>(
  */
 export function setCurrentField<T extends Record<string, unknown>>(
   context: IMergeContext<T>,
-  field: string | undefined,
+  field: string | undefined
 ): void {
   context.currentField = field
 }
@@ -84,7 +84,7 @@ export function setCurrentField<T extends Record<string, unknown>>(
  * @returns Merge statistics
  */
 export function calculateStats<T extends Record<string, unknown>>(
-  context: IMergeContext<T>,
+  context: IMergeContext<T>
 ): MergeStats {
   const endTime = new Date()
   const mergeTimeMs = endTime.getTime() - context.startTime.getTime()
@@ -96,7 +96,10 @@ export function calculateStats<T extends Record<string, unknown>>(
   }
 
   for (const fieldProv of Object.values(context.fieldSources)) {
-    if (fieldProv.sourceRecordId && fieldsFromEachSource[fieldProv.sourceRecordId] !== undefined) {
+    if (
+      fieldProv.sourceRecordId &&
+      fieldsFromEachSource[fieldProv.sourceRecordId] !== undefined
+    ) {
       fieldsFromEachSource[fieldProv.sourceRecordId]++
     }
   }

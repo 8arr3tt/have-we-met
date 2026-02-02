@@ -22,7 +22,7 @@ describe('Timeout', () => {
 
   describe('withTimeout', () => {
     it('resolves when operation completes within timeout', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 100)
       })
 
@@ -35,7 +35,7 @@ describe('Timeout', () => {
     })
 
     it('rejects with TimeoutError when exceeded', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 200)
       })
 
@@ -45,7 +45,7 @@ describe('Timeout', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(100)
 
@@ -58,7 +58,7 @@ describe('Timeout', () => {
     })
 
     it('includes timeout duration in error', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 500)
       })
 
@@ -68,7 +68,7 @@ describe('Timeout', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(100)
 
@@ -83,7 +83,7 @@ describe('Timeout', () => {
     it('cancels operation via abort signal', async () => {
       const controller = new AbortController()
 
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 200)
       })
 
@@ -94,7 +94,7 @@ describe('Timeout', () => {
       })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       // Abort before timeout or completion
       setTimeout(() => controller.abort(), 50)
@@ -111,7 +111,7 @@ describe('Timeout', () => {
       const controller = new AbortController()
       controller.abort()
 
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 100)
       })
 
@@ -121,7 +121,7 @@ describe('Timeout', () => {
           timeoutMs: 200,
           serviceName: 'test-service',
           signal: controller.signal,
-        }),
+        })
       ).rejects.toThrow(ServiceTimeoutError)
 
       // Advance past the inner promise resolution to clean up
@@ -131,13 +131,13 @@ describe('Timeout', () => {
     it('throws error for non-positive timeout', async () => {
       const promise = Promise.resolve('success')
 
-      await expect(
-        withTimeout(promise, { timeoutMs: 0 }),
-      ).rejects.toThrow('Timeout must be a positive number')
+      await expect(withTimeout(promise, { timeoutMs: 0 })).rejects.toThrow(
+        'Timeout must be a positive number'
+      )
 
-      await expect(
-        withTimeout(promise, { timeoutMs: -100 }),
-      ).rejects.toThrow('Timeout must be a positive number')
+      await expect(withTimeout(promise, { timeoutMs: -100 })).rejects.toThrow(
+        'Timeout must be a positive number'
+      )
     })
 
     it('propagates errors from the promise', async () => {
@@ -148,7 +148,7 @@ describe('Timeout', () => {
       const resultPromise = withTimeout(promise, { timeoutMs: 200 })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(50)
 
@@ -158,14 +158,14 @@ describe('Timeout', () => {
     })
 
     it('uses default service name when not provided', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 200)
       })
 
       const resultPromise = withTimeout(promise, { timeoutMs: 100 })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(100)
 
@@ -178,7 +178,7 @@ describe('Timeout', () => {
     })
 
     it('cleans up timeout on success', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 50)
       })
 
@@ -199,7 +199,7 @@ describe('Timeout', () => {
       const resultPromise = withTimeout(promise, { timeoutMs: 200 })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(50)
 
@@ -211,9 +211,10 @@ describe('Timeout', () => {
 
   describe('withTimeoutFn', () => {
     it('wraps a function with timeout', async () => {
-      const fn = () => new Promise<string>(resolve => {
-        setTimeout(() => resolve('success'), 50)
-      })
+      const fn = () =>
+        new Promise<string>((resolve) => {
+          setTimeout(() => resolve('success'), 50)
+        })
 
       const wrappedFn = withTimeoutFn(fn, { timeoutMs: 200 })
       const resultPromise = wrappedFn()
@@ -225,15 +226,19 @@ describe('Timeout', () => {
     })
 
     it('times out wrapped function', async () => {
-      const fn = () => new Promise<string>(resolve => {
-        setTimeout(() => resolve('success'), 200)
-      })
+      const fn = () =>
+        new Promise<string>((resolve) => {
+          setTimeout(() => resolve('success'), 200)
+        })
 
-      const wrappedFn = withTimeoutFn(fn, { timeoutMs: 100, serviceName: 'test' })
+      const wrappedFn = withTimeoutFn(fn, {
+        timeoutMs: 100,
+        serviceName: 'test',
+      })
       const resultPromise = wrappedFn()
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(100)
 
@@ -247,7 +252,7 @@ describe('Timeout', () => {
 
   describe('withTimeoutTimed', () => {
     it('returns result with timing information', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 50)
       })
 
@@ -262,14 +267,14 @@ describe('Timeout', () => {
     })
 
     it('times out and throws with timing', async () => {
-      const promise = new Promise<string>(resolve => {
+      const promise = new Promise<string>((resolve) => {
         setTimeout(() => resolve('success'), 200)
       })
 
       const resultPromise = withTimeoutTimed(promise, { timeoutMs: 100 })
 
       // Attach the rejection handler BEFORE advancing timers
-      const errorPromise = resultPromise.catch(e => e)
+      const errorPromise = resultPromise.catch((e) => e)
 
       await vi.advanceTimersByTimeAsync(100)
 

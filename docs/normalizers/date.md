@@ -45,10 +45,10 @@ interface DateNormalizerOptions {
 ```typescript
 interface DateComponents {
   year?: number
-  month?: number        // 1-12
-  day?: number          // 1-31
-  iso?: string          // ISO 8601: YYYY-MM-DD
-  isPartial: boolean    // True if month or day is missing
+  month?: number // 1-12
+  day?: number // 1-31
+  iso?: string // ISO 8601: YYYY-MM-DD
+  isPartial: boolean // True if month or day is missing
 }
 ```
 
@@ -68,13 +68,11 @@ ISO 8601 is the international standard for date representation:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('dateOfBirth')
-      .type('date')
-      .normalizer('date', {
-        partialDates: 'preserve',
-        inputFormat: 'MM/DD/YYYY'
-      })
+  .schema((s) =>
+    s.field('dateOfBirth').type('date').normalizer('date', {
+      partialDates: 'preserve',
+      inputFormat: 'MM/DD/YYYY',
+    })
   )
   .matching(/* ... */)
   .build()
@@ -169,7 +167,7 @@ normalizeDate(1706630400000)
 normalizeDate(new Date('2024-01-30'))
 // → '2024-01-30'
 
-normalizeDate(new Date(2024, 0, 30))  // Month is 0-indexed in JS
+normalizeDate(new Date(2024, 0, 30)) // Month is 0-indexed in JS
 // → '2024-01-30'
 ```
 
@@ -197,7 +195,7 @@ normalizeDate('2024', { partialDates: 'impute' })
 // Custom impute value
 normalizeDate('2024-01', {
   partialDates: 'impute',
-  imputeValue: 15
+  imputeValue: 15,
 })
 // → '2024-01-15'
 ```
@@ -269,7 +267,7 @@ The normalizer validates dates to catch invalid values:
 
 ```typescript
 // Valid date
-normalizeDate('2024-02-29')  // Leap year
+normalizeDate('2024-02-29') // Leap year
 // → '2024-02-29'
 
 // Invalid date (Feb 30 doesn't exist)
@@ -391,19 +389,13 @@ ISO format enables reliable exact matching:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('dateOfBirth')
-      .type('date')
-      .normalizer('date', {
-        partialDates: 'impute',
-        inputFormat: 'MM/DD/YYYY'
-      })
+  .schema((s) =>
+    s.field('dateOfBirth').type('date').normalizer('date', {
+      partialDates: 'impute',
+      inputFormat: 'MM/DD/YYYY',
+    })
   )
-  .matching(m => m
-    .field('dateOfBirth')
-      .strategy('exact')
-      .weight(100)
-  )
+  .matching((m) => m.field('dateOfBirth').strategy('exact').weight(100))
   .build()
 ```
 
@@ -439,22 +431,24 @@ interface Patient {
 }
 
 const resolver = HaveWeMet.create<Patient>()
-  .schema(s => s
-    .field('fullName')
+  .schema((s) =>
+    s
+      .field('fullName')
       .type('name')
       .normalizer('name')
-    .field('dateOfBirth')
+      .field('dateOfBirth')
       .type('date')
       .normalizer('date', {
         partialDates: 'reject',
-        inputFormat: 'MM/DD/YYYY'
+        inputFormat: 'MM/DD/YYYY',
       })
   )
-  .matching(m => m
-    .field('fullName')
+  .matching((m) =>
+    m
+      .field('fullName')
       .strategy('jaro-winkler')
       .weight(60)
-    .field('dateOfBirth')
+      .field('dateOfBirth')
       .strategy('exact')
       .weight(40)
   )
@@ -465,15 +459,15 @@ const resolver = HaveWeMet.create<Patient>()
 const input = {
   id: 'in',
   fullName: 'John Smith',
-  dateOfBirth: '01/15/1985'
+  dateOfBirth: '01/15/1985',
 }
 
 const candidates = [
   {
     id: 'c1',
     fullName: 'John Smith',
-    dateOfBirth: '1985-01-15'
-  }
+    dateOfBirth: '1985-01-15',
+  },
 ]
 
 const result = resolver.resolve(input, candidates)
@@ -523,16 +517,15 @@ const usNormalizer = (value: unknown) =>
 
 // For EU source
 const euNormalizer = (value: unknown) =>
-  normalizeDate(value, { inputFormat: 'DD/MM/YYYY' })
-
-.schema(s => s
-  .field('date')
-    .type('date')
-    .customNormalizer(value => {
-      // Try both formats
-      return usNormalizer(value) || euNormalizer(value)
-    })
-)
+  normalizeDate(value, { inputFormat: 'DD/MM/YYYY' }).schema((s) =>
+    s
+      .field('date')
+      .type('date')
+      .customNormalizer((value) => {
+        // Try both formats
+        return usNormalizer(value) || euNormalizer(value)
+      })
+  )
 ```
 
 ## Best Practices

@@ -29,7 +29,10 @@ function createTestConfig(overrides?: Partial<MergeConfig>): MergeConfig {
   }
 }
 
-function createSourceRecord(id: string, record: TestRecord): SourceRecord<TestRecord> {
+function createSourceRecord(
+  id: string,
+  record: TestRecord
+): SourceRecord<TestRecord> {
   return {
     id,
     record,

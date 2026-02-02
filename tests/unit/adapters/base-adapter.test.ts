@@ -121,7 +121,10 @@ describe('BaseAdapter', () => {
 
     it('throws on invalid primaryKey type', () => {
       expect(() => {
-        new TestAdapter({ tableName: 'users', primaryKey: 123 as unknown as string })
+        new TestAdapter({
+          tableName: 'users',
+          primaryKey: 123 as unknown as string,
+        })
       }).toThrow(ValidationError)
     })
 
@@ -163,7 +166,9 @@ describe('BaseAdapter', () => {
       const adapter = new TestAdapter(config)
       expect(adapter['config'].tableName).toBe('customers')
       expect(adapter['config'].primaryKey).toBe('customer_id')
-      expect(adapter['config'].fieldMapping).toEqual({ firstName: 'first_name' })
+      expect(adapter['config'].fieldMapping).toEqual({
+        firstName: 'first_name',
+      })
       expect(adapter['config'].usePreparedStatements).toBe(false)
       expect(adapter['config'].poolConfig).toEqual({ min: 2, max: 10 })
     })
@@ -362,7 +367,9 @@ describe('BaseAdapter', () => {
 
       it('throws on non-array input', () => {
         expect(() => {
-          adapter.testValidateRecords('not-an-array' as unknown as Record<string, unknown>[])
+          adapter.testValidateRecords(
+            'not-an-array' as unknown as Record<string, unknown>[]
+          )
         }).toThrow(ValidationError)
       })
 

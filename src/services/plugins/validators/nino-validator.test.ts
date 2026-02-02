@@ -16,10 +16,11 @@ import {
   isAdministrativeNINO,
 } from './nino-validator.js'
 import type { ServiceContext } from '../../types.js'
+import type { ResolverConfig } from '../../../types/config.js'
 
 const createMockContext = (): ServiceContext => ({
   record: {},
-  config: {} as any,
+  config: {} as unknown as ResolverConfig,
   metadata: {
     correlationId: 'test-123',
     startedAt: new Date(),
@@ -100,7 +101,7 @@ describe('NINO Validator', () => {
   describe('hasValidFirstLetter', () => {
     it('accepts valid first letters', () => {
       const validLetters = 'ABCEGHJ KLMNOPRSTWXYZ'.replace(' ', '').split('')
-      validLetters.forEach(letter => {
+      validLetters.forEach((letter) => {
         expect(hasValidFirstLetter(letter)).toBe(true)
       })
     })
@@ -123,7 +124,7 @@ describe('NINO Validator', () => {
   describe('hasValidSecondLetter', () => {
     it('accepts valid second letters', () => {
       const validLetters = 'ABCEGHJ KLMNPRSTWXYZ'.replace(' ', '').split('')
-      validLetters.forEach(letter => {
+      validLetters.forEach((letter) => {
         expect(hasValidSecondLetter(letter)).toBe(true)
       })
     })
@@ -202,7 +203,7 @@ describe('NINO Validator', () => {
     it('validates correct NINO with spaces', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'AB 12 34 56 C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -214,7 +215,7 @@ describe('NINO Validator', () => {
     it('validates correct NINO without spaces', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'AB123456C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -224,7 +225,7 @@ describe('NINO Validator', () => {
     it('validates lowercase NINO', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'ab123456c' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -235,18 +236,20 @@ describe('NINO Validator', () => {
     it('rejects empty values', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: '' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('National Insurance Number is required')
+      expect(result.data?.invalidReason).toBe(
+        'National Insurance Number is required'
+      )
     })
 
     it('rejects invalid format', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'invalid' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -261,7 +264,7 @@ describe('NINO Validator', () => {
       for (const letter of invalidFirstLetters) {
         const result = await ninoValidator.execute(
           { field: 'nino', value: `${letter}B123456C` },
-          context,
+          context
         )
 
         expect(result.data?.valid).toBe(false)
@@ -275,7 +278,7 @@ describe('NINO Validator', () => {
       for (const letter of invalidSecondLetters) {
         const result = await ninoValidator.execute(
           { field: 'nino', value: `A${letter}123456C` },
-          context,
+          context
         )
 
         expect(result.data?.valid).toBe(false)
@@ -289,7 +292,7 @@ describe('NINO Validator', () => {
       for (const prefix of invalidPrefixes) {
         const result = await ninoValidator.execute(
           { field: 'nino', value: `${prefix}123456C` },
-          context,
+          context
         )
 
         expect(result.data?.valid).toBe(false)
@@ -300,7 +303,7 @@ describe('NINO Validator', () => {
     it('rejects administrative prefixes (OO)', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'OO123456C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -312,7 +315,7 @@ describe('NINO Validator', () => {
     it('rejects invalid suffix (not A, B, C, D)', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'AB123456X' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -323,29 +326,29 @@ describe('NINO Validator', () => {
     it('returns validation checks detail', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'AB123456C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.details?.checks).toBeDefined()
       expect(result.data?.details?.checks).toContainEqual(
-        expect.objectContaining({ name: 'format', passed: true }),
+        expect.objectContaining({ name: 'format', passed: true })
       )
       expect(result.data?.details?.checks).toContainEqual(
-        expect.objectContaining({ name: 'first-letter', passed: true }),
+        expect.objectContaining({ name: 'first-letter', passed: true })
       )
       expect(result.data?.details?.checks).toContainEqual(
-        expect.objectContaining({ name: 'second-letter', passed: true }),
+        expect.objectContaining({ name: 'second-letter', passed: true })
       )
       expect(result.data?.details?.checks).toContainEqual(
-        expect.objectContaining({ name: 'suffix', passed: true }),
+        expect.objectContaining({ name: 'suffix', passed: true })
       )
     })
 
     it('tracks timing information', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'AB123456C' },
-        context,
+        context
       )
 
       expect(result.timing).toBeDefined()
@@ -379,7 +382,7 @@ describe('NINO Validator', () => {
 
       const result = await validator.execute(
         { field: 'nino', value: 'TN123456C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -391,7 +394,7 @@ describe('NINO Validator', () => {
 
       const result = await validator.execute(
         { field: 'nino', value: 'OO123456C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -422,18 +425,20 @@ describe('NINO Validator', () => {
     it('handles whitespace-only input', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: '   ' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
       expect(result.data?.valid).toBe(false)
-      expect(result.data?.invalidReason).toBe('National Insurance Number is required')
+      expect(result.data?.invalidReason).toBe(
+        'National Insurance Number is required'
+      )
     })
 
     it('handles extra whitespace in NINO', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'AB  12  34  56  C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -443,7 +448,7 @@ describe('NINO Validator', () => {
     it('normalizes to uppercase without spaces', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'ab 12 34 56 c' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -454,7 +459,7 @@ describe('NINO Validator', () => {
     it('provides helpful suggestions for invalid NINOs', async () => {
       const result = await ninoValidator.execute(
         { field: 'nino', value: 'DB123456C' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -469,7 +474,7 @@ describe('NINO Validator', () => {
       for (const suffix of validSuffixes) {
         const result = await ninoValidator.execute(
           { field: 'nino', value: `AB123456${suffix}` },
-          context,
+          context
         )
 
         expect(result.data?.valid).toBe(true)

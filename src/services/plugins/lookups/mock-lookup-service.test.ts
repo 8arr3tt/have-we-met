@@ -2,8 +2,8 @@
  * Tests for Mock Lookup Service
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { ServiceContext, LookupOutput } from '../../types.js'
+import { describe, it, expect, vi } from 'vitest'
+import type { ServiceContext } from '../../types.js'
 import type { ResolverConfig } from '../../../types/config.js'
 import {
   createMockLookup,
@@ -14,10 +14,11 @@ import {
   createSlowMock,
   createRandomLatencyMock,
   createFlakyMock,
-  type MockLookupService,
 } from './mock-lookup-service.js'
 
-function createMockContext(keyFields: Record<string, unknown> = {}): ServiceContext {
+function createMockContext(
+  keyFields: Record<string, unknown> = {}
+): ServiceContext {
   return {
     record: keyFields,
     config: {} as ResolverConfig,
@@ -67,11 +68,14 @@ describe('Mock Lookup Service', () => {
         })
 
         // Use addResponse to add a canned response with the correct key
-        mock.addResponse({ id: 1 }, {
-          found: true,
-          data: { name: 'Test User' },
-          matchQuality: 'exact',
-        })
+        mock.addResponse(
+          { id: 1 },
+          {
+            found: true,
+            data: { name: 'Test User' },
+            matchQuality: 'exact',
+          }
+        )
 
         const context = createMockContext()
         const result = await mock.execute({ keyFields: { id: 1 } }, context)
@@ -92,7 +96,10 @@ describe('Mock Lookup Service', () => {
         })
 
         const context = createMockContext()
-        const result = await mock.execute({ keyFields: { key: 'value' } }, context)
+        const result = await mock.execute(
+          { keyFields: { key: 'value' } },
+          context
+        )
 
         expect(responseFn).toHaveBeenCalledWith({ keyFields: { key: 'value' } })
         expect(result.data?.data).toEqual({ computed: true })
@@ -374,7 +381,7 @@ describe('Mock Lookup Service', () => {
     })
 
     describe('addResponse', () => {
-      it('adds response by string key', async () => {
+      it('adds response by string key', () => {
         const mock = createMockLookup({ defaultResponse: { found: false } })
 
         mock.addResponse('custom-key', {
@@ -382,23 +389,25 @@ describe('Mock Lookup Service', () => {
           data: { custom: true },
         })
 
-        const context = createMockContext()
         // Note: This won't match by default since we use hash keys
-        // Using the raw key for testing
+        // The test verifies that addResponse can be called without throwing
       })
 
       it('adds response by object key', async () => {
         const mock = createMockLookup({ defaultResponse: { found: false } })
 
-        mock.addResponse({ email: 'test@example.com' }, {
-          found: true,
-          data: { matched: true },
-        })
+        mock.addResponse(
+          { email: 'test@example.com' },
+          {
+            found: true,
+            data: { matched: true },
+          }
+        )
 
         const context = createMockContext()
         const result = await mock.execute(
           { keyFields: { email: 'test@example.com' } },
-          context,
+          context
         )
 
         expect(result.data?.found).toBe(true)
@@ -524,13 +533,13 @@ describe('Mock Lookup Service', () => {
 
       const johnResult = await mock.execute(
         { keyFields: { email: 'john@example.com' } },
-        context,
+        context
       )
       expect(johnResult.data?.data).toEqual({ name: 'John' })
 
       const janeResult = await mock.execute(
         { keyFields: { email: 'jane@example.com' } },
-        context,
+        context
       )
       expect(janeResult.data?.data).toEqual({ name: 'Jane' })
     })
@@ -550,10 +559,10 @@ describe('Mock Lookup Service', () => {
     })
 
     it('uses custom default response', async () => {
-      const mock = createMockLookupWithData(
-        [],
-        { found: false, data: { fallback: true } },
-      )
+      const mock = createMockLookupWithData([], {
+        found: false,
+        data: { fallback: true },
+      })
 
       const context = createMockContext()
       const result = await mock.execute({ keyFields: {} }, context)
@@ -670,7 +679,9 @@ describe('Mock Lookup Service', () => {
 
       const context = createMockContext()
       const results = await Promise.all(
-        Array.from({ length: 20 }, () => mock.execute({ keyFields: {} }, context)),
+        Array.from({ length: 20 }, () =>
+          mock.execute({ keyFields: {} }, context)
+        )
       )
 
       const successes = results.filter((r) => r.success).length

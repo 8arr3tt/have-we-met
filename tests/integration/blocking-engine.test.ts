@@ -158,7 +158,10 @@ describe('Blocking Integration with Matching Engine', () => {
         { id: '3', firstName: 'Bob', lastName: 'Jones', birthYear: 1985 },
       ]
 
-      const blocks = generator.generateBlocksComposite(people, [strategy1, strategy2])
+      const blocks = generator.generateBlocksComposite(people, [
+        strategy1,
+        strategy2,
+      ])
 
       expect(blocks.size).toBeGreaterThan(0)
       expect(blocks.has('lastName:S')).toBe(true)

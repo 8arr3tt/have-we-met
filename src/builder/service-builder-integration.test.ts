@@ -25,7 +25,9 @@ function createTiming() {
 }
 
 // Mock validation service
-function createMockValidationService(name = 'test-validator'): ValidationService {
+function createMockValidationService(
+  name = 'test-validator'
+): ValidationService {
   return {
     name,
     type: 'validation',
@@ -71,6 +73,7 @@ function createMockCustomService(name = 'test-custom'): CustomService {
 
 describe('ResolverBuilder service integration', () => {
   interface TestPerson {
+    [key: string]: unknown
     firstName: string
     lastName: string
     email: string
@@ -91,7 +94,7 @@ describe('ResolverBuilder service integration', () => {
           .field('lastName', { type: 'name', component: 'last' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
@@ -106,7 +109,7 @@ describe('ResolverBuilder service integration', () => {
           .strategy('jaro-winkler')
           .weight(10)
           .threshold(0.85)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) =>
         services
@@ -135,7 +138,7 @@ describe('ResolverBuilder service integration', () => {
           .custom('fraud-check')
           .using(custom)
           .executeAt('post-match')
-          .onResult((r) => (r.result as { riskScore: number }).riskScore < 0.7),
+          .onResult((r) => (r.result as { riskScore: number }).riskScore < 0.7)
       )
       .build()
 
@@ -153,17 +156,17 @@ describe('ResolverBuilder service integration', () => {
           .field('lastName', { type: 'name', component: 'last' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) =>
-        services.validate('nhsNumber').using(validator).onInvalid('reject'),
+        services.validate('nhsNumber').using(validator).onInvalid('reject')
       )
 
     const servicesConfig = builder.getServicesConfig()
@@ -181,14 +184,14 @@ describe('ResolverBuilder service integration', () => {
           .field('lastName', { type: 'name', component: 'last' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .build()
 
@@ -206,14 +209,14 @@ describe('ResolverBuilder service integration', () => {
           .field('lastName', { type: 'name', component: 'last' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) => {
         services.validate('nhsNumber').using(validator).done()
@@ -234,17 +237,17 @@ describe('ResolverBuilder service integration', () => {
           .field('firstName', { type: 'name', component: 'first' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) =>
-        services.validate('nhsNumber').using(validator).onInvalid('reject'),
+        services.validate('nhsNumber').using(validator).onInvalid('reject')
       )
 
     const config = builder.getServicesConfig()
@@ -261,17 +264,17 @@ describe('ResolverBuilder service integration', () => {
           .field('firstName', { type: 'name', component: 'first' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) =>
-        services.lookup('address').using(lookup).onNotFound('flag'),
+        services.lookup('address').using(lookup).onNotFound('flag')
       )
 
     const config = builder.getServicesConfig()
@@ -288,17 +291,17 @@ describe('ResolverBuilder service integration', () => {
           .field('firstName', { type: 'name', component: 'first' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) =>
-        services.custom('fraud-check').using(custom).executeAt('post-match'),
+        services.custom('fraud-check').using(custom).executeAt('post-match')
       )
 
     const config = builder.getServicesConfig()
@@ -316,14 +319,14 @@ describe('ResolverBuilder service integration', () => {
           .field('lastName', { type: 'name', component: 'last' })
           .field('email', { type: 'email' })
           .field('nhsNumber', { type: 'string' })
-          .field('address', { type: 'string' }),
+          .field('address', { type: 'string' })
       )
       .matching((match) =>
         match
           .field('email')
           .strategy('exact')
           .weight(20)
-          .thresholds({ noMatch: 20, definiteMatch: 45 }),
+          .thresholds({ noMatch: 20, definiteMatch: 45 })
       )
       .services((services) =>
         services
@@ -342,7 +345,7 @@ describe('ResolverBuilder service integration', () => {
           .onInvalid('flag')
           .onFailure('continue')
           .required(false)
-          .priority(50),
+          .priority(50)
       )
 
     const config = builder.getServicesConfig()

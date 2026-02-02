@@ -71,7 +71,9 @@ export function isValidEmail(email: string): boolean {
   // Local part validation (before @)
   // Allow: alphanumeric, dots, underscores, percent, plus, hyphens
   // Must not start or end with a dot
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9._+%-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/.test(localPart)) {
+  if (
+    !/^[a-zA-Z0-9][a-zA-Z0-9._+%-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/.test(localPart)
+  ) {
     return false
   }
 

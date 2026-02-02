@@ -61,12 +61,15 @@ describe('Phone Normalizer', () => {
   describe('normalizePhone', () => {
     describe('basic normalization', () => {
       it('should normalize US phone numbers to E.164 format', () => {
-        expect(normalizePhone('202-555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('(202) 555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('202 555 0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone('202-555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
+        expect(normalizePhone('(202) 555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
+        expect(normalizePhone('202 555 0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should normalize phone numbers with country code', () => {
@@ -91,10 +94,12 @@ describe('Phone Normalizer', () => {
       })
 
       it('should trim whitespace', () => {
-        expect(normalizePhone('  202-555-0123  ', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('\t202-555-0123\t', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(
+          normalizePhone('  202-555-0123  ', { defaultCountry: 'US' })
+        ).toBe('+12025550123')
+        expect(
+          normalizePhone('\t202-555-0123\t', { defaultCountry: 'US' })
+        ).toBe('+12025550123')
       })
     })
 
@@ -108,39 +113,45 @@ describe('Phone Normalizer', () => {
       })
 
       it('should handle US numbers with country code 1', () => {
-        expect(normalizePhone('1-202-555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('+1 202 555 0123'))
-          .toBe('+12025550123')
+        expect(normalizePhone('1-202-555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
+        expect(normalizePhone('+1 202 555 0123')).toBe('+12025550123')
       })
 
       it('should handle US toll-free numbers', () => {
-        expect(normalizePhone('1-800-555-1234', { defaultCountry: 'US' }))
-          .toBe('+18005551234')
-        expect(normalizePhone('(888) 555-1234', { defaultCountry: 'US' }))
-          .toBe('+18885551234')
+        expect(normalizePhone('1-800-555-1234', { defaultCountry: 'US' })).toBe(
+          '+18005551234'
+        )
+        expect(normalizePhone('(888) 555-1234', { defaultCountry: 'US' })).toBe(
+          '+18885551234'
+        )
       })
     })
 
     describe('international phone numbers', () => {
       it('should normalize UK phone numbers', () => {
         expect(normalizePhone('+44 20 7123 4567')).toBe('+442071234567')
-        expect(normalizePhone('020 7123 4567', { defaultCountry: 'GB' }))
-          .toBe('+442071234567')
-        expect(normalizePhone('07123 456789', { defaultCountry: 'GB' }))
-          .toBe('+447123456789')
+        expect(normalizePhone('020 7123 4567', { defaultCountry: 'GB' })).toBe(
+          '+442071234567'
+        )
+        expect(normalizePhone('07123 456789', { defaultCountry: 'GB' })).toBe(
+          '+447123456789'
+        )
       })
 
       it('should normalize German phone numbers', () => {
         expect(normalizePhone('+49 30 12345678')).toBe('+493012345678')
-        expect(normalizePhone('030 12345678', { defaultCountry: 'DE' }))
-          .toBe('+493012345678')
+        expect(normalizePhone('030 12345678', { defaultCountry: 'DE' })).toBe(
+          '+493012345678'
+        )
       })
 
       it('should normalize Indian phone numbers', () => {
         expect(normalizePhone('+91 98765 43210')).toBe('+919876543210')
-        expect(normalizePhone('98765 43210', { defaultCountry: 'IN' }))
-          .toBe('+919876543210')
+        expect(normalizePhone('98765 43210', { defaultCountry: 'IN' })).toBe(
+          '+919876543210'
+        )
       })
 
       it('should normalize Chinese phone numbers', () => {
@@ -211,50 +222,53 @@ describe('Phone Normalizer', () => {
 
     describe('various formatting', () => {
       it('should handle spaces', () => {
-        expect(normalizePhone('202 555 0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('+1 202 555 0123'))
-          .toBe('+12025550123')
+        expect(normalizePhone('202 555 0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
+        expect(normalizePhone('+1 202 555 0123')).toBe('+12025550123')
       })
 
       it('should handle hyphens', () => {
-        expect(normalizePhone('202-555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('+1-202-555-0123'))
-          .toBe('+12025550123')
+        expect(normalizePhone('202-555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
+        expect(normalizePhone('+1-202-555-0123')).toBe('+12025550123')
       })
 
       it('should handle parentheses', () => {
-        expect(normalizePhone('(202) 555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('(202)555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone('(202) 555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
+        expect(normalizePhone('(202)555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should handle dots', () => {
-        expect(normalizePhone('202.555.0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone('202.555.0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should handle mixed formatting', () => {
-        expect(normalizePhone('+1 (202) 555-0123'))
-          .toBe('+12025550123')
-        expect(normalizePhone('1-202-555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone('+1 (202) 555-0123')).toBe('+12025550123')
+        expect(normalizePhone('1-202-555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should strip all non-numeric characters except +', () => {
-        expect(normalizePhone('+1 (202) 555-0123'))
-          .toBe('+12025550123')
-        expect(normalizePhone('+44-20-7123-4567'))
-          .toBe('+442071234567')
+        expect(normalizePhone('+1 (202) 555-0123')).toBe('+12025550123')
+        expect(normalizePhone('+44-20-7123-4567')).toBe('+442071234567')
       })
     })
 
     describe('validation', () => {
       it('should reject invalid phone numbers by default', () => {
         expect(normalizePhone('123', { defaultCountry: 'US' })).toBe(null)
-        expect(normalizePhone('not-a-phone', { defaultCountry: 'US' })).toBe(null)
+        expect(normalizePhone('not-a-phone', { defaultCountry: 'US' })).toBe(
+          null
+        )
         expect(normalizePhone('555', { defaultCountry: 'US' })).toBe(null)
       })
 
@@ -264,8 +278,12 @@ describe('Phone Normalizer', () => {
       })
 
       it('should reject completely non-numeric input', () => {
-        expect(normalizePhone('abcdefghij', { defaultCountry: 'US' })).toBe(null)
-        expect(normalizePhone('not-a-phone', { defaultCountry: 'US' })).toBe(null)
+        expect(normalizePhone('abcdefghij', { defaultCountry: 'US' })).toBe(
+          null
+        )
+        expect(normalizePhone('not-a-phone', { defaultCountry: 'US' })).toBe(
+          null
+        )
       })
 
       it('should skip validation when validate is false', () => {
@@ -356,14 +374,18 @@ describe('Phone Normalizer', () => {
       it('should add US country code in fallback when missing', () => {
         // Create a number that might trigger fallback
         // Use a format that's harder for the library to parse
-        const result = normalizePhone('##2025550123##', { defaultCountry: 'US' })
+        const result = normalizePhone('##2025550123##', {
+          defaultCountry: 'US',
+        })
         // Fallback strips non-numeric and adds country code
         expect(result).toBe('+12025550123')
       })
 
       it('should add GB country code in fallback when missing', () => {
         // Force fallback with weird formatting
-        const result = normalizePhone('##2071234567##', { defaultCountry: 'GB' })
+        const result = normalizePhone('##2071234567##', {
+          defaultCountry: 'GB',
+        })
         // Fallback should add UK country code
         expect(result).toBe('+442071234567')
       })
@@ -431,7 +453,9 @@ describe('Phone Normalizer', () => {
 
       it('should handle fallback without country code for other countries', () => {
         // Test fallback path when defaultCountry is not US/GB
-        const result = normalizePhone('##493012345678##', { defaultCountry: 'DE' })
+        const result = normalizePhone('##493012345678##', {
+          defaultCountry: 'DE',
+        })
         // Fallback can't add country code for DE, but should still parse
         expect(result).toBe('+493012345678')
       })
@@ -457,21 +481,25 @@ describe('Phone Normalizer', () => {
 
     describe('edge cases', () => {
       it('should handle phone numbers with leading/trailing whitespace', () => {
-        expect(normalizePhone('  202-555-0123  ', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
-        expect(normalizePhone('\n202-555-0123\n', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(
+          normalizePhone('  202-555-0123  ', { defaultCountry: 'US' })
+        ).toBe('+12025550123')
+        expect(
+          normalizePhone('\n202-555-0123\n', { defaultCountry: 'US' })
+        ).toBe('+12025550123')
       })
 
       it('should handle numbers with multiple spaces', () => {
-        expect(normalizePhone('202  555  0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone('202  555  0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should handle coerced numbers', () => {
         // Number input should be coerced to string
-        expect(normalizePhone(2025550123, { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone(2025550123, { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should handle very long numbers', () => {
@@ -486,30 +514,35 @@ describe('Phone Normalizer', () => {
       })
 
       it('should handle area codes with leading zeros', () => {
-        expect(normalizePhone('020 7123 4567', { defaultCountry: 'GB' }))
-          .toBe('+442071234567')
+        expect(normalizePhone('020 7123 4567', { defaultCountry: 'GB' })).toBe(
+          '+442071234567'
+        )
       })
     })
 
     describe('different countries', () => {
       it('should handle US numbers', () => {
-        expect(normalizePhone('202-555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizePhone('202-555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should handle UK numbers', () => {
-        expect(normalizePhone('020 7123 4567', { defaultCountry: 'GB' }))
-          .toBe('+442071234567')
+        expect(normalizePhone('020 7123 4567', { defaultCountry: 'GB' })).toBe(
+          '+442071234567'
+        )
       })
 
       it('should handle German numbers', () => {
-        expect(normalizePhone('030 12345678', { defaultCountry: 'DE' }))
-          .toBe('+493012345678')
+        expect(normalizePhone('030 12345678', { defaultCountry: 'DE' })).toBe(
+          '+493012345678'
+        )
       })
 
       it('should handle Indian numbers', () => {
-        expect(normalizePhone('98765 43210', { defaultCountry: 'IN' }))
-          .toBe('+919876543210')
+        expect(normalizePhone('98765 43210', { defaultCountry: 'IN' })).toBe(
+          '+919876543210'
+        )
       })
 
       it('should handle numbers from various countries', () => {
@@ -541,14 +574,17 @@ describe('Phone Normalizer', () => {
         ]
 
         formats.forEach((format) => {
-          expect(normalizePhone(format, { defaultCountry: 'US' }))
-            .toBe('+12025550123')
+          expect(normalizePhone(format, { defaultCountry: 'US' })).toBe(
+            '+12025550123'
+          )
         })
       })
 
       it('should normalize consistently regardless of input format', () => {
         const number1 = normalizePhone('+1-202-555-0123')
-        const number2 = normalizePhone('(202) 555-0123', { defaultCountry: 'US' })
+        const number2 = normalizePhone('(202) 555-0123', {
+          defaultCountry: 'US',
+        })
         const number3 = normalizePhone('12025550123', { defaultCountry: 'US' })
 
         expect(number1).toBe(number2)
@@ -561,8 +597,9 @@ describe('Phone Normalizer', () => {
       it('should be registered in the normalizer registry', () => {
         const normalizer = getNormalizer('phone')
         expect(normalizer).toBeDefined()
-        expect(normalizer?.('202-555-0123', { defaultCountry: 'US' }))
-          .toBe('+12025550123')
+        expect(normalizer?.('202-555-0123', { defaultCountry: 'US' })).toBe(
+          '+12025550123'
+        )
       })
 
       it('should work with registry options', () => {

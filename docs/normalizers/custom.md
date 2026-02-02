@@ -20,12 +20,16 @@ The simplest way to use a custom normalizer:
 
 ```typescript
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('username')
+  .schema((s) =>
+    s
+      .field('username')
       .type('string')
-      .customNormalizer(value => {
+      .customNormalizer((value) => {
         if (!value) return null
-        return value.toString().toLowerCase().replace(/[^a-z0-9]/g, '')
+        return value
+          .toString()
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '')
       })
   )
   .matching(/* ... */)
@@ -42,16 +46,15 @@ import { registerNormalizer } from 'have-we-met'
 // Register once
 registerNormalizer('username', (value) => {
   if (!value) return null
-  return value.toString().toLowerCase().replace(/[^a-z0-9]/g, '')
+  return value
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
 })
 
 // Use anywhere
 const resolver = HaveWeMet.create<Person>()
-  .schema(s => s
-    .field('username')
-      .type('string')
-      .normalizer('username')
-  )
+  .schema((s) => s.field('username').type('string').normalizer('username'))
   .build()
 ```
 
@@ -197,19 +200,15 @@ function normalizeSSN(value: unknown): string | null {
 }
 
 // Usage
-registerNormalizer('ssn', normalizeSSN)
-
-.schema(s => s
-  .field('ssn')
-    .type('string')
-    .normalizer('ssn')
+registerNormalizer('ssn', normalizeSSN).schema((s) =>
+  s.field('ssn').type('string').normalizer('ssn')
 )
 
 // Test
-normalizeSSN('123-45-6789')    // → '123-45-6789'
-normalizeSSN('123456789')      // → '123-45-6789'
-normalizeSSN('123 45 6789')    // → '123-45-6789'
-normalizeSSN('invalid')        // → null
+normalizeSSN('123-45-6789') // → '123-45-6789'
+normalizeSSN('123456789') // → '123-45-6789'
+normalizeSSN('123 45 6789') // → '123-45-6789'
+normalizeSSN('invalid') // → null
 ```
 
 ### Example 2: Currency
@@ -286,18 +285,17 @@ function normalizeSKU(
 }
 
 // Usage
-registerNormalizer('sku', normalizeSKU)
-
-.schema(s => s
-  .field('productSKU')
+registerNormalizer('sku', normalizeSKU).schema((s) =>
+  s
+    .field('productSKU')
     .type('string')
     .normalizer('sku', { prefix: 'SKU-', length: 11 })
 )
 
 // Test
-normalizeSKU('abc-123', { prefix: 'SKU-' })      // → 'SKU-ABC123'
-normalizeSKU('ABC123', { prefix: 'SKU-' })       // → 'SKU-ABC123'
-normalizeSKU('xyz', { length: 3 })               // → 'XYZ'
+normalizeSKU('abc-123', { prefix: 'SKU-' }) // → 'SKU-ABC123'
+normalizeSKU('ABC123', { prefix: 'SKU-' }) // → 'SKU-ABC123'
+normalizeSKU('xyz', { length: 3 }) // → 'XYZ'
 ```
 
 ### Example 4: Medical Record Number
@@ -448,13 +446,7 @@ const normalizer = composeNormalizers(
   (value) => String(value).trim(),
   (value) => String(value).toLowerCase(),
   (value) => String(value).replace(/[^a-z0-9]/g, '')
-)
-
-.schema(s => s
-  .field('username')
-    .type('string')
-    .customNormalizer(normalizer)
-)
+).schema((s) => s.field('username').type('string').customNormalizer(normalizer))
 ```
 
 ### Manual Composition
@@ -562,7 +554,7 @@ function myNormalizer(value: unknown): string | null {
 
   // Validate format
   if (!/^[A-Z]{2}\d{6}$/.test(str)) {
-    return null  // Invalid format
+    return null // Invalid format
   }
 
   return str
@@ -586,7 +578,7 @@ function myNormalizer(
   // Apply defaults
   const opts = {
     uppercase: options?.uppercase ?? true,
-    removeSpaces: options?.removeSpaces ?? false
+    removeSpaces: options?.removeSpaces ?? false,
   }
 
   let result = String(value)
@@ -608,7 +600,10 @@ function myNormalizer(
 ### Conditional Normalization
 
 ```typescript
-function normalizeByCountry(value: unknown, options?: { country: string }): string | null {
+function normalizeByCountry(
+  value: unknown,
+  options?: { country: string }
+): string | null {
   if (value == null) return null
 
   const country = options?.country || 'US'

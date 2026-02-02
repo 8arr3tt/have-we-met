@@ -60,10 +60,16 @@ export class MemoryCache implements ExtendedServiceCache {
   }
 
   async get<T>(key: string): Promise<CacheEntry<T> | null> {
-    return this.getWithOptions<T>(key, { allowStale: false, updateAccess: true })
+    return this.getWithOptions<T>(key, {
+      allowStale: false,
+      updateAccess: true,
+    })
   }
 
-  async getWithOptions<T>(key: string, options: CacheGetOptions = {}): Promise<ExtendedCacheEntry<T> | null> {
+  async getWithOptions<T>(
+    key: string,
+    options: CacheGetOptions = {}
+  ): Promise<ExtendedCacheEntry<T> | null> {
     const { allowStale = false, updateAccess = true } = options
     const entry = this.cache.get(key) as InternalEntry<T> | undefined
 
@@ -111,9 +117,14 @@ export class MemoryCache implements ExtendedServiceCache {
     await this.setWithOptions(key, value, { ttlSeconds })
   }
 
-  async setWithOptions<T>(key: string, value: T, options: CacheSetOptions): Promise<void> {
+  async setWithOptions<T>(
+    key: string,
+    value: T,
+    options: CacheSetOptions
+  ): Promise<void> {
     const ttlSeconds = options.ttlSeconds ?? this.config.defaultTtlSeconds
-    const staleWindowSeconds = options.staleWindowSeconds ?? this.config.defaultStaleWindowSeconds ?? 0
+    const staleWindowSeconds =
+      options.staleWindowSeconds ?? this.config.defaultStaleWindowSeconds ?? 0
 
     const now = new Date()
     const expiresAt = new Date(now.getTime() + ttlSeconds * 1000)
@@ -129,7 +140,10 @@ export class MemoryCache implements ExtendedServiceCache {
     }
 
     if (this.config.maxTotalBytes && options.sizeBytes) {
-      while (this.totalBytes + options.sizeBytes > this.config.maxTotalBytes && this.cache.size > 0) {
+      while (
+        this.totalBytes + options.sizeBytes > this.config.maxTotalBytes &&
+        this.cache.size > 0
+      ) {
         this.evictLRU()
       }
     }
@@ -209,7 +223,9 @@ export class MemoryCache implements ExtendedServiceCache {
     return results
   }
 
-  async setMany<T>(entries: Array<{ key: string; value: T; ttlSeconds: number }>): Promise<void> {
+  async setMany<T>(
+    entries: Array<{ key: string; value: T; ttlSeconds: number }>
+  ): Promise<void> {
     for (const entry of entries) {
       await this.set(entry.key, entry.value, entry.ttlSeconds)
     }
@@ -248,7 +264,10 @@ export class MemoryCache implements ExtendedServiceCache {
     this.cache.clear()
   }
 
-  private deleteEntry(key: string, reason: 'lru' | 'expired' | 'manual'): boolean {
+  private deleteEntry(
+    key: string,
+    reason: 'lru' | 'expired' | 'manual'
+  ): boolean {
     const entry = this.cache.get(key)
     if (!entry) return false
 
@@ -284,7 +303,9 @@ export class MemoryCache implements ExtendedServiceCache {
   }
 
   private getOldestEntry(): Date | undefined {
-    const firstEntry = this.cache.values().next().value as InternalEntry<unknown> | undefined
+    const firstEntry = this.cache.values().next().value as
+      | InternalEntry<unknown>
+      | undefined
     return firstEntry?.cachedAt
   }
 
@@ -305,7 +326,9 @@ export class MemoryCache implements ExtendedServiceCache {
 /**
  * Create a memory cache instance with the given configuration
  */
-export function createMemoryCache(config?: Partial<MemoryCacheConfig>): MemoryCache {
+export function createMemoryCache(
+  config?: Partial<MemoryCacheConfig>
+): MemoryCache {
   return new MemoryCache(config)
 }
 
@@ -330,12 +353,22 @@ export function createNoOpCache(): ExtendedServiceCache {
       return { hits: 0, misses: 0, hitRate: 0, size: 0 }
     },
     getExtendedStats(): ExtendedCacheStats {
-      return { hits: 0, misses: 0, hitRate: 0, size: 0, maxSize: 0, evictions: 0, expirations: 0 }
+      return {
+        hits: 0,
+        misses: 0,
+        hitRate: 0,
+        size: 0,
+        maxSize: 0,
+        evictions: 0,
+        expirations: 0,
+      }
     },
     async has(): Promise<boolean> {
       return false
     },
-    async getMany<T>(keys: string[]): Promise<Map<string, CacheEntry<T> | null>> {
+    async getMany<T>(
+      keys: string[]
+    ): Promise<Map<string, CacheEntry<T> | null>> {
       return new Map(keys.map((k) => [k, null]))
     },
     async setMany(): Promise<void> {},

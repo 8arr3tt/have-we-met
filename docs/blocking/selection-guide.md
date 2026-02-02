@@ -64,6 +64,7 @@ START
 ```
 
 **Rationale:**
+
 - O(n²) comparisons are still manageable
 - Simple strategy reduces complexity
 - Focus on matching quality over performance
@@ -79,6 +80,7 @@ START
 ```
 
 **Rationale:**
+
 - 99% reduction in comparisons
 - Fast block generation (<50ms)
 - Good balance of recall and speed
@@ -88,6 +90,7 @@ START
 **Recommendation:** Strategy depends on recall needs
 
 **High recall:**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -98,6 +101,7 @@ START
 ```
 
 **Balanced:**
+
 ```typescript
 .blocking(block => block
   .onField('lastName', { transform: 'soundex' })
@@ -105,6 +109,7 @@ START
 ```
 
 **Speed-critical:**
+
 ```typescript
 .blocking(block => block
   .onField('lastName', { transform: 'firstLetter' })
@@ -124,6 +129,7 @@ START
 ```
 
 **Rationale:**
+
 - Tighter blocks reduce comparisons further
 - Composite keys create more selective blocks
 - Consider database indexing strategies
@@ -133,6 +139,7 @@ START
 #### High Quality Data
 
 **Characteristics:**
+
 - Consistent formatting
 - Few typos or variations
 - Standardized fields
@@ -150,6 +157,7 @@ START
 #### Medium Quality Data
 
 **Characteristics:**
+
 - Some formatting variations
 - Occasional typos
 - Mostly consistent
@@ -179,6 +187,7 @@ START
 #### Low Quality Data
 
 **Characteristics:**
+
 - Inconsistent formatting
 - Many typos
 - Missing or incomplete data
@@ -281,6 +290,7 @@ START
 **Scenario:** Deduplicate customer records across systems
 
 **Basic:**
+
 ```typescript
 .blocking(block => block
   .onField('lastName', { transform: 'soundex' })
@@ -288,6 +298,7 @@ START
 ```
 
 **Advanced:**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -298,6 +309,7 @@ START
 ```
 
 **Rationale:**
+
 - Soundex handles name variations and typos
 - Birth year provides fallback for name changes
 - Union mode ensures maximum recall
@@ -307,6 +319,7 @@ START
 **Scenario:** Find duplicate addresses in a mailing list
 
 **Recommended:**
+
 ```typescript
 .blocking(block => block
   .onFields(['postcode', 'street'], {
@@ -316,6 +329,7 @@ START
 ```
 
 **Rationale:**
+
 - Postcode narrows location precisely
 - First letter of street handles minor variations
 - Composite key creates tight, specific blocks
@@ -325,6 +339,7 @@ START
 **Scenario:** Match organizations across databases
 
 **Recommended:**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -335,6 +350,7 @@ START
 ```
 
 **Rationale:**
+
 - Soundex handles company name variations
 - Country provides geographic grouping
 - Union mode catches matches via either field
@@ -344,6 +360,7 @@ START
 **Scenario:** Find duplicate or similar email addresses
 
 **Recommended:**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -358,6 +375,7 @@ START
 ```
 
 **Rationale:**
+
 - Domain blocking groups same-organization emails
 - Sorted neighbourhood catches typos
 - Small window (5) is sufficient for emails
@@ -367,6 +385,7 @@ START
 **Scenario:** Match products across catalogs
 
 **Recommended:**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -381,6 +400,7 @@ START
 ```
 
 **Rationale:**
+
 - Brand with soundex handles variations
 - Category provides natural grouping
 - SKU prefix helps with similar products
@@ -392,12 +412,14 @@ START
 **Goal:** Minimize block generation time
 
 **Strategy:**
+
 1. Use simple transforms (firstLetter > soundex > metaphone)
 2. Avoid sorted neighbourhood if possible
 3. Use single-field blocking
 4. Prefer union over intersection mode
 
 **Example:**
+
 ```typescript
 .blocking(block => block
   .onField('lastName', { transform: 'firstLetter' })
@@ -405,6 +427,7 @@ START
 ```
 
 **Result:**
+
 - Fastest generation time (~17ms for 100k records)
 - Still achieves 96%+ reduction
 
@@ -413,12 +436,14 @@ START
 **Goal:** Find maximum number of true matches
 
 **Strategy:**
+
 1. Use composite union mode
 2. Include multiple complementary fields
 3. Use phonetic transforms (soundex, metaphone)
 4. Add sorted neighbourhood as fallback
 
 **Example:**
+
 ```typescript
 .blocking(block => block
   .composite('union', comp => comp
@@ -431,6 +456,7 @@ START
 ```
 
 **Result:**
+
 - Maximum recall across multiple fields
 - Higher comparison count (but still 90%+ reduction)
 
@@ -439,12 +465,14 @@ START
 **Goal:** Minimize false positive comparisons
 
 **Strategy:**
+
 1. Use tighter blocks (soundex or multi-field)
 2. Avoid overly broad blocks (firstLetter with high-frequency initial)
 3. Consider intersection mode for very large datasets
 4. Use composite keys for specificity
 
 **Example:**
+
 ```typescript
 .blocking(block => block
   .onFields(['lastName', 'birthYear', 'country'], {
@@ -454,6 +482,7 @@ START
 ```
 
 **Result:**
+
 - Fewer, more specific blocks
 - Lower false positive rate
 - Highest comparison reduction
@@ -484,11 +513,13 @@ Reduction: 99%
 ```
 
 **Good distribution:**
+
 - Blocks are relatively balanced
 - Max block size < 10% of average
 - Comparison reduction > 95%
 
 **Poor distribution:**
+
 - One or few blocks with thousands of records
 - Many blocks with only 1-2 records
 - Comparison reduction < 90%
@@ -496,17 +527,20 @@ Reduction: 99%
 ### Tuning Based on Results
 
 **If blocks are too large:**
+
 - Use more specific transform (firstLetter → soundex)
 - Add more fields (single → multi-field)
 - Reduce window size (sorted neighbourhood)
 
 **If recall is too low:**
+
 - Use broader transform (soundex → firstLetter)
 - Switch to composite union
 - Add sorted neighbourhood
 - Increase window size
 
 **If performance is too slow:**
+
 - Simplify transform (soundex → firstLetter)
 - Reduce number of strategies
 - Avoid sorted neighbourhood
@@ -566,15 +600,15 @@ Reduction: 99%
 
 ### Quick Recommendations
 
-| Scenario | Recommended Strategy |
-|----------|---------------------|
-| General person matching | Standard (soundex on lastName) |
-| High recall person matching | Composite (soundex + birthYear) |
-| Address matching | Multi-field (postcode + street) |
-| Email deduplication | Composite (domain + sorted) |
-| Company matching | Composite (name soundex + country) |
-| Speed-critical | Standard (firstLetter) |
-| Recall-critical | Composite union + sorted neighbourhood |
+| Scenario                    | Recommended Strategy                   |
+| --------------------------- | -------------------------------------- |
+| General person matching     | Standard (soundex on lastName)         |
+| High recall person matching | Composite (soundex + birthYear)        |
+| Address matching            | Multi-field (postcode + street)        |
+| Email deduplication         | Composite (domain + sorted)            |
+| Company matching            | Composite (name soundex + country)     |
+| Speed-critical              | Standard (firstLetter)                 |
+| Recall-critical             | Composite union + sorted neighbourhood |
 
 ### Decision Factors Priority
 

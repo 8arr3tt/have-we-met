@@ -136,9 +136,17 @@ export class IndexAnalyzer {
 
       const indexName = `idx_${tableName}_${query.fields.map((f) => f.replaceAll('.', '_')).join('_')}`
       const indexType = this.selectIndexType(query)
-      const sql = this.generateIndexSQL(tableName, query.fields, indexName, indexType)
+      const sql = this.generateIndexSQL(
+        tableName,
+        query.fields,
+        indexName,
+        indexType
+      )
 
-      const priority = this.calculatePriority(query.frequency, query.fields.length)
+      const priority = this.calculatePriority(
+        query.frequency,
+        query.fields.length
+      )
 
       recommendations.push({
         fields: query.fields,
@@ -194,8 +202,12 @@ export class IndexAnalyzer {
       }
     })
 
-    const indexedFields = new Set(schema.filter((f) => f.indexed).map((f) => f.name))
-    return suggestions.filter((s) => !s.fields.every((f) => indexedFields.has(f)))
+    const indexedFields = new Set(
+      schema.filter((f) => f.indexed).map((f) => f.name)
+    )
+    return suggestions.filter(
+      (s) => !s.fields.every((f) => indexedFields.has(f))
+    )
   }
 
   /**
@@ -204,13 +216,20 @@ export class IndexAnalyzer {
    * @param query - Query pattern
    * @returns Recommended index type
    */
-  private selectIndexType(query: QueryPattern): 'btree' | 'hash' | 'gin' | 'gist' {
+  private selectIndexType(
+    query: QueryPattern
+  ): 'btree' | 'hash' | 'gin' | 'gist' {
     if (query.filterOperators?.includes('like')) {
       return this.dialect === 'postgresql' ? 'gin' : 'btree'
     }
 
-    if (query.filterOperators?.includes('eq') && !query.filterOperators.some((op) => op === 'gt' || op === 'lt')) {
-      return this.dialect === 'postgresql' || this.dialect === 'mysql' ? 'hash' : 'btree'
+    if (
+      query.filterOperators?.includes('eq') &&
+      !query.filterOperators.some((op) => op === 'gt' || op === 'lt')
+    ) {
+      return this.dialect === 'postgresql' || this.dialect === 'mysql'
+        ? 'hash'
+        : 'btree'
     }
 
     return 'btree'

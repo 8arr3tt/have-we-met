@@ -23,7 +23,7 @@ import type {
   ServiceErrorInfo,
 } from './types.js'
 import type { ResolverConfig } from '../types/config.js'
-import type { MatchResult } from './types.js'
+import type { MatchResult } from '../core/scoring/types.js'
 import {
   ServiceNotRegisteredError,
   ServiceAlreadyRegisteredError,
@@ -90,9 +90,14 @@ function createHealthyResult(): HealthCheckResult {
 function createFailedResult(
   error: Error,
   timing: ServiceTiming,
-  retryAttempts: number = 0,
+  retryAttempts: number = 0
 ): ServiceResult {
-  const serviceError = error as { code?: string; type?: string; retryable?: boolean; context?: Record<string, unknown> }
+  const serviceError = error as {
+    code?: string
+    type?: string
+    retryable?: boolean
+    context?: Record<string, unknown>
+  }
   return {
     success: false,
     error: {
@@ -109,7 +114,6 @@ function createFailedResult(
   }
 }
 
-
 /** Timer ID type for cross-environment compatibility */
 type TimerId = ReturnType<typeof setTimeout>
 
@@ -123,14 +127,17 @@ const clearTimeoutFn = clearTimeout as (id: TimerId) => void
  * Sleep utility for delays
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeoutFn(resolve, ms))
+  return new Promise((resolve) => setTimeoutFn(resolve, ms))
 }
 
 /**
  * ServiceExecutorImpl orchestrates external service calls
  */
 export class ServiceExecutorImpl {
-  private services: Map<RegisteredService['config']['plugin']['name'], RegisteredService> = new Map()
+  private services: Map<
+    RegisteredService['config']['plugin']['name'],
+    RegisteredService
+  > = new Map()
   private resolverConfig: ResolverConfig
   private defaults: ServiceDefaults
   // Note: cachingEnabled will be used in Ticket 9.4 for service caching
@@ -163,7 +170,8 @@ export class ServiceExecutorImpl {
     }
 
     const mergedConfig = this.mergeWithDefaults(config)
-    const circuitBreakerConfig = this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
+    const circuitBreakerConfig =
+      this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
 
     this.services.set(name, {
       config: mergedConfig,
@@ -181,7 +189,9 @@ export class ServiceExecutorImpl {
   /**
    * Execute all pre-match services
    */
-  async executePreMatch(record: Record<string, unknown>): Promise<ServiceExecutionResult> {
+  async executePreMatch(
+    record: Record<string, unknown>
+  ): Promise<ServiceExecutionResult> {
     return this.executeServices(record, 'pre-match')
   }
 
@@ -190,7 +200,7 @@ export class ServiceExecutorImpl {
    */
   async executePostMatch(
     record: Record<string, unknown>,
-    matchResult: MatchResult,
+    matchResult: MatchResult
   ): Promise<ServiceExecutionResult> {
     return this.executeServices(record, 'post-match', matchResult)
   }
@@ -304,7 +314,7 @@ export class ServiceExecutorImpl {
   private async executeServices(
     record: Record<string, unknown>,
     executionPoint: ExecutionPoint,
-    matchResult?: MatchResult,
+    matchResult?: MatchResult
   ): Promise<ServiceExecutionResult> {
     const startTime = Date.now()
     const services = this.getServicesForExecutionPoint(executionPoint)
@@ -334,7 +344,7 @@ export class ServiceExecutorImpl {
 
     if (this.parallelExecution) {
       const executeResults = await Promise.all(
-        services.map(async registered => {
+        services.map(async (registered) => {
           const context = buildServiceContext({
             ...contextOptions,
             record: enrichedData,
@@ -345,7 +355,7 @@ export class ServiceExecutorImpl {
             registered,
             result: await this.executeSingleService(registered, input, context),
           }
-        }),
+        })
       )
 
       for (const { name, registered, result } of executeResults) {
@@ -355,7 +365,7 @@ export class ServiceExecutorImpl {
           registered.config,
           enrichedData,
           flags,
-          scoreAdjustments,
+          scoreAdjustments
         )
 
         if (!outcome.proceed && registered.config.required) {
@@ -379,7 +389,11 @@ export class ServiceExecutorImpl {
         const input = this.buildServiceInput(registered.config, enrichedData)
 
         try {
-          const result = await this.executeSingleService(registered, input, context)
+          const result = await this.executeSingleService(
+            registered,
+            input,
+            context
+          )
           results[name] = result
 
           const outcome = this.handleServiceResult(
@@ -387,7 +401,7 @@ export class ServiceExecutorImpl {
             registered.config,
             enrichedData,
             flags,
-            scoreAdjustments,
+            scoreAdjustments
           )
 
           if (!outcome.proceed && registered.config.required) {
@@ -404,12 +418,16 @@ export class ServiceExecutorImpl {
           const timing = this.createTiming(startTime)
           results[name] = createFailedResult(
             error instanceof Error ? error : new Error(String(error)),
-            timing,
+            timing
           )
 
-          if (registered.config.onFailure === 'reject' && registered.config.required) {
+          if (
+            registered.config.onFailure === 'reject' &&
+            registered.config.required
+          ) {
             proceed = false
-            rejectionReason = error instanceof Error ? error.message : String(error)
+            rejectionReason =
+              error instanceof Error ? error.message : String(error)
             rejectedBy = name
             break
           }
@@ -427,7 +445,8 @@ export class ServiceExecutorImpl {
       rejectionReason,
       rejectedBy,
       enrichedData,
-      scoreAdjustments: scoreAdjustments.length > 0 ? scoreAdjustments : undefined,
+      scoreAdjustments:
+        scoreAdjustments.length > 0 ? scoreAdjustments : undefined,
       flags: flags.length > 0 ? flags : undefined,
       totalDurationMs: Date.now() - startTime,
     }
@@ -439,17 +458,26 @@ export class ServiceExecutorImpl {
   private async executeSingleService(
     registered: RegisteredService,
     input: unknown,
-    context: ServiceContext,
+    context: ServiceContext
   ): Promise<ServiceResult> {
     const { config, circuitBreaker } = registered
     const plugin = config.plugin
-    const timeout = config.timeout ?? this.defaults.timeout ?? DEFAULT_SERVICE_CONFIG.timeout!
+    const timeout =
+      config.timeout ?? this.defaults.timeout ?? DEFAULT_SERVICE_CONFIG.timeout!
     const startTime = Date.now()
 
     // Check circuit breaker
-    if (!this.checkCircuitBreaker(circuitBreaker, this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG)) {
-      const cbConfig = this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
-      const resetAt = new Date(circuitBreaker.lastStateChange.getTime() + cbConfig.resetTimeoutMs)
+    if (
+      !this.checkCircuitBreaker(
+        circuitBreaker,
+        this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
+      )
+    ) {
+      const cbConfig =
+        this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
+      const resetAt = new Date(
+        circuitBreaker.lastStateChange.getTime() + cbConfig.resetTimeoutMs
+      )
       throw new ServiceUnavailableError(plugin.name, 'open', resetAt)
     }
 
@@ -473,10 +501,13 @@ export class ServiceExecutorImpl {
         const result = await this.executeWithTimeout(
           () => plugin.execute(input, context),
           timeout,
-          plugin.name,
+          plugin.name
         )
 
-        this.recordSuccess(circuitBreaker, this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG)
+        this.recordSuccess(
+          circuitBreaker,
+          this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
+        )
 
         return {
           ...result,
@@ -500,9 +531,16 @@ export class ServiceExecutorImpl {
       }
     }
 
-    this.recordFailure(circuitBreaker, this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG)
+    this.recordFailure(
+      circuitBreaker,
+      this.defaults.circuitBreaker ?? DEFAULT_CIRCUIT_BREAKER_CONFIG
+    )
 
-    return createFailedResult(lastError!, this.createTiming(startTime), finalAttempt)
+    return createFailedResult(
+      lastError!,
+      this.createTiming(startTime),
+      finalAttempt
+    )
   }
 
   /**
@@ -511,7 +549,7 @@ export class ServiceExecutorImpl {
   private async executeWithTimeout<T>(
     fn: () => Promise<T>,
     timeoutMs: number,
-    serviceName: string,
+    serviceName: string
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const timeoutId = setTimeoutFn(() => {
@@ -519,11 +557,11 @@ export class ServiceExecutorImpl {
       }, timeoutMs)
 
       fn()
-        .then(result => {
+        .then((result) => {
           clearTimeoutFn(timeoutId)
           resolve(result)
         })
-        .catch(error => {
+        .catch((error) => {
           clearTimeoutFn(timeoutId)
           reject(error)
         })
@@ -535,7 +573,7 @@ export class ServiceExecutorImpl {
    */
   private buildServiceInput(
     config: ServiceConfig,
-    record: Record<string, unknown>,
+    record: Record<string, unknown>
   ): unknown {
     const plugin = config.plugin
 
@@ -557,7 +595,9 @@ export class ServiceExecutorImpl {
         }
         const input: LookupInput = {
           keyFields,
-          requestedFields: config.fieldMapping ? Object.keys(config.fieldMapping) : undefined,
+          requestedFields: config.fieldMapping
+            ? Object.keys(config.fieldMapping)
+            : undefined,
         }
         return input
       }
@@ -583,7 +623,7 @@ export class ServiceExecutorImpl {
     config: ServiceConfig,
     currentData: Record<string, unknown>,
     flags: string[],
-    scoreAdjustments: number[],
+    scoreAdjustments: number[]
   ): {
     proceed: boolean
     rejectionReason?: string
@@ -633,7 +673,9 @@ export class ServiceExecutorImpl {
 
         if (output.data && config.fieldMapping) {
           const enrichedData = { ...currentData }
-          for (const [externalField, schemaField] of Object.entries(config.fieldMapping)) {
+          for (const [externalField, schemaField] of Object.entries(
+            config.fieldMapping
+          )) {
             if (externalField in output.data) {
               enrichedData[schemaField] = output.data[externalField]
             }
@@ -677,7 +719,9 @@ export class ServiceExecutorImpl {
   /**
    * Get services for a specific execution point, sorted by priority
    */
-  private getServicesForExecutionPoint(executionPoint: ExecutionPoint): RegisteredService[] {
+  private getServicesForExecutionPoint(
+    executionPoint: ExecutionPoint
+  ): RegisteredService[] {
     const services: RegisteredService[] = []
 
     for (const [, registered] of this.services) {
@@ -689,7 +733,9 @@ export class ServiceExecutorImpl {
 
     // Sort by execution order if specified, otherwise by priority
     if (this.executionOrder) {
-      const orderMap = new Map(this.executionOrder.map((name, index) => [name, index]))
+      const orderMap = new Map(
+        this.executionOrder.map((name, index) => [name, index])
+      )
       services.sort((a, b) => {
         const aOrder = orderMap.get(a.config.plugin.name) ?? Infinity
         const bOrder = orderMap.get(b.config.plugin.name) ?? Infinity
@@ -712,7 +758,10 @@ export class ServiceExecutorImpl {
   private mergeWithDefaults(config: ServiceConfig): ServiceConfig {
     return {
       ...config,
-      timeout: config.timeout ?? this.defaults.timeout ?? DEFAULT_SERVICE_CONFIG.timeout,
+      timeout:
+        config.timeout ??
+        this.defaults.timeout ??
+        DEFAULT_SERVICE_CONFIG.timeout,
       retry: config.retry ?? this.defaults.retry,
       cache: config.cache ?? this.defaults.cache,
       priority: config.priority ?? DEFAULT_SERVICE_CONFIG.priority,
@@ -724,7 +773,9 @@ export class ServiceExecutorImpl {
   /**
    * Create a new circuit breaker state
    */
-  private createCircuitBreakerState(_config: CircuitBreakerConfig): CircuitBreakerState {
+  private createCircuitBreakerState(
+    _config: CircuitBreakerConfig
+  ): CircuitBreakerState {
     return {
       state: 'closed',
       failureCount: 0,
@@ -739,7 +790,7 @@ export class ServiceExecutorImpl {
    */
   private checkCircuitBreaker(
     state: CircuitBreakerState,
-    config: CircuitBreakerConfig,
+    config: CircuitBreakerConfig
   ): boolean {
     const now = Date.now()
 
@@ -765,7 +816,10 @@ export class ServiceExecutorImpl {
   /**
    * Record a successful service call
    */
-  private recordSuccess(state: CircuitBreakerState, config: CircuitBreakerConfig): void {
+  private recordSuccess(
+    state: CircuitBreakerState,
+    config: CircuitBreakerConfig
+  ): void {
     if (state.state === 'half-open') {
       state.successCount++
       if (state.successCount >= config.successThreshold) {
@@ -784,7 +838,10 @@ export class ServiceExecutorImpl {
   /**
    * Record a failed service call
    */
-  private recordFailure(state: CircuitBreakerState, config: CircuitBreakerConfig): void {
+  private recordFailure(
+    state: CircuitBreakerState,
+    config: CircuitBreakerConfig
+  ): void {
     const now = new Date()
     state.lastFailureTime = now
 
@@ -796,7 +853,7 @@ export class ServiceExecutorImpl {
 
     // Clean up old failures outside the window
     const windowStart = now.getTime() - config.failureWindowMs
-    state.failures = state.failures.filter(f => f.getTime() > windowStart)
+    state.failures = state.failures.filter((f) => f.getTime() > windowStart)
     state.failures.push(now)
     state.failureCount = state.failures.length
 
@@ -811,7 +868,7 @@ export class ServiceExecutorImpl {
    */
   private shouldRetry(
     error: Error & { type?: string; retryable?: boolean },
-    retryConfig?: ServiceConfig['retry'],
+    retryConfig?: ServiceConfig['retry']
   ): boolean {
     if (!retryConfig) {
       return false
@@ -843,12 +900,16 @@ export class ServiceExecutorImpl {
   /**
    * Calculate delay before next retry attempt
    */
-  private calculateRetryDelay(attempt: number, config: ServiceConfig['retry']): number {
+  private calculateRetryDelay(
+    attempt: number,
+    config: ServiceConfig['retry']
+  ): number {
     if (!config) {
       return 0
     }
 
-    let delay = config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1)
+    let delay =
+      config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1)
     delay = Math.min(delay, config.maxDelayMs)
 
     // Add jitter (±20%)
@@ -872,6 +933,8 @@ export class ServiceExecutorImpl {
 /**
  * Factory function to create a ServiceExecutor
  */
-export function createServiceExecutor(options: ServiceExecutorOptions): ServiceExecutorImpl {
+export function createServiceExecutor(
+  options: ServiceExecutorOptions
+): ServiceExecutorImpl {
   return new ServiceExecutorImpl(options)
 }

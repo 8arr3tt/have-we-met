@@ -43,12 +43,15 @@ describe('MergeError', () => {
 
 describe('MergeValidationError', () => {
   it('creates error with field and reason', () => {
-    const error = new MergeValidationError('sourceRecords', 'must have at least 2 records')
+    const error = new MergeValidationError(
+      'sourceRecords',
+      'must have at least 2 records'
+    )
 
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(MergeValidationError)
     expect(error.message).toBe(
-      "Merge validation failed for 'sourceRecords': must have at least 2 records",
+      "Merge validation failed for 'sourceRecords': must have at least 2 records"
     )
     expect(error.code).toBe('MERGE_VALIDATION_ERROR')
     expect(error.name).toBe('MergeValidationError')
@@ -82,7 +85,7 @@ describe('MergeConflictError', () => {
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(MergeConflictError)
     expect(error.message).toBe(
-      "Unresolvable merge conflict for field 'status': 2 conflicting values",
+      "Unresolvable merge conflict for field 'status': 2 conflicting values"
     )
     expect(error.code).toBe('MERGE_CONFLICT_ERROR')
     expect(error.name).toBe('MergeConflictError')
@@ -111,7 +114,7 @@ describe('MergeProvenanceError', () => {
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(MergeProvenanceError)
     expect(error.message).toBe(
-      "Provenance tracking failed during 'save': database connection failed",
+      "Provenance tracking failed during 'save': database connection failed"
     )
     expect(error.code).toBe('MERGE_PROVENANCE_ERROR')
     expect(error.name).toBe('MergeProvenanceError')
@@ -120,7 +123,9 @@ describe('MergeProvenanceError', () => {
   })
 
   it('includes additional context', () => {
-    const error = new MergeProvenanceError('update', 'record not found', { recordId: 'prov-123' })
+    const error = new MergeProvenanceError('update', 'record not found', {
+      recordId: 'prov-123',
+    })
 
     expect(error.context?.operation).toBe('update')
     expect(error.context?.recordId).toBe('prov-123')
@@ -133,7 +138,9 @@ describe('UnmergeError', () => {
 
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(UnmergeError)
-    expect(error.message).toBe("Cannot unmerge record 'golden-001': provenance not found")
+    expect(error.message).toBe(
+      "Cannot unmerge record 'golden-001': provenance not found"
+    )
     expect(error.code).toBe('UNMERGE_ERROR')
     expect(error.name).toBe('UnmergeError')
     expect(error.context?.goldenRecordId).toBe('golden-001')
@@ -193,12 +200,17 @@ describe('InvalidStrategyError', () => {
 
 describe('StrategyTypeMismatchError', () => {
   it('creates error with type details', () => {
-    const error = new StrategyTypeMismatchError('average', 'firstName', 'number', 'string')
+    const error = new StrategyTypeMismatchError(
+      'average',
+      'firstName',
+      'number',
+      'string'
+    )
 
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(StrategyTypeMismatchError)
     expect(error.message).toBe(
-      "Strategy 'average' cannot be applied to field 'firstName': expected number, got string",
+      "Strategy 'average' cannot be applied to field 'firstName': expected number, got string"
     )
     expect(error.code).toBe('STRATEGY_TYPE_MISMATCH')
     expect(error.name).toBe('StrategyTypeMismatchError')
@@ -209,9 +221,15 @@ describe('StrategyTypeMismatchError', () => {
   })
 
   it('includes additional context', () => {
-    const error = new StrategyTypeMismatchError('sum', 'tags', 'number', 'array', {
-      suggestion: 'Use union strategy for arrays',
-    })
+    const error = new StrategyTypeMismatchError(
+      'sum',
+      'tags',
+      'number',
+      'array',
+      {
+        suggestion: 'Use union strategy for arrays',
+      }
+    )
 
     expect(error.context?.suggestion).toBe('Use union strategy for arrays')
   })
@@ -224,7 +242,7 @@ describe('CustomStrategyMissingError', () => {
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(CustomStrategyMissingError)
     expect(error.message).toBe(
-      "Field 'specialField' uses 'custom' strategy but no customMerge function was provided",
+      "Field 'specialField' uses 'custom' strategy but no customMerge function was provided"
     )
     expect(error.code).toBe('CUSTOM_STRATEGY_MISSING')
     expect(error.name).toBe('CustomStrategyMissingError')
@@ -236,7 +254,9 @@ describe('CustomStrategyMissingError', () => {
       hint: 'Provide a customMerge function in the field config',
     })
 
-    expect(error.context?.hint).toBe('Provide a customMerge function in the field config')
+    expect(error.context?.hint).toBe(
+      'Provide a customMerge function in the field config'
+    )
   })
 })
 
@@ -246,7 +266,9 @@ describe('ProvenanceNotFoundError', () => {
 
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(ProvenanceNotFoundError)
-    expect(error.message).toBe("No provenance found for golden record 'golden-789'")
+    expect(error.message).toBe(
+      "No provenance found for golden record 'golden-789'"
+    )
     expect(error.code).toBe('PROVENANCE_NOT_FOUND')
     expect(error.name).toBe('ProvenanceNotFoundError')
     expect(error.goldenRecordId).toBe('golden-789')
@@ -254,7 +276,8 @@ describe('ProvenanceNotFoundError', () => {
 
   it('includes additional context', () => {
     const error = new ProvenanceNotFoundError('golden-999', {
-      suggestion: 'Record may have been created before provenance tracking was enabled',
+      suggestion:
+        'Record may have been created before provenance tracking was enabled',
     })
 
     expect(error.context?.suggestion).toContain('before provenance tracking')
@@ -267,7 +290,9 @@ describe('InsufficientSourceRecordsError', () => {
 
     expect(error).toBeInstanceOf(MergeError)
     expect(error).toBeInstanceOf(InsufficientSourceRecordsError)
-    expect(error.message).toBe('Merge requires at least 2 source records, got 1')
+    expect(error.message).toBe(
+      'Merge requires at least 2 source records, got 1'
+    )
     expect(error.code).toBe('INSUFFICIENT_SOURCE_RECORDS')
     expect(error.name).toBe('InsufficientSourceRecordsError')
     expect(error.recordCount).toBe(1)
@@ -276,7 +301,9 @@ describe('InsufficientSourceRecordsError', () => {
   it('handles zero records', () => {
     const error = new InsufficientSourceRecordsError(0)
 
-    expect(error.message).toBe('Merge requires at least 2 source records, got 0')
+    expect(error.message).toBe(
+      'Merge requires at least 2 source records, got 0'
+    )
     expect(error.recordCount).toBe(0)
   })
 

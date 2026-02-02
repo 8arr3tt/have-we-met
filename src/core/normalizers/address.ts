@@ -114,7 +114,10 @@ export function abbreviateState(state: string): string {
  * abbreviateStreetType('St')         // 'St'
  * ```
  */
-export function abbreviateStreetType(streetType: string, country?: string): string {
+export function abbreviateStreetType(
+  streetType: string,
+  country?: string
+): string {
   if (!streetType) return streetType
 
   const normalized = streetType.trim().toLowerCase()
@@ -244,7 +247,10 @@ export function parseAddressComponents(address: string): AddressComponents {
   addressStr = addressStr.replace(/\s+/g, ' ')
 
   // Split by comma
-  const parts = addressStr.split(',').map((p) => p.trim()).filter(Boolean)
+  const parts = addressStr
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean)
 
   if (parts.length === 0) return {}
 
@@ -355,7 +361,9 @@ export function parseAddressComponents(address: string): AddressComponents {
     // Format: "123 Main St, Anytown CA 90210"
     // Last part contains city, state, ZIP
     const lastPart = relevantParts[1]
-    const lastPartMatch = lastPart.match(/^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i)
+    const lastPartMatch = lastPart.match(
+      /^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
+    )
     if (lastPartMatch) {
       components.city = lastPartMatch[1].trim()
       components.state = lastPartMatch[2].toUpperCase()
@@ -385,19 +393,25 @@ export function parseAddressComponents(address: string): AddressComponents {
       components.postalCode = usStateZipMatch[2]
     } else {
       // Try Canadian format: state code + postal code
-      const canadianStatePostalMatch = lastPart.match(/^([A-Z]{2})\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i)
+      const canadianStatePostalMatch = lastPart.match(
+        /^([A-Z]{2})\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i
+      )
       if (canadianStatePostalMatch) {
         components.state = canadianStatePostalMatch[1].toUpperCase()
         components.postalCode = canadianStatePostalMatch[2]
       } else {
         // Try state name (long form) with US ZIP
-        const stateLongZipMatch = lastPart.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/i)
+        const stateLongZipMatch = lastPart.match(
+          /^(.+?)\s+(\d{5}(?:-\d{4})?)$/i
+        )
         if (stateLongZipMatch) {
           components.state = stateLongZipMatch[1].trim()
           components.postalCode = stateLongZipMatch[2]
         } else {
           // Try state name (long form) with Canadian postal code
-          const stateLongCanadianMatch = lastPart.match(/^(.+?)\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i)
+          const stateLongCanadianMatch = lastPart.match(
+            /^(.+?)\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i
+          )
           if (stateLongCanadianMatch) {
             components.state = stateLongCanadianMatch[1].trim()
             components.postalCode = stateLongCanadianMatch[2]
@@ -441,13 +455,17 @@ export function parseAddressComponents(address: string): AddressComponents {
       const lastPart = workingParts[2]
 
       // Try US format
-      const usStateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i)
+      const usStateZipMatch = lastPart.match(
+        /^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
+      )
       if (usStateZipMatch) {
         components.state = usStateZipMatch[1].toUpperCase()
         components.postalCode = usStateZipMatch[2]
       } else {
         // Try Canadian format
-        const canadianMatch = lastPart.match(/^([A-Z]{2})\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i)
+        const canadianMatch = lastPart.match(
+          /^([A-Z]{2})\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i
+        )
         if (canadianMatch) {
           components.state = canadianMatch[1].toUpperCase()
           components.postalCode = canadianMatch[2]
@@ -470,13 +488,19 @@ export function parseAddressComponents(address: string): AddressComponents {
 
         // Last part might be ZIP or postal code
         const lastPart = workingParts[workingParts.length - 1]
-        if (/^\d{5}(?:-\d{4})?$/.test(lastPart) || canadianPostalCodePattern.test(lastPart)) {
+        if (
+          /^\d{5}(?:-\d{4})?$/.test(lastPart) ||
+          canadianPostalCodePattern.test(lastPart)
+        ) {
           components.postalCode = lastPart
         }
       } else {
         // Fallback: assume last 3 parts are city, state, ZIP
         const lastPart = workingParts[workingParts.length - 1]
-        if (/^\d{5}(?:-\d{4})?$/.test(lastPart) || canadianPostalCodePattern.test(lastPart)) {
+        if (
+          /^\d{5}(?:-\d{4})?$/.test(lastPart) ||
+          canadianPostalCodePattern.test(lastPart)
+        ) {
           components.postalCode = lastPart
           components.state = workingParts[workingParts.length - 2]
           components.city = workingParts[workingParts.length - 3]

@@ -166,13 +166,17 @@ registrationEntries.forEach((entry) => {
   console.log(`  Result: ${result.outcome.toUpperCase()}`)
 
   if (result.outcome === 'match') {
-    console.log(`  ✓ Matched with existing patient: ${result.bestMatch!.record.id}`)
+    console.log(
+      `  ✓ Matched with existing patient: ${result.bestMatch!.record.id}`
+    )
     console.log(`  ✓ Confidence: ${result.bestMatch!.score.total.toFixed(1)}%`)
     console.log(`  ✓ Action: Update existing patient record`)
   } else if (result.outcome === 'review') {
     console.log(`  ⚠ Potential matches found (VERIFY):`)
     result.candidates.forEach((candidate) => {
-      console.log(`    - ${candidate.record.id}: ${candidate.score.total.toFixed(1)}%`)
+      console.log(
+        `    - ${candidate.record.id}: ${candidate.score.total.toFixed(1)}%`
+      )
     })
     console.log(`  ⚠ Action: Manual verification required`)
   } else {
@@ -278,9 +282,7 @@ console.log()
 
 console.log('Result:')
 console.log(`  Matched with: ${nearMissResult.bestMatch?.record.id || 'none'}`)
-console.log(
-  `  → Date normalization + exact matching prevents false positives!`
-)
+console.log(`  → Date normalization + exact matching prevents false positives!`)
 console.log()
 
 // Best practices for healthcare

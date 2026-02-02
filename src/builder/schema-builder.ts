@@ -236,10 +236,7 @@ export class SchemaBuilder<T extends object = object> {
    * )
    * ```
    */
-  field<K extends keyof T & string>(
-    name: K,
-    definition: FieldDefinition
-  ): this
+  field<K extends keyof T & string>(name: K, definition: FieldDefinition): this
 
   field<K extends keyof T & string>(
     name: K,

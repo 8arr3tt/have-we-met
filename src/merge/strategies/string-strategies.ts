@@ -3,7 +3,11 @@
  * @module merge/strategies/string-strategies
  */
 
-import type { StrategyFunction, SourceRecord, FieldMergeOptions } from '../types.js'
+import type {
+  StrategyFunction,
+  SourceRecord,
+  FieldMergeOptions,
+} from '../types.js'
 
 /**
  * Converts a value to a string for length comparison.
@@ -12,7 +16,8 @@ import type { StrategyFunction, SourceRecord, FieldMergeOptions } from '../types
 function toComparableString(value: unknown): string | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (typeof value === 'number' || typeof value === 'boolean')
+    return String(value)
   if (Array.isArray(value)) return null
   if (typeof value === 'object') return null
   return String(value)
@@ -39,7 +44,7 @@ function toComparableString(value: unknown): string | null {
 export const preferLonger: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
 
@@ -80,7 +85,7 @@ export const preferLonger: StrategyFunction = (
 export const preferShorter: StrategyFunction = (
   values: unknown[],
   _records: SourceRecord[],
-  _options?: FieldMergeOptions,
+  _options?: FieldMergeOptions
 ): unknown => {
   if (!values || values.length === 0) return undefined
 

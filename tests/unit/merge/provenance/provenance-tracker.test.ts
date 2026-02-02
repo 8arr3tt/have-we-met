@@ -3,7 +3,11 @@ import {
   ProvenanceTracker,
   createProvenanceTracker,
 } from '../../../../src/merge/provenance/provenance-tracker.js'
-import type { SourceRecord, MergeConfig, MergeConflict } from '../../../../src/merge/types.js'
+import type {
+  SourceRecord,
+  MergeConfig,
+  MergeConflict,
+} from '../../../../src/merge/types.js'
 
 interface TestRecord {
   firstName: string
@@ -14,7 +18,7 @@ interface TestRecord {
 function createSourceRecord(
   id: string,
   record: TestRecord,
-  options?: { createdAt?: Date; updatedAt?: Date },
+  options?: { createdAt?: Date; updatedAt?: Date }
 ): SourceRecord<TestRecord> {
   return {
     id,
@@ -78,7 +82,7 @@ describe('ProvenanceTracker', () => {
       tracker.startMerge(sourceRecords, config)
 
       expect(() => tracker.startMerge(sourceRecords, config)).toThrow(
-        'Cannot start a new merge while one is in progress',
+        'Cannot start a new merge while one is in progress'
       )
     })
   })
@@ -94,7 +98,12 @@ describe('ProvenanceTracker', () => {
         { recordId: 'rec-2', value: 'Jane' },
       ]
 
-      tracker.recordFieldSelection('firstName', 'rec-1', 'preferFirst', allValues)
+      tracker.recordFieldSelection(
+        'firstName',
+        'rec-1',
+        'preferFirst',
+        allValues
+      )
 
       const fieldProv = tracker.getFieldProvenance('firstName')
       expect(fieldProv).toBeDefined()
@@ -103,15 +112,10 @@ describe('ProvenanceTracker', () => {
     })
 
     it('records which strategy was applied', () => {
-      tracker.recordFieldSelection(
-        'email',
-        'rec-2',
-        'preferNewer',
-        [
-          { recordId: 'rec-1', value: 'john@example.com' },
-          { recordId: 'rec-2', value: 'jane@example.com' },
-        ],
-      )
+      tracker.recordFieldSelection('email', 'rec-2', 'preferNewer', [
+        { recordId: 'rec-1', value: 'john@example.com' },
+        { recordId: 'rec-2', value: 'jane@example.com' },
+      ])
 
       const fieldProv = tracker.getFieldProvenance('email')
       expect(fieldProv?.strategyApplied).toBe('preferNewer')
@@ -123,7 +127,12 @@ describe('ProvenanceTracker', () => {
         { recordId: 'rec-2', value: 'Jane' },
       ]
 
-      tracker.recordFieldSelection('firstName', 'rec-1', 'preferLonger', allValues)
+      tracker.recordFieldSelection(
+        'firstName',
+        'rec-1',
+        'preferLonger',
+        allValues
+      )
 
       const fieldProv = tracker.getFieldProvenance('firstName')
       expect(fieldProv?.allValues).toHaveLength(2)
@@ -140,19 +149,21 @@ describe('ProvenanceTracker', () => {
           { recordId: 'rec-2', value: 'Jane' },
         ],
         true, // hadConflict
-        'Auto-resolved using preferFirst strategy',
+        'Auto-resolved using preferFirst strategy'
       )
 
       const fieldProv = tracker.getFieldProvenance('firstName')
       expect(fieldProv?.hadConflict).toBe(true)
-      expect(fieldProv?.conflictResolution).toBe('Auto-resolved using preferFirst strategy')
+      expect(fieldProv?.conflictResolution).toBe(
+        'Auto-resolved using preferFirst strategy'
+      )
     })
 
     it('throws if no merge in progress', () => {
       const newTracker = new ProvenanceTracker<TestRecord>()
 
       expect(() =>
-        newTracker.recordFieldSelection('firstName', 'rec-1', 'preferFirst', []),
+        newTracker.recordFieldSelection('firstName', 'rec-1', 'preferFirst', [])
       ).toThrow('No merge in progress')
     })
   })
@@ -214,7 +225,7 @@ describe('ProvenanceTracker', () => {
           values: [],
           resolution: 'auto',
           resolvedValue: 'test',
-        }),
+        })
       ).toThrow('No merge in progress')
     })
   })
@@ -222,15 +233,10 @@ describe('ProvenanceTracker', () => {
   describe('updateFieldSelection', () => {
     beforeEach(() => {
       tracker.startMerge(sourceRecords, config)
-      tracker.recordFieldSelection(
-        'firstName',
-        'rec-1',
-        'preferFirst',
-        [
-          { recordId: 'rec-1', value: 'John' },
-          { recordId: 'rec-2', value: 'Jane' },
-        ],
-      )
+      tracker.recordFieldSelection('firstName', 'rec-1', 'preferFirst', [
+        { recordId: 'rec-1', value: 'John' },
+        { recordId: 'rec-2', value: 'Jane' },
+      ])
     })
 
     it('updates existing field selection', () => {
@@ -247,9 +253,9 @@ describe('ProvenanceTracker', () => {
     })
 
     it('throws if field not previously recorded', () => {
-      expect(() => tracker.updateFieldSelection('nonexistent', { hadConflict: true })).toThrow(
-        "Field 'nonexistent' has not been recorded yet",
-      )
+      expect(() =>
+        tracker.updateFieldSelection('nonexistent', { hadConflict: true })
+      ).toThrow("Field 'nonexistent' has not been recorded yet")
     })
   })
 
@@ -260,35 +266,20 @@ describe('ProvenanceTracker', () => {
         queueItemId: 'queue-456',
       })
 
-      tracker.recordFieldSelection(
-        'firstName',
-        'rec-1',
-        'preferLonger',
-        [
-          { recordId: 'rec-1', value: 'John' },
-          { recordId: 'rec-2', value: 'Jane' },
-        ],
-      )
+      tracker.recordFieldSelection('firstName', 'rec-1', 'preferLonger', [
+        { recordId: 'rec-1', value: 'John' },
+        { recordId: 'rec-2', value: 'Jane' },
+      ])
 
-      tracker.recordFieldSelection(
-        'lastName',
-        'rec-2',
-        'preferFirst',
-        [
-          { recordId: 'rec-1', value: 'Doe' },
-          { recordId: 'rec-2', value: 'Smith' },
-        ],
-      )
+      tracker.recordFieldSelection('lastName', 'rec-2', 'preferFirst', [
+        { recordId: 'rec-1', value: 'Doe' },
+        { recordId: 'rec-2', value: 'Smith' },
+      ])
 
-      tracker.recordFieldSelection(
-        'email',
-        'rec-1',
-        'preferNonNull',
-        [
-          { recordId: 'rec-1', value: 'john@example.com' },
-          { recordId: 'rec-2', value: 'jane@example.com' },
-        ],
-      )
+      tracker.recordFieldSelection('email', 'rec-1', 'preferNonNull', [
+        { recordId: 'rec-1', value: 'john@example.com' },
+        { recordId: 'rec-2', value: 'jane@example.com' },
+      ])
     })
 
     it('creates complete provenance object', () => {
@@ -327,7 +318,9 @@ describe('ProvenanceTracker', () => {
     it('throws if no merge in progress', () => {
       const newTracker = new ProvenanceTracker<TestRecord>()
 
-      expect(() => newTracker.finalize('golden-123')).toThrow('No merge in progress')
+      expect(() => newTracker.finalize('golden-123')).toThrow(
+        'No merge in progress'
+      )
     })
   })
 

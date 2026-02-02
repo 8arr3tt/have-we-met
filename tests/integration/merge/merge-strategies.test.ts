@@ -5,7 +5,10 @@ import {
   registerStrategy,
   unregisterStrategy,
 } from '../../../src/merge/index.js'
-import type { SourceRecord, StrategyFunction } from '../../../src/merge/index.js'
+import type {
+  SourceRecord,
+  StrategyFunction,
+} from '../../../src/merge/index.js'
 
 interface TestRecord {
   id: string
@@ -423,7 +426,9 @@ describe('Integration: Merge Strategies', () => {
       expect(result.goldenRecord.tags).toContain('premium')
       expect(result.goldenRecord.tags).toContain('vip')
       // Union should deduplicate
-      expect(result.goldenRecord.tags?.filter((t) => t === 'premium').length).toBe(1)
+      expect(
+        result.goldenRecord.tags?.filter((t) => t === 'premium').length
+      ).toBe(1)
 
       expect(result.goldenRecord.addresses).toContain('123 Main St')
       expect(result.goldenRecord.addresses).toContain('456 Oak Ave')
@@ -782,8 +787,12 @@ describe('Integration: Merge Strategies', () => {
       const builder = createMergeBuilder<TestRecord>()
       builder.field('email').custom<string>((values) => {
         // Custom logic: prefer company email over personal
-        const companyEmails = values.filter((v) => v && !v.includes('gmail') && !v.includes('yahoo'))
-        return companyEmails.length > 0 ? companyEmails[0] : values.find((v) => v) || ''
+        const companyEmails = values.filter(
+          (v) => v && !v.includes('gmail') && !v.includes('yahoo')
+        )
+        return companyEmails.length > 0
+          ? companyEmails[0]
+          : values.find((v) => v) || ''
       })
       const config = builder.build()
 
@@ -830,8 +839,10 @@ describe('Integration: Merge Strategies', () => {
       const customNameStrategy: StrategyFunction = (values) => {
         const titleCased = values.filter((v) => {
           if (typeof v !== 'string') return false
-          return v.charAt(0) === v.charAt(0).toUpperCase() &&
-                 v.slice(1) === v.slice(1).toLowerCase()
+          return (
+            v.charAt(0) === v.charAt(0).toUpperCase() &&
+            v.slice(1) === v.slice(1).toLowerCase()
+          )
         })
         return titleCased.length > 0 ? titleCased[0] : values[0]
       }
@@ -844,8 +855,10 @@ describe('Integration: Merge Strategies', () => {
       builder.field('firstName').custom<string>((values) => {
         const titleCased = values.filter((v) => {
           if (typeof v !== 'string') return false
-          return v.charAt(0) === v.charAt(0).toUpperCase() &&
-                 v.slice(1) === v.slice(1).toLowerCase()
+          return (
+            v.charAt(0) === v.charAt(0).toUpperCase() &&
+            v.slice(1) === v.slice(1).toLowerCase()
+          )
         })
         return titleCased.length > 0 ? titleCased[0] : values[0]
       })
@@ -1065,7 +1078,9 @@ describe('Integration: Merge Strategies', () => {
         expect(addresses).toContain('456 Oak Ave, City B')
         expect(addresses).toContain('789 Pine Rd, City C')
         // Should be deduplicated
-        expect(addresses.filter((a) => a === '456 Oak Ave, City B')).toHaveLength(1)
+        expect(
+          addresses.filter((a) => a === '456 Oak Ave, City B')
+        ).toHaveLength(1)
       })
     })
 

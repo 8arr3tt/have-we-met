@@ -26,9 +26,7 @@ describe('CompositeBlockingStrategy', () => {
 
     it('defaults to union mode', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
-        strategies: [
-          new StandardBlockingStrategy({ field: 'lastName' }),
-        ],
+        strategies: [new StandardBlockingStrategy({ field: 'lastName' })],
       })
 
       expect(strategy.name).toContain('union')
@@ -36,16 +34,12 @@ describe('CompositeBlockingStrategy', () => {
 
     it('accepts explicit mode configuration', () => {
       const unionStrategy = new CompositeBlockingStrategy<Person>({
-        strategies: [
-          new StandardBlockingStrategy({ field: 'lastName' }),
-        ],
+        strategies: [new StandardBlockingStrategy({ field: 'lastName' })],
         mode: 'union',
       })
 
       const intersectionStrategy = new CompositeBlockingStrategy<Person>({
-        strategies: [
-          new StandardBlockingStrategy({ field: 'lastName' }),
-        ],
+        strategies: [new StandardBlockingStrategy({ field: 'lastName' })],
         mode: 'intersection',
       })
 
@@ -58,7 +52,10 @@ describe('CompositeBlockingStrategy', () => {
     it('combines blocks from all strategies', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -81,7 +78,10 @@ describe('CompositeBlockingStrategy', () => {
     it('compares record pairs if they match ANY strategy', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -116,7 +116,10 @@ describe('CompositeBlockingStrategy', () => {
 
       const compositeStrategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -142,7 +145,10 @@ describe('CompositeBlockingStrategy', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
           // Strategy 1: Block on Soundex of last name
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
           // Strategy 2: Block on birth year
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
@@ -171,8 +177,14 @@ describe('CompositeBlockingStrategy', () => {
     it('handles more than two strategies', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
-          new StandardBlockingStrategy({ field: 'firstName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
+          new StandardBlockingStrategy({
+            field: 'firstName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -196,7 +208,10 @@ describe('CompositeBlockingStrategy', () => {
     it('only keeps blocks present in ALL strategies', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -212,20 +227,27 @@ describe('CompositeBlockingStrategy', () => {
       const blocks = strategy.generateBlocks(records)
 
       // Only records 1 and 2 should be in a block together (they match on BOTH strategies)
-      const intersectionBlock = Array.from(blocks.values()).find((b) => b.length === 2)
+      const intersectionBlock = Array.from(blocks.values()).find(
+        (b) => b.length === 2
+      )
       expect(intersectionBlock).toBeDefined()
       expect(intersectionBlock).toContainEqual(records[0])
       expect(intersectionBlock).toContainEqual(records[1])
 
       // Records 3 and 4 should each be in separate blocks or not in any block
-      const singleRecordBlocks = Array.from(blocks.values()).filter((b) => b.length === 1)
+      const singleRecordBlocks = Array.from(blocks.values()).filter(
+        (b) => b.length === 1
+      )
       expect(singleRecordBlocks.length).toBeGreaterThanOrEqual(2)
     })
 
     it('only compares record pairs matching ALL strategies', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -240,7 +262,9 @@ describe('CompositeBlockingStrategy', () => {
       const blocks = strategy.generateBlocks(records)
 
       // Records 1 and 2 should be together
-      const matchingBlock = Array.from(blocks.values()).find((b) => b.length === 2)
+      const matchingBlock = Array.from(blocks.values()).find(
+        (b) => b.length === 2
+      )
       expect(matchingBlock).toBeDefined()
       expect(matchingBlock).toContainEqual(records[0])
       expect(matchingBlock).toContainEqual(records[1])
@@ -256,7 +280,10 @@ describe('CompositeBlockingStrategy', () => {
 
       const unionStrategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',
@@ -264,7 +291,10 @@ describe('CompositeBlockingStrategy', () => {
 
       const intersectionStrategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -278,10 +308,9 @@ describe('CompositeBlockingStrategy', () => {
         (sum, block) => sum + block.length,
         0
       )
-      const intersectionRecordCount = Array.from(intersectionBlocks.values()).reduce(
-        (sum, block) => sum + block.length,
-        0
-      )
+      const intersectionRecordCount = Array.from(
+        intersectionBlocks.values()
+      ).reduce((sum, block) => sum + block.length, 0)
 
       // Intersection should have fewer or equal records in blocks
       expect(intersectionRecordCount).toBeLessThanOrEqual(unionRecordCount)
@@ -290,7 +319,10 @@ describe('CompositeBlockingStrategy', () => {
     it('reduces recall but improves precision', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -311,15 +343,23 @@ describe('CompositeBlockingStrategy', () => {
       expect(mainBlock).toContainEqual(records[1])
 
       // Record 3 will not be compared with 1 or 2 despite Soundex match
-      const record3Blocks = Array.from(blocks.values()).filter((b) => b.includes(records[2]))
+      const record3Blocks = Array.from(blocks.values()).filter((b) =>
+        b.includes(records[2])
+      )
       expect(record3Blocks.every((b) => b.length === 1)).toBe(true)
     })
 
     it('handles three or more strategies', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
-          new StandardBlockingStrategy({ field: 'firstName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
+          new StandardBlockingStrategy({
+            field: 'firstName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'intersection',
@@ -345,8 +385,14 @@ describe('CompositeBlockingStrategy', () => {
     it('handles empty block sets', () => {
       const strategy = new CompositeBlockingStrategy<Partial<Person>>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', nullStrategy: 'skip' }),
-          new StandardBlockingStrategy({ field: 'birthYear', nullStrategy: 'skip' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            nullStrategy: 'skip',
+          }),
+          new StandardBlockingStrategy({
+            field: 'birthYear',
+            nullStrategy: 'skip',
+          }),
         ],
         mode: 'union',
       })
@@ -415,7 +461,9 @@ describe('CompositeBlockingStrategy', () => {
       const blocks = strategy.generateBlocks(records)
 
       // No records match on both strategies, so each record is in its own block
-      expect(Array.from(blocks.values()).every((b) => b.length === 1)).toBe(true)
+      expect(Array.from(blocks.values()).every((b) => b.length === 1)).toBe(
+        true
+      )
     })
 
     it('handles single record', () => {
@@ -426,7 +474,9 @@ describe('CompositeBlockingStrategy', () => {
         ],
       })
 
-      const records: Person[] = [{ id: '1', firstName: 'John', lastName: 'Smith', birthYear: 1990 }]
+      const records: Person[] = [
+        { id: '1', firstName: 'John', lastName: 'Smith', birthYear: 1990 },
+      ]
 
       const blocks = strategy.generateBlocks(records)
       expect(blocks.size).toBeGreaterThan(0)
@@ -437,8 +487,14 @@ describe('CompositeBlockingStrategy', () => {
     it('combines standard and sorted neighbourhood strategies', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new SortedNeighbourhoodStrategy({ sortBy: 'birthYear', windowSize: 2 }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new SortedNeighbourhoodStrategy({
+            sortBy: 'birthYear',
+            windowSize: 2,
+          }),
         ],
         mode: 'union',
       })
@@ -458,9 +514,18 @@ describe('CompositeBlockingStrategy', () => {
     it('combines multiple standard strategies with different transforms', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'metaphone' }),
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'metaphone',
+          }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
         ],
         mode: 'union',
       })
@@ -487,7 +552,9 @@ describe('CompositeBlockingStrategy', () => {
         mode: 'union',
       })
 
-      expect(strategy.name).toBe('composite:union:[standard:lastName+standard:birthYear]')
+      expect(strategy.name).toBe(
+        'composite:union:[standard:lastName+standard:birthYear]'
+      )
     })
 
     it('generates name for intersection mode', () => {
@@ -499,15 +566,26 @@ describe('CompositeBlockingStrategy', () => {
         mode: 'intersection',
       })
 
-      expect(strategy.name).toBe('composite:intersection:[standard:lastName+standard:birthYear]')
+      expect(strategy.name).toBe(
+        'composite:intersection:[standard:lastName+standard:birthYear]'
+      )
     })
 
     it('includes all strategy names', () => {
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'soundex' }),
-          new SortedNeighbourhoodStrategy({ sortBy: 'birthYear', windowSize: 5 }),
-          new StandardBlockingStrategy({ field: 'firstName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'soundex',
+          }),
+          new SortedNeighbourhoodStrategy({
+            sortBy: 'birthYear',
+            windowSize: 5,
+          }),
+          new StandardBlockingStrategy({
+            field: 'firstName',
+            transform: 'firstLetter',
+          }),
         ],
         mode: 'union',
       })
@@ -538,7 +616,10 @@ describe('CompositeBlockingStrategy', () => {
         strategies: [
           new StandardBlockingStrategy({ field: 'lastName' }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
-          new StandardBlockingStrategy({ field: 'firstName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'firstName',
+            transform: 'firstLetter',
+          }),
         ],
       })
 
@@ -561,7 +642,10 @@ describe('CompositeBlockingStrategy', () => {
 
       const strategy = new CompositeBlockingStrategy<Person>({
         strategies: [
-          new StandardBlockingStrategy({ field: 'lastName', transform: 'firstLetter' }),
+          new StandardBlockingStrategy({
+            field: 'lastName',
+            transform: 'firstLetter',
+          }),
           new StandardBlockingStrategy({ field: 'birthYear' }),
         ],
         mode: 'union',

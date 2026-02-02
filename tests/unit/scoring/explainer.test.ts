@@ -549,9 +549,13 @@ describe('MatchExplainer', () => {
       })
 
       expect(explainer.explain(createResult(1.0))).toContain('exact match')
-      expect(explainer.explain(createResult(0.95))).toContain('very high similarity')
+      expect(explainer.explain(createResult(0.95))).toContain(
+        'very high similarity'
+      )
       expect(explainer.explain(createResult(0.85))).toContain('high similarity')
-      expect(explainer.explain(createResult(0.70))).toContain('moderate similarity')
+      expect(explainer.explain(createResult(0.7))).toContain(
+        'moderate similarity'
+      )
       expect(explainer.explain(createResult(0.45))).toContain('low similarity')
       expect(explainer.explain(createResult(0.0))).toContain('no match')
     })

@@ -11,10 +11,11 @@ import {
   normalizePhoneInput,
 } from './phone-validator.js'
 import type { ServiceContext } from '../../types.js'
+import type { ResolverConfig } from '../../../types/config.js'
 
 const createMockContext = (): ServiceContext => ({
   record: {},
-  config: {} as any,
+  config: {} as unknown as ResolverConfig,
   metadata: {
     correlationId: 'test-123',
     startedAt: new Date(),
@@ -73,7 +74,7 @@ describe('Phone Validator', () => {
     it('validates international phone numbers', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -86,7 +87,7 @@ describe('Phone Validator', () => {
       // Use a valid US format with real area code (202 is Washington DC)
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 (202) 555-0123' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -96,7 +97,7 @@ describe('Phone Validator', () => {
     it('validates UK phone numbers', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+44 20 7123 4567' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -106,7 +107,7 @@ describe('Phone Validator', () => {
     it('rejects empty values', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -117,7 +118,7 @@ describe('Phone Validator', () => {
     it('rejects invalid phone numbers', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: 'invalid' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -129,7 +130,7 @@ describe('Phone Validator', () => {
     it('rejects phone numbers that parse but are invalid for country', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 123' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -139,7 +140,7 @@ describe('Phone Validator', () => {
     it('returns metadata with phone number details', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -152,7 +153,7 @@ describe('Phone Validator', () => {
     it('returns number type when detected', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -162,7 +163,7 @@ describe('Phone Validator', () => {
     it('returns national and international formats', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -173,7 +174,7 @@ describe('Phone Validator', () => {
     it('tracks timing information', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.timing).toBeDefined()
@@ -207,7 +208,7 @@ describe('Phone Validator', () => {
 
       const result = await validator.execute(
         { field: 'phone', value: '202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -223,14 +224,14 @@ describe('Phone Validator', () => {
       // US number should pass
       const usResult = await validator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
       expect(usResult.data?.valid).toBe(true)
 
       // UK number should fail
       const ukResult = await validator.execute(
         { field: 'phone', value: '+44 20 7123 4567' },
-        context,
+        context
       )
       expect(ukResult.data?.valid).toBe(false)
       expect(ukResult.data?.invalidReason).toContain('not accepted')
@@ -243,7 +244,7 @@ describe('Phone Validator', () => {
       // Some numbers may be classified as FIXED_LINE_OR_MOBILE
       const result = await validator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -255,7 +256,7 @@ describe('Phone Validator', () => {
 
       const result = await validator.execute(
         { field: 'phone', value: '+1 202 555 1234' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -277,7 +278,7 @@ describe('Phone Validator', () => {
           value: '020 7123 4567',
           context: { country: 'GB' },
         },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -318,7 +319,7 @@ describe('Phone Validator', () => {
         const validator = createPhoneValidator({ defaultCountry: 'US' })
         const result = await validator.execute(
           { field: 'phone', value: format },
-          context,
+          context
         )
         expect(result.data?.valid).toBe(true)
       }
@@ -327,7 +328,7 @@ describe('Phone Validator', () => {
     it('handles German phone numbers', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+49 30 12345678' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -338,7 +339,7 @@ describe('Phone Validator', () => {
     it('handles Australian phone numbers', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+61 2 1234 5678' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -349,7 +350,7 @@ describe('Phone Validator', () => {
     it('handles phone numbers with extensions', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 202 555 1234 ext. 567' },
-        context,
+        context
       )
 
       // libphonenumber-js may or may not handle extensions
@@ -359,7 +360,7 @@ describe('Phone Validator', () => {
     it('handles whitespace-only input', async () => {
       const result = await phoneValidator.execute(
         { field: 'phone', value: '   ' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)
@@ -371,7 +372,7 @@ describe('Phone Validator', () => {
       // Use a valid US number with real area code
       const result = await phoneValidator.execute(
         { field: 'phone', value: '+1 (202) 555-0123' },
-        context,
+        context
       )
 
       expect(result.success).toBe(true)

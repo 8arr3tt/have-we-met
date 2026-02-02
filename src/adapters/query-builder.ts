@@ -109,10 +109,10 @@ export class QueryBuilder {
    * // { field: 'lastName', direction: 'asc' }
    * ```
    */
-  buildOrderByClause(orderBy: {
+  buildOrderByClause(orderBy: { field: string; direction: 'asc' | 'desc' }): {
     field: string
     direction: 'asc' | 'desc'
-  }): { field: string; direction: 'asc' | 'desc' } {
+  } {
     return orderBy
   }
 

@@ -8,7 +8,9 @@ import type { Provenance, SourceRecord } from '../merge/types.js'
 /**
  * Information about an archived record
  */
-export interface ArchivedRecord<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface ArchivedRecord<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   /** The record ID */
   id: string
 
@@ -111,7 +113,9 @@ export interface ProvenanceAdapter {
  * Merge operations need to archive source records so they can be restored
  * during unmerge operations. This interface provides the necessary methods.
  */
-export interface MergeAdapter<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface MergeAdapter<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   /**
    * Archives records (soft delete for merge).
    * Archived records are kept in storage but marked as inactive.
@@ -159,7 +163,9 @@ export interface MergeAdapter<T extends Record<string, unknown> = Record<string,
    * @param goldenRecordId - The golden record ID
    * @returns Array of archived records
    */
-  getArchivedByGoldenRecord(goldenRecordId: string): Promise<ArchivedRecord<T>[]>
+  getArchivedByGoldenRecord(
+    goldenRecordId: string
+  ): Promise<ArchivedRecord<T>[]>
 
   /**
    * Permanently deletes archived records.
@@ -188,8 +194,9 @@ export interface MergeAdapter<T extends Record<string, unknown> = Record<string,
  * Combined adapter interface that includes both standard database operations
  * and merge-specific operations.
  */
-export interface DatabaseAdapterWithMerge<T extends Record<string, unknown> = Record<string, unknown>>
-  extends MergeAdapter<T> {
+export interface DatabaseAdapterWithMerge<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> extends MergeAdapter<T> {
   /**
    * Access to the provenance adapter for tracking merge decisions.
    */

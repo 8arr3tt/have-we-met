@@ -9,6 +9,7 @@ Provenance tracking maintains a complete audit trail of merge operations, record
 Provenance answers the question: "Where did this data come from?"
 
 For every field in a golden record, provenance tracks:
+
 - Which source record contributed the value
 - What strategy was used to select it
 - What other values were considered
@@ -28,19 +29,19 @@ For every field in a golden record, provenance tracks:
 
 ```typescript
 interface Provenance {
-  goldenRecordId: string        // ID of the merged golden record
-  sourceRecordIds: string[]     // IDs of all source records
-  mergedAt: Date                // When the merge occurred
-  mergedBy?: string             // User/system that performed merge
-  queueItemId?: string          // Review queue reference (if applicable)
-  fieldSources: Record<string, FieldProvenance>  // Per-field attribution
-  strategyUsed: MergeConfig     // Configuration used for merge
+  goldenRecordId: string // ID of the merged golden record
+  sourceRecordIds: string[] // IDs of all source records
+  mergedAt: Date // When the merge occurred
+  mergedBy?: string // User/system that performed merge
+  queueItemId?: string // Review queue reference (if applicable)
+  fieldSources: Record<string, FieldProvenance> // Per-field attribution
+  strategyUsed: MergeConfig // Configuration used for merge
 
   // Unmerge tracking
-  unmerged?: boolean            // Whether this has been unmerged
-  unmergedAt?: Date             // When unmerge occurred
-  unmergedBy?: string           // Who performed unmerge
-  unmergeReason?: string        // Why it was unmerged
+  unmerged?: boolean // Whether this has been unmerged
+  unmergedAt?: Date // When unmerge occurred
+  unmergedBy?: string // Who performed unmerge
+  unmergeReason?: string // Why it was unmerged
 }
 ```
 
@@ -48,14 +49,15 @@ interface Provenance {
 
 ```typescript
 interface FieldProvenance {
-  sourceRecordId: string        // Which record contributed this value
+  sourceRecordId: string // Which record contributed this value
   strategyApplied: MergeStrategy // Strategy used to select
-  allValues: Array<{            // All values that were considered
+  allValues: Array<{
+    // All values that were considered
     recordId: string
     value: unknown
   }>
-  hadConflict: boolean          // Whether strategy faced a conflict
-  conflictResolution?: string   // How conflict was resolved
+  hadConflict: boolean // Whether strategy faced a conflict
+  conflictResolution?: string // How conflict was resolved
 }
 ```
 
@@ -76,7 +78,9 @@ console.log('Merged At:', result.provenance.mergedAt)
 console.log('Merged By:', result.provenance.mergedBy)
 
 // Field-level provenance
-for (const [field, attribution] of Object.entries(result.provenance.fieldSources)) {
+for (const [field, attribution] of Object.entries(
+  result.provenance.fieldSources
+)) {
   console.log(`\nField: ${field}`)
   console.log(`  Value from: ${attribution.sourceRecordId}`)
   console.log(`  Strategy: ${attribution.strategyApplied}`)
@@ -153,10 +157,16 @@ interface ProvenanceStore {
   exists(goldenRecordId: string): Promise<boolean>
 
   // Query operations
-  getBySourceId(sourceRecordId: string, options?: QueryOptions): Promise<Provenance[]>
+  getBySourceId(
+    sourceRecordId: string,
+    options?: QueryOptions
+  ): Promise<Provenance[]>
   findGoldenRecordsBySource(sourceRecordId: string): Promise<string[]>
   getMergeTimeline(options?: QueryOptions): Promise<MergeTimelineEntry[]>
-  getFieldHistory(goldenRecordId: string, field: string): Promise<FieldHistoryEntry[]>
+  getFieldHistory(
+    goldenRecordId: string,
+    field: string
+  ): Promise<FieldHistoryEntry[]>
 
   // Unmerge support
   markUnmerged(goldenRecordId: string, info: UnmergeInfo): Promise<void>
@@ -173,7 +183,8 @@ interface ProvenanceStore {
 
 ```typescript
 // Find all golden records that include a specific source record
-const goldenRecordIds = await provenanceStore.findGoldenRecordsBySource('rec-001')
+const goldenRecordIds =
+  await provenanceStore.findGoldenRecordsBySource('rec-001')
 
 // Get full provenance for each
 for (const id of goldenRecordIds) {
@@ -188,12 +199,14 @@ for (const id of goldenRecordIds) {
 // Get chronological list of all merges
 const timeline = await provenanceStore.getMergeTimeline({
   limit: 100,
-  sortOrder: 'desc',  // Most recent first
-  includeUnmerged: false
+  sortOrder: 'desc', // Most recent first
+  includeUnmerged: false,
 })
 
 for (const entry of timeline) {
-  console.log(`${entry.mergedAt}: ${entry.sourceRecordIds.join(' + ')} → ${entry.goldenRecordId}`)
+  console.log(
+    `${entry.mergedAt}: ${entry.sourceRecordIds.join(' + ')} → ${entry.goldenRecordId}`
+  )
 }
 ```
 
@@ -204,7 +217,9 @@ for (const entry of timeline) {
 const history = await provenanceStore.getFieldHistory('golden-001', 'email')
 
 for (const entry of history) {
-  console.log(`${entry.mergedAt}: ${entry.value} (from ${entry.sourceRecordId}, ${entry.strategyApplied})`)
+  console.log(
+    `${entry.mergedAt}: ${entry.value} (from ${entry.sourceRecordId}, ${entry.strategyApplied})`
+  )
 }
 ```
 
@@ -215,7 +230,7 @@ for (const entry of history) {
 const merges = await provenanceStore.getBySourceId('rec-001', {
   limit: 10,
   sortOrder: 'desc',
-  includeUnmerged: true  // Include unmerged for audit
+  includeUnmerged: true, // Include unmerged for audit
 })
 ```
 
@@ -303,8 +318,8 @@ const adapter = prismaAdapter(prisma, {
   tableName: 'customers',
   provenance: {
     enabled: true,
-    tableName: 'customer_provenance'
-  }
+    tableName: 'customer_provenance',
+  },
 })
 ```
 
@@ -315,8 +330,8 @@ Record who performed merges and why:
 ```typescript
 const result = await executor.merge({
   sourceRecords,
-  mergedBy: 'user@example.com',  // Identify the actor
-  queueItemId: 'queue-123',      // Link to review queue
+  mergedBy: 'user@example.com', // Identify the actor
+  queueItemId: 'queue-123', // Link to review queue
 })
 ```
 
@@ -343,7 +358,7 @@ Don't delete provenance when unmerging - mark as unmerged:
 await provenanceStore.markUnmerged(goldenRecordId, {
   unmergedAt: new Date(),
   unmergedBy: 'admin',
-  reason: 'Incorrect match identified'
+  reason: 'Incorrect match identified',
 })
 
 // Can still query historical provenance
@@ -363,6 +378,7 @@ Many regulations require tracking data lineage:
 - **Financial regulations**: Audit trail requirements
 
 Provenance helps meet these requirements by:
+
 - Recording the source of each field value
 - Tracking who made merge decisions
 - Maintaining complete audit history

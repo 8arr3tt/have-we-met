@@ -55,7 +55,9 @@ interface ProvenanceTrackingState<T extends Record<string, unknown>> {
  * const provenance = tracker.finalize('golden-record-id')
  * ```
  */
-export class ProvenanceTracker<T extends Record<string, unknown> = Record<string, unknown>> {
+export class ProvenanceTracker<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
   private state: ProvenanceTrackingState<T> | null = null
 
   /**
@@ -69,10 +71,12 @@ export class ProvenanceTracker<T extends Record<string, unknown> = Record<string
   startMerge(
     sourceRecords: SourceRecord<T>[],
     config: MergeConfig,
-    options?: { mergedBy?: string; queueItemId?: string },
+    options?: { mergedBy?: string; queueItemId?: string }
   ): void {
     if (this.state !== null) {
-      throw new Error('Cannot start a new merge while one is in progress. Call finalize() first.')
+      throw new Error(
+        'Cannot start a new merge while one is in progress. Call finalize() first.'
+      )
     }
 
     this.state = {
@@ -103,7 +107,7 @@ export class ProvenanceTracker<T extends Record<string, unknown> = Record<string
     strategy: MergeStrategy,
     allValues: Array<{ recordId: string; value: unknown }>,
     hadConflict: boolean = false,
-    conflictResolution?: string,
+    conflictResolution?: string
   ): void {
     this.ensureMergeInProgress()
 

@@ -15,7 +15,10 @@ import type {
   ServiceDefaults,
   ServicesConfig,
 } from './types.js'
-import { ServiceConfigurationError, ServicePluginError } from './service-error.js'
+import {
+  ServiceConfigurationError,
+  ServicePluginError,
+} from './service-error.js'
 
 /**
  * Valid service types
@@ -54,13 +57,16 @@ export function validateServicePlugin(plugin: ServicePlugin): void {
 
   // Validate name
   if (!plugin.name || typeof plugin.name !== 'string') {
-    throw new ServicePluginError('plugin name must be a non-empty string', plugin.name)
+    throw new ServicePluginError(
+      'plugin name must be a non-empty string',
+      plugin.name
+    )
   }
 
   if (plugin.name.trim() !== plugin.name) {
     throw new ServicePluginError(
       'plugin name must not have leading or trailing whitespace',
-      plugin.name,
+      plugin.name
     )
   }
 
@@ -69,32 +75,54 @@ export function validateServicePlugin(plugin: ServicePlugin): void {
     throw new ServicePluginError('plugin type is required', plugin.name)
   }
 
-  if (!VALID_SERVICE_TYPES.includes(plugin.type as (typeof VALID_SERVICE_TYPES)[number])) {
+  if (
+    !VALID_SERVICE_TYPES.includes(
+      plugin.type as (typeof VALID_SERVICE_TYPES)[number]
+    )
+  ) {
     throw new ServicePluginError(
       `plugin type must be one of: ${VALID_SERVICE_TYPES.join(', ')}`,
       plugin.name,
-      { providedType: plugin.type },
+      { providedType: plugin.type }
     )
   }
 
   // Validate execute function
   if (!plugin.execute || typeof plugin.execute !== 'function') {
-    throw new ServicePluginError('plugin must have an execute function', plugin.name)
+    throw new ServicePluginError(
+      'plugin must have an execute function',
+      plugin.name
+    )
   }
 
   // Validate optional healthCheck
-  if (plugin.healthCheck !== undefined && typeof plugin.healthCheck !== 'function') {
-    throw new ServicePluginError('healthCheck must be a function if provided', plugin.name)
+  if (
+    plugin.healthCheck !== undefined &&
+    typeof plugin.healthCheck !== 'function'
+  ) {
+    throw new ServicePluginError(
+      'healthCheck must be a function if provided',
+      plugin.name
+    )
   }
 
   // Validate optional dispose
   if (plugin.dispose !== undefined && typeof plugin.dispose !== 'function') {
-    throw new ServicePluginError('dispose must be a function if provided', plugin.name)
+    throw new ServicePluginError(
+      'dispose must be a function if provided',
+      plugin.name
+    )
   }
 
   // Validate optional description
-  if (plugin.description !== undefined && typeof plugin.description !== 'string') {
-    throw new ServicePluginError('description must be a string if provided', plugin.name)
+  if (
+    plugin.description !== undefined &&
+    typeof plugin.description !== 'string'
+  ) {
+    throw new ServicePluginError(
+      'description must be a string if provided',
+      plugin.name
+    )
   }
 }
 
@@ -103,13 +131,15 @@ export function validateServicePlugin(plugin: ServicePlugin): void {
  * @param plugin - The validation service plugin to validate
  * @throws {ServicePluginError} If plugin is invalid
  */
-export function validateValidationServicePlugin(plugin: ValidationService): void {
+export function validateValidationServicePlugin(
+  plugin: ValidationService
+): void {
   validateServicePlugin(plugin)
 
   if (plugin.type !== 'validation') {
     throw new ServicePluginError(
       `expected type 'validation', got '${plugin.type}'`,
-      plugin.name,
+      plugin.name
     )
   }
 }
@@ -125,7 +155,7 @@ export function validateLookupServicePlugin(plugin: LookupService): void {
   if (plugin.type !== 'lookup') {
     throw new ServicePluginError(
       `expected type 'lookup', got '${plugin.type}'`,
-      plugin.name,
+      plugin.name
     )
   }
 }
@@ -141,7 +171,7 @@ export function validateCustomServicePlugin(plugin: CustomService): void {
   if (plugin.type !== 'custom') {
     throw new ServicePluginError(
       `expected type 'custom', got '${plugin.type}'`,
-      plugin.name,
+      plugin.name
     )
   }
 }
@@ -152,23 +182,29 @@ export function validateCustomServicePlugin(plugin: CustomService): void {
  * @param fieldPath - Field path for error messages
  * @throws {ServiceConfigurationError} If config is invalid
  */
-export function validateRetryConfig(config: RetryConfig, fieldPath: string = 'retry'): void {
+export function validateRetryConfig(
+  config: RetryConfig,
+  fieldPath: string = 'retry'
+): void {
   if (!config) {
     throw new ServiceConfigurationError(fieldPath, 'retry config is required')
   }
 
   // Validate maxAttempts
-  if (typeof config.maxAttempts !== 'number' || !Number.isInteger(config.maxAttempts)) {
+  if (
+    typeof config.maxAttempts !== 'number' ||
+    !Number.isInteger(config.maxAttempts)
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.maxAttempts`,
-      'must be an integer',
+      'must be an integer'
     )
   }
 
   if (config.maxAttempts < 1) {
     throw new ServiceConfigurationError(
       `${fieldPath}.maxAttempts`,
-      'must be at least 1',
+      'must be at least 1'
     )
   }
 
@@ -176,14 +212,14 @@ export function validateRetryConfig(config: RetryConfig, fieldPath: string = 're
   if (typeof config.initialDelayMs !== 'number') {
     throw new ServiceConfigurationError(
       `${fieldPath}.initialDelayMs`,
-      'must be a number',
+      'must be a number'
     )
   }
 
   if (config.initialDelayMs < 0) {
     throw new ServiceConfigurationError(
       `${fieldPath}.initialDelayMs`,
-      'must not be negative',
+      'must not be negative'
     )
   }
 
@@ -191,14 +227,14 @@ export function validateRetryConfig(config: RetryConfig, fieldPath: string = 're
   if (typeof config.backoffMultiplier !== 'number') {
     throw new ServiceConfigurationError(
       `${fieldPath}.backoffMultiplier`,
-      'must be a number',
+      'must be a number'
     )
   }
 
   if (config.backoffMultiplier < 1) {
     throw new ServiceConfigurationError(
       `${fieldPath}.backoffMultiplier`,
-      'must be at least 1',
+      'must be at least 1'
     )
   }
 
@@ -206,14 +242,14 @@ export function validateRetryConfig(config: RetryConfig, fieldPath: string = 're
   if (typeof config.maxDelayMs !== 'number') {
     throw new ServiceConfigurationError(
       `${fieldPath}.maxDelayMs`,
-      'must be a number',
+      'must be a number'
     )
   }
 
   if (config.maxDelayMs < config.initialDelayMs) {
     throw new ServiceConfigurationError(
       `${fieldPath}.maxDelayMs`,
-      'must be greater than or equal to initialDelayMs',
+      'must be greater than or equal to initialDelayMs'
     )
   }
 
@@ -222,7 +258,7 @@ export function validateRetryConfig(config: RetryConfig, fieldPath: string = 're
     if (!Array.isArray(config.retryOn)) {
       throw new ServiceConfigurationError(
         `${fieldPath}.retryOn`,
-        'must be an array',
+        'must be an array'
       )
     }
 
@@ -231,7 +267,7 @@ export function validateRetryConfig(config: RetryConfig, fieldPath: string = 're
       if (!validRetryOn.includes(item)) {
         throw new ServiceConfigurationError(
           `${fieldPath}.retryOn`,
-          `invalid value '${item}', must be one of: ${validRetryOn.join(', ')}`,
+          `invalid value '${item}', must be one of: ${validRetryOn.join(', ')}`
         )
       }
     }
@@ -244,7 +280,10 @@ export function validateRetryConfig(config: RetryConfig, fieldPath: string = 're
  * @param fieldPath - Field path for error messages
  * @throws {ServiceConfigurationError} If config is invalid
  */
-export function validateCacheConfig(config: CacheConfig, fieldPath: string = 'cache'): void {
+export function validateCacheConfig(
+  config: CacheConfig,
+  fieldPath: string = 'cache'
+): void {
   if (!config) {
     throw new ServiceConfigurationError(fieldPath, 'cache config is required')
   }
@@ -253,7 +292,7 @@ export function validateCacheConfig(config: CacheConfig, fieldPath: string = 'ca
   if (typeof config.enabled !== 'boolean') {
     throw new ServiceConfigurationError(
       `${fieldPath}.enabled`,
-      'must be a boolean',
+      'must be a boolean'
     )
   }
 
@@ -261,14 +300,14 @@ export function validateCacheConfig(config: CacheConfig, fieldPath: string = 'ca
   if (typeof config.ttlSeconds !== 'number') {
     throw new ServiceConfigurationError(
       `${fieldPath}.ttlSeconds`,
-      'must be a number',
+      'must be a number'
     )
   }
 
   if (config.ttlSeconds <= 0) {
     throw new ServiceConfigurationError(
       `${fieldPath}.ttlSeconds`,
-      'must be positive',
+      'must be positive'
     )
   }
 
@@ -276,15 +315,18 @@ export function validateCacheConfig(config: CacheConfig, fieldPath: string = 'ca
   if (config.keyFn !== undefined && typeof config.keyFn !== 'function') {
     throw new ServiceConfigurationError(
       `${fieldPath}.keyFn`,
-      'must be a function if provided',
+      'must be a function if provided'
     )
   }
 
   // Validate optional staleOnError
-  if (config.staleOnError !== undefined && typeof config.staleOnError !== 'boolean') {
+  if (
+    config.staleOnError !== undefined &&
+    typeof config.staleOnError !== 'boolean'
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.staleOnError`,
-      'must be a boolean if provided',
+      'must be a boolean if provided'
     )
   }
 }
@@ -297,24 +339,30 @@ export function validateCacheConfig(config: CacheConfig, fieldPath: string = 'ca
  */
 export function validateCircuitBreakerConfig(
   config: CircuitBreakerConfig,
-  fieldPath: string = 'circuitBreaker',
+  fieldPath: string = 'circuitBreaker'
 ): void {
   if (!config) {
-    throw new ServiceConfigurationError(fieldPath, 'circuit breaker config is required')
+    throw new ServiceConfigurationError(
+      fieldPath,
+      'circuit breaker config is required'
+    )
   }
 
   // Validate failureThreshold
-  if (typeof config.failureThreshold !== 'number' || !Number.isInteger(config.failureThreshold)) {
+  if (
+    typeof config.failureThreshold !== 'number' ||
+    !Number.isInteger(config.failureThreshold)
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.failureThreshold`,
-      'must be an integer',
+      'must be an integer'
     )
   }
 
   if (config.failureThreshold < 1) {
     throw new ServiceConfigurationError(
       `${fieldPath}.failureThreshold`,
-      'must be at least 1',
+      'must be at least 1'
     )
   }
 
@@ -322,29 +370,32 @@ export function validateCircuitBreakerConfig(
   if (typeof config.resetTimeoutMs !== 'number') {
     throw new ServiceConfigurationError(
       `${fieldPath}.resetTimeoutMs`,
-      'must be a number',
+      'must be a number'
     )
   }
 
   if (config.resetTimeoutMs <= 0) {
     throw new ServiceConfigurationError(
       `${fieldPath}.resetTimeoutMs`,
-      'must be positive',
+      'must be positive'
     )
   }
 
   // Validate successThreshold
-  if (typeof config.successThreshold !== 'number' || !Number.isInteger(config.successThreshold)) {
+  if (
+    typeof config.successThreshold !== 'number' ||
+    !Number.isInteger(config.successThreshold)
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.successThreshold`,
-      'must be an integer',
+      'must be an integer'
     )
   }
 
   if (config.successThreshold < 1) {
     throw new ServiceConfigurationError(
       `${fieldPath}.successThreshold`,
-      'must be at least 1',
+      'must be at least 1'
     )
   }
 
@@ -352,14 +403,14 @@ export function validateCircuitBreakerConfig(
   if (typeof config.failureWindowMs !== 'number') {
     throw new ServiceConfigurationError(
       `${fieldPath}.failureWindowMs`,
-      'must be a number',
+      'must be a number'
     )
   }
 
   if (config.failureWindowMs <= 0) {
     throw new ServiceConfigurationError(
       `${fieldPath}.failureWindowMs`,
-      'must be positive',
+      'must be positive'
     )
   }
 }
@@ -372,7 +423,7 @@ export function validateCircuitBreakerConfig(
  */
 export function validateServiceConfig(
   config: ServiceConfig,
-  fieldPath: string = 'service',
+  fieldPath: string = 'service'
 ): void {
   if (!config) {
     throw new ServiceConfigurationError(fieldPath, 'service config is required')
@@ -385,14 +436,18 @@ export function validateServiceConfig(
   if (!config.executionPoint) {
     throw new ServiceConfigurationError(
       `${fieldPath}.executionPoint`,
-      'executionPoint is required',
+      'executionPoint is required'
     )
   }
 
-  if (!VALID_EXECUTION_POINTS.includes(config.executionPoint as (typeof VALID_EXECUTION_POINTS)[number])) {
+  if (
+    !VALID_EXECUTION_POINTS.includes(
+      config.executionPoint as (typeof VALID_EXECUTION_POINTS)[number]
+    )
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.executionPoint`,
-      `must be one of: ${VALID_EXECUTION_POINTS.join(', ')}`,
+      `must be one of: ${VALID_EXECUTION_POINTS.join(', ')}`
     )
   }
 
@@ -400,33 +455,45 @@ export function validateServiceConfig(
   if (!config.onFailure) {
     throw new ServiceConfigurationError(
       `${fieldPath}.onFailure`,
-      'onFailure is required',
+      'onFailure is required'
     )
   }
 
-  if (!VALID_ON_FAILURE_BEHAVIORS.includes(config.onFailure as (typeof VALID_ON_FAILURE_BEHAVIORS)[number])) {
+  if (
+    !VALID_ON_FAILURE_BEHAVIORS.includes(
+      config.onFailure as (typeof VALID_ON_FAILURE_BEHAVIORS)[number]
+    )
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.onFailure`,
-      `must be one of: ${VALID_ON_FAILURE_BEHAVIORS.join(', ')}`,
+      `must be one of: ${VALID_ON_FAILURE_BEHAVIORS.join(', ')}`
     )
   }
 
   // Validate onInvalid (for validation services)
   if (config.onInvalid !== undefined) {
-    if (!VALID_ON_INVALID_BEHAVIORS.includes(config.onInvalid as (typeof VALID_ON_INVALID_BEHAVIORS)[number])) {
+    if (
+      !VALID_ON_INVALID_BEHAVIORS.includes(
+        config.onInvalid as (typeof VALID_ON_INVALID_BEHAVIORS)[number]
+      )
+    ) {
       throw new ServiceConfigurationError(
         `${fieldPath}.onInvalid`,
-        `must be one of: ${VALID_ON_INVALID_BEHAVIORS.join(', ')}`,
+        `must be one of: ${VALID_ON_INVALID_BEHAVIORS.join(', ')}`
       )
     }
   }
 
   // Validate onNotFound (for lookup services)
   if (config.onNotFound !== undefined) {
-    if (!VALID_ON_NOT_FOUND_BEHAVIORS.includes(config.onNotFound as (typeof VALID_ON_NOT_FOUND_BEHAVIORS)[number])) {
+    if (
+      !VALID_ON_NOT_FOUND_BEHAVIORS.includes(
+        config.onNotFound as (typeof VALID_ON_NOT_FOUND_BEHAVIORS)[number]
+      )
+    ) {
       throw new ServiceConfigurationError(
         `${fieldPath}.onNotFound`,
-        `must be one of: ${VALID_ON_NOT_FOUND_BEHAVIORS.join(', ')}`,
+        `must be one of: ${VALID_ON_NOT_FOUND_BEHAVIORS.join(', ')}`
       )
     }
   }
@@ -436,24 +503,27 @@ export function validateServiceConfig(
     if (typeof config.timeout !== 'number') {
       throw new ServiceConfigurationError(
         `${fieldPath}.timeout`,
-        'must be a number',
+        'must be a number'
       )
     }
 
     if (config.timeout <= 0) {
       throw new ServiceConfigurationError(
         `${fieldPath}.timeout`,
-        'must be positive',
+        'must be positive'
       )
     }
   }
 
   // Validate optional priority
   if (config.priority !== undefined) {
-    if (typeof config.priority !== 'number' || !Number.isInteger(config.priority)) {
+    if (
+      typeof config.priority !== 'number' ||
+      !Number.isInteger(config.priority)
+    ) {
       throw new ServiceConfigurationError(
         `${fieldPath}.priority`,
-        'must be an integer',
+        'must be an integer'
       )
     }
   }
@@ -462,7 +532,7 @@ export function validateServiceConfig(
   if (config.required !== undefined && typeof config.required !== 'boolean') {
     throw new ServiceConfigurationError(
       `${fieldPath}.required`,
-      'must be a boolean',
+      'must be a boolean'
     )
   }
 
@@ -471,7 +541,7 @@ export function validateServiceConfig(
     if (!Array.isArray(config.fields)) {
       throw new ServiceConfigurationError(
         `${fieldPath}.fields`,
-        'must be an array',
+        'must be an array'
       )
     }
 
@@ -479,7 +549,7 @@ export function validateServiceConfig(
       if (typeof config.fields[i] !== 'string' || !config.fields[i]) {
         throw new ServiceConfigurationError(
           `${fieldPath}.fields[${i}]`,
-          'must be a non-empty string',
+          'must be a non-empty string'
         )
       }
     }
@@ -487,10 +557,13 @@ export function validateServiceConfig(
 
   // Validate optional fieldMapping
   if (config.fieldMapping !== undefined) {
-    if (typeof config.fieldMapping !== 'object' || config.fieldMapping === null) {
+    if (
+      typeof config.fieldMapping !== 'object' ||
+      config.fieldMapping === null
+    ) {
       throw new ServiceConfigurationError(
         `${fieldPath}.fieldMapping`,
-        'must be an object',
+        'must be an object'
       )
     }
 
@@ -498,7 +571,7 @@ export function validateServiceConfig(
       if (typeof value !== 'string' || !value) {
         throw new ServiceConfigurationError(
           `${fieldPath}.fieldMapping.${key}`,
-          'must be a non-empty string',
+          'must be a non-empty string'
         )
       }
     }
@@ -515,19 +588,25 @@ export function validateServiceConfig(
   }
 
   // Validate optional resultPredicate
-  if (config.resultPredicate !== undefined && typeof config.resultPredicate !== 'function') {
+  if (
+    config.resultPredicate !== undefined &&
+    typeof config.resultPredicate !== 'function'
+  ) {
     throw new ServiceConfigurationError(
       `${fieldPath}.resultPredicate`,
-      'must be a function if provided',
+      'must be a function if provided'
     )
   }
 
   // Validate optional customParams
   if (config.customParams !== undefined) {
-    if (typeof config.customParams !== 'object' || config.customParams === null) {
+    if (
+      typeof config.customParams !== 'object' ||
+      config.customParams === null
+    ) {
       throw new ServiceConfigurationError(
         `${fieldPath}.customParams`,
-        'must be an object if provided',
+        'must be an object if provided'
       )
     }
   }
@@ -541,7 +620,7 @@ export function validateServiceConfig(
  */
 export function validateServiceDefaults(
   defaults: ServiceDefaults,
-  fieldPath: string = 'defaults',
+  fieldPath: string = 'defaults'
 ): void {
   if (!defaults) {
     return // Defaults are optional
@@ -552,14 +631,14 @@ export function validateServiceDefaults(
     if (typeof defaults.timeout !== 'number') {
       throw new ServiceConfigurationError(
         `${fieldPath}.timeout`,
-        'must be a number',
+        'must be a number'
       )
     }
 
     if (defaults.timeout <= 0) {
       throw new ServiceConfigurationError(
         `${fieldPath}.timeout`,
-        'must be positive',
+        'must be positive'
       )
     }
   }
@@ -576,7 +655,10 @@ export function validateServiceDefaults(
 
   // Validate optional circuitBreaker
   if (defaults.circuitBreaker !== undefined) {
-    validateCircuitBreakerConfig(defaults.circuitBreaker, `${fieldPath}.circuitBreaker`)
+    validateCircuitBreakerConfig(
+      defaults.circuitBreaker,
+      `${fieldPath}.circuitBreaker`
+    )
   }
 }
 
@@ -587,7 +669,10 @@ export function validateServiceDefaults(
  */
 export function validateServicesConfig(config: ServicesConfig): void {
   if (!config) {
-    throw new ServiceConfigurationError('services', 'services config is required')
+    throw new ServiceConfigurationError(
+      'services',
+      'services config is required'
+    )
   }
 
   // Validate services array
@@ -605,7 +690,7 @@ export function validateServicesConfig(config: ServicesConfig): void {
     if (serviceNames.has(name)) {
       throw new ServiceConfigurationError(
         `services[${i}]`,
-        `duplicate service name '${name}'`,
+        `duplicate service name '${name}'`
       )
     }
     serviceNames.add(name)
@@ -617,7 +702,10 @@ export function validateServicesConfig(config: ServicesConfig): void {
   }
 
   // Validate optional cachingEnabled
-  if (config.cachingEnabled !== undefined && typeof config.cachingEnabled !== 'boolean') {
+  if (
+    config.cachingEnabled !== undefined &&
+    typeof config.cachingEnabled !== 'boolean'
+  ) {
     throw new ServiceConfigurationError('cachingEnabled', 'must be a boolean')
   }
 
@@ -632,7 +720,7 @@ export function validateServicesConfig(config: ServicesConfig): void {
       if (typeof name !== 'string') {
         throw new ServiceConfigurationError(
           `executionOrder[${i}]`,
-          'must be a string',
+          'must be a string'
         )
       }
 
@@ -640,7 +728,7 @@ export function validateServicesConfig(config: ServicesConfig): void {
       if (!serviceNames.has(name)) {
         throw new ServiceConfigurationError(
           `executionOrder[${i}]`,
-          `service '${name}' not found in services array`,
+          `service '${name}' not found in services array`
         )
       }
     }
@@ -650,20 +738,26 @@ export function validateServicesConfig(config: ServicesConfig): void {
 /**
  * Checks if a plugin is a validation service
  */
-export function isValidationService(plugin: ServicePlugin): plugin is ValidationService {
+export function isValidationService(
+  plugin: ServicePlugin
+): plugin is ValidationService {
   return plugin.type === 'validation'
 }
 
 /**
  * Checks if a plugin is a lookup service
  */
-export function isLookupService(plugin: ServicePlugin): plugin is LookupService {
+export function isLookupService(
+  plugin: ServicePlugin
+): plugin is LookupService {
   return plugin.type === 'lookup'
 }
 
 /**
  * Checks if a plugin is a custom service
  */
-export function isCustomService(plugin: ServicePlugin): plugin is CustomService {
+export function isCustomService(
+  plugin: ServicePlugin
+): plugin is CustomService {
   return plugin.type === 'custom'
 }

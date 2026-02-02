@@ -5,6 +5,7 @@ Database adapters provide the bridge between have-we-met's matching engine and y
 ## Overview
 
 **have-we-met** supports three major ORM adapters:
+
 - **Prisma**: Schema-first ORM with excellent TypeScript integration
 - **Drizzle**: Lightweight, type-safe query builder
 - **TypeORM**: Mature, decorator-based ORM with broad database support
@@ -14,15 +15,19 @@ All adapters implement a common `DatabaseAdapter<T>` interface, making it easy t
 ## Why Use Database Adapters?
 
 ### Memory Efficiency
+
 Instead of loading your entire dataset into memory, adapters fetch only the records needed for matching based on your blocking configuration.
 
 ### Performance
+
 Adapters leverage database indexes and efficient queries to reduce the number of comparisons from O(n²) to manageable levels.
 
 ### Persistence
+
 Results can be saved directly back to your database, maintaining data consistency through transactions.
 
 ### Scalability
+
 Process millions of records by streaming batches rather than loading everything at once.
 
 ## Quick Start
@@ -37,20 +42,24 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 const resolver = HaveWeMet.create<Customer>()
-  .schema(schema => {
+  .schema((schema) => {
     schema
       .field('firstName', { type: 'name', component: 'first' })
       .field('lastName', { type: 'name', component: 'last' })
       .field('email', { type: 'email' })
   })
-  .blocking(block => block
-    .onField('lastName', { transform: 'soundex' })
-  )
-  .matching(match => {
+  .blocking((block) => block.onField('lastName', { transform: 'soundex' }))
+  .matching((match) => {
     match
-      .field('email').strategy('exact').weight(20)
-      .field('firstName').strategy('jaro-winkler').weight(10)
-      .field('lastName').strategy('jaro-winkler').weight(10)
+      .field('email')
+      .strategy('exact')
+      .weight(20)
+      .field('firstName')
+      .strategy('jaro-winkler')
+      .weight(10)
+      .field('lastName')
+      .strategy('jaro-winkler')
+      .weight(10)
       .thresholds({ noMatch: 20, definiteMatch: 45 })
   })
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
@@ -63,13 +72,15 @@ const resolver = HaveWeMet.create<Customer>()
 const newCustomer = {
   firstName: 'John',
   lastName: 'Smith',
-  email: 'john.smith@example.com'
+  email: 'john.smith@example.com',
 }
 
 const matches = await resolver.resolveWithDatabase(newCustomer)
 
-matches.forEach(match => {
-  console.log(`Found ${match.outcome}: ${match.record.id} (score: ${match.score.totalScore})`)
+matches.forEach((match) => {
+  console.log(
+    `Found ${match.outcome}: ${match.record.id} (score: ${match.score.totalScore})`
+  )
 })
 ```
 
@@ -78,7 +89,7 @@ matches.forEach(match => {
 ```typescript
 const result = await resolver.deduplicateBatchFromDatabase({
   batchSize: 1000,
-  persistResults: true
+  persistResults: true,
 })
 
 console.log(`Processed ${result.totalProcessed} records`)
@@ -97,21 +108,23 @@ When you configure an adapter, it automatically includes a `queue` property for 
 ```typescript
 const resolver = HaveWeMet.create<Customer>()
   // ... schema, blocking, matching ...
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'customers',
-    queue: {
-      autoExpireAfter: 30 * 24 * 60 * 60 * 1000, // 30 days
-      defaultPriority: 0,
-      enableMetrics: true
-    }
-  }))
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'customers',
+      queue: {
+        autoExpireAfter: 30 * 24 * 60 * 60 * 1000, // 30 days
+        defaultPriority: 0,
+        enableMetrics: true,
+      },
+    })
+  )
   .build()
 
 // Queue is automatically available
 await resolver.queue.add({
   candidateRecord: newCustomer,
   potentialMatches: matches,
-  context: { source: 'import' }
+  context: { source: 'import' },
 })
 ```
 
@@ -150,7 +163,10 @@ All adapters provide these queue-specific methods:
 ```typescript
 interface QueueAdapter<T> {
   insertQueueItem(item: QueueItem<T>): Promise<QueueItem<T>>
-  updateQueueItem(id: string, updates: Partial<QueueItem<T>>): Promise<QueueItem<T>>
+  updateQueueItem(
+    id: string,
+    updates: Partial<QueueItem<T>>
+  ): Promise<QueueItem<T>>
   findQueueItems(filter: QueueFilter): Promise<QueueItem<T>[]>
   findQueueItemById(id: string): Promise<QueueItem<T> | null>
   deleteQueueItem(id: string): Promise<void>
@@ -170,20 +186,22 @@ All adapters implement the `DatabaseAdapter<T>` interface:
 ### Core Methods
 
 #### `findByBlockingKeys(blockingKeys, options?)`
+
 Finds records matching the blocking criteria. This is the primary method used to retrieve candidate records for matching.
 
 ```typescript
 const blockingKeys = new Map([
   ['lastName', 'Smith'],
-  ['dobYear', '1985']
+  ['dobYear', '1985'],
 ])
 
 const candidates = await adapter.findByBlockingKeys(blockingKeys, {
-  limit: 100
+  limit: 100,
 })
 ```
 
 #### `findByIds(ids)`
+
 Retrieves specific records by their identifiers.
 
 ```typescript
@@ -191,48 +209,55 @@ const records = await adapter.findByIds(['id1', 'id2', 'id3'])
 ```
 
 #### `findAll(options?)`
+
 Gets all records with optional pagination and filtering. Used for batch processing.
 
 ```typescript
 const records = await adapter.findAll({
   limit: 1000,
   offset: 0,
-  orderBy: { field: 'createdAt', direction: 'desc' }
+  orderBy: { field: 'createdAt', direction: 'desc' },
 })
 ```
 
 #### `count(filter?)`
+
 Counts records, optionally with filter criteria.
 
 ```typescript
 const total = await adapter.count()
-const active = await adapter.count({ status: { operator: 'eq', value: 'active' } })
+const active = await adapter.count({
+  status: { operator: 'eq', value: 'active' },
+})
 ```
 
 ### CRUD Operations
 
 #### `insert(record)`
+
 Inserts a new record and returns it with generated fields (e.g., ID).
 
 ```typescript
 const newRecord = await adapter.insert({
   firstName: 'Jane',
   lastName: 'Doe',
-  email: 'jane@example.com'
+  email: 'jane@example.com',
 })
 ```
 
 #### `update(id, updates)`
+
 Updates an existing record.
 
 ```typescript
 const updated = await adapter.update('id123', {
   email: 'newemail@example.com',
-  status: 'verified'
+  status: 'verified',
 })
 ```
 
 #### `delete(id)`
+
 Deletes a record.
 
 ```typescript
@@ -242,23 +267,25 @@ await adapter.delete('id123')
 ### Batch Operations
 
 #### `batchInsert(records)`
+
 Inserts multiple records efficiently. Much faster than individual inserts.
 
 ```typescript
 const records = [
   { firstName: 'John', lastName: 'Doe' },
-  { firstName: 'Jane', lastName: 'Smith' }
+  { firstName: 'Jane', lastName: 'Smith' },
 ]
 const inserted = await adapter.batchInsert(records)
 ```
 
 #### `batchUpdate(updates)`
+
 Updates multiple records in a single operation.
 
 ```typescript
 const updates = [
   { id: 'id1', updates: { status: 'merged' } },
-  { id: 'id2', updates: { status: 'merged' } }
+  { id: 'id2', updates: { status: 'merged' } },
 ]
 const updated = await adapter.batchUpdate(updates)
 ```
@@ -266,6 +293,7 @@ const updated = await adapter.batchUpdate(updates)
 ### Transactions
 
 #### `transaction(callback)`
+
 Executes operations within a transaction, ensuring atomicity.
 
 ```typescript
@@ -283,14 +311,14 @@ const result = await adapter.transaction(async (txAdapter) => {
 
 ```typescript
 interface AdapterConfig {
-  tableName: string              // Database table/collection name
-  primaryKey?: string            // Primary key field (default: 'id')
-  fieldMapping?: Record<string, string>  // Map schema fields to DB columns
+  tableName: string // Database table/collection name
+  primaryKey?: string // Primary key field (default: 'id')
+  fieldMapping?: Record<string, string> // Map schema fields to DB columns
   usePreparedStatements?: boolean // Use prepared statements (default: true)
   poolConfig?: {
-    min?: number                 // Minimum pool connections
-    max?: number                 // Maximum pool connections
-    idleTimeoutMs?: number       // Idle connection timeout
+    min?: number // Minimum pool connections
+    max?: number // Maximum pool connections
+    idleTimeoutMs?: number // Idle connection timeout
   }
 }
 ```
@@ -302,10 +330,10 @@ const adapter = prismaAdapter(prisma, {
   tableName: 'customers',
   primaryKey: 'customer_id',
   fieldMapping: {
-    firstName: 'first_name',      // Schema field -> DB column
+    firstName: 'first_name', // Schema field -> DB column
     lastName: 'last_name',
-    dateOfBirth: 'dob'
-  }
+    dateOfBirth: 'dob',
+  },
 })
 ```
 
@@ -317,12 +345,13 @@ Resolve a single record against your database using blocking for efficiency.
 
 ```typescript
 const matches = await resolver.resolveWithDatabase(newCustomer, {
-  useBlocking: true,      // Use blocking to reduce queries (default: true)
-  maxFetchSize: 1000      // Maximum records to fetch (default: 1000)
+  useBlocking: true, // Use blocking to reduce queries (default: true)
+  maxFetchSize: 1000, // Maximum records to fetch (default: 1000)
 })
 ```
 
 **How it works:**
+
 1. Generates blocking keys from the candidate record
 2. Queries database using `adapter.findByBlockingKeys()`
 3. Applies in-memory matching to retrieved candidates
@@ -334,20 +363,21 @@ Find all duplicates in your database by comparing records within blocking groups
 
 ```typescript
 const result = await resolver.deduplicateBatchFromDatabase({
-  batchSize: 1000,           // Process N records at a time (default: 1000)
-  persistResults: false,     // Save results to database (default: false)
-  maxRecords: 10000,         // Limit processing (default: unlimited)
-  returnExplanation: true    // Include detailed explanations (default: true)
+  batchSize: 1000, // Process N records at a time (default: 1000)
+  persistResults: false, // Save results to database (default: false)
+  maxRecords: 10000, // Limit processing (default: unlimited)
+  returnExplanation: true, // Include detailed explanations (default: true)
 })
 ```
 
 **Returns:**
+
 ```typescript
 interface DeduplicationBatchResult {
-  totalProcessed: number          // Records processed
-  duplicateGroupsFound: number    // Number of duplicate clusters
-  totalDuplicates: number         // Total duplicate records
-  durationMs: number              // Time taken
+  totalProcessed: number // Records processed
+  duplicateGroupsFound: number // Number of duplicate clusters
+  totalDuplicates: number // Total duplicate records
+  durationMs: number // Time taken
   results: Array<{
     masterRecordId: string
     duplicateIds: string[]
@@ -362,8 +392,8 @@ Identifies and merges duplicate records using configured merge strategies.
 
 ```typescript
 const results = await resolver.findAndMergeDuplicates({
-  deleteAfterMerge: false,       // Delete source records (default: false)
-  useTransaction: true,          // Use transactions (default: true)
+  deleteAfterMerge: false, // Delete source records (default: false)
+  useTransaction: true, // Use transactions (default: true)
 })
 ```
 
@@ -373,11 +403,14 @@ The merge uses the strategies configured via the `.merge()` builder:
 const resolver = HaveWeMet.create<Customer>()
   .schema(/* ... */)
   .matching(/* ... */)
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
-    .field('firstName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('email')
+      .strategy('preferNewer')
   )
   .adapter(prismaAdapter(prisma, { tableName: 'customers' }))
   .build()
@@ -392,7 +425,12 @@ Adapters throw specific error types for different failure scenarios:
 ### AdapterError Types
 
 ```typescript
-import { ConnectionError, QueryError, TransactionError, ValidationError } from 'have-we-met/adapters'
+import {
+  ConnectionError,
+  QueryError,
+  TransactionError,
+  ValidationError,
+} from 'have-we-met/adapters'
 
 try {
   await adapter.findByBlockingKeys(keys)
@@ -448,7 +486,7 @@ Process large datasets in batches to manage memory efficiently.
 
 ```typescript
 const result = await resolver.deduplicateBatchFromDatabase({
-  batchSize: 1000  // Process 1000 records at a time
+  batchSize: 1000, // Process 1000 records at a time
 })
 ```
 
@@ -472,7 +510,7 @@ Use your database's query analyzer to identify slow queries.
 ```typescript
 // Enable query logging in development
 const adapter = prismaAdapter(prisma, {
-  tableName: 'customers'
+  tableName: 'customers',
 })
 
 // Profile queries to find bottlenecks
@@ -518,7 +556,15 @@ npx prisma migrate dev --name add_review_queue
 
 ```typescript
 // drizzle/schema.ts
-import { pgTable, uuid, jsonb, varchar, timestamp, integer, text } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  uuid,
+  jsonb,
+  varchar,
+  timestamp,
+  integer,
+  text,
+} from 'drizzle-orm/pg-core'
 
 export const reviewQueue = pgTable('review_queue', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -532,7 +578,7 @@ export const reviewQueue = pgTable('review_queue', {
   decision: jsonb('decision'),
   context: jsonb('context'),
   priority: integer('priority').default(0),
-  tags: text('tags').array()
+  tags: text('tags').array(),
 })
 ```
 
@@ -553,31 +599,52 @@ export class AddReviewQueue1234567890 implements MigrationInterface {
       new Table({
         name: 'review_queue',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'candidate_record', type: 'jsonb' },
           { name: 'potential_matches', type: 'jsonb' },
-          { name: 'status', type: 'varchar', length: '20', default: "'pending'" },
+          {
+            name: 'status',
+            type: 'varchar',
+            length: '20',
+            default: "'pending'",
+          },
           { name: 'created_at', type: 'timestamp', default: 'now()' },
           { name: 'updated_at', type: 'timestamp', default: 'now()' },
           { name: 'decided_at', type: 'timestamp', isNullable: true },
-          { name: 'decided_by', type: 'varchar', length: '255', isNullable: true },
+          {
+            name: 'decided_by',
+            type: 'varchar',
+            length: '255',
+            isNullable: true,
+          },
           { name: 'decision', type: 'jsonb', isNullable: true },
           { name: 'context', type: 'jsonb', isNullable: true },
           { name: 'priority', type: 'integer', default: 0 },
-          { name: 'tags', type: 'text[]', default: 'ARRAY[]::text[]' }
-        ]
+          { name: 'tags', type: 'text[]', default: 'ARRAY[]::text[]' },
+        ],
       })
     )
 
-    await queryRunner.createIndex('review_queue', new TableIndex({
-      name: 'idx_queue_status',
-      columnNames: ['status']
-    }))
+    await queryRunner.createIndex(
+      'review_queue',
+      new TableIndex({
+        name: 'idx_queue_status',
+        columnNames: ['status'],
+      })
+    )
 
-    await queryRunner.createIndex('review_queue', new TableIndex({
-      name: 'idx_queue_created_at',
-      columnNames: ['created_at']
-    }))
+    await queryRunner.createIndex(
+      'review_queue',
+      new TableIndex({
+        name: 'idx_queue_created_at',
+        columnNames: ['created_at'],
+      })
+    )
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -637,11 +704,21 @@ model SourceRecordArchive {
 ### Drizzle Provenance Schema
 
 ```typescript
-import { pgTable, uuid, jsonb, varchar, timestamp, boolean, text } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  uuid,
+  jsonb,
+  varchar,
+  timestamp,
+  boolean,
+  text,
+} from 'drizzle-orm/pg-core'
 
 export const provenance = pgTable('provenance', {
   id: uuid('id').primaryKey().defaultRandom(),
-  goldenRecordId: varchar('golden_record_id', { length: 255 }).notNull().unique(),
+  goldenRecordId: varchar('golden_record_id', { length: 255 })
+    .notNull()
+    .unique(),
   sourceRecordIds: text('source_record_ids').array().notNull(),
   mergedAt: timestamp('merged_at').notNull(),
   mergedBy: varchar('merged_by', { length: 255 }),
@@ -669,16 +746,21 @@ export const sourceRecordArchive = pgTable('source_record_archive', {
 const resolver = HaveWeMet.create<Customer>()
   .schema(/* ... */)
   .matching(/* ... */)
-  .merge(merge => merge
-    .timestampField('updatedAt')
-    .defaultStrategy('preferNonNull')
-    .field('firstName').strategy('preferLonger')
-    .field('email').strategy('preferNewer')
+  .merge((merge) =>
+    merge
+      .timestampField('updatedAt')
+      .defaultStrategy('preferNonNull')
+      .field('firstName')
+      .strategy('preferLonger')
+      .field('email')
+      .strategy('preferNewer')
   )
-  .adapter(prismaAdapter(prisma, {
-    tableName: 'customers',
-    // Merge operations use the configured strategies
-  }))
+  .adapter(
+    prismaAdapter(prisma, {
+      tableName: 'customers',
+      // Merge operations use the configured strategies
+    })
+  )
   .build()
 
 // Merge from queue
@@ -704,6 +786,7 @@ See [Golden Record](./golden-record.md), [Provenance](./provenance.md), and [Unm
 ## Examples
 
 Complete working examples are available in the `examples/` directory:
+
 - `examples/database-adapters/prisma-example.ts` - Customer deduplication with Prisma
 - `examples/database-adapters/drizzle-example.ts` - Patient matching with Drizzle
 - `examples/database-adapters/typeorm-example.ts` - Contact merging with TypeORM

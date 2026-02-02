@@ -13,7 +13,11 @@ import type {
   ServiceContext,
   HealthCheckResult,
 } from '../../types.js'
-import { ServiceNetworkError, ServiceServerError, ServiceTimeoutError } from '../../service-error.js'
+import {
+  ServiceNetworkError,
+  ServiceServerError,
+  ServiceTimeoutError,
+} from '../../service-error.js'
 import { stableHash } from '../../cache/cache-key-generator.js'
 
 /**
@@ -107,7 +111,7 @@ function sleep(ms: number): Promise<void> {
 function createSuccessResult(
   data: LookupOutput,
   startedAt: Date,
-  cached: boolean = false,
+  cached: boolean = false
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -128,7 +132,7 @@ function createSuccessResult(
 function createFailureResult(
   error: Error,
   startedAt: Date,
-  errorType: 'network' | 'timeout' | 'unknown' = 'network',
+  errorType: 'network' | 'timeout' | 'unknown' = 'network'
 ): ServiceResult<LookupOutput> {
   const completedAt = new Date()
   return {
@@ -195,7 +199,10 @@ export interface MockLookupService extends LookupService {
   updateConfig(config: Partial<MockLookupConfig>): void
 
   /** Add a canned response */
-  addResponse(key: string | Record<string, unknown>, response: LookupOutput): void
+  addResponse(
+    key: string | Record<string, unknown>,
+    response: LookupOutput
+  ): void
 
   /** Remove a canned response */
   removeResponse(key: string | Record<string, unknown>): boolean
@@ -210,7 +217,9 @@ export interface MockLookupService extends LookupService {
 /**
  * Create a mock lookup service
  */
-export function createMockLookup(config: MockLookupConfig = {}): MockLookupService {
+export function createMockLookup(
+  config: MockLookupConfig = {}
+): MockLookupService {
   let mergedConfig = { ...DEFAULT_MOCK_CONFIG, ...config }
   const callHistory: MockLookupCallEntry[] = []
   let currentConcurrentCalls = 0
@@ -275,7 +284,7 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
     success: boolean,
     startedAt: Date,
     response?: LookupOutput,
-    error?: string,
+    error?: string
   ): void => {
     if (!mergedConfig.trackCalls) return
 
@@ -296,7 +305,7 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
 
     async execute(
       input: LookupInput,
-      _context: ServiceContext,
+      _context: ServiceContext
     ): Promise<ServiceResult<LookupOutput>> {
       const startedAt = new Date()
       const serviceName = this.name
@@ -307,7 +316,7 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
           const error = new ServiceServerError(
             serviceName,
             'Rate limit exceeded',
-            429,
+            429
           )
           recordCall(input, false, startedAt, undefined, error.message)
           return createFailureResult(error, startedAt, 'network')
@@ -324,7 +333,7 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
           const error = new ServiceServerError(
             serviceName,
             'Too many concurrent calls',
-            503,
+            503
           )
           recordCall(input, false, startedAt, undefined, error.message)
           return createFailureResult(error, startedAt, 'network')
@@ -349,13 +358,20 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
                 return createFailureResult(error, startedAt, 'timeout')
 
               case 'server':
-                error = new ServiceServerError(serviceName, 'Simulated server error', 500)
+                error = new ServiceServerError(
+                  serviceName,
+                  'Simulated server error',
+                  500
+                )
                 recordCall(input, false, startedAt, undefined, error.message)
                 return createFailureResult(error, startedAt, 'network')
 
               case 'network':
               default:
-                error = new ServiceNetworkError(serviceName, 'Simulated network failure')
+                error = new ServiceNetworkError(
+                  serviceName,
+                  'Simulated network failure'
+                )
                 recordCall(input, false, startedAt, undefined, error.message)
                 return createFailureResult(error, startedAt, 'network')
             }
@@ -367,7 +383,10 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
           // Add match quality if not present
           const finalResponse: LookupOutput = {
             ...response,
-            matchQuality: response.matchQuality ?? mergedConfig.defaultMatchQuality ?? 'partial',
+            matchQuality:
+              response.matchQuality ??
+              mergedConfig.defaultMatchQuality ??
+              'partial',
           }
 
           recordCall(input, true, startedAt, finalResponse)
@@ -376,12 +395,13 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
           currentConcurrentCalls--
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
         recordCall(input, false, startedAt, undefined, errorMessage)
         return createFailureResult(
           error instanceof Error ? error : new Error(errorMessage),
           startedAt,
-          'unknown',
+          'unknown'
         )
       }
     },
@@ -442,14 +462,18 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
     updateConfig(newConfig: Partial<MockLookupConfig>): void {
       mergedConfig = { ...mergedConfig, ...newConfig }
       if (newConfig.name) {
-        (service as { name: string }).name = newConfig.name
+        ;(service as { name: string }).name = newConfig.name
       }
       if (newConfig.description) {
-        (service as { description: string }).description = newConfig.description
+        ;(service as { description: string }).description =
+          newConfig.description
       }
     },
 
-    addResponse(key: string | Record<string, unknown>, response: LookupOutput): void {
+    addResponse(
+      key: string | Record<string, unknown>,
+      response: LookupOutput
+    ): void {
       if (!mergedConfig.responses) {
         mergedConfig.responses = new Map()
       }
@@ -483,7 +507,7 @@ export function createMockLookup(config: MockLookupConfig = {}): MockLookupServi
  */
 export function createMockLookupWithData(
   data: Array<{ input: Record<string, unknown>; output: LookupOutput }>,
-  defaultResponse?: LookupOutput,
+  defaultResponse?: LookupOutput
 ): MockLookupService {
   const responses = new Map<string, LookupOutput>()
 
@@ -503,7 +527,7 @@ export function createMockLookupWithData(
  */
 export function createSuccessMock(
   data: Record<string, unknown>,
-  matchQuality: LookupMatchQuality = 'exact',
+  matchQuality: LookupMatchQuality = 'exact'
 ): MockLookupService {
   return createMockLookup({
     defaultResponse: {
@@ -531,7 +555,7 @@ export function createNotFoundMock(): MockLookupService {
  * Create a mock lookup that always fails
  */
 export function createFailureMock(
-  errorType: 'network' | 'timeout' | 'server' = 'network',
+  errorType: 'network' | 'timeout' | 'server' = 'network'
 ): MockLookupService {
   return createMockLookup({
     failureRate: 1,
@@ -544,7 +568,7 @@ export function createFailureMock(
  */
 export function createSlowMock(
   latencyMs: number,
-  defaultResponse?: LookupOutput,
+  defaultResponse?: LookupOutput
 ): MockLookupService {
   return createMockLookup({
     latencyMs,
@@ -558,7 +582,7 @@ export function createSlowMock(
 export function createRandomLatencyMock(
   minMs: number,
   maxMs: number,
-  defaultResponse?: LookupOutput,
+  defaultResponse?: LookupOutput
 ): MockLookupService {
   return createMockLookup({
     latencyRange: { min: minMs, max: maxMs },
@@ -571,7 +595,7 @@ export function createRandomLatencyMock(
  */
 export function createFlakyMock(
   failureRate: number,
-  defaultResponse?: LookupOutput,
+  defaultResponse?: LookupOutput
 ): MockLookupService {
   return createMockLookup({
     failureRate,

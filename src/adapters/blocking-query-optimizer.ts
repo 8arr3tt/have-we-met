@@ -101,11 +101,17 @@ export class BlockingQueryOptimizer {
     const strategyName = strategy.name
 
     if (strategyName.startsWith('standard:')) {
-      recommendations.push(...this.recommendIndexesForStandard(strategy, tableName))
+      recommendations.push(
+        ...this.recommendIndexesForStandard(strategy, tableName)
+      )
     } else if (strategyName.startsWith('sorted-neighbourhood:')) {
-      recommendations.push(...this.recommendIndexesForSortedNeighbourhood(strategy, tableName))
+      recommendations.push(
+        ...this.recommendIndexesForSortedNeighbourhood(strategy, tableName)
+      )
     } else if (strategyName.startsWith('composite:')) {
-      recommendations.push(...this.recommendIndexesForComposite(strategy, tableName))
+      recommendations.push(
+        ...this.recommendIndexesForComposite(strategy, tableName)
+      )
     }
 
     return recommendations
@@ -205,7 +211,12 @@ export class BlockingQueryOptimizer {
     } else {
       for (const field of fields) {
         const indexName = `idx_${tableName}_${field.replaceAll('.', '_')}`
-        const sql = this.generateIndexSQL(tableName, [field], indexName, 'btree')
+        const sql = this.generateIndexSQL(
+          tableName,
+          [field],
+          indexName,
+          'btree'
+        )
 
         recommendations.push({
           fields: [field],
@@ -243,7 +254,9 @@ export class BlockingQueryOptimizer {
 
       const strategies = innerStrategies.split('+')
       for (const strategy of strategies) {
-        const strategyFields = this.extractFieldsFromSingleStrategy(strategy.trim())
+        const strategyFields = this.extractFieldsFromSingleStrategy(
+          strategy.trim()
+        )
         fields.push(...strategyFields)
       }
 
@@ -353,7 +366,9 @@ export class BlockingQueryOptimizer {
     let estimatedTimeMs: number
 
     if (hasIndex) {
-      estimatedRowsScanned = Math.ceil(totalRecordCount / Math.pow(10, numBlockingFields))
+      estimatedRowsScanned = Math.ceil(
+        totalRecordCount / Math.pow(10, numBlockingFields)
+      )
       estimatedTimeMs = Math.max(1, estimatedRowsScanned * 0.001)
     } else {
       estimatedRowsScanned = totalRecordCount
@@ -415,7 +430,11 @@ export class BlockingQueryOptimizer {
       fields.reduce((acc, [, cardinality]) => acc * (1 - cardinality), 1) * 100
 
     let explanation = `Selected ${recommendedFields.length} field(s) with best cardinality: `
-    explanation += recommendedFields.map((field) => `${field} (${(fieldCardinalities[field] * 100).toFixed(1)}%)`).join(', ')
+    explanation += recommendedFields
+      .map(
+        (field) => `${field} (${(fieldCardinalities[field] * 100).toFixed(1)}%)`
+      )
+      .join(', ')
     explanation += `. Expected to reduce comparisons by ~${(100 - expectedReduction).toFixed(1)}%.`
 
     return {

@@ -10,7 +10,6 @@ import {
 import { getNormalizer } from '../../../src/core/normalizers/registry'
 
 describe('Basic Normalizers', () => {
-
   describe('trim', () => {
     it('should trim whitespace from both ends', () => {
       expect(trim('  hello  ')).toBe('hello')

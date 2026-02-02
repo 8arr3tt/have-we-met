@@ -40,7 +40,9 @@ describe('Numeric Strategies', () => {
 
     it('handles null values', () => {
       const records = createRecords(4)
-      expect(mostFrequent([null, 'value', 'value', null], records)).toBe('value')
+      expect(mostFrequent([null, 'value', 'value', null], records)).toBe(
+        'value'
+      )
     })
 
     it('handles undefined values', () => {
