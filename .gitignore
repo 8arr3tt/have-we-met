@@ -6,19 +6,7 @@ coverage/
 .env
 .env.local
 
-# Plan files
-PLAN.md
-phase-*-plan.md
-
-# Claude Code
-.claude/
-CLAUDE.md
-
-# Ralph Wiggum Loop
-.ralph-temp/
-QUICKSTART-RALPH.md
-RALPH-WIGGUM-LOOP.md
-ralph-helper.sh
-ralph-wiggum-loop.sh
-progress-tracker.md
-have-we-met.zip
+# Temporary test/debug files
+test-*.js
+test-*.mjs
+test-*.cjs
