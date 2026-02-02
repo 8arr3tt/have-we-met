@@ -185,7 +185,8 @@ describe('QueueAlerts', () => {
 
     it('returns alert when oldest pending exceeds threshold', async () => {
       const now = new Date()
-      const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+      // 1.8 days to ensure it's clearly between 1.5x and 2x threshold
+      const oldDate = new Date(now.getTime() - 1.8 * 24 * 60 * 60 * 1000)
 
       const mockStats: QueueStats = {
         total: 5,
@@ -199,7 +200,7 @@ describe('QueueAlerts', () => {
         },
         avgWaitTime: 0,
         avgDecisionTime: 0,
-        oldestPending: twoDaysAgo,
+        oldestPending: oldDate,
       }
 
       vi.mocked(mockQueue.stats).mockResolvedValue(mockStats)
