@@ -1,7 +1,7 @@
 {
   "name": "have-we-met",
-  "version": "0.0.1",
-  "description": "Identity resolution library",
+  "version": "0.1.0",
+  "description": "Identity resolution library for Node.js - match, deduplicate, and merge records across datasets with deterministic, probabilistic, and ML-based matching",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -19,7 +19,10 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsup",
@@ -38,10 +41,29 @@
     "identity",
     "resolution",
     "entity-resolution",
-    "record-linkage"
+    "record-linkage",
+    "deduplication",
+    "matching",
+    "merge",
+    "fuzzy-matching",
+    "probabilistic-matching",
+    "machine-learning",
+    "data-quality",
+    "master-data-management",
+    "mdm",
+    "customer-data",
+    "patient-matching"
   ],
-  "author": "",
+  "author": "Matt",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/have-we-met.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/have-we-met/issues"
+  },
+  "homepage": "https://github.com/yourusername/have-we-met#readme",
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@prisma/client": "^7.3.0",

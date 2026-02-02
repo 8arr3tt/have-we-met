@@ -1,0 +1,50 @@
+# Source files
+src/
+tests/
+examples/
+benchmarks/
+
+# Documentation source (keep README.md in package)
+docs/
+PLAN.md
+CLAUDE.md
+progress-tracker.md
+phase-*.md
+API-CHANGES.md
+RELEASE.md
+RELEASE-NOTES.md
+
+# Build and test configs
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+eslint.config.js
+.prettierrc
+
+# Development files
+.github/
+.vscode/
+.git/
+.gitignore
+node_modules/
+
+# Test and coverage
+coverage/
+.vitest/
+
+# Benchmark data and results
+benchmarks/data/
+benchmarks/results/
+
+# Development utilities
+scripts/
+
+# Lock files (users should generate their own)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment and local config
+.env
+.env.*
+*.log
