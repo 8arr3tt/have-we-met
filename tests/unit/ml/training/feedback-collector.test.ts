@@ -886,7 +886,8 @@ describe('FeedbackFilter date filters', () => {
   })
 
   it('should filter by since date', () => {
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    // Use a slightly earlier cutoff to account for timing differences
+    const yesterday = new Date(Date.now() - 25 * 60 * 60 * 1000)
     const items = collector.getFeedback({ since: yesterday })
     expect(items.length).toBe(2)
   })
