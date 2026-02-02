@@ -269,6 +269,7 @@ All strategies achieve **95-99%+ reduction** in comparisons compared to exhausti
 - [Selection Guide](selection-guide.md) - Choose the right strategy for your data
 - [Transforms Reference](transforms.md) - Available block transforms and when to use them
 - [Tuning Guide](tuning.md) - Optimize blocking performance for your use case
+- [Documentation Home](../README.md) - Back to main documentation
 
 ## Quick Start
 

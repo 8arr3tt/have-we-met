@@ -333,3 +333,4 @@ const resolver = HaveWeMet.create<Person>()
 - [Address Normalizer](./address.md)
 - [Date Normalizer](./date.md)
 - [Custom Normalizers](./custom.md)
+- [Documentation Home](../README.md) - Back to main documentation

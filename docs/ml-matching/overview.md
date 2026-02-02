@@ -187,3 +187,4 @@ The ModelTrainer uses gradient descent to learn weights:
 - [Custom Models](custom-models.md) - Train your own models
 - [Training Guide](training.md) - Model training best practices
 - [Feedback Loop](feedback-loop.md) - Learn from human decisions
+- [Documentation Home](../README.md) - Back to main documentation

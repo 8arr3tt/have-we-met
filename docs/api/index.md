@@ -121,7 +121,8 @@ import type {
 
 ## Related Documentation
 
+- [Documentation Home](../README.md) - Main documentation index
 - [Getting Started Guide](../examples.md) - Step-by-step introduction
 - [Tuning Guide](../tuning-guide.md) - Optimize your configuration
 - [Algorithm Comparison](../algorithms/comparison.md) - Choose the right algorithms
-- [Use Case Guides](../examples.md) - Real-world examples
+- [Use Case Guides](../use-cases/customer-deduplication.md) - Real-world examples
