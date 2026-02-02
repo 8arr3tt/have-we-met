@@ -262,3 +262,32 @@ export type {
   MLMatchOptions,
   MLMatchStats,
 } from './ml'
+
+// Consolidation - Multi-Source Matching
+export {
+  SchemaMapper,
+  createSchemaMapper,
+  TypeCoercions,
+  CommonTransforms,
+} from './consolidation/schema-mapper'
+
+export type {
+  TransformFunction,
+  FieldMappingConfig,
+  FieldMapping,
+  ConsolidationSource,
+  ConflictResolutionConfig,
+  ConsolidationConfig,
+  MappedRecord,
+  ConsolidationMatchResult,
+  ConsolidationStats,
+  ConsolidationResult,
+} from './consolidation/types'
+
+export { MatchingScope } from './consolidation/types'
+
+export {
+  ConsolidationError,
+  ConsolidationConfigError,
+  MappingError,
+} from './consolidation/types'
