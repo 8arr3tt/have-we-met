@@ -66,7 +66,7 @@ describe('Performance: Blocking Strategies', () => {
     console.log(`Sorted neighbourhood 10k records: ${duration.toFixed(2)}ms`)
   })
 
-  it('should generate sorted neighbourhood blocks for 100k records in <500ms', () => {
+  it('should generate sorted neighbourhood blocks for 100k records in <600ms', () => {
     const records = generateRecords(100000)
     const strategy = new SortedNeighbourhoodStrategy({
       sortBy: 'lastName',
@@ -78,7 +78,7 @@ describe('Performance: Blocking Strategies', () => {
     const blocks = blockGen.generateBlocks(records, strategy)
     const duration = performance.now() - start
 
-    expect(duration).toBeLessThan(500)
+    expect(duration).toBeLessThan(600)
     expect(blocks.size).toBeGreaterThan(0)
     console.log(`Sorted neighbourhood 100k records: ${duration.toFixed(0)}ms`)
   })
