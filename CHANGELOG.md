@@ -57,6 +57,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Feedback Loop**: FeedbackCollector learns from human review decisions
 - **Three Integration Modes**: hybrid, mlOnly, fallback
 
+#### Multi-Source Consolidation
+- **Schema Mapping**: Transform records from different source schemas to unified output schema
+- **Cross-Source Matching**: Match records across multiple database tables with different schemas
+- **Source Priority**: Configure source precedence for conflict resolution
+- **Two Matching Scopes**: Within-source-first (deduplicate each source, then match across) and unified pool (match all records together)
+- **Multi-Table Adapters**: Load from multiple source tables, write to unified output table
+- **Consolidation Builder API**: Fluent API for configuring multi-source workflows
+- **Field-Level Conflict Resolution**: Combine source priority with field-specific merge strategies
+- **ETL Pipeline Support**: End-to-end workflow for consolidating data from disparate systems
+
 #### Benchmarks and Documentation
 - **Benchmark Infrastructure**: Dataset loader, metrics collector, report generator
 - **Standard Datasets**: Febrl, Fodors-Zagat restaurant benchmarks
