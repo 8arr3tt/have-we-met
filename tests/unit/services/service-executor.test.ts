@@ -410,7 +410,8 @@ describe('ServiceExecutorImpl', () => {
 
       const result = await executor.executePreMatch({})
 
-      expect(result.totalDurationMs).toBeGreaterThanOrEqual(50)
+      // Allow some tolerance for timer resolution on different systems
+      expect(result.totalDurationMs).toBeGreaterThanOrEqual(45)
     })
   })
 
