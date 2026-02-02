@@ -52,6 +52,9 @@ function createMockAdapter<T>(
     createBatch: vi.fn(async (batch: Partial<T>[]) =>
       batch.map((r, i) => ({ ...r, id: Date.now() + i } as T))
     ),
+    batchInsert: vi.fn(async (batch: T[]) =>
+      batch.map((r, i) => ({ ...r, id: Date.now() + i } as T))
+    ),
     findByBlocking: vi.fn(async () => []),
     transaction: vi.fn(async (callback: any) => callback()),
   } as DatabaseAdapter<T>
@@ -457,7 +460,7 @@ describe('ConsolidationExecutor', () => {
       const executor = new ConsolidationExecutor(config, resolver)
       await executor.execute({ writeOutput: true })
 
-      expect(outputAdapter.createBatch).toHaveBeenCalled()
+      expect(outputAdapter.batchInsert).toHaveBeenCalled()
     })
 
     it('should continue on error when failFast is false', async () => {
