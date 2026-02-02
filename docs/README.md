@@ -26,6 +26,18 @@ New to have-we-met? Start here:
 - **[Algorithms](./algorithms/comparison.md)** - String similarity algorithms and when to use them
 - **[Database Adapters](./database-adapters.md)** - Connect to Prisma, Drizzle, or TypeORM
 
+## Multi-Source Consolidation
+
+Match and merge records from multiple databases with different schemas:
+
+- **[Overview](./consolidation/overview.md)** - Architecture, use cases, and key concepts
+- **[Getting Started](./consolidation/getting-started.md)** - Quick start guide with examples
+- **[Schema Mapping](./consolidation/schema-mapping.md)** - Field mapping and transformations
+- **[Conflict Resolution](./consolidation/conflict-resolution.md)** - Source priority and merge strategies
+- **[Matching Scopes](./consolidation/matching-scopes.md)** - Within-source-first vs unified pool
+- **[ETL Workflow](./consolidation/etl-workflow.md)** - Production ETL patterns and optimization
+- **[API Reference](./api-reference/consolidation-builder.md)** - ConsolidationBuilder API
+
 ## Use Case Guides
 
 Practical guides for common identity resolution scenarios:
@@ -136,6 +148,7 @@ Performance benchmarks and results:
 | Use machine learning | [ML Matching Overview](./ml-matching/overview.md) |
 | Connect a database | [Database Adapters](./database-adapters.md) |
 | Review potential matches | [Review Queue](./review-queue.md) |
+| Consolidate multiple sources | [Consolidation Overview](./consolidation/overview.md) |
 
 ## Support
 

@@ -13,6 +13,7 @@
 ## Features
 
 - 🎯 **Three Matching Paradigms**: Deterministic rules, probabilistic scoring, and ML-based matching
+- 🔀 **Multi-Source Consolidation**: Match and merge records from multiple databases with different schemas
 - ⚡ **Blazing Fast**: Blocking strategies reduce O(n²) to linear time - process 100k records in seconds
 - 🔧 **Flexible Configuration**: Fluent API with full TypeScript support and type inference
 - 💾 **Database Native**: First-class adapters for Prisma, Drizzle, and TypeORM
@@ -185,6 +186,56 @@ results.forEach(result => {
 ```
 
 **[See ML matching example →](examples/ml-matching.ts)**
+
+### 5. Multi-Source Consolidation
+
+Match and merge records from multiple databases with different schemas:
+
+```typescript
+// Consolidate customers from 3 product databases
+const result = await HaveWeMet.consolidation<UnifiedCustomer>()
+  .source('crm', source => source
+    .adapter(crmAdapter)
+    .mapping(map => map
+      .field('email').from('email_address')
+      .field('firstName').from('first_name')
+      .field('lastName').from('last_name')
+    )
+    .priority(2) // CRM is most trusted
+  )
+  .source('billing', source => source
+    .adapter(billingAdapter)
+    .mapping(map => map
+      .field('email').from('contact_email')
+      .field('firstName').from('fname')
+      .field('lastName').from('lname')
+    )
+    .priority(1)
+  )
+  .source('support', source => source
+    .adapter(supportAdapter)
+    .mapping(map => map
+      .field('email').from('email')
+      .field('firstName').from('first')
+      .field('lastName').from('last')
+    )
+    .priority(1)
+  )
+  .matchingScope('within-source-first')
+  .conflictResolution(cr => cr
+    .useSourcePriority(true)
+    .defaultStrategy('preferNonNull')
+    .fieldStrategy('email', 'preferNewer')
+  )
+  .outputAdapter(unifiedAdapter)
+  .build()
+  .consolidate()
+
+console.log(`Created ${result.stats.goldenRecords} unified records`)
+console.log(`Found ${result.stats.crossSourceMatches} cross-source matches`)
+```
+
+**[See consolidation examples →](examples/consolidation/)**
 
 ## Why have-we-met?
 
