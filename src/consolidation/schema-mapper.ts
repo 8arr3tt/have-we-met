@@ -150,10 +150,11 @@ export class SchemaMapper<TInput = any, TOutput = any> {
    * setNestedValue({}, 'address.city', 'NYC') // { address: { city: 'NYC' } }
    * ```
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private setNestedValue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     obj: any,
     path: keyof TOutput | string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any
   ): void {
     const pathStr = String(path)

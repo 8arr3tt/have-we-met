@@ -44,33 +44,29 @@ export class TypeORMQueueAdapter<
 
     if (normalized.since) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.createdAt)
-        where.createdAt = {} as any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.createdAt) where.createdAt = {} as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.createdAt as any).$gte = normalized.since
     }
 
     if (normalized.until) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.createdAt)
-        where.createdAt = {} as any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.createdAt) where.createdAt = {} as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.createdAt as any).$lte = normalized.until
     }
 
     if (normalized.priority?.min !== undefined) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.priority)
-        where.priority = {} as any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.priority) where.priority = {} as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.priority as any).$gte = normalized.priority.min
     }
 
     if (normalized.priority?.max !== undefined) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!where.priority)
-        where.priority = {} as any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!where.priority) where.priority = {} as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(where.priority as any).$lte = normalized.priority.max
     }
 
