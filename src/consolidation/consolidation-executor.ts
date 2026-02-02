@@ -88,7 +88,6 @@ export interface ExecuteOptions {
  */
 export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
   private readonly config: ConsolidationConfig<TOutput>
-  private readonly _resolver: Resolver<TOutput>
   private readonly matcher: CrossSourceMatcher<TOutput>
   private readonly merger: SourceAwareMerger<TOutput>
 
@@ -104,7 +103,6 @@ export class ConsolidationExecutor<TOutput extends Record<string, unknown>> {
   ) {
     this.validateConfig(config)
     this.config = config
-    this._resolver = resolver
 
     // Initialize matcher
     this.matcher = new CrossSourceMatcher({
